@@ -10,34 +10,35 @@ operations. Do NOT plug the SuperMini's USB into anything after wiring.
   ESPHome-matched version, **standalone over its own USB**, verified it
   enumerates again after flash
 - U213 unpowered (unplug PoE), ethernet cable can stay connected
-- Parts: 7x Dupont/Dupont-cut 0.1" jumper wires (<5cm), 3x 10k resistors
+- Parts: 5x Dupont/Dupont-cut 0.1" jumper wires (<5cm), 2x 10k resistors
 
-## 1. Pull-ups (3x 10k), all to U213 3V3
+## 1. Pull-ups (2x 10k), all to U213 3V3
 
 | U213 pin | via 10k to 3V3 |
 |---|---|
 | G9  | SDIO CMD |
 | G10 | SDIO D0  |
-| G13 | SDIO D3  |
 
 Piggyback the resistor on the Dupont connection at the U213 header pin
 (one female-to-male pair joined, resistor leg in the junction).
 
 ## 2. Wire matrix (U213 side → SuperMini side)
 
+**1-bit SDIO** — the SuperMini has no headers for C6 GPIO21–23
+(SDIO D1–D3), so `wifi-c6-failover.yaml` sets `bus_width: 1`; D1–D3
+stay unconnected and those U213 pins (G11–G13) remain spare.
+
 | U213 header | SuperMini pin | Function |
 |---|---|---|
 | G8  | GPIO19 | SDIO CLK (keep this wire short + away from others) |
 | G9  | GPIO18 | SDIO CMD (+10k to 3V3) |
 | G10 | GPIO20 | SDIO D0 (+10k to 3V3) |
-| G11 | GPIO21 | SDIO D1 |
-| G12 | GPIO22 | SDIO D2 |
-| G13 | GPIO23 | SDIO D3 (+10k to 3V3) |
 | 3V3 | 3V3    | logic supply |
 | GND | GND    | common ground (unsplittable) |
 
 Silkscreen note: some SuperMini variants alias GPIO20–23 to SPI
 `SCK/MO/MI`. Trust the number, not the alias.
+GP21/GP22/GP23 on the SuperMini stay unconnected.
 
 ## 3. Reserved-but-not-yet-wired
 
