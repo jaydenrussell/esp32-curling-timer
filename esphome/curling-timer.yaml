@@ -40,6 +40,10 @@ logger:
 # ---------------------------------------------------------------------
 # Networking: PoE Ethernet is primary; Wi-Fi (via the C6 SDIO
 # co-processor) is failover; the AP hotspot is last-resort setup mode.
+#
+# Ethernet-only build (no C6 co-processor wired yet): comment out BOTH
+# `esp32_hosted:` and `wifi:` blocks below — everything else is
+# unchanged and diagnostics sensors still report the live link.
 # ---------------------------------------------------------------------
 ethernet:
   # M5Stack Unit PoE-P4: PHY IP101GRI @ address 1
@@ -74,6 +78,28 @@ wifi:
   ap:
     ssid: "Curling-Timer-Setup"
     password: !secret ap_password
+
+# ---------------------------------------------------------------------
+# Link diagnostics — which network path is actually up.
+# Ethernet is primary whenever its link is connected; Wi-Fi (C6) is
+# failover; the AP hotspot is last-resort.
+# ---------------------------------------------------------------------
+binary_sensor:
+  - platform: template
+    name: "Ethernet Connected"
+    id: ethernet_up
+    device_class: connectivity
+    entity_category: diagnostic
+    lambda: |-
+      return ethernet::global_eth_component->is_connected();
+
+  - platform: template
+    name: "Wi-Fi Connected"
+    id: wifi_up
+    device_class: connectivity
+    entity_category: diagnostic
+    lambda: |-
+      return wifi::global_wifi_component->is_connected();
 
 # ---------------------------------------------------------------------
 # Services
@@ -123,9 +149,25 @@ text_sensor:
   - platform: version
     name: "Firmware Version"
 
+  - platform: template
+    name: "Active Link"
+    id: active_link
+    entity_category: diagnostic
+    update_interval: 5s
+    lambda: |-
+      if (ethernet::global_eth_component->is_connected())
+        return {"ethernet"};
+      if (wifi::global_wifi_component->is_connected())
+        return {"wifi"};
+      return {"none"};
+
 sensor:
   - platform: uptime
     name: "Uptime"
+
+  - platform: wifi_signal
+    name: "Wi-Fi RSSI"
+    update_interval: 30s
 
 # =====================================================================
 # WIP — enable as external_components land (in implementation order):
