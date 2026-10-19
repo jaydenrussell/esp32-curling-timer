@@ -10,17 +10,13 @@ operations. Do NOT plug the SuperMini's USB into anything after wiring.
   ESPHome-matched version, **standalone over its own USB**, verified it
   enumerates again after flash
 - U213 unpowered (unplug PoE), ethernet cable can stay connected
-- Parts: 5x Dupont/Dupont-cut 0.1" jumper wires (<5cm), 2x 10k resistors
+- Parts: 5x Dupont/Dupont-cut 0.1" jumper wires (<5cm)
 
-## 1. Pull-ups (2x 10k), all to U213 3V3
-
-| U213 pin | via 10k to 3V3 |
-|---|---|
-| G9  | SDIO CMD |
-| G10 | SDIO D0  |
-
-Piggyback the resistor on the Dupont connection at the U213 header pin
-(one female-to-male pair joined, resistor leg in the junction).
+**No external pull-up resistors needed.** The C6 slave firmware
+(`sdio_slave_initialize()`) enables the internal (~45k) pull-ups on
+CMD/D0; the lines are push-pull during transactions, so internal PUs
+only define idle level. If SDIO init shows CRC/timing errors, add
+`sdio_frequency: 20MHz` before suspecting wiring.
 
 ## 2. Wire matrix (U213 side → SuperMini side)
 
@@ -71,7 +67,7 @@ package and add the wire |
 ## 6. Troubleshooting quick hits
 
 - **SDIO errors / transport never mounts** — swap CMD/CLK wire (most
-  common mis-wire), re-check pull-ups seated
+  common mis-wire), or add `sdio_frequency: 20MHz`
 - **Wi-Fi never scans** — version mismatch between `network_adapter.bin`
   and ESPHome's esp_hosted; re-download the matching release (flash-c6.md)
 - **Works, then hangs after hours** — wire EN→G27 with `reset_pin:` so
