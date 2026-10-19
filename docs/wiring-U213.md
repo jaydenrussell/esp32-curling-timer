@@ -16,14 +16,22 @@ microSD slot stays unused, freeing the 4-bit SDIO bus for Wi-Fi).
 
 ## Ethernet PHY (primary network)
 
-| Signal | P4 pin |
-|---|---|
-| PHY type | IP101 (IP101GRI) |
-| PHY address | 1 |
-| MDC | GPIO31 |
-| MDIO | GPIO52 |
-| PHY power | GPIO51 |
-| RMII ref clock | external 50MHz in (`clk_mode: GPIO0_IN`) |
+M5Stack official U213 pin map — RMII data pads are fixed by chip IOMUX.
+
+| Signal | P4 pin | Note |
+|---|---|---|
+| PHY type | IP101 (IP101GRI) | driver `type: IP101` |
+| PHY address | 1 | |
+| SMI MDC | GPIO31 | |
+| SMI MDIO | GPIO52 | |
+| PHY reset | GPIO51 | ESPHome `power_pin` |
+| RMII RXDV | GPIO28 | fixed pad |
+| RMII RXD0 | GPIO29 | fixed pad |
+| RMII RXD1 | GPIO30 | fixed pad |
+| RMII TXD0 | GPIO34 | fixed pad (boot-strapping pin) |
+| RMII TXD1 | GPIO35 | fixed pad (boot-strapping pin) |
+| RMII TXEN | GPIO49 | fixed pad |
+| RMII REF_CLK in | **GPIO50** | only GPIO32/44/50 are valid clock-input pads |
 
 ## Display add-on (U221 — LT8912B MIPI-DSI → HDMI)
 

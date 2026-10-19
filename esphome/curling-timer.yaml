@@ -50,14 +50,15 @@ logger:
 #   wifi_addon: !include wifi-c6-failover.yaml
 # ---------------------------------------------------------------------
 ethernet:
-  # M5Stack Unit PoE-P4: PHY IP101GRI @ address 1
+  # M5Stack Unit PoE-P4: PHY IP101GRI @ address 1 (per M5Stack U213 pin map)
+  # RXDV=G28 RXD0=G29 RXD1=G30 TXD0=G34 TXD1=G35 TXEN=G49 RMII_CLK=G50
   type: IP101
   phy_addr: 1
   mdc_pin: GPIO31
   mdio_pin: GPIO52
   power_pin: GPIO51
   clk:
-    pin: GPIO0
+    pin: GPIO50
     mode: CLK_EXT_IN
 
 # ---------------------------------------------------------------------
