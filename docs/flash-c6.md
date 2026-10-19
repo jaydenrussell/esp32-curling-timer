@@ -7,17 +7,21 @@ SuperMini's USB-C; after that only the P4 talks to it.
 ## 1. Version-matched binary — already in this repo
 
 `firmware/network_adapter_esp32c6.bin` is Espressif's prebuilt slave
-firmware from the `esphome/esp-hosted-firmware` release **v2.12.13**
-(built with ESP-IDF v5.5.5), which is exactly what ESPHome 2026.9.1
-builds the P4 host with. SHA256:
+firmware from the `esphome/esp-hosted-firmware` release **v2.12.12**,
+which matches the `espressif/esp_hosted` version that ESPHome 2026.9.1's
+`esp32_hosted` component pins in its `to_code`. Host and co-processor
+**must** match; a mismatched pair fails the SDIO handshake inside
+`esp_wifi_start`, which can trap the P4 in a boot loop. SHA256:
 
 ```
-09e4ed4ff648444ad045c1d934825af407648f58898586ce9f4275e53fdb23f6
+bad97ce81e7fcf5f3365898f633b80941ae863db9c754d87a78f89c8f61f2e94
 ```
 
 If ESPHome is ever upgraded, re-download the matching release tag from
-<https://github.com/esphome/esp-hosted-firmware/releases> (tag should
-equal the `espressif/esp_hosted` version ESPHome pins).
+<https://github.com/esphome/esp-hosted-firmware/releases> and cross-check
+the `esp32.add_idf_component(name="espressif/esp_hosted", ref=...)` line
+in the ESPHome install's `components/esp32_hosted/__init__.py` — the tag
+must equal that `ref`.
 
 ## 2. Flash (Windows)
 
