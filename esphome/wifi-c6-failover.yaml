@@ -13,11 +13,13 @@ esp32_hosted:
   variant: ESP32C6
   type: SDIO
   bus_width: 1     # SuperMini is headerless on C6 D1-D3 (GPIO21-23) — 1-bit SDIO needs only CLK/CMD/D0
-  clk_pin: GPIO8   # C6 GPIO19 (SDIO_CLK)
-  cmd_pin: GPIO9   # C6 GPIO18 (SDIO_CMD)
-  d0_pin: GPIO10   # C6 GPIO20 (SDIO_D0)
+  clk_pin: GPIO40  # Hat2-Bus pin 10 (C6 GPIO19, SDIO_CLK)
+  cmd_pin: GPIO39  # Hat2-Bus pin 12 (C6 GPIO18, SDIO_CMD)
+  d0_pin: GPIO41   # Hat2-Bus pin 8  (C6 GPIO20, SDIO_D0)
+  # 20MHz through flying wires + GPIO matrix; raise to 40MHz once stable
+  sdio_frequency: 20MHz
   active_high: true
-  reset_pin: GPIO27  # C6 EN via U213 USB1_DP pad; wire later, NC is harmless
+  reset_pin: GPIO27  # C6 EN via SDIO-Bus pin 7 (USB1_DP); wire later, NC is harmless
   use_psram: true
 
 wifi:

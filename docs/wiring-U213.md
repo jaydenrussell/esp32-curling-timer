@@ -115,24 +115,34 @@ are 5V; easy to miswire against the 1.6× larger 9P SDIO header.
 
 Relay 1 (`relay_bell_ring`) keys the 24VAC bell circuit; relay 2 aux.
 
-## ESP32-C6 SuperMini (Wi-Fi co-processor)
+## ESP32-C6 SuperMini (Wi-Fi co-processor) — wired on the **Hat2-Bus**
+
+The HDMI add-on physically occupies the SDIO-Bus/ISP-Bus header area, so
+the C6 link lands on the Hat2-Bus (2.54-16P, top of unit). P4 host SDMMC
+slot 1 is fully GPIO-matrixable (IDF `sd_host_sdmmc.c`), and G39/G40/G41
+are claimed by no other U213 peripheral; RMII stays on G28/29/30/34/35/
+49/50.
 
 Chip fixed mapping — SDIO slave IOs are always GPIO18–23 on the C6.
 
-| C6 SuperMini pin | U213 pin | Function | Extra |
+| C6 SuperMini pin | Hat2-Bus pin | P4 GPIO | Function |
 |---|---|---|---|
-| GPIO19 | G8 (SDIO-Bus 6) | SDIO CLK | shortest wire |
-| GPIO18 | G9 (SDIO-Bus 5) | SDIO CMD | 1-bit mode |
-| GPIO20 | G10 (SDIO-Bus 4) | SDIO D0 | 1-bit mode |
-| 3V3 | ISP-Bus pin 6 (3V3) | logic rail | only supply path |
-| GND | GND (ISP-Bus 1) | common ground | mandatory |
-| EN | GPIO27 (SDIO-Bus 7) | P4 can hard-reset C6 | optional; config already reserves it |
-| USB-C | bench only | first flash of `network_adapter.bin` | see docs/flash-c6.md |
+| GPIO19 | 10 | GPIO40 | SDIO CLK (shortest wire) |
+| GPIO18 | 12 | GPIO39 | SDIO CMD |
+| GPIO20 | 8 | GPIO41 | SDIO D0 |
+| 3V3 | 13 | — | logic supply (left row) |
+| GND | 1 | — | common ground (left row) |
 
-Bus runs **1-bit SDIO** (`bus_width: 1` in `wifi-c6-failover.yaml`) because
-the SuperMini lacks headers on C6 GPIO21–23. C6 GPIO21/22/23 and U213
-pins G11–G13 stay unconnected. Internal ~45k pull-ups (enabled by the C6
-slave firmware) hold CMD/D0 idle-high; no external resistors.
+Bus runs **1-bit SDIO** (`bus_width: 1`): the SuperMini lacks headers on
+C6 GPIO21–23, and the slave firmware's internal ~45k pull-ups hold
+CMD/D0 idle-high — no external resistors. `sdio_frequency: 20MHz`
+initially; raise to 40MHz once stable.
+
+**Future 4-bit upgrade:** add SM GP21/G22/G23 → Hat2 pin 6 (G42) /
+pin 4 (G43) / pin 2 (G44), set `bus_width: 4` + `d1/d2/d3_pin`. The
+whole 4-bit bus then rides one contiguous right-row strip (pins 2–12).
+
+Hat2-Bus pins 3 and 15 are 5V — never route them to the SuperMini.
 
 Rules: wires under 5cm, all grounds common, inspect every joint before
 applying 5V. Silkscreen on SuperMini variants may label GPIOs 20–23 as

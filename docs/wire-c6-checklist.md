@@ -18,19 +18,20 @@ CMD/D0; the lines are push-pull during transactions, so internal PUs
 only define idle level. If SDIO init shows CRC/timing errors, add
 `sdio_frequency: 20MHz` before suspecting wiring.
 
-## 2. Wire matrix (U213 side → SuperMini side)
+## 2. Wire matrix (U213 Hat2-Bus → SuperMini)
 
-**1-bit SDIO** — the SuperMini has no headers for C6 GPIO21–23
-(SDIO D1–D3), so `wifi-c6-failover.yaml` sets `bus_width: 1`; D1–D3
-stay unconnected and those U213 pins (G11–G13) remain spare.
+**1-bit SDIO** on the Hat2-Bus (the HDMI add-on occupies the SDIO-Bus/
+ISP-Bus area). Hat2-Bus pin numbering: LEFT column pins 1,3,5,7,9,11,
+13,15 = GND,5V,G21,G20,G19,NC,3V3,5V; RIGHT column pins 2,4,6,8,10,12,
+14,16 = G44,G43,G42,G41,G40,G39,G23,G22.
 
-| U213 header | SuperMini pin | Function |
+| U213 Hat2-Bus | SuperMini pin | Function |
 |---|---|---|
-| G8  | GPIO19 | SDIO CLK (keep this wire short + away from others) |
-| G9  | GPIO18 | SDIO CMD (+10k to 3V3) |
-| G10 | GPIO20 | SDIO D0 (+10k to 3V3) |
-| 3V3 | 3V3    | logic supply |
-| GND | GND    | common ground (unsplittable) |
+| Pin 10 (G40) | GPIO19 | SDIO CLK (keep this wire short + away from others) |
+| Pin 12 (G39) | GPIO18 | SDIO CMD |
+| Pin 8 (G41)  | GPIO20 | SDIO D0 |
+| Pin 13 (3V3) | 3V3    | logic supply — never Hat2 pins 3 or 15 (5V) |
+| Pin 1 (GND)  | GND    | common ground (unsplittable) |
 
 Silkscreen note: some SuperMini variants alias GPIO20–23 to SPI
 `SCK/MO/MI`. Trust the number, not the alias.
