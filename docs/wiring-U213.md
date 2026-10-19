@@ -48,33 +48,61 @@ Supported modes: **1280x720@60** (default, chosen) or 1920x1080@30.
 Connection is the 24P FPC to P4 MIPI-DSI 2-lane. No stock ESPHome driver
 for the LT8912B — provided by `external_components/lt8912b`.
 
-## SDIO header (Wi-Fi co-processor bus)
+## SDIO-Bus header (Wi-Fi co-processor bus) — 2.54-9P
 
-2.54mm 9-pin header on the bottom edge. SDIO bus runs on G8–G13;
-USB1 pads double as free GPIO if USB1 is unused.
+Confirmed against the official M5Stack Unit PoE-P4 PinMap (`docs.m5stack.com/en/unit/Unit_PoE-P4`).
+On the P4 host the SDMMC slot pins go through GPIO matrix, so G8–G13 are our
+routing choice (same choice M5Stack uses on Tab5).
 
 | Header pin | P4 GPIO | Used for |
 |---|---|---|
-| G8 | GPIO8 | SDIO CLK |
-| G9 | GPIO9 | SDIO CMD |
-| G10 | GPIO10 | SDIO D0 |
-| G11 | GPIO11 | SDIO D1 |
-| G12 | GPIO12 | SDIO D2 |
-| G13 | GPIO13 | SDIO D3 |
-| USB1_DP | GPIO27 | spare (C6 EN reset wire, optional) |
-| USB1_DM | GPIO26 | spare |
-| 5V | — | 5V rail |
+| 1 | GPIO13 | spare (D3, unused in 1-bit SDIO) |
+| 2 | GPIO12 | spare (D2, unused in 1-bit SDIO) |
+| 3 | GPIO11 | spare (D1, unused in 1-bit SDIO) |
+| 4 | GPIO10 | SDIO D0 |
+| 5 | GPIO9 | SDIO CMD |
+| 6 | GPIO8 | SDIO CLK |
+| 7 | GPIO27 | USB1_DP — C6 EN reset wire, optional |
+| 8 | GPIO26 | USB1_DM spare |
+| 9 | — | **5V rail — never feed the SuperMini from here** |
 
-## ISP header (first-flash / recovery)
+## ISP-Bus header — 2.54-6P
 
-| Signal | Note |
-|---|---|
-| GND | common ground |
-| BOOT | GPIO35 |
-| RST | reset pad |
-| U0RX | GPIO28 |
-| U0TX | GPIO37 |
-| 3V3 | logic rail |
+| Header pin | Signal | Note |
+|---|---|---|
+| 1 | GND | common ground |
+| 2 | GPIO35 | BOOT label |
+| 3 | RST | P4 reset |
+| 4 | GPIO38 | UART0 RX |
+| 5 | GPIO37 | UART0 TX |
+| 6 | **3V3** | **logic rail — the SuperMini's 3V3 feed comes from here** |
+
+## Hat2-Bus — 2.54-16P (top of unit)
+
+Expansion bus for future M5 hats. **Not for the C6** — despite G19–G23
+being present, keep the SDIO link on the SDIO-Bus above. Two of its pins
+are 5V; easy to miswire against the 1.6× larger 9P SDIO header.
+
+| Pin L | Pin | Pin R | Pin |
+|---|---|---|---|
+| 1 GND | 2 G44 | | |
+| 3 5V | 4 G43 | | |
+| 5 G21 | 6 G42 | | |
+| 7 G20 | 8 G41 | | |
+| 9 G19 | 10 G40 | | |
+| 11 NC | 12 G39 | | |
+| 13 3V3 | 14 G23 | | |
+| 15 5V | 16 G22 | | |
+
+## Onboard indicators
+
+| Signal | P4 pin | Note |
+|---|---|---|
+| IR transmitter | GPIO14 | IR_TX, MHS153IRCT |
+| RGB LED green | GPIO15 | |
+| RGB LED blue | GPIO16 | |
+| RGB LED red | GPIO17 | ESPHome `status_led` / bench blinky |
+| User button | GPIO45 | KEY_USER |
 
 ## Relay (Unit 2Relay, Grove Port B — HY2.0-4P)
 
@@ -93,16 +121,18 @@ Chip fixed mapping — SDIO slave IOs are always GPIO18–23 on the C6.
 
 | C6 SuperMini pin | U213 pin | Function | Extra |
 |---|---|---|---|
-| GPIO19 | G8 | SDIO CLK | — |
-| GPIO18 | G9 | SDIO CMD | 10k pull-up to 3V3 |
-| GPIO20 | G10 | SDIO D0 | 10k pull-up to 3V3 |
-| GPIO21 | G11 | SDIO D1 | — |
-| GPIO22 | G12 | SDIO D2 | — |
-| GPIO23 | G13 | SDIO D3 | 10k pull-up to 3V3 |
-| EN | GPIO27 (USB1_DP pad) | P4 can hard-reset C6 | optional but recommended |
-| 3V3 | 3V3 | logic rail | — |
-| GND | GND | common ground | mandatory |
+| GPIO19 | G8 (SDIO-Bus 6) | SDIO CLK | shortest wire |
+| GPIO18 | G9 (SDIO-Bus 5) | SDIO CMD | 1-bit mode |
+| GPIO20 | G10 (SDIO-Bus 4) | SDIO D0 | 1-bit mode |
+| 3V3 | ISP-Bus pin 6 (3V3) | logic rail | only supply path |
+| GND | GND (ISP-Bus 1) | common ground | mandatory |
+| EN | GPIO27 (SDIO-Bus 7) | P4 can hard-reset C6 | optional; config already reserves it |
 | USB-C | bench only | first flash of `network_adapter.bin` | see docs/flash-c6.md |
+
+Bus runs **1-bit SDIO** (`bus_width: 1` in `wifi-c6-failover.yaml`) because
+the SuperMini lacks headers on C6 GPIO21–23. C6 GPIO21/22/23 and U213
+pins G11–G13 stay unconnected. Internal ~45k pull-ups (enabled by the C6
+slave firmware) hold CMD/D0 idle-high; no external resistors.
 
 Rules: wires under 5cm, all grounds common, inspect every joint before
 applying 5V. Silkscreen on SuperMini variants may label GPIOs 20–23 as
