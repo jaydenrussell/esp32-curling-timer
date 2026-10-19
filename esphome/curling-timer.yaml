@@ -22,6 +22,10 @@ esphome:
 
 esp32:
   variant: esp32p4
+  # First bench boot showed "Chip Revision: 103" (v1.3) — pre-rev3
+  # engineering sample silicon; required so the build targets rev<3.0
+  engineering_sample: true
+  cpu_frequency: 360MHz
   flash_size: 16MB
   framework:
     type: esp-idf
@@ -79,6 +83,9 @@ ota:
 web_server:
   port: 80
   auth:
+    # digest avoids sending the password over the network in a
+    # reversible form (ESPHome deprecates basic in 2027.1)
+    type: digest
     username: admin
     password: !secret web_password
 
