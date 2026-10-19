@@ -11,7 +11,7 @@
 
 esp32_hosted:
   variant: ESP32C6
-  type: SDIO
+  type: sdio
   bus_width: 1     # SuperMini is headerless on C6 D1-D3 (GPIO21-23) — 1-bit SDIO needs only CLK/CMD/D0
   clk_pin: GPIO40  # Hat2-Bus pin 10 (C6 GPIO19, SDIO_CLK)
   cmd_pin: GPIO39  # Hat2-Bus pin 12 (C6 GPIO18, SDIO_CMD)
@@ -56,3 +56,11 @@ sensor:
   - platform: wifi_signal
     name: "Wi-Fi RSSI"
     update_interval: 30s
+
+network:
+  # ethernet is the default route; wifi (C6 SDIO co-processor) takes over on failover
+  # Required since ESPHome 2026.9: both interfaces configured must set an order
+  priority:
+    - ethernet
+    - wifi
+
