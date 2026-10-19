@@ -102,9 +102,10 @@ SPI `SCK/MO/MI` — same pins, check the number, not the alias.
 
 ## Bring-up order
 
-1. U213 + U221 bench, flash minimal config (this yaml without wifi block)
+1. U213 + U221 bench, flash minimal config (ethernet-only default —
+   Wi-Fi is an optional package and not needed for this step)
 2. Add SuperMini C6, flash `network_adapter.bin` over its USB-C (docs/flash-c6.md),
-   then enable `esp32_hosted:` and `wifi:` blocks
+   then enable the `wifi_addon` package in `curling-timer.yaml`
 3. Confirm both ethernet and Wi-Fi come up, remove the bench flash cable
 4. Wire Relay card + 24VAC test load
 5. Enable `external_components` WIP blocks (display → engine → UI → editor)

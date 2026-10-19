@@ -28,8 +28,9 @@ esptool.py --chip esp32c6 --port COMx --baud 921600 \
 
 1. Wire the SuperMini to the U213 header per `docs/wiring-U213.md`
    (six SDIO wires + 3V3/GND, optional EN→GPIO27).
-2. Enable `esp32_hosted:` and `wifi:` in the YAML (already in
-   `esphome/curling-timer.yaml`), build and flash the P4.
+2. Enable the Wi-Fi package in `esphome/curling-timer.yaml`:
+   `packages: { wifi_addon: !include wifi-c6-failover.yaml }`, build
+   and flash the P4.
 3. On boot, logs should show the C6 joining your Wi-Fi and SDIO transport
    coming up. Ethernet and Wi-Fi both respond; Ethernet stays primary.
 

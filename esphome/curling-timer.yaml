@@ -38,12 +38,12 @@ logger:
   level: INFO
 
 # ---------------------------------------------------------------------
-# Networking: PoE Ethernet is primary; Wi-Fi (via the C6 SDIO
-# co-processor) is failover; the AP hotspot is last-resort setup mode.
+# Networking: PoE Ethernet is the default and only requirement.
+# Wi-Fi (via the C6 SDIO co-processor) is an OPTIONAL add-on package —
+# add it only when the SuperMini C6 is wired and flashed:
 #
-# Ethernet-only build (no C6 co-processor wired yet): comment out BOTH
-# `esp32_hosted:` and `wifi:` blocks below — everything else is
-# unchanged and diagnostics sensors still report the live link.
+# packages:
+#   wifi_addon: !include wifi-c6-failover.yaml
 # ---------------------------------------------------------------------
 ethernet:
   # M5Stack Unit PoE-P4: PHY IP101GRI @ address 1
@@ -54,30 +54,6 @@ ethernet:
   power_pin: GPIO51
   # RMII 50MHz reference clock is fed in from the board's clock circuit
   clk_mode: GPIO0_IN
-
-esp32_hosted:
-  # ESP32-C6 SuperMini wired to the U213 SDIO header — see docs/wiring-U213.md
-  variant: ESP32C6
-  type: SDIO
-  clk_pin: GPIO8    # C6 GPIO19 (SDIO_CLK)
-  cmd_pin: GPIO9    # C6 GPIO18 (SDIO_CMD)
-  d0_pin: GPIO10    # C6 GPIO20 (SDIO_D0)
-  d1_pin: GPIO11    # C6 GPIO21 (SDIO_D1)
-  d2_pin: GPIO12    # C6 GPIO22 (SDIO_D2)
-  d3_pin: GPIO13    # C6 GPIO23 (SDIO_D3)
-  use_psram: true
-
-# Enable this once the C6 EN pin is routed to a U213 GPIO (USB1_DP pad
-# works when USB1 is unused) so the P4 can hard-reset a stuck C6:
-#   reset_pin: GPIO27
-
-wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
-  power_save_mode: none
-  ap:
-    ssid: "Curling-Timer-Setup"
-    password: !secret ap_password
 
 # ---------------------------------------------------------------------
 # Link diagnostics — which network path is actually up.
@@ -92,14 +68,6 @@ binary_sensor:
     entity_category: diagnostic
     lambda: |-
       return ethernet::global_eth_component->is_connected();
-
-  - platform: template
-    name: "Wi-Fi Connected"
-    id: wifi_up
-    device_class: connectivity
-    entity_category: diagnostic
-    lambda: |-
-      return wifi::global_wifi_component->is_connected();
 
 # ---------------------------------------------------------------------
 # Services
@@ -149,25 +117,9 @@ text_sensor:
   - platform: version
     name: "Firmware Version"
 
-  - platform: template
-    name: "Active Link"
-    id: active_link
-    entity_category: diagnostic
-    update_interval: 5s
-    lambda: |-
-      if (ethernet::global_eth_component->is_connected())
-        return {"ethernet"};
-      if (wifi::global_wifi_component->is_connected())
-        return {"wifi"};
-      return {"none"};
-
 sensor:
   - platform: uptime
     name: "Uptime"
-
-  - platform: wifi_signal
-    name: "Wi-Fi RSSI"
-    update_interval: 30s
 
 # =====================================================================
 # WIP — enable as external_components land (in implementation order):

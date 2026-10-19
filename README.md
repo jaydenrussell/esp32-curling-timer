@@ -15,7 +15,7 @@ Python to ESPHome / ESP32-P4.
 | M5Stack Unit PoE-P4 (U213) | Main controller: ESP32-P4NRW32, 16MB flash + 32MB PSRAM, IP101 Ethernet PHY, PoE |
 | M5Stack Add-On Display Out for PoE-P4 (U221) | LT8912B MIPI-DSI → HDMI, 1280×720@60 |
 | M5Stack Unit 2Relay (Grove Port B) | Relay 1 keys 24VAC bell; relay 2 aux |
-| ESP32-C6 SuperMini | Wi-Fi co-processor on the U213 SDIO header (`G8–G13`) |
+| ESP32-C6 SuperMini *(optional)* | Wi-Fi 6 failover co-processor on the U213 SDIO header (`G8–G13`) |
 
 All pin maps: [`docs/wiring-U213.md`](docs/wiring-U213.md).
 C6 first flash: [`docs/flash-c6.md`](docs/flash-c6.md).
@@ -38,6 +38,11 @@ cp esphome/secrets.yaml.example esphome/secrets.yaml
 $EDITOR esphome/secrets.yaml
 esphome compile esphome/curling-timer.yaml
 ```
+
+Ethernet-only is the default build: no C6 needed to get ethernet,
+relays, OTA and the web UI. To add Wi-Fi, wire + flash the SuperMini
+C6 (`docs/flash-c6.md`) and enable the package in
+`esphome/curling-timer.yaml`.
 
 First hardware flash is over the U213 USB-C; later updates go OTA or
 over Ethernet.
