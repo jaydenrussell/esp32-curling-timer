@@ -1,0 +1,145 @@
+# =====================================================================
+# ESP32 Curling Timer
+# M5Stack Unit PoE-P4 (U213) + Add-On Display Out LT8912B HDMI (U221)
+# + M5Stack Unit 2Relay (HY2.0-4P, GPIO control) + ESP32-C6 (SuperMini)
+#   SDIO co-processor for Wi-Fi 6
+#
+# Port of the rpi-buzzer / pitimer firmware (v2.4.4) to ESPHome.
+#
+# v0 bring-up: stock components only (compiles clean, no custom code).
+# Display / schedule-engine / web-editor arrive via external_components/
+# and are enabled by uncommenting the marked WIP blocks below.
+# =====================================================================
+
+substitutions:
+  # IANA timezone, e.g. "America/New_York" — see docs/BUILD.md
+  timezone: "Etc/GMT"
+
+esphome:
+  name: curling-timer
+  friendly_name: Curling Timer
+  name_add_mac_suffix: false
+
+esp32:
+  variant: esp32p4
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    advanced:
+      execute_from_psram: true
+
+psram:
+  mode: octal
+  speed: 200MHz
+
+logger:
+  # USB Serial/JTAG on the U213 USB-C port is the bench console.
+  hardware_uart: USB_SERIAL_JTAG
+  level: INFO
+
+# ---------------------------------------------------------------------
+# Networking: PoE Ethernet is primary; Wi-Fi (via the C6 SDIO
+# co-processor) is failover; the AP hotspot is last-resort setup mode.
+# ---------------------------------------------------------------------
+ethernet:
+  # M5Stack Unit PoE-P4: PHY IP101GRI @ address 1
+  type: IP101
+  phy_addr: 1
+  mdc_pin: GPIO31
+  mdio_pin: GPIO52
+  power_pin: GPIO51
+  # RMII 50MHz reference clock is fed in from the board's clock circuit
+  clk_mode: GPIO0_IN
+
+esp32_hosted:
+  # ESP32-C6 SuperMini wired to the U213 SDIO header — see docs/wiring-U213.md
+  variant: ESP32C6
+  type: SDIO
+  clk_pin: GPIO8    # C6 GPIO19 (SDIO_CLK)
+  cmd_pin: GPIO9    # C6 GPIO18 (SDIO_CMD)
+  d0_pin: GPIO10    # C6 GPIO20 (SDIO_D0)
+  d1_pin: GPIO11    # C6 GPIO21 (SDIO_D1)
+  d2_pin: GPIO12    # C6 GPIO22 (SDIO_D2)
+  d3_pin: GPIO13    # C6 GPIO23 (SDIO_D3)
+  use_psram: true
+
+# Enable this once the C6 EN pin is routed to a U213 GPIO (USB1_DP pad
+# works when USB1 is unused) so the P4 can hard-reset a stuck C6:
+#   reset_pin: GPIO27
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  power_save_mode: none
+  ap:
+    ssid: "Curling-Timer-Setup"
+    password: !secret ap_password
+
+# ---------------------------------------------------------------------
+# Services
+# ---------------------------------------------------------------------
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+web_server:
+  port: 80
+  auth:
+    username: admin
+    password: !secret web_password
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: ${timezone}
+    servers:
+      - time.cloudflare.com
+      - pool.ntp.org
+    on_time_sync:
+      then:
+        - logger.log: "Time synchronized"
+
+# ---------------------------------------------------------------------
+# M5Stack Unit 2Relay — wired to Grove Port B (HY2.0-4P: G53, G54, 5V, GND)
+# Manual LED-on = relay closed. Drives the 24VAC bell circuit.
+# ---------------------------------------------------------------------
+switch:
+  - platform: gpio
+    name: "Bell Relay 1"
+    id: relay_bell_ring
+    pin: GPIO53
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: "Bell Relay 2"
+    id: relay_aux
+    pin: GPIO54
+    restore_mode: RESTORE_DEFAULT_OFF
+
+# ---------------------------------------------------------------------
+# Diagnostics
+# ---------------------------------------------------------------------
+text_sensor:
+  - platform: version
+    name: "Firmware Version"
+
+sensor:
+  - platform: uptime
+    name: "Uptime"
+
+# =====================================================================
+# WIP — enable as external_components land (in implementation order):
+#
+# 1. LT8912B HDMI display driver (1280x720@60 via MIPI-DSI):
+# external_components:
+#   - source: local/external_components
+#     components: [lt8912b, curling_engine, web_editor]
+#
+# 2. Schedule engine (validation, buzz rules, NVS store):
+# curling_engine:
+#   store_path: /flash/data
+#
+# 3. LVGL countdown UI on the HDMI screen.
+#
+# 4. Web schedule editor (REST + HTML like pitimer web.py).
+# =====================================================================

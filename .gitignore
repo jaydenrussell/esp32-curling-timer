@@ -1,0 +1,12 @@
+# ESPHome build artifacts and secrets
+esphome/secrets.yaml
+.esphome/
+build/
+*.esphome*
+
+__pycache__/
+*.pyc
+*.egg-info/
+
+.vscode/
+.idea/
