@@ -13,7 +13,7 @@
 
 substitutions:
   # IANA timezone, e.g. "America/New_York" — see docs/BUILD.md
-  timezone: "Etc/GMT"
+  timezone: "America/Toronto"
 
 esphome:
   name: curling-timer
@@ -22,8 +22,8 @@ esphome:
 
 esp32:
   variant: esp32p4
-  # First bench boot showed "Chip Revision: 103" (v1.3) — pre-rev3
-  # engineering sample silicon; required so the build targets rev<3.0
+  # First bench boot showed "Chip Revision: 103" (v1.3) on the U213 —
+  # pre-rev3 silicon; required so the build targets rev<3.0
   engineering_sample: true
   cpu_frequency: 360MHz
   flash_size: 16MB
@@ -33,7 +33,7 @@ esp32:
       execute_from_psram: true
 
 psram:
-  mode: octal
+  # ESP32-P4 only supports hex mode in ESPHome (2026.9.1)
   speed: 200MHz
 
 logger:
@@ -56,8 +56,9 @@ ethernet:
   mdc_pin: GPIO31
   mdio_pin: GPIO52
   power_pin: GPIO51
-  # RMII 50MHz reference clock is fed in from the board's clock circuit
-  clk_mode: GPIO0_IN
+  clk:
+    pin: GPIO0
+    mode: CLK_EXT_IN
 
 # ---------------------------------------------------------------------
 # Link diagnostics — which network path is actually up.
@@ -78,13 +79,14 @@ binary_sensor:
 # ---------------------------------------------------------------------
 ota:
   - platform: esphome
-    password: !secret ota_password
+  # TODO: add `password: !secret ota_password` before deployment on a
+  # shared/production network (bench convenience until then)
 
 web_server:
   port: 80
   auth:
-    # digest avoids sending the password over the network in a
-    # reversible form (ESPHome deprecates basic in 2027.1)
+    # digest avoids sending the password in a reversible form
+    # (ESPHome deprecates basic auth in 2027.1)
     type: digest
     username: admin
     password: !secret web_password
