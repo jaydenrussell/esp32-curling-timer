@@ -491,14 +491,15 @@ struct Parser {
       for (size_t i = begin; i < l.size(); i++) {
         char c = l[i];
         if (in_s) {
+          acc.push_back(c);
           if (c == '\'') {
             if (i + 1 < l.size() && l[i + 1] == '\'') {
               i++;
+              acc.push_back(l[i]);  // keep the '' escape pair for parse_flow
             } else {
               in_s = false;
             }
           }
-          acc.push_back(c);
           continue;
         }
         if (in_d) {
