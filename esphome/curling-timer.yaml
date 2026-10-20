@@ -134,16 +134,20 @@ sensor:
 # =====================================================================
 # WIP — enable as external_components land (in implementation order):
 #
-# 1. LT8912B HDMI display driver (1280x720@60 via MIPI-DSI):
+# 1. Schedule engine + web editor (source path is relative to this file):
 # external_components:
-#   - source: local/external_components
-#     components: [lt8912b, curling_engine, web_editor]
+#   - source: ../external_components
+#     components: [curling_engine, web_editor]
 #
-# 2. Schedule engine (validation, buzz rules, NVS store):
 # curling_engine:
-#   store_path: /flash/data
+#   store_path: /flash
 #
-# 3. LVGL countdown UI on the HDMI screen.
+# web_editor:
+#   password: !secret web_password
+#   port: 8080
 #
-# 4. Web schedule editor (REST + HTML like pitimer web.py).
+# 2. LVGL countdown UI on the HDMI screen.
+#
+# 3. LT8912B HDMI display driver (1280x720@60 via MIPI-DSI) — add
+#    lt8912b to `components:` above once its component lands.
 # =====================================================================
