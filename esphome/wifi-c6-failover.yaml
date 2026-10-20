@@ -57,6 +57,20 @@ sensor:
     name: "Wi-Fi RSSI"
     update_interval: 30s
 
+switch:
+  # Runtime on/off for the Wi-Fi path (esp32_hosted stays initialized;
+  # only STA/AP activity is torn down). State persists across reboots,
+  # defaulting to ON - flip OFF to skip Wi-Fi without reflashing.
+  - platform: template
+    name: "Wi-Fi"
+    id: wifi_toggle
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - wifi.enable:
+    turn_off_action:
+      - wifi.disable:
+
 network:
   # ethernet is the default route; wifi (C6 SDIO co-processor) takes over on failover
   # Required since ESPHome 2026.9: both interfaces configured must set an order
