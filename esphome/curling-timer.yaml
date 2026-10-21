@@ -6,8 +6,9 @@
 #
 # Port of the rpi-buzzer / pitimer firmware (v2.4.4) to ESPHome.
 #
-# Schedule engine + web editor are enabled below (external_components);
-# the display stack (LVGL + LT8912B) is still pending — see WIP blocks.
+# Schedule engine + web editor + LT8912B HDMI display are enabled below
+# (external_components); the LVGL countdown UI on top of the display is
+# still pending — see the block at the bottom.
 # =====================================================================
 
 substitutions:
@@ -144,7 +145,7 @@ sensor:
 # ---------------------------------------------------------------------
 external_components:
   - source: ../external_components
-    components: [curling_engine, web_editor]
+    components: [curling_engine, web_editor, lt8912b]
 
 curling_engine:
   store_path: /flash
@@ -153,11 +154,22 @@ web_editor:
   password: !secret web_password
   port: 8080
 
+# ---------------------------------------------------------------------
+# HDMI display: M5Stack Add-On Display Out LT8912B (U221), 1280x720@60.
+# esp_ldo powers the MIPI-DSI PHY (channel 3 @ 2.5V per M5GFX U221) —
+# lt8912b depends on it. First boot shows the ESPHome test card on HDMI;
+# the LVGL countdown UI lands next (WIP).
+# ---------------------------------------------------------------------
+esp_ldo:
+  - channel: 3
+    voltage: 2.5V
+
+lt8912b:
+  reset_pin: GPIO4
+  enable_pin: GPIO33
+  sda_pin: GPIO0
+  scl_pin: GPIO1
+
 # =====================================================================
-# WIP — remaining display stack (components not yet in the repo):
-#
-# 1. LVGL countdown UI on the HDMI screen.
-#
-# 2. LT8912B HDMI display driver (1280x720@60 via MIPI-DSI) — add
-#    lt8912b alongside the components above once it lands.
+# WIP - LVGL countdown UI on the HDMI screen (engine binding + widgets).
 # =====================================================================
