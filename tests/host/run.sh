@@ -9,6 +9,7 @@ WEB=../../external_components/web_editor
 g++ -std=c++20 -O1 -Wall -Wextra -Wno-unused-parameter -I. \
   "$ENGINE/settings.cpp" "$ENGINE/model.cpp" "$ENGINE/quickstart.cpp" \
   "$ENGINE/sha256.cpp" "$ENGINE/store.cpp" "$ENGINE/fs_std.cpp" \
+  "$ENGINE/config_edit.cpp" \
   "$WEB/auth.cpp" \
   test_*.cpp -o build/host_tests
 exec ./build/host_tests "$@"
