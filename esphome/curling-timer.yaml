@@ -6,7 +6,6 @@
 #
 # Port of the rpi-buzzer / pitimer firmware (v2.4.4) to ESPHome.
 #
-# v0 bring-up: stock components only (compiles clean, no custom code).
 # Schedule engine + web editor are enabled below (external_components);
 # the display stack (LVGL + LT8912B) is still pending — see WIP blocks.
 # =====================================================================
