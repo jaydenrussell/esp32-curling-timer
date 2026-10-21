@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 
+#include "bell.h"
 #include "esphome/components/time/real_time_clock.h"
 #include "esphome/core/component.h"
 #include "render.h"
@@ -17,7 +18,9 @@ namespace curling_engine {
 //   editor.py    — splice/model/quick start       (model.* / quickstart.*)
 //   SettingsStore — versioned atomic file saves   (store.* + fs_posix.cpp)
 //   web.py       — REST + auth                    (web_editor component)
-// Display/bell tick: display_snapshot below (render.* = pitimer display.py).
+// Display tick: display_snapshot (render.* = pitimer display.py draw_screen
+// prep). Bell tick: bell_due (bell.* = buzz_if_due), driving the Unit 2Relay
+// GPIO switches from the yaml side.
 //
 // Storage layout: partition label "storage" (added from __init__.py) mounted
 // at store_path_ (default /flash) holding pitimer_settings.yml + backups/.
@@ -57,6 +60,14 @@ class CurlingEngineComponent : public Component {
   // carries the red/yellow error screen state).
   bool display_snapshot(DisplaySnapshot *out);
 
+  // 1 Hz bell tick (pitimer buzz_if_due): rings once per (date, start) game
+  // when seconds_until_buzzer enters [-BUZZER_GRACE_SECONDS, 0]. Returns the
+  // BELL_RELAY_* bitmask from settings buzzer.relays (RELAY3/4 ignored), 0
+  // when nothing is due; on a non-zero return bell_duration_ms() is the
+  // buzzer.duration pulse length from the same settings read.
+  int bell_due();
+  uint32_t bell_duration_ms() const { return this->bell_duration_ms_; }
+
  protected:
   std::string store_path_{"/flash"};
   time::RealTimeClock *time_{nullptr};
@@ -65,6 +76,8 @@ class CurlingEngineComponent : public Component {
   bool ready_{false};
   int32_t wl_handle_{-1};  // wl_handle_t; FAT mount handle for unmount
   uint32_t last_error_log_ms_{0};  // throttle for repeated snapshot errors
+  std::string last_buzzed_key_;    // pitimer last_buzzed: (date, start) game
+  uint32_t bell_duration_ms_{0};   // set by bell_due() when it fires
 };
 
 }  // namespace curling_engine

@@ -126,5 +126,26 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
   return true;
 }
 
+int CurlingEngineComponent::bell_due() {
+  this->bell_duration_ms_ = 0;
+  if (!this->ready_)
+    return 0;
+  int weekday_mon0 = 0, seconds_of_day = 0;
+  std::string date_iso;
+  if (!this->local_now(&weekday_mon0, &seconds_of_day, &date_iso))
+    return 0;
+  PiTimerSettings settings;
+  std::string err;
+  if (!this->read_parsed(&settings, nullptr, nullptr, &err))
+    return 0;
+  auto game = settings.find_current_game(weekday_mon0, seconds_of_day, date_iso);
+  int mask = bell_check(settings, game, date_iso, &this->last_buzzed_key_,
+                        &this->bell_duration_ms_);
+  if (mask != 0)
+    ESP_LOGI(TAG, "bell due for %s: relays mask %d, %u ms", this->last_buzzed_key_.c_str(), mask,
+             static_cast<unsigned>(this->bell_duration_ms_));
+  return mask;
+}
+
 }  // namespace curling_engine
 }  // namespace esphome
