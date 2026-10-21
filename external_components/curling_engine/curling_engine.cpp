@@ -5,6 +5,7 @@
 #include "default_settings.h"
 #include "esp_err.h"
 #include "esp_vfs_fat.h"
+#include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -95,6 +96,33 @@ bool CurlingEngineComponent::read_parsed(PiTimerSettings *settings, std::string 
     *text = std::move(local_text);
   if (version != nullptr)
     *version = std::move(local_version);
+  return true;
+}
+
+bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
+  *out = DisplaySnapshot{};
+  int weekday_mon0 = 0, seconds_of_day = 0;
+  std::string date_iso;
+  bool clock_known = this->local_now(&weekday_mon0, &seconds_of_day, &date_iso);
+
+  PiTimerSettings settings;
+  std::string err;
+  if (!this->read_parsed(&settings, nullptr, nullptr, &err)) {
+    // pitimer display_error(): red fixed title + first line of the message.
+    out->header_text = "** ERROR: CHECK SETTINGS FILE **";
+    out->header_color = color_to_hex("red");
+    out->show_status = true;
+    size_t nl = err.find('\n');
+    out->status_text = err.substr(0, nl == std::string::npos ? err.size() : nl);
+    out->status_color = color_to_hex("yellow");
+    uint32_t now_ms = millis();
+    if (this->last_error_log_ms_ == 0 || now_ms - this->last_error_log_ms_ >= 30000) {
+      this->last_error_log_ms_ = now_ms;
+      ESP_LOGW(TAG, "display snapshot: settings invalid: %s", err.c_str());
+    }
+    return false;
+  }
+  *out = render_snapshot(settings, clock_known, weekday_mon0, seconds_of_day, date_iso);
   return true;
 }
 

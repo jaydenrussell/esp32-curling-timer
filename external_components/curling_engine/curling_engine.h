@@ -5,6 +5,7 @@
 
 #include "esphome/components/time/real_time_clock.h"
 #include "esphome/core/component.h"
+#include "render.h"
 #include "settings.h"
 #include "store.h"
 
@@ -16,7 +17,7 @@ namespace curling_engine {
 //   editor.py    — splice/model/quick start       (model.* / quickstart.*)
 //   SettingsStore — versioned atomic file saves   (store.* + fs_posix.cpp)
 //   web.py       — REST + auth                    (web_editor component)
-// Display/bell tick work stays with the display roadmap (plan: out of scope).
+// Display/bell tick: display_snapshot below (render.* = pitimer display.py).
 //
 // Storage layout: partition label "storage" (added from __init__.py) mounted
 // at store_path_ (default /flash) holding pitimer_settings.yml + backups/.
@@ -50,6 +51,12 @@ class CurlingEngineComponent : public Component {
   bool read_parsed(PiTimerSettings *settings, std::string *text, std::string *version,
                    std::string *err);
 
+  // 1 Hz display tick (LVGL interval action): fresh read+parse of the live
+  // settings + pitimer draw_screen data prep (render.cpp). Always fills *out;
+  // returns false when the settings file is unreadable/invalid (out then
+  // carries the red/yellow error screen state).
+  bool display_snapshot(DisplaySnapshot *out);
+
  protected:
   std::string store_path_{"/flash"};
   time::RealTimeClock *time_{nullptr};
@@ -57,6 +64,7 @@ class CurlingEngineComponent : public Component {
   std::unique_ptr<SettingsStore> store_;
   bool ready_{false};
   int32_t wl_handle_{-1};  // wl_handle_t; FAT mount handle for unmount
+  uint32_t last_error_log_ms_{0};  // throttle for repeated snapshot errors
 };
 
 }  // namespace curling_engine
