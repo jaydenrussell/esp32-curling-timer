@@ -1,0 +1,357 @@
+# =====================================================================
+# ESP32 Curling Timer
+# M5Stack Unit PoE-P4 (U213) + Add-On Display Out LT8912B HDMI (U221)
+# + M5Stack Unit 2Relay (HY2.0-4P, GPIO control) + ESP32-C6 (SuperMini)
+#   SDIO co-processor for Wi-Fi 6
+#
+# Port of the rpi-buzzer / pitimer firmware (v2.4.4) to ESPHome.
+#
+# Schedule engine + web editor + LT8912B HDMI display + LVGL countdown
+# UI are enabled below (external_components).
+#
+# THIS IS THE PASTE-READY VARIANT (git source) for the Home Assistant
+# ESPHome Device Builder add-on. Repo/CI builds use curling-timer.yaml.
+# =====================================================================
+
+substitutions:
+  # IANA timezone, e.g. "America/New_York" — see docs/BUILD.md
+  timezone: "America/Toronto"
+
+esphome:
+  name: curling-timer
+  friendly_name: Curling Timer
+  name_add_mac_suffix: false
+
+esp32:
+  variant: esp32p4
+  # First bench boot showed "Chip Revision: 103" (v1.3) on the U213 —
+  # pre-rev3 silicon; required so the build targets rev<3.0
+  engineering_sample: true
+  cpu_frequency: 360MHz
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+    advanced:
+      execute_from_psram: true
+
+psram:
+  # ESP32-P4 only supports hex mode in ESPHome (2026.9.1)
+  speed: 200MHz
+
+logger:
+  # USB Serial/JTAG on the U213 USB-C port is the bench console.
+  hardware_uart: USB_SERIAL_JTAG
+  level: INFO
+
+# ---------------------------------------------------------------------
+# Networking: PoE Ethernet is the default and only requirement.
+# Wi-Fi (via the C6 SDIO co-processor) is an OPTIONAL add-on package —
+# add it only when the SuperMini C6 is wired and flashed:
+#
+# packages:
+#   wifi_addon: !include wifi-c6-failover.yaml
+# ---------------------------------------------------------------------
+ethernet:
+  # M5Stack Unit PoE-P4: PHY IP101GRI @ address 1 (per M5Stack U213 pin map)
+  # RXDV=G28 RXD0=G29 RXD1=G30 TXD0=G34 TXD1=G35 TXEN=G49 RMII_CLK=G50
+  type: IP101
+  phy_addr: 1
+  mdc_pin: GPIO31
+  mdio_pin: GPIO52
+  power_pin: GPIO51
+  clk:
+    pin: GPIO50
+    mode: CLK_EXT_IN
+
+# ---------------------------------------------------------------------
+# Link diagnostics — which network path is actually up.
+# Ethernet is primary whenever its link is connected; Wi-Fi (C6) is
+# failover; the AP hotspot is last-resort.
+# ---------------------------------------------------------------------
+binary_sensor:
+  - platform: template
+    name: "Ethernet Connected"
+    id: ethernet_up
+    device_class: connectivity
+    entity_category: diagnostic
+    lambda: |-
+      return ethernet::global_eth_component->is_connected();
+
+# ---------------------------------------------------------------------
+# Services
+# ---------------------------------------------------------------------
+ota:
+  - platform: esphome
+  # TODO: add `password: !secret ota_password` before deployment on a
+  # shared/production network (bench convenience until then)
+
+web_server:
+  port: 80
+  auth:
+    # digest avoids sending the password in a reversible form
+    # (ESPHome deprecates basic auth in 2027.1)
+    type: digest
+    username: admin
+    password: !secret web_password
+
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: ${timezone}
+    servers:
+      - time.cloudflare.com
+      - pool.ntp.org
+    on_time_sync:
+      then:
+        - logger.log: "Time synchronized"
+
+# ---------------------------------------------------------------------
+# M5Stack Unit 2Relay — wired to Grove Port B (HY2.0-4P: G53, G54, 5V, GND)
+# Manual LED-on = relay closed. Drives the 24VAC bell circuit.
+# ---------------------------------------------------------------------
+switch:
+  - platform: gpio
+    name: "Bell Relay 1"
+    id: relay_bell_ring
+    pin: GPIO53
+    restore_mode: RESTORE_DEFAULT_OFF
+
+  - platform: gpio
+    name: "Bell Relay 2"
+    id: relay_aux
+    pin: GPIO54
+    restore_mode: RESTORE_DEFAULT_OFF
+
+# ---------------------------------------------------------------------
+# Diagnostics
+# ---------------------------------------------------------------------
+text_sensor:
+  - platform: version
+    name: "Firmware Version"
+
+sensor:
+  - platform: uptime
+    name: "Uptime"
+
+# ---------------------------------------------------------------------
+# Schedule engine + web editor (external_components).
+# PASTE-READY for Home Assistant "ESPHome Device Builder": the source
+# is fetched from GitHub (anonymous, repo is public) — no repo checkout
+# or path mapping needed. Copy this entire file into
+# /config/esphome/curling-timer.yaml and click Install.
+# (Repo/CI builds use curling-timer.yaml with the relative source.)
+# ---------------------------------------------------------------------
+external_components:
+  - source:
+      type: git
+      url: https://github.com/jaydenrussell/esp32-curling-timer
+      ref: main
+      path: external_components   # required: ESPHome only auto-scans
+                                  # components/ and esphome/components/
+    components: [curling_engine, web_editor, lt8912b]
+    # Re-fetch main on every install so push fixes land immediately
+    # (ESPHome default is 1 day)
+    refresh: 0s
+
+curling_engine:
+  id: engine
+  store_path: /flash
+
+web_editor:
+  password: !secret web_password
+  port: 8080
+
+# ---------------------------------------------------------------------
+# HDMI display: M5Stack Add-On Display Out LT8912B (U221), 1280x720@60.
+# esp_ldo powers the MIPI-DSI PHY (channel 3 @ 2.5V per M5GFX U221) —
+# lt8912b depends on it. The LVGL page below drives the pixels; without
+# an lvgl: block this component would show the ESPHome test card instead.
+# ---------------------------------------------------------------------
+esp_ldo:
+  - channel: 3
+    voltage: 2.5V
+
+lt8912b:
+  id: hdmi
+  reset_pin: GPIO4
+  enable_pin: GPIO33
+  sda_pin: GPIO0
+  scl_pin: GPIO1
+
+# ---------------------------------------------------------------------
+# Fonts — Lato Bold (static TTF from google/fonts, fetched once per
+# build and cached). Lato ships U+02F8, the modifier letter raised
+# colon pitimer uses instead of ':'. Sizes target 1280x720: the
+# countdown switches between a 4-digit (MM:SS) and 5-digit (H:MM:SS)
+# font like pitimer's font_size_4_digits / font_size_5_digits.
+# ---------------------------------------------------------------------
+font:
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
+    id: font_timer_4
+    size: 460
+    glyphs: ["0123456789", "\u02F8"]
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
+    id: font_timer_5
+    size: 350
+    glyphs: ["0123456789", "\u02F8"]
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
+    id: font_header
+    size: 72
+    glyphsets: [GF_Latin_Kernel]
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
+    id: font_footer
+    size: 48
+    glyphsets: [GF_Latin_Kernel]
+    glyphs: ["\u02F8"]
+
+# Latest display snapshot from CurlingEngineComponent::display_snapshot()
+# (the pitimer draw_screen data prep), written once per second below.
+globals:
+  - id: g_snap
+    type: esphome::curling_engine::DisplaySnapshot
+    restore_value: no
+
+# ---------------------------------------------------------------------
+# LVGL countdown page — pitimer display.py layout at 1280x720:
+#   header top-centre, countdown centre (raised 720/24 for the pace
+#   line), pace line under it, game name bottom-centre, date/time in
+#   the bottom corners (yellow), status line centre (errors / waiting
+#   for clock). All labels start empty; the 1 Hz tick below fills them.
+# ---------------------------------------------------------------------
+lvgl:
+  displays:
+    - hdmi
+  widgets:
+    - label:
+        id: lbl_header
+        align: TOP_MID
+        y: 20
+        text_font: font_header
+        long_mode: CLIP
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_cnt4
+        align: CENTER
+        y: -30
+        text_font: font_timer_4
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_cnt5
+        align: CENTER
+        y: -30
+        text_font: font_timer_5
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_pace
+        align: CENTER
+        y: 182
+        text_font: font_header
+        long_mode: CLIP
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_status
+        align: CENTER
+        y: 0
+        text_font: font_header
+        long_mode: CLIP
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_game
+        align: BOTTOM_MID
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_date
+        align: BOTTOM_LEFT
+        x: 10
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_time
+        align: BOTTOM_RIGHT
+        x: -10
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
+
+# ---------------------------------------------------------------------
+# 1 Hz display tick — refresh the snapshot, then push recoloured text
+# into every label (empty string hides the label).
+# ---------------------------------------------------------------------
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-
+          auto *eng = id(engine);
+          if (eng == nullptr || !eng->ready())
+            return;
+          ::esphome::curling_engine::DisplaySnapshot snap;
+          eng->display_snapshot(&snap);
+          id(g_snap) = snap;
+      - lvgl.label.update:
+          id: lbl_header
+          text: !lambda |-
+            auto &s = id(g_snap);
+            return ::esphome::curling_engine::recolor(s.header_color, s.header_text);
+      - lvgl.label.update:
+          id: lbl_cnt4
+          text: !lambda |-
+            auto &s = id(g_snap);
+            if (!s.show_countdown || s.seconds_until_buzzer >= 3600)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+      - lvgl.label.update:
+          id: lbl_cnt5
+          text: !lambda |-
+            auto &s = id(g_snap);
+            if (!s.show_countdown || s.seconds_until_buzzer < 3600)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+      - lvgl.label.update:
+          id: lbl_pace
+          text: !lambda |-
+            auto &s = id(g_snap);
+            if (!s.show_pace)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.pace_color, s.pace_text);
+      - lvgl.label.update:
+          id: lbl_status
+          text: !lambda |-
+            auto &s = id(g_snap);
+            if (!s.show_status)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.status_color, s.status_text);
+      - lvgl.label.update:
+          id: lbl_game
+          text: !lambda |-
+            auto &s = id(g_snap);
+            if (!s.show_game_name)
+              return std::string();
+            return ::esphome::curling_engine::recolor(
+                ::esphome::curling_engine::FOOTER_COLOR_HEX, s.game_name);
+      - lvgl.label.update:
+          id: lbl_date
+          text: !lambda |-
+            auto &s = id(g_snap);
+            if (!s.show_date_time)
+              return std::string();
+            return ::esphome::curling_engine::recolor(
+                ::esphome::curling_engine::FOOTER_COLOR_HEX, s.date_text);
+      - lvgl.label.update:
+          id: lbl_time
+          text: !lambda |-
+            auto &s = id(g_snap);
+            if (!s.show_date_time)
+              return std::string();
+            return ::esphome::curling_engine::recolor(
+                ::esphome::curling_engine::FOOTER_COLOR_HEX, s.time_text);

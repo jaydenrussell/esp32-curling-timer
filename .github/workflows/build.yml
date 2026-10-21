@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check paste variant is in sync with curling-timer.yaml
+        run: python3 tools/make_ha_yaml.py --check
       - name: Build and run host tests (engine + web auth/config)
         run: bash tests/host/run.sh
   compile:
