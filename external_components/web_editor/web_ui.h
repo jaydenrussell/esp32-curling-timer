@@ -1,0 +1,921 @@
+// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
+#pragma once
+
+static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Countdown Timer</title>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f4f5f7; --card: #ffffff; --text: #1d2330; --muted: #5d6677; --line: #d9dde5;
+  --accent: #1f6feb; --accent-text: #ffffff; --ok: #1a7f37; --warn: #9a6700; --bad: #cf222e;
+  --ok-bg: #dafbe1; --warn-bg: #fff8c5; --bad-bg: #ffebe9; --quick: #8250df;
+  --preset-bg: #ddf4ff; --preset-text: #0550ae; --preset-border: #218bff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* so the browser draws its own widgets dark too: the time picker and its popup, scrollbars */
+    color-scheme: dark;
+    --bg: #0f1218; --card: #181c24; --text: #e6e9ef; --muted: #9aa3b2; --line: #2c3340;
+    --accent: #4c8dff; --accent-text: #0b0e13; --ok: #3fb950; --warn: #d29922; --bad: #f85149;
+    --ok-bg: #12261a; --warn-bg: #2a2310; --bad-bg: #2d1416; --quick: #a371f7;
+    --preset-bg: #12305a; --preset-text: #a5d6ff; --preset-border: #388bfd;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
+header h1 { font-size: 18px; margin: 0; flex: 1; }
+.version { font-size: 13px; font-weight: 400; color: var(--muted); }
+.version a { color: var(--accent); text-decoration: none; }
+.version a:hover { text-decoration: underline; }
+nav { display: flex; gap: 4px; padding: 8px 16px; overflow-x: auto; background: var(--card); border-bottom: 1px solid var(--line); }
+nav button { background: none; border: 0; padding: 8px 12px; border-radius: 8px; color: var(--muted); font: inherit; cursor: pointer; white-space: nowrap; }
+nav button.active { background: var(--accent); color: var(--accent-text); }
+main { max-width: 960px; margin: 0 auto; padding: 16px 16px 96px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.card h2 { font-size: 17px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.card h2 .spacer { flex: 1; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+button.btn { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 8px; padding: 8px 14px; cursor: pointer; min-height: 40px; }
+button.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+button.btn.danger { color: var(--bad); }
+/* quick start presets: tinted, so the solid primary 'Start now' stays the main action */
+button.btn.preset { background: var(--preset-bg); color: var(--preset-text); border-color: var(--preset-border); font-weight: 600; }
+button.btn.icon { padding: 4px 10px; min-height: 36px; }
+button.btn:disabled { opacity: .5; cursor: default; }
+input, select, textarea { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; min-height: 40px; min-width: 0; }
+textarea { width: 100%; min-height: 60vh; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+label.check { display: inline-flex; align-items: center; gap: 6px; }
+label.check input { min-height: 0; width: 18px; height: 18px; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+.banner { border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; white-space: pre-wrap; }
+.banner.bad { background: var(--bad-bg); color: var(--bad); }
+.banner.ok { background: var(--ok-bg); color: var(--ok); }
+.banner.warn { background: var(--warn-bg); color: var(--warn); }
+.pill { display: inline-block; font-size: 13px; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.pill.ok { color: var(--ok); } .pill.bad { color: var(--bad); } .pill.quick { color: var(--quick); } .pill.warn { color: var(--warn); }
+.countdown { font-size: clamp(56px, 18vw, 120px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; margin: 8px 0; }
+.state { font-weight: 600; letter-spacing: .04em; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.grid2 label, .grid2 .field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+.duration { display: flex; align-items: center; gap: 6px; }
+.duration input { width: 5.5em; }
+/* one shared grid (start | bell/buzzer | name) so the columns line up across rows */
+.today { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); column-gap: 12px; }
+.today li { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.today .name { overflow-wrap: anywhere; }
+.today .name .pill { margin-left: 8px; white-space: nowrap; }
+.today li:last-child { border-bottom: 0; }
+/* game in progress: accent background, readable text in both themes */
+.today li.now { font-weight: 700; background: var(--accent); color: var(--accent-text); border-radius: 6px; }
+.today li.now .pill { color: inherit; }
+.today li.past { color: var(--muted); }
+.today li.head { font-size: 14px; font-weight: 600; color: var(--muted); border-bottom-width: 2px; }
+.entry { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.entry:last-of-type { border-bottom: 0; }
+.entry .name { grid-column: 1 / -1; display: flex; gap: 8px; }
+.entry .name input { flex: 1; }
+.entry .more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.entry .more label, .entry .times label { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--muted); }
+@media (min-width: 720px) {
+  .entry { grid-template-columns: 150px 150px 1fr; }
+  .entry .name { grid-column: auto; }
+}
+/* collapsible date exception cards */
+details.fold { padding: 0; margin-bottom: 8px; }
+details.fold > summary { display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; list-style: none; border-radius: 12px; }
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+details.fold .chevron { display: inline-block; width: 1em; transition: transform .15s; color: var(--muted); }
+details.fold[open] .chevron { transform: rotate(90deg); }
+details.fold .fold-date { font-weight: 600; white-space: nowrap; }
+details.fold .fold-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+details.fold .fold-count { font-size: 14px; white-space: nowrap; }
+details.fold .fold-body { padding: 0 16px 16px; }
+.row-actions .spacer { flex: 1; }
+/* the message and buttons sit together in the middle, so they are not missed on a wide monitor */
+.savebar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px 16px; display: none; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 6; }
+.savebar.show { display: flex; }
+.savebar span { color: var(--warn); }
+/* on a narrow phone the message takes its own line, with both buttons centred under it */
+@media (max-width: 480px) { .savebar span { flex-basis: 100%; text-align: center; } }
+.backups { list-style: none; padding: 0; margin: 0; }
+.backups li { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.backups li span { flex: 1; min-width: 180px; font-variant-numeric: tabular-nums; }
+pre.view { overflow: auto; max-height: 50vh; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-size: 12px; }
+#login { position: fixed; inset: 0; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
+#login.show { display: flex; }
+#login form { width: 100%; max-width: 360px; }
+#login input { width: 100%; margin: 8px 0 12px; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div id="login"><form class="card" id="login-form">
+  <h2>Countdown Timer <span class="version">v2026.9.1</span></h2>
+  <label for="password" class="muted small">Password</label>
+  <input id="password" type="password" autocomplete="current-password" required>
+  <div id="login-error" class="banner bad hidden"></div>
+  <button class="btn primary" type="submit">Log in</button>
+</form></div>
+
+<header><h1>Countdown Timer <span class="version">v2026.9.1 &middot; <a
+  href="https://sites.google.com/cityviewcurling.ca/cvcc-it/countdown-timer" target="_blank" rel="noopener"
+  title="Countdown Timer support page">Help</a></span></h1><button class="btn icon" id="logout" title="Log out">Log out</button></header>
+<nav id="tabs"></nav>
+<main>
+  <div id="message" class="banner hidden"></div>
+  <section id="tab-status"></section>
+  <section id="tab-schedule" class="hidden"></section>
+  <section id="tab-exceptions" class="hidden"></section>
+  <section id="tab-config" class="hidden"></section>
+  <section id="tab-raw" class="hidden"></section>
+  <section id="tab-history" class="hidden"></section>
+</main>
+<div class="savebar" id="savebar"><span>Unsaved schedule changes</span>
+  <button class="btn" id="discard">Discard</button><button class="btn primary" id="save">Save &amp; apply</button></div>
+<div class="savebar" id="config-savebar"><span>Unsaved config changes</span>
+  <button class="btn" id="config-discard">Discard</button><button class="btn primary" id="config-save">Save &amp; apply</button></div>
+
+<script>
+'use strict';
+const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const TABS = [['status', 'Status'], ['schedule', 'Weekly schedule'], ['exceptions', 'Date exceptions'],
+              ['config', 'Config'], ['raw', 'Raw YAML'], ['history', 'History']];
+const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
+                configOriginal: null, configValues: null, configVersion: null, configDirty: false };
+
+// ---- small helpers --------------------------------------------------------
+function el(tag, props, ...children) {
+  const node = document.createElement(tag);
+  for (const [key, value] of Object.entries(props || {})) {
+    if (key === 'class') node.className = value;
+    else if (key.startsWith('on')) node.addEventListener(key.slice(2), value);
+    else if (key === 'value') node.value = value;
+    else if (key in node && typeof value !== 'string') node[key] = value;
+    else if (value !== false && value != null) node.setAttribute(key, value === true ? '' : value);
+  }
+  for (const child of children.flat()) {
+    if (child != null && child !== false) node.append(child instanceof Node ? child : String(child));
+  }
+  return node;
+}
+const $ = (id) => document.getElementById(id);
+const pad = (n) => String(n).padStart(2, '0');
+function hms(seconds) {
+  const h = Math.floor(seconds / 3600), m = Math.floor(seconds % 3600 / 60), s = seconds % 60;
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+function shortTime(seconds) { return hms(seconds).replace(/:00$/, '').replace(/^0/, ''); }
+function parseTime(value) {
+  const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(value || '');
+  if (!match) return null;
+  const secs = (+match[1]) * 3600 + (+match[2]) * 60 + (+(match[3] || 0));
+  return secs < 86400 ? secs : null;
+}
+function countdownText(seconds) {
+  if (seconds <= 0) return '00:00';
+  const h = Math.floor(seconds / 3600), m = Math.floor(seconds % 3600 / 60), s = seconds % 60;
+  return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+function weekdayOf(iso) { return DAYS[(new Date(iso + 'T12:00:00').getDay() + 6) % 7]; }
+
+let messageTimer = 0;
+function showMessage(text, kind = 'bad') {
+  const box = $('message');
+  box.className = `banner ${kind}`;
+  box.textContent = text;
+  clearTimeout(messageTimer);
+  if (kind === 'ok') messageTimer = setTimeout(() => box.classList.add('hidden'), 4000);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function clearMessage() { $('message').classList.add('hidden'); }
+
+async function api(path, body) {
+  const options = body === undefined ? {} : {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+  let response;
+  try {
+    response = await fetch(path, options);
+  } catch (err) {
+    return { ok: false, status: 0, data: { error: 'cannot reach the timer, check the network' } };
+  }
+  const data = await response.json().catch(() => ({ error: `unexpected response (${response.status})` }));
+  if (response.status === 401 && path !== '/api/login') showLogin();
+  return { ok: response.ok, status: response.status, data };
+}
+
+// ---- login ----------------------------------------------------------------
+function showLogin() { $('login').classList.add('show'); $('password').focus(); }
+$('login-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const result = await api('/api/login', { password: $('password').value });
+  if (!result.ok) {
+    $('login-error').textContent = result.data.error;
+    $('login-error').classList.remove('hidden');
+    return;
+  }
+  $('password').value = '';
+  $('login-error').classList.add('hidden');
+  $('login').classList.remove('show');
+  start();
+});
+$('logout').addEventListener('click', async () => { await api('/api/logout', {}); location.reload(); });
+
+// ---- tabs -----------------------------------------------------------------
+function renderTabs() {
+  $('tabs').replaceChildren(...TABS.map(([id, label]) =>
+    el('button', { class: id === state.tab ? 'active' : '', onclick: () => selectTab(id) }, label)));
+}
+function selectTab(id) {
+  state.tab = id;
+  renderTabs();
+  clearMessage();
+  for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== id);
+  if (id === 'status') loadStatus();
+  if ((id === 'schedule' || id === 'exceptions') && !state.model) loadSettings();
+  else if (id === 'schedule') renderSchedule();
+  else if (id === 'exceptions') renderExceptions();
+  if (id === 'config' && (!state.configOriginal || !state.configDirty)) loadConfig();
+  else if (id === 'config') renderConfig();
+  if (id === 'raw') loadRaw();
+  if (id === 'history') loadHistory();
+}
+
+// ---- status tab -----------------------------------------------------------
+async function loadStatus() {
+  const result = await api('/api/status');
+  if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
+  state.status = result.data;
+  state.statusAt = performance.now();
+  renderStatus();
+}
+
+// the quick start form is built once so the 5 second status refresh never wipes what is being typed
+let quickForm = null;
+// one tap quick start timers: button label, name shown on the display, duration in seconds,
+// an optional title (wording for the tooltip and confirmation when it differs from the name on the display)
+// and the optional during_buzzer/header_hold overrides for the header shown after the buzzer
+const QUICK_PRESETS = [
+  { label: 'Practice (5m)', name: 'PRACTICE', title: 'Practice', seconds: 5 * 60,
+    during_buzzer: '--- PRACTICE DONE ---', header_hold: 60 },
+  { label: 'Game (6 ends)', name: 'Game (6 ends)', seconds: 75 * 60 },
+  { label: 'Game (8 ends)', name: 'Game (8 ends)', seconds: 105 * 60 },
+];
+
+function buildQuickForm() {
+  const minutes = el('input', { type: 'number', min: 0, max: 179, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Minutes' });
+  const seconds = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Seconds' });
+  const name = el('input', { type: 'text', maxlength: 60, placeholder: 'QUICK START' });
+  const pace = el('input', { type: 'checkbox' });
+  const replace = el('input', { type: 'checkbox' });
+  const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start now');
+  const hint = el('span', { class: 'muted small' });
+  const options = () => ({ pace_of_play: pace.checked, replace_conflicts: replace.checked });
+  const presets = QUICK_PRESETS.map((preset) => el('button', { class: 'btn preset', type: 'button',
+    title: `${preset.title || preset.name}, ${durationText(preset.seconds)}`,
+    onclick: () => launchQuick({ seconds: preset.seconds, name: preset.name, title: preset.title,
+                                 during_buzzer: preset.during_buzzer, header_hold: preset.header_hold },
+                               options()) }, preset.label));
+  const form = el('form', { class: 'card', onsubmit: (event) => {
+      event.preventDefault();
+      const timer = readQuickForm(minutes, seconds, name);
+      if (timer) launchQuick(timer, options());
+    } },
+    el('h2', {}, 'Quick start timer'),
+    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start counting down right now and ring the bell/buzzer when the duration time has elapsed.'),
+    el('div', { class: 'row-actions', style: 'margin: 0 0 12px' }, el('span', { class: 'muted small' }, 'Presets:'), presets),
+    el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Or set your own:'),
+    el('div', { class: 'grid2' },
+      el('div', { class: 'field', role: 'group', 'aria-label': 'Duration' }, 'Duration (minutes and seconds)',
+        el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's'))),
+      el('label', {}, 'Name on display (optional)', name)),
+    el('div', { class: 'row-actions' },
+      el('label', { class: 'check' }, pace, 'Show pace of play'),
+      el('label', { class: 'check' }, replace, 'Replace conflicting games today')),
+    el('div', { class: 'row-actions' }, button, hint));
+  form.update = (enabled, clockOk = true) => {
+    button.disabled = !enabled;
+    presets.forEach((b) => { b.disabled = !enabled; });
+    hint.textContent = enabled ? '' : (clockOk ? 'Enable the timer first' : 'Waiting for the clock to sync');
+  };
+  return form;
+}
+
+function renderStatus() {
+  const s = state.status;
+  const root = $('tab-status');
+  if (!s) return;
+  if (!quickForm) {
+    quickForm = buildQuickForm();
+    root.replaceChildren(el('div', { id: 'status-now' }), quickForm, el('div', { id: 'status-today' }));
+  }
+  quickForm.classList.toggle('hidden', !s.valid);
+  if (!s.valid) {
+    $('status-now').replaceChildren(el('div', { class: 'card' },
+      el('h2', {}, 'Settings file has an error'),
+      el('div', { class: 'banner bad' }, s.error),
+      el('p', { class: 'muted' }, 'The display shows this error until the file is fixed. Use the Raw YAML or History tab.')));
+    $('status-today').replaceChildren();
+    return;
+  }
+  quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
+  const now = el('div', { class: 'card' });
+  const head = el('h2', {}, 'On the display now', el('span', { class: 'spacer' }),
+    el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Timer enabled' : 'Timer disabled'));
+  now.append(head);
+  const cur = s.current;
+  if (!s.enabled) {
+    now.append(el('div', { class: 'state', style: 'color: var(--bad)' }, 'TIMER DISABLED'));
+  } else if (!s.clock_synced) {
+    now.append(el('div', { class: 'banner warn' },
+      'Waiting for the clock to sync (SNTP). The countdown, today\'s games and quick start appear once the time is known.'));
+  } else if (cur) {
+    now.append(el('div', { class: 'state' }, cur.name || 'Game in progress',
+                  cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null),
+               el('div', { class: 'countdown', id: 'countdown' }, ''),
+               el('div', { class: 'muted' }, `Started ${shortTime(cur.start)} · buzzer at ${shortTime(cur.buzzer)}`));
+  } else {
+    now.append(el('div', { class: 'state muted' }, 'Idle'),
+               el('div', { class: 'muted' }, s.next ? `Next: ${s.next.name || 'game'} at ${shortTime(s.next.start)}` : 'No more games today'));
+  }
+  const actions = el('div', { class: 'row-actions' },
+    el('button', { class: `btn ${s.enabled ? 'danger' : 'primary'}`, onclick: () => toggleEnabled(!s.enabled) },
+       s.enabled ? 'Disable timer' : 'Enable timer'));
+  if (cur && cur.quick) {
+    actions.append(el('button', { class: 'btn danger', onclick: () => cancelQuick(cur) }, 'Cancel quick start'));
+  }
+  now.append(actions);
+  $('status-now').replaceChildren(now);
+
+  if (!s.clock_synced) {
+    $('status-today').replaceChildren();
+    return;
+  }
+  const today = el('div', { class: 'card' },
+    el('h2', {}, `Today (${s.weekday})`, el('span', { class: 'spacer' }),
+       s.today.source === 'exception' ? el('span', { class: 'pill warn' }, `Exception${s.today.note ? ': ' + s.today.note : ''}`)
+                                      : el('span', { class: 'pill' }, 'Weekly schedule')));
+  const nowSecs = secondsNow();
+  if (!s.today.entries.length) today.append(el('p', { class: 'muted' }, 'No buzzers today.'));
+  else today.append(el('ul', { class: 'today' },
+    // column headings, as the first row of the same grid so they line up with the values
+    el('li', { class: 'head' }, el('span', {}, 'Start'), el('span', {}, 'Bell/Buzzer'), el('span', { class: 'name' }, 'Entry Name')),
+    [...s.today.entries].sort((a, b) => a.start - b.start).map((e) => el('li', {
+      // an entry's own header_hold override wins over the file wide one
+      class: cur && cur.start === e.start ? 'now' : (e.buzzer + (e.header_hold != null ? e.header_hold : s.header_hold) < nowSecs ? 'past' : '') },
+    el('span', {}, shortTime(e.start)),
+    el('span', {}, shortTime(e.buzzer)),
+    el('span', { class: 'name' }, e.name || '',
+       e.quick ? el('span', { class: 'pill quick' }, 'quick') : null)))));
+  $('status-today').replaceChildren(today);
+  tick();
+}
+
+function secondsNow() {
+  const s = state.status;
+  if (!s) return 0;
+  const [, time] = s.now.split(' ');
+  return parseTime(time) + Math.floor((performance.now() - state.statusAt) / 1000);
+}
+
+function tick() {
+  const s = state.status;
+  const box = $('countdown');
+  if (box && s && s.current) {
+    const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
+    box.textContent = countdownText(left);
+    box.style.color = left <= 0 ? 'var(--bad)' : 'var(--ok)';
+  }
+}
+
+async function toggleEnabled(enabled) {
+  if (!enabled && !confirm('Disable the timer? The display will show the disabled message and no buzzers will ring.')) return;
+  const result = await api('/api/enabled', { enabled });
+  if (!result.ok) return showMessage(result.data.error);
+  showMessage(enabled ? 'Timer enabled' : 'Timer disabled', 'ok');
+  state.model = null;
+  loadStatus();
+}
+
+// e.g. '25 min', '24 min 59 s' or '45 s' (same wording as the server's messages)
+function durationText(total) {
+  const m = Math.floor(total / 60), s = total % 60;
+  return [m ? `${m} min` : '', s || !m ? `${s} s` : ''].filter(Boolean).join(' ');
+}
+
+// the duration and name typed in the form, or null (with a message shown) if they are not valid
+function readQuickForm(minutesInput, secondsInput, nameInput) {
+  const minutes = minutesInput.value === '' ? 0 : Number(minutesInput.value);
+  const secs = secondsInput.value === '' ? 0 : Number(secondsInput.value);
+  if (!Number.isInteger(minutes) || minutes < 0) { showMessage('Minutes must be a whole number'); return null; }
+  if (!Number.isInteger(secs) || secs < 0 || secs > 59) { showMessage('Seconds must be a whole number from 0 to 59'); return null; }
+  const seconds = minutes * 60 + secs;
+  if (seconds < 1) { showMessage('Enter a duration of at least 1 second'); return null; }
+  return { seconds, name: nameInput.value.trim() || null };
+}
+
+// confirm, then start a quick start timer { seconds, name, title, during_buzzer, header_hold }
+// from the form or a preset button
+async function launchQuick({ seconds, name, title, during_buzzer, header_hold }, options) {
+  const ends = new Date(Date.now() + seconds * 1000);
+  // title is only how the timer is worded here; name is what goes on the display
+  const called = title || name;
+  const what = called ? `"${called}" (${durationText(seconds)})` : `a ${durationText(seconds)} timer`;
+  if (!confirm(`Start ${what} now? Bell/buzzer at about ${pad(ends.getHours())}:${pad(ends.getMinutes())}:${pad(ends.getSeconds())}.`)) return;
+  const result = await api('/api/quickstart', { seconds, name, during_buzzer, header_hold, ...options });
+  if (!result.ok) return showMessage(result.data.error);
+  showMessage(`Quick start timer running, bell/buzzer at ${result.data.buzzer_time}`, 'ok');
+  quickForm.reset();
+  state.model = null;
+  loadStatus();
+}
+
+async function cancelQuick(current) {
+  if (!confirm(`Cancel the quick start timer "${current.name || ''}"?`)) return;
+  const result = await api('/api/quickstart/cancel', { start: current.start });
+  if (!result.ok) return showMessage(result.data.error);
+  showMessage('Quick start timer cancelled', 'ok');
+  state.model = null;
+  loadStatus();
+}
+
+// ---- schedule / exceptions editors ----------------------------------------
+async function loadSettings() {
+  const result = await api('/api/settings');
+  if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
+  state.model = result.data;
+  setDirty(false);
+  if (state.tab === 'schedule') renderSchedule();
+  if (state.tab === 'exceptions') renderExceptions();
+}
+
+function updateSavebars() {
+  $('config-savebar').classList.toggle('show', state.configDirty);
+  $('savebar').classList.toggle('show', state.dirty);
+  // both bars up: the schedule bar sits directly above the config bar
+  $('savebar').style.bottom = state.configDirty ? `${$('config-savebar').offsetHeight}px` : '0px';
+}
+
+function setDirty(dirty) {
+  state.dirty = dirty;
+  updateSavebars();
+}
+
+function setConfigDirty(dirty) {
+  state.configDirty = dirty;
+  updateSavebars();
+}
+
+function newEntry(previous) {
+  // whole minutes, since the time inputs don't show seconds
+  const start = previous ? Math.ceil((previous.buzzer + 25 * 60) / 60) * 60 : 9 * 3600;
+  return { start: Math.min(start, 86340), buzzer: Math.min(start + 105 * 60, 86340), name: null,
+           during_buzzer: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false };
+}
+
+function entryEditor(entries, index, rerender) {
+  const entry = entries[index];
+  const changed = () => setDirty(true);
+  // hours and minutes only; a stored time keeps its seconds (e.g. a quick start) until it is edited,
+  // and the YAML file always gets H:MM:SS
+  const timeInput = (key) => el('input', { type: 'time', step: 60, value: hms(entry[key]).slice(0, 5), required: true,
+    onchange: (event) => { const v = parseTime(event.target.value); if (v !== null) { entry[key] = v; changed(); } } });
+  const text = (key, placeholder) => el('input', { type: 'text', value: entry[key] || '', placeholder, maxlength: 80,
+    oninput: (event) => { entry[key] = event.target.value.trim() || null; changed(); } });
+  const pace = el('select', { onchange: (event) => { entry.pace_of_play = { '': null, on: true, off: false }[event.target.value]; changed(); } },
+    el('option', { value: '', selected: entry.pace_of_play === null }, 'Default'),
+    el('option', { value: 'on', selected: entry.pace_of_play === true }, 'Show'),
+    el('option', { value: 'off', selected: entry.pace_of_play === false }, 'Hide'));
+  const unit = el('input', { type: 'number', min: 0.5, step: 0.5, inputmode: 'decimal', placeholder: 'default',
+    value: entry.pace_unit_duration ? entry.pace_unit_duration / 60 : '',
+    onchange: (event) => { const v = Number(event.target.value); entry.pace_unit_duration = v > 0 ? Math.round(v * 60) : null; changed(); } });
+  // seconds, like the file wide setting; 0 is a real value (no hold at all), so only '' clears the override
+  const hold = el('input', { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: 'default',
+    value: entry.header_hold != null ? entry.header_hold : '',
+    onchange: (event) => { const v = Number(event.target.value);
+                           entry.header_hold = event.target.value !== '' && v >= 0 ? Math.round(v) : null; changed(); } });
+  const hasMore = entry.during_buzzer || entry.header_hold != null || entry.pace_of_play !== null || entry.pace_unit_duration;
+  const more = el('div', { class: `more ${hasMore ? '' : 'hidden'}` },
+    el('label', {}, 'Header during buzzer', text('during_buzzer', 'default')),
+    el('label', {}, 'Header hold seconds', hold),
+    el('label', {}, 'Pace of play', pace),
+    el('label', {}, 'Minutes per end', unit));
+  return el('div', { class: 'entry' },
+    el('div', { class: 'times' }, el('label', {}, 'Start', timeInput('start'))),
+    el('div', { class: 'times' }, el('label', {}, 'Buzzer', timeInput('buzzer'))),
+    el('div', { class: 'name' }, text('name', 'Name on display'),
+      entry.quick ? el('span', { class: 'pill quick', style: 'align-self: center' }, 'quick') : null,
+      el('button', { class: 'btn icon', type: 'button', title: 'More options', onclick: () => more.classList.toggle('hidden') }, '⋯'),
+      el('button', { class: 'btn icon danger', type: 'button', title: 'Delete game',
+                     onclick: () => { entries.splice(index, 1); changed(); rerender(); } }, '✕')),
+    more);
+}
+
+function entryList(entries, rerender) {
+  const box = el('div', {});
+  if (!entries.length) box.append(el('p', { class: 'muted small' }, 'No buzzers this day.'));
+  entries.forEach((_, index) => box.append(entryEditor(entries, index, rerender)));
+  return box;
+}
+
+// collapsible card (like code folding), collapsed unless its key is in openSet; the summary line
+// shows the title, an optional badge and note, and how many games are inside
+function foldCard({ openSet, key, title, badge = null, note = null, count, body }) {
+  return el('details', { class: 'card fold', open: openSet.has(key),
+      ontoggle: (event) => { if (event.target.open) openSet.add(key); else openSet.delete(key); } },
+    el('summary', {},
+      el('span', { class: 'chevron', 'aria-hidden': 'true' }, '▸'),
+      el('span', { class: 'fold-date' }, title),
+      badge,
+      note || el('span', { class: 'fold-note' }),
+      el('span', { class: 'fold-count muted' }, count ? `${count} game${count === 1 ? '' : 's'}` : 'No buzzers')),
+    el('div', { class: 'fold-body' }, body));
+}
+
+// Expand all / Collapse all buttons for the fold cards whose keys getKeys() returns when clicked
+function foldButtons(openSet, getKeys, rerender) {
+  return [el('button', { class: 'btn', onclick: () => { getKeys().forEach((k) => openSet.add(k)); rerender(); } }, 'Expand all'),
+          el('button', { class: 'btn', onclick: () => { openSet.clear(); rerender(); } }, 'Collapse all')];
+}
+
+function renderSchedule() {
+  const m = state.model;
+  if (!m) return;
+  const cards = [el('div', { class: 'row-actions', style: 'margin: 0 0 16px' },
+    el('span', { class: 'spacer' }), foldButtons(state.openDays, () => DAYS, renderSchedule))];
+  if (m.inner_comments) cards.unshift(commentWarning(m.inner_comments));
+  // 'today' only when today's games really come from the weekly schedule (no date exception)
+  const todayWeekday = m.exceptions.some((d) => d.date === todayIso()) ? null : weekdayOf(todayIso());
+  for (const day of DAYS) {
+    const entries = m.schedule[day];
+    const copyTo = el('select', { onchange: (event) => {
+      const target = event.target.value;
+      event.target.value = '';
+      if (!target || !confirm(`Replace ${target}'s games with a copy of ${day}'s?`)) return;
+      m.schedule[target] = structuredClone(entries);
+      setDirty(true);
+      renderSchedule();
+    } }, el('option', { value: '' }, 'Copy to…'), DAYS.filter((d) => d !== day).map((d) => el('option', { value: d }, d)));
+    cards.push(foldCard({ openSet: state.openDays, key: day, title: day, count: entries.length,
+      badge: day === todayWeekday ? el('span', { class: 'pill ok' }, 'today') : null,
+      body: [entryList(entries, renderSchedule),
+        el('div', { class: 'row-actions' },
+          el('button', { class: 'btn', onclick: () => {
+            entries.push(newEntry(entries[entries.length - 1])); setDirty(true); renderSchedule(); } }, '+ Add game'),
+          el('span', { class: 'spacer' }), copyTo)] }));
+  }
+  $('tab-schedule').replaceChildren(...cards);
+}
+
+function commentWarning(count) {
+  return el('div', { class: 'banner warn' },
+    `The settings file has ${count} comment line(s) inside the schedule/exceptions sections. ` +
+    'Saving here removes them; use the Raw YAML tab if you need to keep them.');
+}
+
+function renderExceptions() {
+  const m = state.model;
+  if (!m) return;
+  const today = todayIso();
+  const date = el('input', { type: 'date', value: today, required: true });
+  const note = el('input', { type: 'text', placeholder: 'Note, e.g. bonspiel name', maxlength: 80 });
+  const prefill = el('input', { type: 'checkbox', checked: true });
+  const add = el('form', { class: 'card', onsubmit: (event) => {
+      event.preventDefault();
+      if (m.exceptions.some((d) => d.date === date.value)) return showMessage(`${date.value} already has an exception`);
+      const entries = prefill.checked ? structuredClone(m.schedule[weekdayOf(date.value)]) : [];
+      const day = { date: date.value, note: note.value.trim(), entries };
+      const later = m.exceptions.findIndex((d) => d.date > day.date);
+      m.exceptions.splice(later < 0 ? m.exceptions.length : later, 0, day);
+      state.openDates.add(day.date);
+      setDirty(true);
+      renderExceptions();
+    } },
+    el('h2', {}, 'Add a date'),
+    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'A date exception replaces that day\'s weekly schedule. Leave it with no games for a day without buzzers.'),
+    el('div', { class: 'grid2' }, el('label', {}, 'Date', date), el('label', {}, 'Note', note)),
+    el('div', { class: 'row-actions' }, el('label', { class: 'check' }, prefill, 'Start from the weekly schedule for that day'),
+      el('button', { class: 'btn primary', type: 'submit' }, 'Add date')));
+
+  const past = m.exceptions.filter((d) => d.date < today);
+  let shown = [];
+  const tools = el('div', { class: 'row-actions', style: 'margin: 0 0 16px' },
+    el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: state.showPast,
+      onchange: (event) => { state.showPast = event.target.checked; renderExceptions(); } }), `Show past dates (${past.length})`),
+    el('button', { class: 'btn danger', disabled: !past.length, onclick: () => {
+      if (!confirm(`Remove ${past.length} past date(s)?`)) return;
+      m.exceptions = m.exceptions.filter((d) => d.date >= today);
+      setDirty(true);
+      renderExceptions();
+    } }, 'Remove past dates'),
+    el('span', { class: 'spacer' }),
+    foldButtons(state.openDates, () => shown.map((d) => d.date), renderExceptions));
+
+  const cards = [add, tools];
+  if (m.inner_comments) cards.unshift(commentWarning(m.inner_comments));
+  shown = [...m.exceptions].filter((d) => state.showPast || d.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+  if (!shown.length) cards.push(el('p', { class: 'muted' }, 'No upcoming date exceptions.'));
+  for (const day of shown) {
+    const noteText = el('span', { class: 'fold-note muted' }, day.note);
+    cards.push(foldCard({ openSet: state.openDates, key: day.date, title: `${weekdayOf(day.date)} ${day.date}`,
+      badge: day.date === today ? el('span', { class: 'pill ok' }, 'today') : null, note: noteText, count: day.entries.length,
+      body: [
+        el('input', { type: 'text', value: day.note, placeholder: 'Note', maxlength: 80, style: 'width: 100%; margin-bottom: 4px',
+          oninput: (event) => { day.note = event.target.value.trim(); noteText.textContent = day.note; setDirty(true); } }),
+        entryList(day.entries, renderExceptions),
+        el('div', { class: 'row-actions' },
+          el('button', { class: 'btn', onclick: () => {
+            day.entries.push(newEntry(day.entries[day.entries.length - 1])); setDirty(true); renderExceptions(); } }, '+ Add game'),
+          el('span', { class: 'spacer' }),
+          el('button', { class: 'btn danger', title: 'Delete this date', onclick: () => {
+            if (!confirm(`Delete the exception for ${day.date}? The weekly schedule will apply again.`)) return;
+            m.exceptions.splice(m.exceptions.indexOf(day), 1); state.openDates.delete(day.date); setDirty(true); renderExceptions(); } }, 'Delete date'))] }));
+  }
+  $('tab-exceptions').replaceChildren(...cards);
+}
+
+// ---- config tab (every parameter that is not the schedule) ----------------
+// field spec: [dotted path exactly as GET/POST /api/config uses it, type, label, ...]
+// types: bool, int (min..max), text, color (pygame name + datalist), minutes (UI minutes, sent as seconds),
+// relays (RELAY1..RELAY4 checkbox group)
+const CONFIG_SECTIONS = [
+  { title: 'Timer', hint: 'Every setting except the weekly schedule. Changes are written to the settings file only when you press Save & apply.',
+    fields: [
+      ['config.enabled', 'bool', 'Timer enabled']] },
+  { title: 'Header text',
+    fields: [
+      ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
+      ['config.header.text.when_disabled', 'text', 'Text when disabled'],
+      ['config.header.text.when_idle', 'text', 'Text when idle'],
+      ['config.header.text.counting_down', 'text', 'Text while counting down'],
+      ['config.header.text.during_buzzer', 'text', 'Text while the buzzer rings'],
+      ['config.header.color.when_disabled', 'color', 'Colour when disabled'],
+      ['config.header.color.when_idle', 'color', 'Colour when idle'],
+      ['config.header.color.counting_down', 'color', 'Colour while counting down'],
+      ['config.header.color.during_buzzer', 'color', 'Colour while the buzzer rings']] },
+  { title: 'Countdown clock',
+    fields: [
+      ['config.countdown.font_size_4_digits', 'int', 'Timer font size under an hour', 0, 100000],
+      ['config.countdown.font_size_5_digits', 'int', 'Timer font size an hour or more', 0, 100000],
+      ['config.countdown.color.counting_down', 'color', 'Colour while counting down'],
+      ['config.countdown.color.during_buzzer', 'color', 'Colour while the buzzer rings']] },
+  { title: 'Pace of play',
+    fields: [
+      ['config.pace_of_play.enabled', 'bool', 'Show pace of play'],
+      ['config.pace_of_play.font_size', 'int', 'Font size (pixels)', 0, 100000],
+      ['config.pace_of_play.color', 'color', 'Colour'],
+      ['config.pace_of_play.unit_name', 'text', 'Unit name, e.g. END'],
+      ['config.pace_of_play.unit_duration', 'minutes', 'Minutes per unit', 0.5, 43200]] },
+  { title: 'Footer',
+    fields: [
+      ['config.footer.font_size', 'int', 'Font size (pixels)', 0, 100000],
+      ['config.footer.datetime', 'bool', 'Show date and time'],
+      ['config.footer.entry_name', 'bool', 'Show entry name']] },
+  { title: 'Bell / buzzer',
+    fields: [
+      ['config.buzzer.relays', 'relays', 'Relays that ring'],
+      ['config.buzzer.duration', 'int', 'Buzzer duration (seconds)', 0, 100000],
+      ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
+];
+const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
+const RELAY_NAMES = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4'];
+// common pygame colour names — the file accepts any single line of text, this just assists typing
+const PYGAME_COLORS = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta', 'gray', 'grey',
+  'navy', 'skyblue', 'wheat', 'orange', 'purple', 'brown', 'pink', 'lime', 'teal', 'olive', 'maroon', 'silver',
+  'gold', 'indigo', 'violet', 'coral', 'salmon', 'tan', 'beige', 'ivory', 'khaki', 'plum', 'azure', 'snow',
+  'crimson', 'darkgreen', 'darkblue', 'darkred', 'lightblue', 'lightgreen', 'dgray', 'lgray'];
+
+// the value as it will be compared/sent: absent text and absent relays compare equal to cleared
+function configNorm(path, value) {
+  if (path === 'config.buzzer.relays') return Array.isArray(value) ? value : [];
+  if (value == null) return '';
+  return value;
+}
+// only the fields whose working value differs from the loaded file are sent
+function configDiff() {
+  const diff = {};
+  for (const path of CONFIG_PATHS) {
+    let value = state.configValues[path];
+    if (typeof value === 'string') value = value.trim();
+    const before = configNorm(path, state.configOriginal[path]);
+    const after = configNorm(path, value);
+    const equal = path === 'config.buzzer.relays'
+      ? JSON.stringify(before) === JSON.stringify(after)
+      : before === after;
+    if (!equal) diff[path] = value;
+  }
+  return diff;
+}
+function configTouched() { setConfigDirty(Object.keys(configDiff()).length > 0); }
+
+// the same limits the server enforces, checked before the request so a bad field never
+// costs a round trip (the server answer is still shown if it disagrees)
+function validateConfigDiff(diff) {
+  for (const [path, value] of Object.entries(diff)) {
+    if (path === 'config.pace_of_play.unit_duration') {
+      if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0)
+        return 'Minutes per unit must be a number greater than 0';
+    } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
+               path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
+               path === 'config.buzzer.header_hold') {
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 100000)
+        return `${path} must be a whole number of seconds or pixels (0 or more)`;
+    }
+  }
+  return null;
+}
+
+async function loadConfig() {
+  const result = await api('/api/config');
+  if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
+  state.configOriginal = result.data.config;
+  state.configValues = JSON.parse(JSON.stringify(result.data.config));
+  state.configVersion = result.data.version;
+  setConfigDirty(false);
+  if (state.tab === 'config') renderConfig();
+}
+
+function configField(field) {
+  const [path, type, label, min, max] = field;
+  const value = state.configValues[path];
+  const set = (next) => { state.configValues[path] = next; configTouched(); };
+  if (type === 'bool') {
+    return el('div', { class: 'field' }, el('label', { class: 'check' },
+      el('input', { type: 'checkbox', checked: value === true, onchange: (event) => set(event.target.checked) }), label));
+  }
+  if (type === 'int') {
+    return el('label', {}, label, el('input', { type: 'number', min, max, step: 1, inputmode: 'numeric',
+      value: value == null ? '' : String(value),
+      oninput: (event) => set(event.target.value === '' ? null : Number(event.target.value)) }));
+  }
+  if (type === 'text') {
+    return el('label', {}, label, el('input', { type: 'text', maxlength: 80, value: value == null ? '' : value,
+      placeholder: 'not set', oninput: (event) => set(event.target.value) }));
+  }
+  if (type === 'color') {
+    return el('label', {}, label, el('input', { type: 'text', maxlength: 80, value: value == null ? '' : value,
+      placeholder: 'not set', list: 'pygame-colors', oninput: (event) => set(event.target.value) }));
+  }
+  if (type === 'minutes') {
+    return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.5, inputmode: 'decimal',
+      value: value == null ? '' : String(value / 60),
+      oninput: (event) => set(event.target.value === '' ? null : Math.round(Number(event.target.value) * 60)) }));
+  }
+  if (type === 'relays') {
+    const selected = Array.isArray(value) ? value : [];
+    return el('div', { class: 'field' }, label, el('div', { class: 'row-actions', style: 'margin-top: 2px' },
+      RELAY_NAMES.map((name) => el('label', { class: 'check' },
+        el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
+          const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
+          const at = list.indexOf(name);
+          if (event.target.checked && at < 0) list.push(name);
+          if (!event.target.checked && at >= 0) list.splice(at, 1);
+          set(list);
+        } }), name))));
+  }
+  return el('div', {}, label);
+}
+
+function renderConfig() {
+  if (!state.configValues) return;
+  if (!document.getElementById('pygame-colors')) {
+    document.body.append(el('datalist', { id: 'pygame-colors' },
+      PYGAME_COLORS.map((color) => el('option', { value: color }))));
+  }
+  $('tab-config').replaceChildren(...CONFIG_SECTIONS.map((section) =>
+    el('div', { class: 'card' },
+      section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
+      el('h2', {}, section.title),
+      el('div', { class: 'grid2' }, section.fields.map(configField)))));
+}
+
+$('config-save').addEventListener('click', async () => {
+  const diff = configDiff();
+  if (!Object.keys(diff).length) return setConfigDirty(false);
+  const problem = validateConfigDiff(diff);
+  if (problem) return showMessage(problem);
+  $('config-save').disabled = true;
+  const result = await api('/api/config', { version: state.configVersion, config: diff });
+  $('config-save').disabled = false;
+  if (!result.ok) {
+    if (result.status === 409) return showMessage(result.data.error + ' (Discard reloads the latest version.)');
+    return showMessage(`Not saved: ${result.data.error}`);
+  }
+  showMessage('Saved; the display updates within a second', 'ok');
+  loadConfig();
+});
+$('config-discard').addEventListener('click', () => {
+  if (confirm('Discard your unsaved config changes?')) loadConfig();
+});
+
+function checkModel(m) {
+  const lists = [...DAYS.map((d) => [d, m.schedule[d]]), ...m.exceptions.map((d) => [d.date, d.entries])];
+  for (const [where, entries] of lists) {
+    entries.sort((a, b) => a.start - b.start);
+    for (const e of entries) {
+      if (e.buzzer <= e.start) return `${where}: buzzer ${shortTime(e.buzzer)} is not after start ${shortTime(e.start)}`;
+    }
+  }
+  return null;
+}
+
+$('save').addEventListener('click', async () => {
+  const m = state.model;
+  const problem = checkModel(m);
+  if (problem) { showMessage(problem); renderSchedule(); renderExceptions(); return; }
+  $('save').disabled = true;
+  const result = await api('/api/settings', { version: m.version, schedule: m.schedule, exceptions: m.exceptions });
+  $('save').disabled = false;
+  if (!result.ok) {
+    if (result.status === 409) return showMessage(result.data.error + ' (Discard reloads the latest version.)');
+    return showMessage(`Not saved: ${result.data.error}`);
+  }
+  showMessage('Saved; the display updates within a second', 'ok');
+  loadSettings();
+});
+$('discard').addEventListener('click', () => { if (confirm('Discard your unsaved changes?')) loadSettings(); });
+window.addEventListener('beforeunload', (event) => { if (state.dirty || state.configDirty) event.preventDefault(); });
+
+// ---- raw YAML -------------------------------------------------------------
+async function loadRaw() {
+  const result = await api('/api/raw');
+  if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
+  state.raw = result.data;
+  const area = el('textarea', { spellcheck: false, value: result.data.text });
+  const validate = async () => {
+    const check = await api('/api/validate', { text: area.value });
+    if (!check.ok) return showMessage(check.data.error);
+    showMessage(check.data.ok ? 'No errors found' : check.data.error, check.data.ok ? 'ok' : 'bad');
+  };
+  const save = async () => {
+    if ((state.dirty || state.configDirty) && !confirm('You have unsaved changes that will be lost. Continue?')) return;
+    const saved = await api('/api/raw', { version: state.raw.version, text: area.value });
+    if (!saved.ok) return showMessage(`Not saved: ${saved.data.error}`);
+    showMessage('Saved; the display updates within a second', 'ok');
+    state.model = null;
+    setDirty(false);
+    loadRaw();
+  };
+  $('tab-raw').replaceChildren(el('div', { class: 'card' },
+    el('h2', {}, 'Raw settings file'),
+    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Full access to every setting (fonts, colours, relays…). Changes are checked before they are applied.'),
+    area,
+    el('div', { class: 'row-actions' },
+      el('button', { class: 'btn', onclick: validate }, 'Check'),
+      el('button', { class: 'btn primary', onclick: save }, 'Save & apply'),
+      el('button', { class: 'btn', onclick: loadRaw }, 'Reload'))));
+}
+
+// ---- history --------------------------------------------------------------
+async function loadHistory() {
+  const result = await api('/api/backups');
+  if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
+  const view = el('pre', { class: 'view hidden' });
+  const list = el('ul', { class: 'backups' }, result.data.backups.map((b) => el('li', {},
+    el('span', {}, new Date(b.mtime * 1000).toLocaleString()),
+    el('button', { class: 'btn icon', onclick: async () => {
+      const got = await api(`/api/backups/${encodeURIComponent(b.name)}`);
+      if (!got.ok) return showMessage(got.data.error);
+      view.textContent = got.data.text; view.classList.remove('hidden'); view.scrollIntoView({ behavior: 'smooth' });
+    } }, 'View'),
+    el('button', { class: 'btn icon', onclick: async () => {
+      if (!confirm(`Restore the settings from ${new Date(b.mtime * 1000).toLocaleString()}? The current file is backed up first.`)) return;
+      const raw = await api('/api/raw');
+      if (!raw.ok) return showMessage(raw.data.error);
+      const restored = await api('/api/restore', { name: b.name, version: raw.data.version });
+      if (!restored.ok) return showMessage(`Not restored: ${restored.data.error}`);
+      showMessage('Restored; the display updates within a second', 'ok');
+      state.model = null; setDirty(false); loadHistory();
+    } }, 'Restore'))));
+  $('tab-history').replaceChildren(el('div', { class: 'card' },
+    el('h2', {}, 'Previous versions'),
+    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'A copy is kept automatically before every change (latest 30).'),
+    result.data.backups.length ? list : el('p', { class: 'muted' }, 'No backups yet.'), view));
+}
+
+// ---- start up -------------------------------------------------------------
+let started = false;
+function start() {
+  renderTabs();
+  selectTab(state.tab);
+  if (started) return;
+  started = true;
+  setInterval(tick, 1000);
+  setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, 5000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && state.tab === 'status') loadStatus(); });
+}
+start();
+</script>
+</body>
+</html>
+)esphome_web_ui";

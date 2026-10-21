@@ -11,6 +11,7 @@
 #include "auth.h"
 #include "esphome/core/log.h"
 #include "web_editor.h"
+#include "web_ui.h"
 
 namespace esphome {
 namespace web_editor {
@@ -138,6 +139,17 @@ static esp_err_t api_handler(httpd_req_t *req) {
   if (query != std::string::npos)
     uri.resize(query);
   request.path = std::move(uri);
+  // the editor page itself (python serves web.html on /); CSP as in web.py _send
+  if (request.method == "GET" && (request.path == "/" || request.path == "/index.html")) {
+    ApiResponse page;
+    page.content_type = "text/html; charset=utf-8";
+    page.extra_headers.emplace_back(
+        "Content-Security-Policy",
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; frame-ancestors 'none'");
+    page.body = WEB_UI_HTML;
+    return send_response(req, page);
+  }
   request.content_type = header_value(req, "Content-Type", SMALL_HEADER_BUF);
   request.origin = header_value(req, "Origin", SMALL_HEADER_BUF);
   request.host = header_value(req, "Host", SMALL_HEADER_BUF);
