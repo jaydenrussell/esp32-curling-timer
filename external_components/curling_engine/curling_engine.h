@@ -20,6 +20,7 @@ namespace curling_engine {
 //
 // Storage layout: partition label "storage" (added from __init__.py) mounted
 // at store_path_ (default /flash) holding pitimer_settings.yml + backups/.
+// FAT via wear levelling (SPIFFS VFS cannot mkdir/opendir for backups).
 
 static constexpr const char *SETTINGS_BASENAME = "pitimer_settings.yml";
 
@@ -55,6 +56,7 @@ class CurlingEngineComponent : public Component {
   std::unique_ptr<StoreFs> fs_;
   std::unique_ptr<SettingsStore> store_;
   bool ready_{false};
+  int32_t wl_handle_{-1};  // wl_handle_t; FAT mount handle for unmount
 };
 
 }  // namespace curling_engine

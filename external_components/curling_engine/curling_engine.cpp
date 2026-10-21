@@ -4,7 +4,7 @@
 
 #include "default_settings.h"
 #include "esp_err.h"
-#include "esp_spiffs.h"
+#include "esp_vfs_fat.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -12,25 +12,28 @@ namespace curling_engine {
 
 static const char *const TAG = "curling_engine";
 static const char *const PARTITION_LABEL = "storage";
-static const size_t SPIFFS_MAX_FILES = 40;
+// FAT counts every open file and directory against this limit.
+static constexpr size_t FAT_MAX_FILES = 16;
 
 void CurlingEngineComponent::setup() {
-  esp_vfs_spiffs_conf_t conf = {};
-  conf.base_path = this->store_path_.c_str();
-  conf.partition_label = PARTITION_LABEL;
-  conf.max_files = SPIFFS_MAX_FILES;
+  esp_vfs_fat_mount_config_t conf = {};
   conf.format_if_mount_failed = true;
-  esp_err_t err = esp_vfs_spiffs_register(&conf);
+  conf.max_files = FAT_MAX_FILES;
+  conf.allocation_unit_size = 16 * 1024;
+  esp_err_t err =
+      esp_vfs_fat_spiflash_mount_rw_wl(this->store_path_.c_str(), PARTITION_LABEL, &conf,
+                                       &this->wl_handle_);
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "SPIFFS mount of %s (partition '%s') failed: %s — check esp32 partitions",
+    ESP_LOGE(TAG, "FAT mount of %s (partition '%s') failed: %s — check esp32 partitions",
              this->store_path_.c_str(), PARTITION_LABEL, esp_err_to_name(err));
     this->mark_failed();
     return;
   }
-  size_t total = 0, used = 0;
-  if (esp_spiffs_info(PARTITION_LABEL, &total, &used) == ESP_OK)
-    ESP_LOGI(TAG, "SPIFFS %s: %u KB total, %u KB used", this->store_path_.c_str(),
-             static_cast<unsigned>(total / 1024), static_cast<unsigned>(used / 1024));
+  uint64_t total = 0, used = 0;
+  if (esp_vfs_fat_info(this->store_path_.c_str(), &total, &used) == ESP_OK)
+    ESP_LOGI(TAG, "FATFS %s: %llu KB total, %llu KB used", this->store_path_.c_str(),
+             static_cast<unsigned long long>(total / 1024),
+             static_cast<unsigned long long>(used / 1024));
 
   this->fs_.reset(make_posix_store_fs());
   this->store_ = std::make_unique<SettingsStore>(this->fs_.get(), this->settings_path());

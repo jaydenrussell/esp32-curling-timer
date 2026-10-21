@@ -23,6 +23,8 @@ class WebEditorComponent : public Component {
 
   WebConfig &web_config() { return web_config_; }
   LoginLimiter &login_limiter() { return limiter_; }
+  curling_engine::CurlingEngineComponent *engine() { return engine_; }
+  uint16_t port() const { return port_; }
 
  protected:
   bool load_auth_from_nvs();

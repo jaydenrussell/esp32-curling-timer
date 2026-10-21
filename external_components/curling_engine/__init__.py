@@ -29,7 +29,7 @@ CONFIG_SCHEMA = cv.COMPONENT_SCHEMA.extend(
         cv.GenerateID(): cv.declare_id(CurlingEngineComponent),
         # Directory on SPIFFS holding pitimer_settings.yml + rolling backups.
         cv.Optional(CONF_STORE_PATH, default="/flash"): cv.string,
-        # data/spiffs partition appended to the generated table (app slots
+        # data/fat partition appended to the generated table (app slots
         # shrink automatically). Set to 0 if you declare your own partition.
         cv.Optional(CONF_PARTITION_SIZE, default=DEFAULT_PARTITION_SIZE): _validate_partition_size,
         cv.GenerateID(CONF_TIME_ID): cv.use_id(time.RealTimeClock),
@@ -38,11 +38,14 @@ CONFIG_SCHEMA = cv.COMPONENT_SCHEMA.extend(
 
 
 async def to_code(config):
-    # esp32 excludes the spiffs IDF component by default; re-enable it here.
-    esp32.include_builtin_idf_component("spiffs")
+    # fatfs + wear_levelling are excluded by default (ESPHome itself doesn't
+    # use filesystem storage); re-enable them for the settings partition.
+    # (SPIFFS VFS cannot mkdir/opendir, so backups need a real filesystem.)
+    esp32.include_builtin_idf_component("fatfs")
+    esp32.include_builtin_idf_component("wear_levelling")
     if config[CONF_PARTITION_SIZE]:
         esp32.add_partition(
-            STORAGE_PARTITION_NAME, "data", "spiffs", config[CONF_PARTITION_SIZE]
+            STORAGE_PARTITION_NAME, "data", "fat", config[CONF_PARTITION_SIZE]
         )
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)

@@ -4,6 +4,7 @@
 #include <nvs_flash.h>
 
 #include "esphome/core/log.h"
+#include "http.h"
 
 namespace esphome {
 namespace web_editor {
@@ -65,6 +66,10 @@ void WebEditorComponent::setup() {
     return;
   }
   ESP_LOGI(TAG, "auth ready (session cookie %s, port %u)", SESSION_COOKIE, this->port_);
+  if (!start_web_httpd(this)) {
+    this->mark_failed();
+    return;
+  }
 }
 
 bool WebEditorComponent::load_auth_from_nvs() {

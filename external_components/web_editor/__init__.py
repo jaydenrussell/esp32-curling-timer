@@ -1,9 +1,9 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import curling_engine
+from esphome.components import curling_engine, esp32
 from esphome.const import CONF_ID, CONF_PASSWORD, CONF_PORT
 
-DEPENDENCIES = ["curling_engine"]
+DEPENDENCIES = ["curling_engine", "esp32", "json"]
 
 CONF_ENGINE_ID = "engine_id"
 
@@ -29,3 +29,5 @@ async def to_code(config):
     cg.add(var.set_engine(engine))
     cg.add(var.set_password(config[CONF_PASSWORD]))
     cg.add(var.set_port(config[CONF_PORT]))
+    # not in DEFAULT_EXCLUDED_IDF_COMPONENTS' allowlist — re-enable it
+    esp32.include_builtin_idf_component("esp_http_server")
