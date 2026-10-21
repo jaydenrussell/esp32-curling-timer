@@ -134,7 +134,19 @@ sensor:
 # =====================================================================
 # WIP — enable as external_components land (in implementation order):
 #
-# 1. Schedule engine + web editor (source path is relative to this file):
+# 1. Schedule engine + web editor.
+#    In this repo the source is relative to this file:
+#      source: ../external_components
+#    From the Home Assistant "ESPHome Device Builder" add-on (or any
+#    build outside this repo) use the GitHub form instead - this is a
+#    public repo and the components live under external_components/:
+#      source:
+#        type: github
+#        url: https://github.com/jaydenrussell/esp32-curling-timer
+#        ref: main
+#        path: external_components
+#    (`path:` is required: a cloned repo is only auto-scanned for
+#    components/ or esphome/components/)
 # external_components:
 #   - source: ../external_components
 #     components: [curling_engine, web_editor]
