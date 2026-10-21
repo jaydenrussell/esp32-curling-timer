@@ -1,11 +1,11 @@
 #pragma once
 
-// WIP stub — Phase C (web_editor API + httpd + UI) replaces this with the
-// full esp_http_server implementation. Exists now so codegen references
-// (set_engine/set_password/set_port) compile and the harness validates.
+// WIP: HTTP/UI land in the next step (web.py parity API + ported web.html
+// with the Config tab). This step adds the auth module + NVS persistence.
 
 #include <string>
 
+#include "auth.h"
 #include "esphome/components/curling_engine/curling_engine.h"
 #include "esphome/core/component.h"
 
@@ -18,12 +18,21 @@ class WebEditorComponent : public Component {
   void set_password(const std::string &password) { password_ = password; }
   void set_port(uint16_t port) { port_ = port; }
 
+  void setup() override;
   void dump_config() override;
 
+  WebConfig &web_config() { return web_config_; }
+  LoginLimiter &login_limiter() { return limiter_; }
+
  protected:
+  bool load_auth_from_nvs();
+  bool save_auth_to_nvs();
+
   curling_engine::CurlingEngineComponent *engine_{nullptr};
   std::string password_;
   uint16_t port_{8080};
+  WebConfig web_config_;
+  LoginLimiter limiter_;
 };
 
 }  // namespace web_editor

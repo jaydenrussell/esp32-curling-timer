@@ -14,6 +14,7 @@ $vcvars = Join-Path $vs "VC\Auxiliary\Build\vcvars64.bat"
 
 $engineNames = "settings", "model", "quickstart", "sha256", "store", "fs_std"
 $engine = $engineNames | ForEach-Object { Join-Path $root "external_components\curling_engine\$_.cpp" }
+$engine += Join-Path $root "external_components\web_editor\auth.cpp"
 $tests = (Get-ChildItem (Join-Path $here "test_*.cpp")).FullName
 $missing = @($engine + $tests) | Where-Object { -not (Test-Path $_) }
 if ($missing) { throw "missing sources: $($missing -join ', ')" }
