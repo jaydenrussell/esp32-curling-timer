@@ -682,7 +682,7 @@ const CONFIG_SECTIONS = [
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.entry_name', 'bool', 'Show entry name']] },
   { title: 'Bell / buzzer',
-    hint: 'Each event pulses its chosen relays for the ring duration. Games without a countdown warning (shorter than the minutes below) never trigger it.',
+    hint: 'Each event pulses its own relays for the ring duration; an empty relay list switches that event off. The countdown warning only applies to games longer than the minutes set here.',
     fields: [
       ['config.buzzer.relays', 'relays', 'Relays that ring at the buzzer time'],
       ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000],
