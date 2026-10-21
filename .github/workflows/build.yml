@@ -20,7 +20,6 @@ jobs:
       - name: Generate dummy secrets for compile check
         run: cp esphome/secrets.yaml.example esphome/secrets.yaml
       - name: Compile curling-timer.yaml
-        uses: esphome/build-action@v1.9.1
+        uses: esphome/build-action@v8.1.0
         with:
-          yaml_file: esphome/curling-timer.yaml
-          platform: esphome
+          yaml-file: esphome/curling-timer.yaml
