@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <set>
 #include <string>
 
 #include "bell.h"
@@ -60,13 +61,11 @@ class CurlingEngineComponent : public Component {
   // carries the red/yellow error screen state).
   bool display_snapshot(DisplaySnapshot *out);
 
-  // 1 Hz bell tick (pitimer buzz_if_due): rings once per (date, start) game
-  // when seconds_until_buzzer enters [-BUZZER_GRACE_SECONDS, 0]. Returns the
-  // BELL_RELAY_* bitmask from settings buzzer.relays (RELAY3/4 ignored), 0
-  // when nothing is due; on a non-zero return bell_duration_ms() is the
-  // buzzer.duration pulse length from the same settings read.
-  int bell_due();
-  uint32_t bell_duration_ms() const { return this->bell_duration_ms_; }
+  // 1 Hz bell tick (pitimer buzz_if_due + optional start/countdown events):
+  // returns true when at least one event fires this tick, filling *out with
+  // the merged relay bitmask (BELL_RELAY_*) and pulse length. Each event
+  // rings once per (date, start) game; see settings buzzer section.
+  bool bell_tick(BellRing *out);
 
  protected:
   std::string store_path_{"/flash"};
@@ -76,8 +75,8 @@ class CurlingEngineComponent : public Component {
   bool ready_{false};
   int32_t wl_handle_{-1};  // wl_handle_t; FAT mount handle for unmount
   uint32_t last_error_log_ms_{0};  // throttle for repeated snapshot errors
-  std::string last_buzzed_key_;    // pitimer last_buzzed: (date, start) game
-  uint32_t bell_duration_ms_{0};   // set by bell_due() when it fires
+  std::set<std::string> fired_keys_;  // bell events already rung this game
+                                      // ("date/start/buzzer|start|countdown")
 };
 
 }  // namespace curling_engine

@@ -126,25 +126,24 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
   return true;
 }
 
-int CurlingEngineComponent::bell_due() {
-  this->bell_duration_ms_ = 0;
+bool CurlingEngineComponent::bell_tick(BellRing *out) {
+  *out = BellRing{};
   if (!this->ready_)
-    return 0;
+    return false;
   int weekday_mon0 = 0, seconds_of_day = 0;
   std::string date_iso;
   if (!this->local_now(&weekday_mon0, &seconds_of_day, &date_iso))
-    return 0;
+    return false;
   PiTimerSettings settings;
   std::string err;
   if (!this->read_parsed(&settings, nullptr, nullptr, &err))
-    return 0;
+    return false;
   auto game = settings.find_current_game(weekday_mon0, seconds_of_day, date_iso);
-  int mask = bell_check(settings, game, date_iso, &this->last_buzzed_key_,
-                        &this->bell_duration_ms_);
-  if (mask != 0)
-    ESP_LOGI(TAG, "bell due for %s: relays mask %d, %u ms", this->last_buzzed_key_.c_str(), mask,
-             static_cast<unsigned>(this->bell_duration_ms_));
-  return mask;
+  // Qualified: the member bell_tick() would otherwise hide the free function.
+  if (!::esphome::curling_engine::bell_tick(settings, game, date_iso, &this->fired_keys_, out))
+    return false;
+  ESP_LOGI(TAG, "bell: relays mask %d, %u ms", out->mask, static_cast<unsigned>(out->duration_ms));
+  return true;
 }
 
 }  // namespace curling_engine

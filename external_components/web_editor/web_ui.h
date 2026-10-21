@@ -682,13 +682,19 @@ const CONFIG_SECTIONS = [
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.entry_name', 'bool', 'Show entry name']] },
   { title: 'Bell / buzzer',
+    hint: 'Each event pulses its chosen relays for the ring duration. Games without a countdown warning (shorter than the minutes below) never trigger it.',
     fields: [
-      ['config.buzzer.relays', 'relays', 'Relays that ring'],
-      ['config.buzzer.duration', 'int', 'Buzzer duration (seconds)', 0, 100000],
+      ['config.buzzer.relays', 'relays', 'Relays that ring at the buzzer time'],
+      ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000],
+      ['config.buzzer.ring_at_start', 'relays', 'Relays that ring at game start (none = off)'],
+      ['config.buzzer.countdown.minutes_before', 'int', 'Countdown warning: minutes before the buzzer (0 = off)', 0, 100000],
+      ['config.buzzer.countdown.relays', 'relays', 'Relays that ring at the countdown warning'],
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
 const RELAY_NAMES = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4'];
+const RELAYS_PATHS = new Set(['config.buzzer.relays', 'config.buzzer.ring_at_start',
+  'config.buzzer.countdown.relays']);
 // common pygame colour names — the file accepts any single line of text, this just assists typing
 const PYGAME_COLORS = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta', 'gray', 'grey',
   'navy', 'skyblue', 'wheat', 'orange', 'purple', 'brown', 'pink', 'lime', 'teal', 'olive', 'maroon', 'silver',
@@ -697,7 +703,7 @@ const PYGAME_COLORS = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan
 
 // the value as it will be compared/sent: absent text and absent relays compare equal to cleared
 function configNorm(path, value) {
-  if (path === 'config.buzzer.relays') return Array.isArray(value) ? value : [];
+  if (RELAYS_PATHS.has(path)) return Array.isArray(value) ? value : [];
   if (value == null) return '';
   return value;
 }
@@ -709,7 +715,7 @@ function configDiff() {
     if (typeof value === 'string') value = value.trim();
     const before = configNorm(path, state.configOriginal[path]);
     const after = configNorm(path, value);
-    const equal = path === 'config.buzzer.relays'
+    const equal = RELAYS_PATHS.has(path)
       ? JSON.stringify(before) === JSON.stringify(after)
       : before === after;
     if (!equal) diff[path] = value;
@@ -727,7 +733,8 @@ function validateConfigDiff(diff) {
         return 'Minutes per unit must be a number greater than 0';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
                path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
-               path === 'config.buzzer.header_hold') {
+               path === 'config.buzzer.header_hold' ||
+               path === 'config.buzzer.countdown.minutes_before') {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 100000)
         return `${path} must be a whole number of seconds or pixels (0 or more)`;
     }

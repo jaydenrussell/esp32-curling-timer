@@ -629,6 +629,19 @@ ApiResponse PiTimerApi::get_config() {
   } else {
     cfg["buzzer.relays"] = nullptr;
   }
+  if (s.ring_at_start.has_value()) {
+    JsonArray relays = cfg["buzzer.ring_at_start"].to<JsonArray>();
+    for (const std::string &relay : *s.ring_at_start)
+      relays.add(relay);
+  } else {
+    cfg["buzzer.ring_at_start"] = nullptr;
+  }
+  cfg["buzzer.countdown.minutes_before"] = s.countdown_minutes_before;
+  {
+    JsonArray relays = cfg["buzzer.countdown.relays"].to<JsonArray>();
+    for (const std::string &relay : s.countdown_relays)
+      relays.add(relay);
+  }
   cfg["buzzer.duration"] = s.relay_duration;
   cfg["buzzer.header_hold"] = s.relay_msg_time;
   return from_document(doc);
@@ -661,11 +674,13 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
     } else if (path == "config.header.font_size" || path == "config.countdown.font_size_4_digits" ||
                path == "config.countdown.font_size_5_digits" ||
                path == "config.pace_of_play.font_size" || path == "config.footer.font_size" ||
-               path == "config.buzzer.duration" || path == "config.buzzer.header_hold") {
+               path == "config.buzzer.duration" || path == "config.buzzer.header_hold" ||
+               path == "config.buzzer.countdown.minutes_before") {
       if (!json_strict_int(v, &number) || number < 0 || number > 100000)
         return error_json(422, path + " must be a whole number of seconds or pixels (0 or more)");
       yaml = curling_engine::yaml_int(number);
-    } else if (path == "config.buzzer.relays") {
+    } else if (path == "config.buzzer.relays" || path == "config.buzzer.ring_at_start" ||
+               path == "config.buzzer.countdown.relays") {
       if (!v.is<JsonArrayConst>())
         return error_json(422, path + " must be a list of RELAY1, RELAY2, RELAY3 and/or RELAY4");
       std::vector<std::string> relays;

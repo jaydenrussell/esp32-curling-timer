@@ -76,7 +76,16 @@ config:
         # relays - List of PiRelay V2 Shield relays ('RELAYn' where n can be from 1 to 4)
         #          connected to bell/buzzers/lights (use empty list [] for nothing connected)
         #          e.g. ['RELAY1', 'RELAY2'] or ['RELAY4'] or []
+        #          These relays ring when a game's buzzer time is reached.
         relays: ['RELAY1']
+        # ring_at_start - Optional: relays to also ring for 'duration' seconds when a
+        #                 game STARTS (use empty list [] for no start ring).
+        ring_at_start: []
+        # countdown - Optional: ring relays a warning 'minutes_before' minutes before
+        #             the buzzer time (minutes_before: 0 turns the warning off).
+        countdown:
+            minutes_before: 0
+            relays: []
         # duration - How long to keep relays on (i.e. operating) in integer seconds
         duration: 2
         # header_hold - How long to hold the 'during_buzzer' header message in integer seconds

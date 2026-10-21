@@ -1179,6 +1179,25 @@ static const YamlValue *require_(const YamlValue *section, const char *key, YTyp
   return v;
 }
 
+// Port of the buzzer-section relay list validation (settings.py: relays must
+// be a list of RELAY1..RELAY4). Also used for the optional ring_at_start and
+// countdown.relays lists.
+static bool parse_relay_seq(const YamlValue &seq, const char *what, const char *where,
+                            std::vector<std::string> *out, std::string *err) {
+  out->clear();
+  for (const YamlValue &relay : seq.seq) {
+    bool ok = relay.type == YType::Str && (relay.s == "RELAY1" || relay.s == "RELAY2" ||
+                                           relay.s == "RELAY3" || relay.s == "RELAY4");
+    if (!ok) {
+      *err = std::string("entry ") + yaml_repr(relay) + " in " + where + " " + what +
+             " not one of " + VALID_RELAYS_REPR;
+      return false;
+    }
+    out->push_back(relay.s);
+  }
+  return true;
+}
+
 // Python f-string helper: None prints bare 'None' inside messages.
 static std::string game_msg(const PiTimerGame &g) {
   return g.message.has_value() ? *g.message : "None";
@@ -1331,6 +1350,9 @@ void PiTimerSettings::reset() {
   date_and_time = false;
   game_name = false;
   relays = std::nullopt;
+  ring_at_start = std::nullopt;
+  countdown_minutes_before = 0;
+  countdown_relays.clear();
   relay_duration = 0;
   relay_msg_time = 0;
   schedules.clear();
@@ -1467,15 +1489,42 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if (rl == nullptr)
     return false;
   relays = std::vector<std::string>{};
-  for (const YamlValue &relay : rl->seq) {
-    bool ok = relay.type == YType::Str && (relay.s == "RELAY1" || relay.s == "RELAY2" ||
-                                           relay.s == "RELAY3" || relay.s == "RELAY4");
-    if (!ok) {
-      *err = std::string("entry ") + yaml_repr(relay) + " in " + where +
-             " relays not one of " + VALID_RELAYS_REPR;
+  if (!parse_relay_seq(*rl, "relays", where, &*relays, err))
+    return false;
+  // Optional ring events (absent = feature off; see default_settings.h).
+  ring_at_start = std::nullopt;
+  if ((v = buzzer->find("ring_at_start")) != nullptr) {
+    if (v->type != YType::Seq) {
+      *err = std::string("'ring_at_start' in ") + where + " is not a valid list (" +
+             yaml_repr(*v) + ")";
       return false;
     }
-    relays->push_back(relay.s);
+    ring_at_start = std::vector<std::string>{};
+    if (!parse_relay_seq(*v, "ring_at_start", where, &*ring_at_start, err))
+      return false;
+  }
+  countdown_minutes_before = 0;
+  countdown_relays.clear();
+  if ((v = buzzer->find("countdown")) != nullptr) {
+    if (v->type != YType::Map) {
+      *err = std::string("'countdown' in ") + where + " is not a valid section (" + yaml_repr(*v) +
+             ")";
+      return false;
+    }
+    const char *cd_where = "config buzzer countdown section";
+    const YamlValue *minutes = require_(v, "minutes_before", YType::Int, cd_where, err);
+    if (minutes == nullptr)
+      return false;
+    if (minutes->i < 0) {
+      *err = "'minutes_before' in config buzzer countdown section cannot be negative";
+      return false;
+    }
+    countdown_minutes_before = static_cast<int>(minutes->i);
+    const YamlValue *cd_relays = require_(v, "relays", YType::Seq, cd_where, err);
+    if (cd_relays == nullptr)
+      return false;
+    if (!parse_relay_seq(*cd_relays, "relays", cd_where, &countdown_relays, err))
+      return false;
   }
   if ((v = require_(buzzer, "duration", YType::Int, where, err)) == nullptr)
     return false;

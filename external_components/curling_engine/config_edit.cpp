@@ -1,6 +1,7 @@
 #include "config_edit.h"
 
 #include "model.h"
+#include "settings.h"
 
 namespace esphome {
 namespace curling_engine {
@@ -158,6 +159,82 @@ static bool replace_line_value(std::vector<std::string> *lines, size_t index, co
   return true;
 }
 
+// Append `key: <yaml>` as the last line of the block opened at parent (used
+// when a newer setting is missing from an older file). An empty `yaml`
+// creates just the parent key line for nested paths. Returns the inserted
+// line index. Child indent matches the first existing child line, else
+// parent + 2.
+static size_t insert_child_value(std::vector<std::string> *lines, size_t parent,
+                                 const std::string &key, const std::string &yaml) {
+  const size_t parent_indent = line_indent((*lines)[parent]);
+  size_t child_indent = parent_indent + 2;
+  bool have_child_indent = false;
+  // Empty block (just the parent key line): insert immediately after it.
+  size_t insert_at = parent + 1;
+  for (size_t i = parent + 1; i < lines->size(); i++) {
+    const std::string &line = (*lines)[i];
+    const size_t indent = line_indent(line);
+    if (line_is_blank_or_comment(line)) {
+      const bool is_comment = indent < line.size() && line[indent] == '#';
+      if (!is_comment || indent > parent_indent)
+        continue;  // blank line, or comment inside the block: keep scanning
+      break;  // outdented comment (section separator) — block ended
+    }
+    if (indent <= parent_indent)
+      break;  // next key at/beyond parent indent — block ended
+    if (!have_child_indent) {
+      // First content line in the block sets the child indent (files use
+      // parent+2 or deeper nesting; pyyaml seq items match sibling keys).
+      child_indent = indent;
+      have_child_indent = true;
+    }
+    insert_at = i + 1;
+  }
+  std::string new_line(child_indent, ' ');
+  new_line += key + ":";
+  if (!yaml.empty())
+    new_line += " " + yaml;
+  lines->insert(lines->begin() + static_cast<long>(insert_at), std::move(new_line));
+  return insert_at;
+}
+
+// Newer settings that may be inserted when missing from an older file.
+// Anything else that is absent keeps failing with "no config setting" so
+// typos and removed keys are rejected instead of silently appended.
+static bool insertable_config_path(const std::string &path) {
+  return path == "config.buzzer.ring_at_start" || path == "config.buzzer.countdown.minutes_before" ||
+         path == "config.buzzer.countdown.relays";
+}
+
+// The countdown section needs both keys (minutes_before and relays), so a
+// partial edit is completed from the current file: an unchanged key keeps its
+// stored value, a section that does not exist yet starts at 0 minutes and no
+// relays (event off).
+static void complete_countdown_values(std::vector<ConfigValue> *values, const std::string &text) {
+  bool has_minutes = false;
+  bool has_relays = false;
+  for (const ConfigValue &value : *values) {
+    if (value.path == "config.buzzer.countdown.minutes_before")
+      has_minutes = true;
+    else if (value.path == "config.buzzer.countdown.relays")
+      has_relays = true;
+  }
+  if (!has_minutes && !has_relays)
+    return;  // no countdown edit: leave the section untouched
+  int minutes = 0;
+  std::vector<std::string> relays;
+  PiTimerSettings settings;
+  std::string err;
+  if (settings.parse_settings_text(text, "settings.yml", &err)) {
+    minutes = settings.countdown_minutes_before;
+    relays = settings.countdown_relays;
+  }
+  if (!has_minutes)
+    values->push_back(ConfigValue{"config.buzzer.countdown.minutes_before", yaml_int(minutes)});
+  if (!has_relays)
+    values->push_back(ConfigValue{"config.buzzer.countdown.relays", yaml_relays(relays)});
+}
+
 bool apply_config_values(const std::string &text, const std::vector<ConfigValue> &values,
                          std::string *out, std::string *err) {
   if (values.empty()) {
@@ -167,7 +244,10 @@ bool apply_config_values(const std::string &text, const std::vector<ConfigValue>
   std::string newline;
   std::vector<std::string> lines = split_lines(text, &newline);
 
-  for (const ConfigValue &value : values) {
+  std::vector<ConfigValue> complete = values;
+  complete_countdown_values(&complete, text);
+
+  for (const ConfigValue &value : complete) {
     // path must start with "config." and have at least one more segment
     if (value.path.rfind("config.", 0) != 0 || value.path.size() <= sizeof("config.") - 1) {
       *err = "no config setting '" + value.path + "' in the settings file";
@@ -189,6 +269,19 @@ bool apply_config_values(const std::string &text, const std::vector<ConfigValue>
       }
       size_t child;
       if (!find_child_line(lines, static_cast<long>(index), key, &child)) {
+        if (insertable_config_path(value.path)) {
+          if (dot == std::string::npos) {
+            // Newer setting missing from an older file: append it to the
+            // parent block instead of failing the whole save.
+            insert_child_value(&lines, index, key, value.yaml);
+            break;
+          }
+          // Intermediate block missing (e.g. buzzer.countdown on older
+          // files): create the empty parent line and keep walking the path.
+          index = insert_child_value(&lines, index, key, "");
+          rest = dot + 1;
+          continue;
+        }
         *err = "no config setting '" + value.path + "' in the settings file";
         return false;
       }

@@ -1,5 +1,9 @@
 #include "doctest.h"
 
+#include <cstdio>
+#include <string>
+#include <vector>
+
 #include "../../external_components/curling_engine/config_edit.h"
 #include "../../external_components/curling_engine/settings.h"
 #include "generated_fixtures.h"
@@ -144,4 +148,82 @@ TEST_CASE ("apply_config_values preserves CRLF and inner schedule comments") {
   PiTimerSettings s;
   REQUIRE(s.parse_settings_text(out, "pitimer_settings.yml", &err));
   CHECK(s.font_sizes["footer"] == 128);
+}
+
+TEST_CASE("apply_config_values inserts newer keys missing from older files") {
+  // TEXT_SETTINGS_TEXT predates the ring events: buzzer has no ring_at_start
+  // and no countdown block. Saving the new fields must insert them rather
+  // than fail with "no config setting".
+  std::string out, err;
+  const std::vector<ConfigValue> values = {
+      {"config.buzzer.ring_at_start", yaml_relays({"RELAY2"})},
+      {"config.buzzer.countdown.minutes_before", yaml_int(2)},
+      {"config.buzzer.countdown.relays", yaml_relays({"RELAY1", "RELAY2"})},
+      {"config.buzzer.duration", yaml_int(3)},
+  };
+  REQUIRE(apply_config_values(TEXT_SETTINGS_TEXT, values, &out, &err));
+  CHECK(out != TEXT_SETTINGS_TEXT);
+  // New keys must sit inside the buzzer block, before the schedule section.
+  const size_t buzzer = out.find("buzzer:");
+  const size_t start = out.find("ring_at_start: ['RELAY2']");
+  const size_t minutes = out.find("minutes_before: 2");
+  const size_t relays = out.find("relays: ['RELAY1', 'RELAY2']");
+  const size_t schedule = out.find("schedule:");
+  REQUIRE(buzzer != std::string::npos);
+  CHECK(start > buzzer);
+  CHECK(minutes > buzzer);
+  CHECK(relays > buzzer);
+  REQUIRE(schedule != std::string::npos);
+  CHECK(start < schedule);
+  CHECK(minutes < schedule);
+  CHECK(relays < schedule);
+
+  PiTimerSettings s;
+  if (!s.parse_settings_text(out, "pitimer_settings.yml", &err)) {
+    std::printf("ERR: %s\n", err.c_str());
+    FAIL("parse failed");
+  }
+  REQUIRE(s.ring_at_start.has_value());
+  CHECK(*s.ring_at_start == std::vector<std::string>{"RELAY2"});
+  CHECK(s.countdown_minutes_before == 2);
+  CHECK(s.countdown_relays == std::vector<std::string>({"RELAY1", "RELAY2"}));
+  CHECK(s.relay_duration == 3);
+  // Existing keys still editable in the same save.
+  CHECK(s.relay_msg_time == 300);
+}
+
+TEST_CASE("apply_config_values inserts into a buzzer block with a trailing comment") {
+  // Complete settings file (CASE_BASE) with an outdented comment injected
+  // between the buzzer block and the schedule section.
+  std::string text(CASE_BASE);
+  const size_t sched = text.find("schedule:");
+  REQUIRE(sched != std::string::npos);
+  text.insert(sched, "# ---- schedule below ----\n");
+  std::string out, err;
+  REQUIRE(apply_config_values(text, {{"config.buzzer.ring_at_start", yaml_relays({"RELAY2"})},
+                                     {"config.buzzer.countdown.minutes_before", yaml_int(1)}},
+                              &out, &err));
+  const size_t hold = out.find("header_hold: 300");
+  const size_t start = out.find("ring_at_start: ['RELAY2']");
+  const size_t minutes = out.find("minutes_before: 1");
+  REQUIRE(hold != std::string::npos);
+  REQUIRE(start != std::string::npos);
+  REQUIRE(minutes != std::string::npos);
+  // Inserted after the block's last real key, before the outdented comment.
+  CHECK(start > hold);
+  CHECK(minutes > hold);
+  CHECK(out.find("# ---- schedule below ----") > minutes);
+  // Indentation matches the buzzer block's existing children (4-space style).
+  const size_t line_start = out.rfind('\n', start) + 1;
+  CHECK(out.compare(line_start, 4, "    ") == 0);
+  PiTimerSettings s;
+  if (!s.parse_settings_text(out, "settings.yml", &err)) {
+    std::printf("ERR: %s\n", err.c_str());
+    FAIL("parse failed");
+  }
+  REQUIRE(s.ring_at_start.has_value());
+  CHECK(s.countdown_minutes_before == 1);
+  // The countdown section needs both keys: the missing one is completed from
+  // the current file (no countdown section yet -> 0 minutes, no relays).
+  CHECK(s.countdown_relays.empty());
 }

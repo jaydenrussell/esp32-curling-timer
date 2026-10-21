@@ -310,3 +310,108 @@ TEST_CASE ("first-boot default example parses") {
     exception_entries += day.second.size();
   CHECK(exception_entries == 2);  // 2027-01-16 bonspiel (2026-12-25 closed)
 }
+
+// ---------------------------------------------------------------------------
+// Optional buzzer ring events (extensions beyond pitimer v2.4.4)
+// ---------------------------------------------------------------------------
+
+namespace {
+
+std::string with_ring_events(const std::string &buzzer_block) {
+  std::string text(CASE_BASE);
+  const std::string old_block =
+      "  buzzer:\n"
+      "    relays:\n"
+      "    - RELAY1\n"
+      "    duration: 2\n"
+      "    header_hold: 300\n";
+  const size_t at = text.find(old_block);
+  REQUIRE(at != std::string::npos);
+  text.replace(at, old_block.size(), buzzer_block);
+  return text;
+}
+
+constexpr const char *BUZZER_EVENTS_BLOCK =
+    "  buzzer:\n"
+    "    relays:\n"
+    "    - RELAY1\n"
+    "    ring_at_start:\n"
+    "    - RELAY2\n"
+    "    countdown:\n"
+    "      minutes_before: 2\n"
+    "      relays: ['RELAY1', 'RELAY2']\n"
+    "    duration: 2\n"
+    "    header_hold: 300\n";
+
+}  // namespace
+
+TEST_CASE("ring event keys parse with their relay lists") {
+  auto r = parse_text(with_ring_events(BUZZER_EVENTS_BLOCK).c_str());
+  REQUIRE(r.ok);
+  REQUIRE(r.s.ring_at_start.has_value());
+  CHECK(*r.s.ring_at_start == std::vector<std::string>{"RELAY2"});
+  CHECK(r.s.countdown_minutes_before == 2);
+  CHECK(r.s.countdown_relays == std::vector<std::string>({"RELAY1", "RELAY2"}));
+}
+
+TEST_CASE("older files without ring event keys parse as each event off") {
+  auto r = parse_text(CASE_BASE);
+  REQUIRE(r.ok);
+  CHECK_FALSE(r.s.ring_at_start.has_value());
+  CHECK(r.s.countdown_minutes_before == 0);
+  CHECK(r.s.countdown_relays.empty());
+}
+
+TEST_CASE("invalid ring event relays are rejected like buzzer.relays") {
+  auto r = parse_text(with_ring_events(
+      "  buzzer:\n"
+      "    relays: ['RELAY1']\n"
+      "    ring_at_start: ['RELAY9']\n"
+      "    duration: 2\n"
+      "    header_hold: 300\n")
+                          .c_str());
+  CHECK_FALSE(r.ok);
+  CHECK(r.err.find("ring_at_start") != std::string::npos);
+  CHECK(r.err.find("not one of") != std::string::npos);
+}
+
+TEST_CASE("negative countdown minutes_before is rejected") {
+  auto r = parse_text(with_ring_events(
+      "  buzzer:\n"
+      "    relays: ['RELAY1']\n"
+      "    countdown:\n"
+      "      minutes_before: -1\n"
+      "      relays: ['RELAY2']\n"
+      "    duration: 2\n"
+      "    header_hold: 300\n")
+                          .c_str());
+  CHECK_FALSE(r.ok);
+  CHECK(r.err.find("minutes_before") != std::string::npos);
+  CHECK(r.err.find("cannot be negative") != std::string::npos);
+}
+
+TEST_CASE("countdown block without relays key is rejected") {
+  auto r = parse_text(with_ring_events(
+      "  buzzer:\n"
+      "    relays: ['RELAY1']\n"
+      "    countdown:\n"
+      "      minutes_before: 3\n"
+      "    duration: 2\n"
+      "    header_hold: 300\n")
+                          .c_str());
+  CHECK_FALSE(r.ok);
+  CHECK(r.err.find("relays") != std::string::npos);
+}
+
+TEST_CASE("countdown block with only relays is rejected") {
+  auto r = parse_text(with_ring_events(
+      "  buzzer:\n"
+      "    relays: ['RELAY1']\n"
+      "    countdown:\n"
+      "      relays: ['RELAY2']\n"
+      "    duration: 2\n"
+      "    header_hold: 300\n")
+                          .c_str());
+  CHECK_FALSE(r.ok);
+  CHECK(r.err.find("minutes_before") != std::string::npos);
+}

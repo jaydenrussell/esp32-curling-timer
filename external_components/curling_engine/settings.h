@@ -88,6 +88,11 @@ class PiTimerSettings {
   bool date_and_time{false};
   bool game_name{false};
   std::optional<std::vector<std::string>> relays;
+  // Optional ring events (config.buzzer): absent/empty lists and a zero
+  // countdown minutes_before disable each event — see default_settings.h.
+  std::optional<std::vector<std::string>> ring_at_start; // relays pulsed at game start
+  int countdown_minutes_before{0};       // minutes before buzzer (0 = off)
+  std::vector<std::string> countdown_relays;            // relays pulsed at that moment
   int relay_duration{0};
   int relay_msg_time{0};
   std::map<std::string, std::vector<PiTimerGame>> schedules;
