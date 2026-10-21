@@ -1,66 +1,60 @@
 #pragma once
 
-#include "esphome/core/component.h"
+#include <memory>
 #include <string>
-#include <vector>
-#include <map>
+
+#include "esphome/components/time/real_time_clock.h"
+#include "esphome/core/component.h"
+#include "settings.h"
+#include "store.h"
 
 namespace esphome {
 namespace curling_engine {
 
-// Port of the pitimer v2.4.4 engine (rpi-buzzer):
-//   settings.py  — schedule validation + lookup
-//   display.py   — per-second tick, buzz-once rules, quick-start logic
-//   editor.py    — splice-only config editing
-//   web.py       — REST endpoints / auth (separate web-editor component)
+// Data half of the pitimer engine on-device:
+//   settings.py  — parse/validate/status lookup   (settings.h/.cpp)
+//   editor.py    — splice/model/quick start       (model.* / quickstart.*)
+//   SettingsStore — versioned atomic file saves   (store.* + fs_posix.cpp)
+//   web.py       — REST + auth                    (web_editor component)
+// Display/bell tick work stays with the display roadmap (plan: out of scope).
 //
-// Key semantics preserved from the Python firmware:
-//   * bell rings once per (date, start) pair, 5s grace window
-//   * game duration cap: 3 hours
-//   * overlap validation includes per-entry header_hold
-//   * no leading zeros in H:MM:SS; hour 0 stored as raw seconds
-//   * wake each second inside WAKE_MARGIN_MS of the tick
-//   * splice editing keeps non-schedule sections byte-for-byte
+// Storage layout: partition label "storage" (added from __init__.py) mounted
+// at store_path_ (default /flash) holding pitimer_settings.yml + backups/.
 
-static const int BUZZER_GRACE_SECONDS = 5;
-static const int WAKE_MARGIN_MS = 5;
-
-struct ExceptionDay {
-  std::string date;  // YYYY-MM-DD
-  std::string kind;  // closed / custom schedule
-};
-
-struct GameEntry {
-  std::string start;   // H:MM:SS, no leading zero on H
-  int duration_s{0};
-  int header_hold_s{0};
-};
-
-struct Settings {
-  std::vector<GameEntry> schedule;
-  std::vector<ExceptionDay> exceptions;
-  int version{1};
-  // WIP(v1): team names, end-marker config, pace-of-play thresholds,
-  // quick-start presets (PRACTICE 5m w/ during_buzzer + header_hold 60;
-  // 6-end game 75m; 8-end game 105m)
-};
-
-bool validate_times(const Settings &s, std::string *error);
-bool has_overlap(const Settings &s, std::string *error);
-// WIP(v1): tick(), buzz scheduling state, NVS-backed store with atomic
-// fixup (30 rolling backups + version hash), splice editor.
-
-std::string serialize_settings(const Settings &s);
-bool parse_settings(const std::string &body, Settings *out, std::string *error);
+static constexpr const char *SETTINGS_BASENAME = "pitimer_settings.yml";
 
 class CurlingEngineComponent : public Component {
  public:
+  float get_setup_priority() const override { return setup_priority::DATA; }
+
   void set_store_path(const std::string &path) { store_path_ = path; }
+  void set_time(time::RealTimeClock *time) { time_ = time; }
+
   void setup() override;
   void dump_config() override;
 
+  // --- interface for web_editor ---
+  SettingsStore *get_store() { return store_.get(); }
+  StoreFs *get_store_fs() { return fs_.get(); }
+  bool ready() const { return ready_; }
+  std::string settings_path() const { return store_path_ + "/" + SETTINGS_BASENAME; }
+  time::RealTimeClock *get_time() { return time_; }
+
+  // Local wall-clock snapshot: weekday Mon=0, seconds since midnight,
+  // YYYY-MM-DD. False until the RTC has a sane time (login + quick-start gate).
+  bool local_now(int *weekday_mon0, int *seconds_of_day, std::string *date_iso) const;
+
+  // Convenience: read + version + parse the live settings in one shot.
+  // Returns false on IO (store err) or invalid text (parse err).
+  bool read_parsed(PiTimerSettings *settings, std::string *text, std::string *version,
+                   std::string *err);
+
  protected:
-  std::string store_path_;
+  std::string store_path_{"/flash"};
+  time::RealTimeClock *time_{nullptr};
+  std::unique_ptr<StoreFs> fs_;
+  std::unique_ptr<SettingsStore> store_;
+  bool ready_{false};
 };
 
 }  // namespace curling_engine

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "../../external_components/curling_engine/default_settings.h"
 #include "../../external_components/curling_engine/settings.h"
 #include "generated_fixtures.h"
 
@@ -286,4 +287,26 @@ TEST_CASE("returned game is a copy") {
   REQUIRE(stored.message.has_value());
   CHECK(*stored.message == "MONDAY GAME");
   CHECK(stored.seconds_until_buzzer == std::nullopt);
+}
+
+TEST_CASE ("first-boot default example parses") {
+  // default_settings.h is generated from pitimer_settings.example.yml by
+  // tools/gen_default_settings.py; first boot writes it to SPIFFS.
+  auto r = parse_text(esphome::curling_engine::DEFAULT_SETTINGS_YAML, "pitimer_settings.yml");
+  REQUIRE(r.ok);
+  CHECK(r.s.valid);
+  CHECK(r.s.enabled);
+  CHECK(r.s.font_sizes.at("header") == 208);
+  REQUIRE(r.s.headers.count("text") == 1);
+  CHECK(r.s.headers.at("text").at("when_idle") == "YOUR CLUB NAME");
+  CHECK(r.s.schedules.size() == 7);
+  CHECK(r.s.exceptions.size() == 2);
+  size_t total = 0;
+  for (const auto &day : r.s.schedules)
+    total += day.second.size();
+  CHECK(total == 7);  // Mon 2 + Tue 2 + Thu 1 + Sat 2
+  size_t exception_entries = 0;
+  for (const auto &day : r.s.exceptions)
+    exception_entries += day.second.size();
+  CHECK(exception_entries == 2);  // 2027-01-16 bonspiel (2026-12-25 closed)
 }
