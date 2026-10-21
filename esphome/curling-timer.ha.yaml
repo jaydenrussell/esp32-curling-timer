@@ -108,19 +108,35 @@ time:
 # ---------------------------------------------------------------------
 # M5Stack Unit 2Relay — wired to Grove Port B (HY2.0-4P: G53, G54, 5V, GND)
 # Manual LED-on = relay closed. Drives the 24VAC bell circuit.
+# Both channels are manual HA toggles. The schedule engine pulses the
+# relays listed in the settings file buzzer.relays (RELAY1 = relay 1,
+# RELAY2 = relay 2) once per game for buzzer.duration seconds — pitimer
+# semantics with the 5s grace window. Customise in the settings file
+# (web editor or the file itself), e.g.:
+#   buzzer: {relays: ['RELAY1', 'RELAY2'], duration: 2, header_hold: 299}
+# "Automatic Bell" gates the schedule-driven pulses only; the manual
+# relay toggles work either way. restore_mode ALWAYS_OFF matches
+# pitimer's reset_buzzer(): never leave a relay energised across reboot.
 # ---------------------------------------------------------------------
 switch:
-  - platform: gpio
-    name: "Bell Relay 1"
-    id: relay_bell_ring
-    pin: GPIO53
-    restore_mode: RESTORE_DEFAULT_OFF
+  - platform: template
+    id: bell_auto
+    name: "Automatic Bell"
+    icon: mdi:bell-ring-outline
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
 
   - platform: gpio
-    name: "Bell Relay 2"
+    name: "Relay 1 (Bell)"
+    id: relay_bell_ring
+    pin: GPIO53
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    name: "Relay 2 (Aux)"
     id: relay_aux
     pin: GPIO54
-    restore_mode: RESTORE_DEFAULT_OFF
+    restore_mode: ALWAYS_OFF
 
 # ---------------------------------------------------------------------
 # Diagnostics
@@ -284,9 +300,28 @@ lvgl:
         recolor: true
         text: ""
 
+# Non-blocking relay pulse used by the bell tick below (engine runs in
+# the same 1 Hz display interval; scripts keep the delay off that path).
+script:
+  - id: pulse_relay_bell
+    parameters:
+      pulse_ms: int
+    then:
+      - switch.turn_on: relay_bell_ring
+      - delay: !lambda "return pulse_ms;"
+      - switch.turn_off: relay_bell_ring
+  - id: pulse_relay_aux
+    parameters:
+      pulse_ms: int
+    then:
+      - switch.turn_on: relay_aux
+      - delay: !lambda "return pulse_ms;"
+      - switch.turn_off: relay_aux
+
 # ---------------------------------------------------------------------
 # 1 Hz display tick — refresh the snapshot, then push recoloured text
-# into every label (empty string hides the label).
+# into every label (empty string hides the label). Also runs the bell
+# check (pitimer buzz_if_due) after the labels.
 # ---------------------------------------------------------------------
 interval:
   - interval: 1s
@@ -355,3 +390,22 @@ interval:
               return std::string();
             return ::esphome::curling_engine::recolor(
                 ::esphome::curling_engine::FOOTER_COLOR_HEX, s.time_text);
+      # Bell: pitimer buzz_if_due — pulse the relays from the settings
+      # file buzzer.relays once per game (RELAY1 -> relay 1, RELAY2 ->
+      # relay 2; RELAY3/4 have no hardware). The "Automatic Bell" toggle
+      # gates this; when off the game is not consumed, so re-enabling
+      # mid-grace can still ring.
+      - lambda: |-
+          if (!id(bell_auto).state)
+            return;
+          auto *eng = id(engine);
+          if (eng == nullptr)
+            return;
+          const int mask = eng->bell_due();
+          if (mask == 0)
+            return;
+          const int pulse_ms = static_cast<int>(eng->bell_duration_ms());
+          if (mask & ::esphome::curling_engine::BELL_RELAY_1)
+            id(pulse_relay_bell).execute(pulse_ms);
+          if (mask & ::esphome::curling_engine::BELL_RELAY_2)
+            id(pulse_relay_aux).execute(pulse_ms);
