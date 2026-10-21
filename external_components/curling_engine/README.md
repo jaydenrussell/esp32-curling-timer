@@ -13,5 +13,10 @@ logical engine to ESP32-P4:
 
 ## Status
 
-**WIP** — header contract in `include/curling_engine.h`, matching the
-Python sources listed for reference porting.
+Landed: the header contract in `curling_engine.h` is fully
+implemented (validation, buzzer counting, splice edits, store,
+quick-start) as a port of the pitimer Python sources. Host-tested —
+87 doctest cases via `tests/host/run.sh`. Enabled in
+`esphome/curling-timer.yaml`; at codegen the component appends a
+2 MB `data/fat` `storage` partition to the partition table and the
+store mounts it at `store_path` (default `/flash`).

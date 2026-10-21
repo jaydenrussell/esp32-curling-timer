@@ -7,8 +7,8 @@
 # Port of the rpi-buzzer / pitimer firmware (v2.4.4) to ESPHome.
 #
 # v0 bring-up: stock components only (compiles clean, no custom code).
-# Display / schedule-engine / web-editor arrive via external_components/
-# and are enabled by uncommenting the marked WIP blocks below.
+# Schedule engine + web editor are enabled below (external_components);
+# the display stack (LVGL + LT8912B) is still pending — see WIP blocks.
 # =====================================================================
 
 substitutions:
@@ -131,35 +131,34 @@ sensor:
   - platform: uptime
     name: "Uptime"
 
+# ---------------------------------------------------------------------
+# Schedule engine + web editor (external_components).
+# Source below is relative to this file (repo checkout / CI). To build
+# from the Home Assistant "ESPHome Device Builder" add-on — or any
+# checkout outside this repo — replace `source:` with the GitHub form:
+#   source:
+#     type: git
+#     url: https://github.com/jaydenrussell/esp32-curling-timer
+#     ref: main
+#     path: external_components   # required: ESPHome only auto-scans
+#                                 # components/ and esphome/components/
+# ---------------------------------------------------------------------
+external_components:
+  - source: ../external_components
+    components: [curling_engine, web_editor]
+
+curling_engine:
+  store_path: /flash
+
+web_editor:
+  password: !secret web_password
+  port: 8080
+
 # =====================================================================
-# WIP — enable as external_components land (in implementation order):
+# WIP — remaining display stack (components not yet in the repo):
 #
-# 1. Schedule engine + web editor.
-#    In this repo the source is relative to this file:
-#      source: ../external_components
-#    From the Home Assistant "ESPHome Device Builder" add-on (or any
-#    build outside this repo) use the GitHub form instead - this is a
-#    public repo and the components live under external_components/:
-#      source:
-#        type: github
-#        url: https://github.com/jaydenrussell/esp32-curling-timer
-#        ref: main
-#        path: external_components
-#    (`path:` is required: a cloned repo is only auto-scanned for
-#    components/ or esphome/components/)
-# external_components:
-#   - source: ../external_components
-#     components: [curling_engine, web_editor]
+# 1. LVGL countdown UI on the HDMI screen.
 #
-# curling_engine:
-#   store_path: /flash
-#
-# web_editor:
-#   password: !secret web_password
-#   port: 8080
-#
-# 2. LVGL countdown UI on the HDMI screen.
-#
-# 3. LT8912B HDMI display driver (1280x720@60 via MIPI-DSI) — add
-#    lt8912b to `components:` above once its component lands.
+# 2. LT8912B HDMI display driver (1280x720@60 via MIPI-DSI) — add
+#    lt8912b alongside the components above once it lands.
 # =====================================================================

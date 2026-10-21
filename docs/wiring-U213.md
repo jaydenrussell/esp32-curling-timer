@@ -156,4 +156,5 @@ SPI `SCK/MO/MI` — same pins, check the number, not the alias.
    then enable the `wifi_addon` package in `curling-timer.yaml`
 3. Confirm both ethernet and Wi-Fi come up, remove the bench flash cable
 4. Wire Relay card + 24VAC test load
-5. Enable `external_components` WIP blocks (display → engine → UI → editor)
+5. Enable the remaining `external_components` display blocks
+   (LVGL → LT8912B — schedule engine + web editor are already on)

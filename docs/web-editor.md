@@ -29,9 +29,21 @@ web_editor:
   port: 8080                              # optional (default 8080)
 ```
 
-The blocks in `esphome/curling-timer.yaml` are still commented out
-until Phase D lands; `_webtest.yaml` in the same folder is the
-temporary harness used for development compiles (never commit it).
+The blocks are enabled in `esphome/curling-timer.yaml` (repo builds
+use the repo-relative source above). To build outside the repo — e.g.
+the Home Assistant **ESPHome Device Builder** add-on — swap the source
+for the GitHub form (this public repo):
+
+```yaml
+external_components:
+  - source:
+      type: git
+      url: https://github.com/jaydenrussell/esp32-curling-timer
+      ref: main
+      path: external_components   # required: ESPHome only auto-scans
+                                  # components/ and esphome/components/
+    components: [curling_engine, web_editor]
+```
 
 ## Logging in
 

@@ -28,4 +28,4 @@ both files together.
 ## Status
 
 Landed: REST API + auth + embedded UI behind `CurlingEngineComponent`.
-On-device QA pending (Phase D).
+On-device QA pending (first device flash).
