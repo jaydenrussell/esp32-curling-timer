@@ -7,6 +7,12 @@ on:
   workflow_dispatch:
 
 jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and run host tests (engine + web auth/config)
+        run: bash tests/host/run.sh
   compile:
     runs-on: ubuntu-latest
     steps:
