@@ -85,7 +85,10 @@ void Lt8912b::setup() {
       .virtual_channel = 0,
       .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_PLL_F160M,
       .dpi_clock_freq_mhz = 80,
-      .in_color_format = LCD_COLOR_FMT_RGB888,
+      // RGB565: the display and LVGL both work in 16-bit colour, so the
+      // driver copies the pixels straight through (an RGB888 driver would
+      // need a 2.8 MB framebuffer and convert every pixel).
+      .in_color_format = LCD_COLOR_FMT_RGB565,
       .num_fbs = 1,
       .video_timing =
           {
@@ -144,13 +147,15 @@ void Lt8912b::setup() {
   ESP_LOGI(TAG, "free heap before the DSI lock: %u bytes (largest internal block %u)",
            static_cast<unsigned>(esp_get_free_heap_size()),
            static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL)));
+  // The lock is released by the transfer-done callback, so it is given
+  // once here to let the first transfer start.
   this->io_lock_ = xSemaphoreCreateBinary();
   if (this->io_lock_ == nullptr) {
-    // Without the lock the first flush would take a NULL semaphore and
-    // abort the chip, so fail the component with a clear message instead.
-    this->mark_failed_(LOG_STR("Could not allocate the DSI transfer lock (out of memory)"),
-                       ESP_ERR_NO_MEM);
-    return;
+    // No memory for the lock: carry on without it rather than taking a
+    // NULL semaphore (which aborts the chip) on the first flush.
+    ESP_LOGW(TAG, "no memory for the DSI transfer lock - continuing without it");
+  } else {
+    xSemaphoreGive(this->io_lock_);
   }
   esp_lcd_dpi_panel_event_callbacks_t cbs = {
       .on_color_trans_done = notify_refresh_ready,
@@ -224,20 +229,24 @@ void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const ui
   auto bytes_per_pixel = 3 - this->color_depth_;
   auto stride = (x_offset + w + x_pad) * bytes_per_pixel;
   ptr += y_offset * stride + x_offset * bytes_per_pixel;
+  // Wait for the previous transfer to finish (the callback gives the lock
+  // when it completes) before handing the driver new pixels.
+  if (this->io_lock_ != nullptr)
+    xSemaphoreTake(this->io_lock_, portMAX_DELAY);
   if (x_offset == 0 && x_pad == 0) {
     err = esp_lcd_panel_draw_bitmap(this->panel_, x_start, y_start, x_start + w, y_start + h, ptr);
-    xSemaphoreTake(this->io_lock_, portMAX_DELAY);
   } else {
     for (int y = 0; y != h; y++) {
       err = esp_lcd_panel_draw_bitmap(this->panel_, x_start, y + y_start, x_start + w, y + y_start + 1, ptr);
       if (err != ESP_OK)
         break;
       ptr += stride;
-      xSemaphoreTake(this->io_lock_, portMAX_DELAY);
     }
   }
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "lcd_panel_draw_bitmap failed: %s", esp_err_to_name(err));
+    if (this->io_lock_ != nullptr)
+      xSemaphoreGive(this->io_lock_);
   }
 }
 

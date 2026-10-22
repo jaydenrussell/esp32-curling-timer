@@ -11,6 +11,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent / "esphome" / "curling-timer.yaml"
 HA = Path(__file__).resolve().parent.parent / "esphome" / "curling-timer.ha.yaml"
+REF_FILE = Path(__file__).resolve().parent.parent / "esphome" / "component_ref.txt"
 
 HEADER_REPO = """\
 # Schedule engine + web editor + LT8912B HDMI display + LVGL countdown
@@ -58,27 +59,30 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: main
+      ref: {ref}
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
-    # Re-fetch main on every install so push fixes land immediately
-    # (ESPHome default is 1 day).
-    #
-    # If the build fails with a missing symbol or member, the add-on
-    # served a cached (older) clone: update the add-on, or delete its
-    # external_components cache, and install again. The "Web Editor"
-    # diagnostic entity reports the component build stamp the device
-    # actually runs (web_editor <version>).
+    # The ref is a release tag, so the components always match this
+    # file: a cached checkout of an older "main" can never mismatch the
+    # YAML (which is what broke the add-on builds).
     refresh: 0s
 """
+
+
+def component_ref() -> str:
+    """The component ref the paste variant pins to (esphome/component_ref.txt)."""
+    ref = REF_FILE.read_text(encoding="utf-8").strip()
+    if not ref:
+        sys.exit(f"error: {REF_FILE.name} is empty")
+    return ref
 
 
 def build() -> str:
     text = REPO.read_text(encoding="utf-8")
     for old, new, what in (
         (HEADER_REPO, HEADER_HA, "header"),
-        (BLOCK_REPO, BLOCK_HA, "external_components block"),
+        (BLOCK_REPO, BLOCK_HA.format(ref=component_ref()), "external_components block"),
     ):
         if text.count(old) != 1:
             sys.exit(
