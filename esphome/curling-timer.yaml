@@ -113,8 +113,6 @@ api:
 # to be the API key, so both use the same secret.
 ota:
   - platform: esphome
-    encryption:
-      key: !secret curling_timer__encryption_key
 
 web_server:
   port: 80
