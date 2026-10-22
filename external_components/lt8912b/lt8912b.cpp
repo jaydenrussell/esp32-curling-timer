@@ -149,14 +149,9 @@ void Lt8912b::setup() {
            static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL)));
   // The lock is released by the transfer-done callback, so it is given
   // once here to let the first transfer start.
-  this->io_lock_ = xSemaphoreCreateBinary();
-  if (this->io_lock_ == nullptr) {
-    // No memory for the lock: carry on without it rather than taking a
-    // NULL semaphore (which aborts the chip) on the first flush.
-    ESP_LOGW(TAG, "no memory for the DSI transfer lock - continuing without it");
-  } else {
-    xSemaphoreGive(this->io_lock_);
-  }
+  this->io_lock_ = xSemaphoreCreateBinaryStatic(&this->io_lock_buffer_);
+  // Static allocation never fails; give once so the first transfer can proceed
+  xSemaphoreGive(this->io_lock_);
   esp_lcd_dpi_panel_event_callbacks_t cbs = {
       .on_color_trans_done = notify_refresh_ready,
   };

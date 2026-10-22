@@ -73,6 +73,7 @@ class Lt8912b : public display::Display {
   esp_lcd_dsi_bus_handle_t dsi_bus_{};
   esp_lcd_panel_handle_t panel_{};
   SemaphoreHandle_t io_lock_{};
+  StaticSemaphore_t io_lock_buffer_{};
   bool hdmi_ready_{false};
 
   display::ColorBitness color_depth_{display::COLOR_BITNESS_888};
