@@ -86,10 +86,22 @@ binary_sensor:
 # ---------------------------------------------------------------------
 # Services
 # ---------------------------------------------------------------------
+# Native API - encrypted. The key is a 32-byte base64 secret; without
+# it the API speaks plaintext and anyone on the network can drive the
+# device. Generate with: openssl rand -base64 32
+api:
+  encryption:
+    key: !secret curling_timer__encryption_key
+
+# Over-the-air updates - encrypted, so a firmware image cannot be pushed
+# or installed by anyone who only has network access. The key also
+# authenticates the uploader, so no separate password is used (ESPHome
+# refuses password + encryption together). ESPHome requires the OTA key
+# to be the API key, so both use the same secret.
 ota:
   - platform: esphome
-  # TODO: add `password: !secret ota_password` before deployment on a
-  # shared/production network (bench convenience until then)
+    encryption:
+      key: !secret curling_timer__encryption_key
 
 web_server:
   port: 80
