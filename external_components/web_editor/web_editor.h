@@ -7,6 +7,7 @@
 
 #include "auth.h"
 #include "esphome/components/curling_engine/curling_engine.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/core/component.h"
 
 namespace esphome {
@@ -17,6 +18,7 @@ class WebEditorComponent : public Component {
   void set_engine(curling_engine::CurlingEngineComponent *engine) { engine_ = engine; }
   void set_password(const std::string &password) { password_ = password; }
   void set_port(uint16_t port) { port_ = port; }
+  void set_status_sensor(text_sensor::TextSensor *sensor) { status_sensor_ = sensor; }
 
   void setup() override;
   void dump_config() override;
@@ -26,15 +28,16 @@ class WebEditorComponent : public Component {
   curling_engine::CurlingEngineComponent *engine() { return engine_; }
   uint16_t port() const { return port_; }
 
-  // One-line state of the web server for diagnostics (shown as an ESPHome
-  // diagnostic entity): "listening on port 8080" once the HTTP server is
-  // up, or the reason it is not ("password too short", "httpd_start
-  // failed: ..."). Empty until setup() has run.
+  // One-line state of the web server for diagnostics: "listening on port
+  // 8080" once the HTTP server is up, or the reason it is not ("password
+  // too short", "httpd_start failed: ..."). Empty until setup() has run.
   std::string status() const { return status_; }
 
  protected:
   bool load_auth_from_nvs();
   bool save_auth_to_nvs();
+  // Store the state and push it to the diagnostic entity.
+  void set_status(const std::string &status);
 
   curling_engine::CurlingEngineComponent *engine_{nullptr};
   std::string password_;
@@ -42,6 +45,7 @@ class WebEditorComponent : public Component {
   WebConfig web_config_;
   LoginLimiter limiter_;
   std::string status_;
+  text_sensor::TextSensor *status_sensor_{nullptr};
 };
 
 }  // namespace web_editor

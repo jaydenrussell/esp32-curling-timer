@@ -153,15 +153,6 @@ text_sensor:
   - platform: version
     name: "Firmware Version"
 
-  # Why the web editor is (not) reachable on its port - "listening on port
-  # 8080" once the HTTP server is up, otherwise the failure reason.
-  - platform: template
-    name: "Web Editor"
-    id: web_editor_status
-    entity_category: diagnostic
-    lambda: |-
-      return id(web_editor_comp).status();
-
 sensor:
   - platform: uptime
     name: "Uptime"
@@ -187,6 +178,10 @@ curling_engine:
   store_path: /flash
 
 web_editor:
+  # The "Web Editor" diagnostic entity (listening on port 8080 / the
+  # reason it is not) is created by the component itself, so this file
+  # never calls component APIs - a cached (older) clone of the external
+  # component can then never break the build.
   id: web_editor_comp
   password: !secret web_password
   port: 8080

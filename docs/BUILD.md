@@ -15,6 +15,25 @@ The external components are fetched from GitHub as a `type: git` source with
 `refresh: 0s`, so every install re-fetches `main` - a fix pushed to the repo
 lands on the device with the next install.
 
+### If the build fails with a missing symbol or member
+
+The add-on caches the git checkout of `external_components`. When it serves an
+older clone, the pasted YAML (newer) calls component APIs that the clone does
+not have yet, and the compile fails - for example
+`'class esphome::web_editor::WebEditorComponent' has no member named 'status'`.
+
+Fix it by making the add-on fetch the current `main`:
+
+1. Update the ESPHome Device Builder add-on, then install again.
+2. If that is not enough, delete the add-on's cached checkout (the
+   `external_components` folder in the add-on's data/build directory) and
+   install again.
+
+The "Web Editor" diagnostic entity shows which component the device actually
+runs: `listening on port 8080 (web_editor 2026-10-22.1)`. If the stamp is
+older than the repo's `external_components/web_editor/VERSION`, the clone is
+stale.
+
 ## secrets.yaml
 
 Every secret below is referenced by `!secret` in the YAML. A missing secret

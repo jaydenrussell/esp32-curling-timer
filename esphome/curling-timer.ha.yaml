@@ -156,15 +156,6 @@ text_sensor:
   - platform: version
     name: "Firmware Version"
 
-  # Why the web editor is (not) reachable on its port - "listening on port
-  # 8080" once the HTTP server is up, otherwise the failure reason.
-  - platform: template
-    name: "Web Editor"
-    id: web_editor_status
-    entity_category: diagnostic
-    lambda: |-
-      return id(web_editor_comp).status();
-
 sensor:
   - platform: uptime
     name: "Uptime"
@@ -186,7 +177,13 @@ external_components:
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
     # Re-fetch main on every install so push fixes land immediately
-    # (ESPHome default is 1 day)
+    # (ESPHome default is 1 day).
+    #
+    # If the build fails with a missing symbol or member, the add-on
+    # served a cached (older) clone: update the add-on, or delete its
+    # external_components cache, and install again. The "Web Editor"
+    # diagnostic entity reports the component build stamp the device
+    # actually runs (web_editor <version>).
     refresh: 0s
 
 curling_engine:
@@ -194,6 +191,10 @@ curling_engine:
   store_path: /flash
 
 web_editor:
+  # The "Web Editor" diagnostic entity (listening on port 8080 / the
+  # reason it is not) is created by the component itself, so this file
+  # never calls component APIs - a cached (older) clone of the external
+  # component can then never break the build.
   id: web_editor_comp
   password: !secret web_password
   port: 8080

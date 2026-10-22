@@ -14,6 +14,16 @@ static const char *const NVS_NAMESPACE = "pitimer_web";
 static const char *const NVS_KEY_PASSWORD_HASH = "password_hash";
 static const char *const NVS_KEY_SECRET = "secret";
 
+#ifndef WEB_EDITOR_VERSION
+#define WEB_EDITOR_VERSION "unknown"
+#endif
+
+// "listening on port 8080 (web_editor 2026-10-22.1)" - the version part
+// shows whether the device runs the current external component.
+static std::string status_text(const std::string &what) {
+  return what + " (web_editor " + WEB_EDITOR_VERSION + ")";
+}
+
 static bool open_web_nvs(nvs_handle_t *handle) {
   esp_err_t err = nvs_open(NVS_NAMESPACE, NVS_READWRITE, handle);
   if (err == ESP_ERR_NVS_NOT_INITIALIZED) {
@@ -39,9 +49,15 @@ static bool nvs_get_string(nvs_handle_t handle, const char *key, std::string *ou
   return true;
 }
 
+void WebEditorComponent::set_status(const std::string &status) {
+  this->status_ = status;
+  if (this->status_sensor_ != nullptr)
+    this->status_sensor_->publish_state(status);
+}
+
 void WebEditorComponent::setup() {
   if (!this->load_auth_from_nvs()) {
-    this->status_ = "failed: NVS is not available";
+    this->set_status("failed: NVS is not available");
     this->mark_failed();
     return;
   }
@@ -52,13 +68,13 @@ void WebEditorComponent::setup() {
       if (!this->web_config_.set_password(this->password_)) {
         ESP_LOGE(TAG, "web_editor.password must be at least %u characters",
                  static_cast<unsigned>(MIN_PASSWORD_LENGTH));
-        this->status_ = "failed: web_editor.password is shorter than " +
-                        std::to_string(MIN_PASSWORD_LENGTH) + " characters";
+        this->set_status("failed: web_editor.password is shorter than " +
+                         std::to_string(MIN_PASSWORD_LENGTH) + " characters");
         this->mark_failed();
         return;
       }
       if (!this->save_auth_to_nvs()) {
-        this->status_ = "failed: the password hash could not be stored";
+        this->set_status("failed: the password hash could not be stored");
         this->mark_failed();
         return;
       }
@@ -66,17 +82,18 @@ void WebEditorComponent::setup() {
     }
   } else if (!this->web_config_.configured()) {
     ESP_LOGE(TAG, "no password: set web_editor.password in the YAML config");
-    this->status_ = "failed: no web_editor.password in the YAML config";
+    this->set_status("failed: no web_editor.password in the YAML config");
     this->mark_failed();
     return;
   }
   ESP_LOGI(TAG, "auth ready (session cookie %s, port %u)", SESSION_COOKIE, this->port_);
   if (!start_web_httpd(this)) {
-    this->status_ = "failed: the HTTP server could not be started on port " + std::to_string(this->port_);
+    this->set_status("failed: the HTTP server could not be started on port " +
+                     std::to_string(this->port_));
     this->mark_failed();
     return;
   }
-  this->status_ = "listening on port " + std::to_string(this->port_);
+  this->set_status(status_text("listening on port " + std::to_string(this->port_)));
 }
 
 bool WebEditorComponent::load_auth_from_nvs() {

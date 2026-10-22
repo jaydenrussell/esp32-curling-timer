@@ -63,7 +63,13 @@ external_components:
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
     # Re-fetch main on every install so push fixes land immediately
-    # (ESPHome default is 1 day)
+    # (ESPHome default is 1 day).
+    #
+    # If the build fails with a missing symbol or member, the add-on
+    # served a cached (older) clone: update the add-on, or delete its
+    # external_components cache, and install again. The "Web Editor"
+    # diagnostic entity reports the component build stamp the device
+    # actually runs (web_editor <version>).
     refresh: 0s
 """
 
