@@ -4,6 +4,8 @@
 
 #include "default_settings.h"
 #include "esp_err.h"
+#include "esp_heap_caps.h"
+#include "esp_system.h"
 #include "esp_vfs_fat.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
@@ -35,6 +37,9 @@ void CurlingEngineComponent::setup() {
     ESP_LOGI(TAG, "FATFS %s: %llu KB total, %llu KB used", this->store_path_.c_str(),
              static_cast<unsigned long long>(total / 1024),
              static_cast<unsigned long long>(used / 1024));
+  ESP_LOGI(TAG, "free heap after the FAT mount: %u bytes (largest internal block %u)",
+           static_cast<unsigned>(esp_get_free_heap_size()),
+           static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL)));
 
   this->fs_.reset(make_posix_store_fs());
   this->store_ = std::make_unique<SettingsStore>(this->fs_.get(), this->settings_path());

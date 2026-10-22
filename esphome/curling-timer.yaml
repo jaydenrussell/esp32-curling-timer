@@ -32,8 +32,14 @@ esp32:
     # lists them for the web editor. ESP-IDF's VFS only provides opendir/
     # readdir/mkdir when this is on (otherwise newlib's always-fail stubs are
     # linked and every save fails with "cannot create backup directory").
+    #
+    # Long file names: ESPHome's generated sdkconfig leaves FATFS with
+    # LFN_NONE, so only 8.3 names can be created and
+    # "pitimer_settings.yml" fails with FR_INVALID_NAME. LFN_HEAP enables
+    # them (the LFN buffer is ~300 bytes per open file).
     sdkconfig_options:
       CONFIG_VFS_SUPPORT_DIR: y
+      CONFIG_FATFS_LFN_HEAP: y
     advanced:
       execute_from_psram: true
 
@@ -65,6 +71,16 @@ ethernet:
   clk:
     pin: GPIO50
     mode: CLK_EXT_IN
+
+
+# ---------------------------------------------------------------------
+# mDNS - advertises the device as curling-timer.local on the local
+# network, so Home Assistant can discover it and the device can be
+# reached by name (http://curling-timer.local:8080 for the web editor).
+# The hostname follows the device name above.
+# ---------------------------------------------------------------------
+mdns:
+  id: mdns_advertiser
 
 # ---------------------------------------------------------------------
 # Link diagnostics — which network path is actually up.

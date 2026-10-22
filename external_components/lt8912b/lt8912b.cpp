@@ -1,6 +1,8 @@
 #ifdef USE_ESP32_VARIANT_ESP32P4
 #include <utility>
 #include "lt8912b.h"
+#include "esp_heap_caps.h"
+#include "esp_system.h"
 #include "esphome/core/helpers.h"
 
 namespace esphome {
@@ -139,7 +141,17 @@ void Lt8912b::setup() {
     return;
   }
 
+  ESP_LOGI(TAG, "free heap before the DSI lock: %u bytes (largest internal block %u)",
+           static_cast<unsigned>(esp_get_free_heap_size()),
+           static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL)));
   this->io_lock_ = xSemaphoreCreateBinary();
+  if (this->io_lock_ == nullptr) {
+    // Without the lock the first flush would take a NULL semaphore and
+    // abort the chip, so fail the component with a clear message instead.
+    this->mark_failed_(LOG_STR("Could not allocate the DSI transfer lock (out of memory)"),
+                       ESP_ERR_NO_MEM);
+    return;
+  }
   esp_lcd_dpi_panel_event_callbacks_t cbs = {
       .on_color_trans_done = notify_refresh_ready,
   };
@@ -235,7 +247,9 @@ bool Lt8912b::check_buffer_() {
   if (this->buffer_ != nullptr)
     return true;
   auto bytes_per_pixel = 3 - this->color_depth_;
-  RAMAllocator<uint8_t> allocator;
+  // A full screen is 1.8 MB at 1280x720 - far too much for the internal
+  // heap, so ask for external (PSRAM) memory.
+  RAMAllocator<uint8_t> allocator(true);
   this->buffer_ = allocator.allocate(this->height_ * this->width_ * bytes_per_pixel);
   if (this->buffer_ == nullptr) {
     this->mark_failed_(LOG_STR("Could not allocate buffer for display!"), ESP_ERR_NO_MEM);

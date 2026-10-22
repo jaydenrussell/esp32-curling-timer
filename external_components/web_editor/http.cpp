@@ -4,6 +4,8 @@
 #include <string>
 
 #include "esp_http_server.h"
+#include "esp_heap_caps.h"
+#include "esp_system.h"
 #include "lwip/inet.h"
 #include "lwip/sockets.h"
 
@@ -173,12 +175,23 @@ bool start_web_httpd(WebEditorComponent *editor) {
   config.server_port = editor->port();
   config.ctrl_port = editor->port() + 1;
   config.max_uri_handlers = 4;
-  config.stack_size = 16384;
-  config.lru_purge_enable = true;
+  // A single user (the web editor) needs one or two connections; keeping
+  // the defaults costs internal RAM on a device that also runs LVGL, the
+  // HDMI driver and the API.
+  config.max_open_sockets = 4;
+  config.stack_size = 8192;
+  // The LRU purge path takes the httpd's control-socket semaphore; with a
+  // freed server that handle can be NULL and the take aborts the chip.
+  // Without it the server just refuses extra connections.
+  config.lru_purge_enable = false;
   config.uri_match_fn = httpd_uri_match_wildcard;
+  ESP_LOGI(TAG, "free heap before the web server: %u bytes (largest block %u)",
+           static_cast<unsigned>(esp_get_free_heap_size()),
+           static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL)));
   esp_err_t err = httpd_start(&s_server, &config);
   if (err != ESP_OK) {
-    ESP_LOGE(TAG, "httpd_start on port %u failed: %s", editor->port(), esp_err_to_name(err));
+    ESP_LOGE(TAG, "httpd_start on port %u failed: %s (free heap %u bytes)", editor->port(),
+             esp_err_to_name(err), static_cast<unsigned>(esp_get_free_heap_size()));
     s_server = nullptr;
     return false;
   }
