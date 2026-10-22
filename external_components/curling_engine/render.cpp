@@ -71,7 +71,7 @@ constexpr ColorName kColorNames[] = {
 
 std::string hex6(uint32_t rgb) {
   char buf[8];
-  snprintf(buf, sizeof(buf), "#%06X", rgb);
+  snprintf(buf, sizeof(buf), "#%06X", static_cast<unsigned int>(rgb));
   return buf;
 }
 

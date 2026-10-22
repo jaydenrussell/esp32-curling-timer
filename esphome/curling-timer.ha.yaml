@@ -31,6 +31,12 @@ esp32:
   flash_size: 16MB
   framework:
     type: esp-idf
+    # The settings store keeps timestamped backups in a "backups" folder and
+    # lists them for the web editor. ESP-IDF's VFS only provides opendir/
+    # readdir/mkdir when this is on (otherwise newlib's always-fail stubs are
+    # linked and every save fails with "cannot create backup directory").
+    sdkconfig_options:
+      CONFIG_VFS_SUPPORT_DIR: y
     advanced:
       execute_from_psram: true
 
