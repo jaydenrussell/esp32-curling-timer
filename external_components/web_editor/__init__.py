@@ -15,7 +15,11 @@ from esphome.const import (
 from esphome.const import __version__ as ESPHOME_VERSION
 from esphome.core import ID
 
-DEPENDENCIES = ["curling_engine", "esp32", "json", "text_sensor"]
+# "network" is required: its setup() calls esp_netif_init(), which brings
+# up lwIP and creates the TCP/IP core lock. Starting the HTTP server
+# before that aborts the chip - the first socket() call takes a NULL
+# core-lock mutex (xSemaphoreTake -> assert).
+DEPENDENCIES = ["curling_engine", "esp32", "json", "text_sensor", "network"]
 
 CONF_ENGINE_ID = "engine_id"
 
