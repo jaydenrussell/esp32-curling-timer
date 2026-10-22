@@ -141,6 +141,15 @@ text_sensor:
   - platform: version
     name: "Firmware Version"
 
+  # Why the web editor is (not) reachable on its port - "listening on port
+  # 8080" once the HTTP server is up, otherwise the failure reason.
+  - platform: template
+    name: "Web Editor"
+    id: web_editor_status
+    entity_category: diagnostic
+    lambda: |-
+      return id(web_editor_comp).status();
+
 sensor:
   - platform: uptime
     name: "Uptime"
@@ -166,6 +175,7 @@ curling_engine:
   store_path: /flash
 
 web_editor:
+  id: web_editor_comp
   password: !secret web_password
   port: 8080
 
@@ -187,28 +197,38 @@ lt8912b:
   scl_pin: GPIO1
 
 # ---------------------------------------------------------------------
-# Fonts — Lato Bold (static TTF from google/fonts, fetched once per
+# Fonts - Lato Bold (static TTF from google/fonts, fetched once per
 # build and cached). Lato ships U+02F8, the modifier letter raised
-# colon pitimer uses instead of ':'. Sizes target 1280x720: the
-# countdown switches between a 4-digit (MM:SS) and 5-digit (H:MM:SS)
-# font like pitimer's font_size_4_digits / font_size_5_digits.
+# colon pitimer uses instead of ':'.
+#
+# Sizes are measured off the pitimer reference screen (1280x720): the
+# header text spans ~95% of the width, the 5-digit timer ~93%, the
+# pace line ~80% and the footer date ~22%.
+#   header 96   timer 5 digits 370   timer 4 digits 450
+#   pace 85     footer 52
+# The 4-digit timer is larger than the 5-digit one (as in pitimer:
+# 992 vs 816) because it has fewer glyphs to fit across the width.
 # ---------------------------------------------------------------------
 font:
   - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_timer_4
-    size: 460
+    size: 450
     glyphs: ["0123456789", "\u02F8"]
   - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_timer_5
-    size: 350
+    size: 370
     glyphs: ["0123456789", "\u02F8"]
   - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_header
-    size: 72
+    size: 96
+    glyphsets: [GF_Latin_Kernel]
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
+    id: font_pace
+    size: 85
     glyphsets: [GF_Latin_Kernel]
   - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_footer
-    size: 48
+    size: 52
     glyphsets: [GF_Latin_Kernel]
     glyphs: ["\u02F8"]
 
@@ -221,10 +241,13 @@ globals:
 
 # ---------------------------------------------------------------------
 # LVGL countdown page — pitimer display.py layout at 1280x720:
-#   header top-centre, countdown centre (raised 720/24 for the pace
-#   line), pace line under it, game name bottom-centre, date/time in
-#   the bottom corners (yellow), status line centre (errors / waiting
-#   for clock). All labels start empty; the 1 Hz tick below fills them.
+#   header top-centre (top margin = height/36 = 20), countdown centre
+#   (raised by height/24 = 30 to make room for the pace line, but only
+#   while the pace line is shown), pace line under the timer
+#   (height/2 + timer_height/2 - height/15 = -48), game name
+#   bottom-centre, date/time in the bottom corners (yellow), status line
+#   centre (errors / waiting for clock). All labels start empty; the
+#   1 Hz tick below fills them.
 # ---------------------------------------------------------------------
 lvgl:
   displays:
@@ -241,22 +264,22 @@ lvgl:
     - label:
         id: lbl_cnt4
         align: CENTER
-        y: -30
+        y: 0
         text_font: font_timer_4
         recolor: true
         text: ""
     - label:
         id: lbl_cnt5
         align: CENTER
-        y: -30
+        y: 0
         text_font: font_timer_5
         recolor: true
         text: ""
     - label:
         id: lbl_pace
         align: CENTER
-        y: 182
-        text_font: font_header
+        y: 0
+        text_font: font_pace
         long_mode: CLIP
         recolor: true
         text: ""
@@ -332,6 +355,11 @@ interval:
             return ::esphome::curling_engine::recolor(s.header_color, s.header_text);
       - lvgl.label.update:
           id: lbl_cnt4
+          align: CENTER
+          y: !lambda |-
+            // pitimer raises the timer by height/24 only while the pace line
+            // is shown; otherwise it sits dead centre.
+            return id(g_snap).show_pace ? -30 : 0;
           text: !lambda |-
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer >= 3600)
@@ -339,6 +367,9 @@ interval:
             return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
       - lvgl.label.update:
           id: lbl_cnt5
+          align: CENTER
+          y: !lambda |-
+            return id(g_snap).show_pace ? -30 : 0;
           text: !lambda |-
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer < 3600)
@@ -346,6 +377,16 @@ interval:
             return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
       - lvgl.label.update:
           id: lbl_pace
+          align: CENTER
+          y: !lambda |-
+            // pitimer: the pace line sits just below the timer, overlapping
+            // its bottom padding. The timer's box height (LVGL line height)
+            // gives the glyph height the digits occupy, so the line follows
+            // whichever timer font is in use.
+            auto &s = id(g_snap);
+            const bool five = s.show_countdown && s.seconds_until_buzzer >= 3600;
+            lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
+            return 340 + (int) (0.3225f * lv_obj_get_height(timer));
           text: !lambda |-
             auto &s = id(g_snap);
             if (!s.show_pace)

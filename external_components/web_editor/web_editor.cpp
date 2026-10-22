@@ -41,6 +41,7 @@ static bool nvs_get_string(nvs_handle_t handle, const char *key, std::string *ou
 
 void WebEditorComponent::setup() {
   if (!this->load_auth_from_nvs()) {
+    this->status_ = "failed: NVS is not available";
     this->mark_failed();
     return;
   }
@@ -51,10 +52,13 @@ void WebEditorComponent::setup() {
       if (!this->web_config_.set_password(this->password_)) {
         ESP_LOGE(TAG, "web_editor.password must be at least %u characters",
                  static_cast<unsigned>(MIN_PASSWORD_LENGTH));
+        this->status_ = "failed: web_editor.password is shorter than " +
+                        std::to_string(MIN_PASSWORD_LENGTH) + " characters";
         this->mark_failed();
         return;
       }
       if (!this->save_auth_to_nvs()) {
+        this->status_ = "failed: the password hash could not be stored";
         this->mark_failed();
         return;
       }
@@ -62,14 +66,17 @@ void WebEditorComponent::setup() {
     }
   } else if (!this->web_config_.configured()) {
     ESP_LOGE(TAG, "no password: set web_editor.password in the YAML config");
+    this->status_ = "failed: no web_editor.password in the YAML config";
     this->mark_failed();
     return;
   }
   ESP_LOGI(TAG, "auth ready (session cookie %s, port %u)", SESSION_COOKIE, this->port_);
   if (!start_web_httpd(this)) {
+    this->status_ = "failed: the HTTP server could not be started on port " + std::to_string(this->port_);
     this->mark_failed();
     return;
   }
+  this->status_ = "listening on port " + std::to_string(this->port_);
 }
 
 bool WebEditorComponent::load_auth_from_nvs() {

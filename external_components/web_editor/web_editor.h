@@ -26,6 +26,12 @@ class WebEditorComponent : public Component {
   curling_engine::CurlingEngineComponent *engine() { return engine_; }
   uint16_t port() const { return port_; }
 
+  // One-line state of the web server for diagnostics (shown as an ESPHome
+  // diagnostic entity): "listening on port 8080" once the HTTP server is
+  // up, or the reason it is not ("password too short", "httpd_start
+  // failed: ..."). Empty until setup() has run.
+  std::string status() const { return status_; }
+
  protected:
   bool load_auth_from_nvs();
   bool save_auth_to_nvs();
@@ -35,6 +41,7 @@ class WebEditorComponent : public Component {
   uint16_t port_{8080};
   WebConfig web_config_;
   LoginLimiter limiter_;
+  std::string status_;
 };
 
 }  // namespace web_editor
