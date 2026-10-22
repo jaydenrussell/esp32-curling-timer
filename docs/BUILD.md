@@ -20,11 +20,15 @@ disagree.
 
 To ship new component code:
 
-1. Commit the component changes.
-2. `git tag -a v1.0.1 -m "..." && git push origin v1.0.1`
-3. Put the new tag in `esphome/component_ref.txt`.
-4. `python tools/make_ha_yaml.py` and commit the regenerated
-   `curling-timer.ha.yaml`.
+1. Make the component changes and bump the tag in `esphome/component_ref.txt`
+   (e.g. `v1.0.1`).
+2. `python tools/make_ha_yaml.py` - the paste variant now points at the new
+   tag. Commit the components, the YAML, the ref file and the regenerated
+   paste variant **together** (CI checks that the paste variant matches the
+   generator, so a half-done state fails the build).
+3. `git tag -a v1.0.1 -m "..." && git push origin v1.0.1` - the tag points at
+   that commit, so the components the device gets are exactly the ones this
+   YAML was written against.
 
 The "Web Editor" diagnostic entity shows which component the device actually
 runs: `listening on port 8080 (web_editor 2026-10-22.1)`.
