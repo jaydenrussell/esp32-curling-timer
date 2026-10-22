@@ -11,28 +11,23 @@ at `esphome/curling-timer.ha.yaml`:
 2. Add the secrets below to `/config/secrets.yaml` in the same folder.
 3. Install / update the add-on, then flash.
 
-The external components are fetched from GitHub as a `type: git` source with
-`refresh: 0s`, so every install re-fetches `main` - a fix pushed to the repo
-lands on the device with the next install.
+The external components are fetched from GitHub as a `type: git` source, pinned
+to the release tag in `esphome/component_ref.txt` (currently `v1.0.0`). The
+pin matters: the add-on caches the checkout, and an older cached "main" does
+not match the pasted YAML, which fails the build with a missing symbol. A tag
+always resolves to the same code, so the YAML and the components can never
+disagree.
 
-### If the build fails with a missing symbol or member
+To ship new component code:
 
-The add-on caches the git checkout of `external_components`. When it serves an
-older clone, the pasted YAML (newer) calls component APIs that the clone does
-not have yet, and the compile fails - for example
-`'class esphome::web_editor::WebEditorComponent' has no member named 'status'`.
-
-Fix it by making the add-on fetch the current `main`:
-
-1. Update the ESPHome Device Builder add-on, then install again.
-2. If that is not enough, delete the add-on's cached checkout (the
-   `external_components` folder in the add-on's data/build directory) and
-   install again.
+1. Commit the component changes.
+2. `git tag -a v1.0.1 -m "..." && git push origin v1.0.1`
+3. Put the new tag in `esphome/component_ref.txt`.
+4. `python tools/make_ha_yaml.py` and commit the regenerated
+   `curling-timer.ha.yaml`.
 
 The "Web Editor" diagnostic entity shows which component the device actually
-runs: `listening on port 8080 (web_editor 2026-10-22.1)`. If the stamp is
-older than the repo's `external_components/web_editor/VERSION`, the clone is
-stale.
+runs: `listening on port 8080 (web_editor 2026-10-22.1)`.
 
 ## secrets.yaml
 
