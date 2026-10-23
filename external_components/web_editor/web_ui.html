@@ -698,18 +698,6 @@ const CONFIG_SECTIONS = [
       ['config.footer.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.entry_name', 'bool', 'Show entry name']] },
-  { group: '🔌 Relays', title: 'Relay configuration',
-    hint: 'Configure how many relays are active and what each is mapped to.',
-    fields: [
-      ['config.relay_count', 'int', 'Number of relays', 0, 4],
-      ['config.relay1_enabled', 'bool', 'RELAY1 enabled'],
-      ['config.relay1_function', 'text', 'RELAY1 function'],
-      ['config.relay2_enabled', 'bool', 'RELAY2 enabled'],
-      ['config.relay2_function', 'text', 'RELAY2 function'],
-      ['config.relay3_enabled', 'bool', 'RELAY3 enabled'],
-      ['config.relay3_function', 'text', 'RELAY3 function'],
-      ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
-      ['config.relay4_function', 'text', 'RELAY4 function']] },
   { group: 'Audio', title: 'Game Start',
     fields: [
       ['config.buzzer.ring_at_start', 'relays', 'Output'],
