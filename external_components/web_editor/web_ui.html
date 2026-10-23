@@ -804,6 +804,7 @@ function renderConfig() {
 }
 
 $('config-save').addEventListener('click', async () => {
+  if (!state.configVersion) await loadConfig();
   const diff = configDiff();
   if (!Object.keys(diff).length) return setConfigDirty(false);
   const problem = validateConfigDiff(diff);
@@ -834,6 +835,7 @@ function checkModel(m) {
 }
 
 $('save').addEventListener('click', async () => {
+  if (!state.model) await loadModel();
   const m = state.model;
   const problem = checkModel(m);
   if (problem) { showMessage(problem); renderSchedule(); renderExceptions(); return; }
