@@ -853,8 +853,10 @@ function configField(field) {
 
 async function testRelay(eventName) {
   try {
-    await fetch('/api/test_relay', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: eventName }) });
-  } catch(e) { console.error(e); }
+    const result = await api('/api/test_relay', { event: eventName });
+    if (result.ok) showMessage(`Test triggered: ${eventName}`, 'ok');
+    else showMessage(`Test failed: ${result.data.error}`);
+  } catch(e) { console.error(e); showMessage('Test failed'); }
 }
 
 function renderConfig() {
