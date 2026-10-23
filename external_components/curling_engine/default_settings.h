@@ -74,6 +74,8 @@ config:
     # relays - Relay configuration (count, enable, function mapping)
     relays_enabled: True
     relay_count: 4
+    # pregame_countdown - Seconds of countdown before game starts
+    pregame_countdown: 10
     relay1_function: 'None'
     relay2_function: 'None'
     relay3_function: 'None'

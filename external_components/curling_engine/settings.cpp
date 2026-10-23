@@ -1365,6 +1365,7 @@ void PiTimerSettings::reset() {
   relay2_enabled = true;
   relay3_enabled = true;
   relay4_enabled = true;
+  pregame_countdown = 10;
   schedules.clear();
   exceptions.clear();
   valid = false;
@@ -1493,6 +1494,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = cfg->find("relay_count")) != nullptr && v->type == YType::Int) relay_count = static_cast<int>(v->i);
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_function"; if((v=cfg->find(key))!=nullptr && v->type==YType::Str){ if(i==1)relay1_function=v->s; if(i==2)relay2_function=v->s; if(i==3)relay3_function=v->s; if(i==4)relay4_function=v->s;} }
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_enabled"; if((v=cfg->find(key))!=nullptr && v->type==YType::Bool){ if(i==1)relay1_enabled=v->b; if(i==2)relay2_enabled=v->b; if(i==3)relay3_enabled=v->b; if(i==4)relay4_enabled=v->b;} }
+  if ((v = cfg->find("pregame_countdown")) != nullptr && v->type == YType::Int) pregame_countdown = static_cast<int>(v->i);
 
   // buzzer subsection
   const YamlValue *buzzer = require_(cfg, "buzzer", YType::Map, "main config section", err);

@@ -95,6 +95,7 @@ class PiTimerSettings {
   std::vector<std::string> countdown_relays;            // relays pulsed at that moment
   int relay_duration{0};
   int relay_msg_time{0};
+  int pregame_countdown{10};
   bool relays_enabled{true};
   int relay_count{4};
   std::string relay1_function{"None"};

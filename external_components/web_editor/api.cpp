@@ -662,6 +662,7 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.relay2_enabled"] = s.relay2_enabled;
   cfg["config.relay3_enabled"] = s.relay3_enabled;
   cfg["config.relay4_enabled"] = s.relay4_enabled;
+  cfg["config.pregame_countdown"] = s.pregame_countdown;
   return from_document(doc);
 }
 
@@ -697,7 +698,8 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.pace_of_play.font_size" || path == "config.footer.font_size" ||
                path == "config.buzzer.duration" || path == "config.buzzer.header_hold" ||
                path == "config.buzzer.countdown.minutes_before" ||
-               path == "config.relay_count") {
+               path == "config.relay_count" ||
+               path == "config.pregame_countdown") {
       if (!json_strict_int(v, &number) || number < 0 || number > 100000)
         return error_json(422, path + " must be a whole number of seconds or pixels (0 or more)");
       yaml = curling_engine::yaml_int(number);

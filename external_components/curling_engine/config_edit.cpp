@@ -208,7 +208,8 @@ static bool insertable_config_path(const std::string &path) {
          path == "config.relay1_function" || path == "config.relay2_function" ||
          path == "config.relay3_function" || path == "config.relay4_function" ||
          path == "config.relay1_enabled" || path == "config.relay2_enabled" ||
-         path == "config.relay3_enabled" || path == "config.relay4_enabled";
+         path == "config.relay3_enabled" || path == "config.relay4_enabled" ||
+         path == "config.pregame_countdown";
 }
 
 // The countdown section needs both keys (minutes_before and relays), so a
