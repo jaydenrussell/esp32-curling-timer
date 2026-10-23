@@ -201,9 +201,19 @@ function showMessage(text, kind = 'bad') {
   const box = $('message');
   box.className = `banner ${kind}`;
   box.textContent = text;
+  // Also show in savebars
+  for (const id of ['savebar', 'config-savebar']) {
+    const bar = $(id);
+    if (bar) {
+      let msg = bar.querySelector('.save-msg');
+      if (!msg) { msg = document.createElement('span'); msg.className = 'save-msg'; bar.prepend(msg); }
+      msg.textContent = text;
+      msg.style.color = kind === 'ok' ? 'var(--ok)' : 'var(--bad)';
+      msg.style.marginRight = '8px';
+    }
+  }
   clearTimeout(messageTimer);
-  if (kind === 'ok') messageTimer = setTimeout(() => box.classList.add('hidden'), 4000);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (kind === 'ok') messageTimer = setTimeout(() => { box.classList.add('hidden'); for (const id of ['savebar', 'config-savebar']) { const m = $(id)?.querySelector('.save-msg'); if (m) m.textContent = ''; } }, 4000);
 }
 function clearMessage() { $('message').classList.add('hidden'); }
 
