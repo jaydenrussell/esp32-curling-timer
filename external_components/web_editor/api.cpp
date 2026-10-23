@@ -733,12 +733,11 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
           text.find('\t') != std::string::npos)
         return error_json(422, path + " must be a single line of text");
       yaml = curling_engine::yaml_quote(text);
-    } else {
     } else if (path == "config.relay1_function" || path == "config.relay2_function" ||
                path == "config.relay3_function" || path == "config.relay4_function") {
       if (!v.is<const char *>())
         return error_json(422, path + " must be a string");
-      yaml = curling_engine::yaml_str(v.as<const char *>());
+      yaml = curling_engine::yaml_quote(v.as<const char *>());
     } else {
       return error_json(422, "unknown config setting '" + path + "'");
     }
@@ -853,7 +852,8 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
   if (p == "/api/quickstart/cancel")
     return cancel_quick_start(data);
   if (p == "/api/test_relay")
-    return test_relay(data);  if (p == "/api/config")
+    return test_relay(data);
+  if (p == "/api/config")
     return post_config(data);
   return error_json(404, "not found");
 }
