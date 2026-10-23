@@ -826,7 +826,8 @@ function renderConfig() {
   for (const section of CONFIG_SECTIONS) {
     if (section.group !== currentGroup) {
       currentGroup = section.group;
-      nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, currentGroup));
+       const icon = currentGroup === 'Display (HDMI output)' ? '🖥 ' : currentGroup === 'Audio' ? '🔊 ' : '';
+       nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, icon + currentGroup));
     }
     nodes.push(el('div', { class: 'card' },
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
