@@ -173,7 +173,7 @@ bool start_web_httpd(WebEditorComponent *editor) {
   s_editor = editor;
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.server_port = editor->port();
-  config.ctrl_port = editor->port() + 1;
+  config.ctrl_port = 0;
   config.max_uri_handlers = 4;
   // A single user (the web editor) needs one or two connections; keeping
   // the defaults costs internal RAM on a device that also runs LVGL, the
