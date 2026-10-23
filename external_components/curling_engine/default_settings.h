@@ -76,6 +76,10 @@ config:
     relay_count: 4
     # pregame_countdown - Seconds of countdown before game starts
     pregame_countdown: 10
+    # pregame display options
+    pregame_font_size: 0
+    pregame_color: ''
+    pregame_header_text: 'Get ready'
     relay1_function: 'None'
     relay2_function: 'None'
     relay3_function: 'None'

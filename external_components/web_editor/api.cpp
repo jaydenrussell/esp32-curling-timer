@@ -682,6 +682,9 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.relay3_enabled"] = s.relay3_enabled;
   cfg["config.relay4_enabled"] = s.relay4_enabled;
   cfg["config.pregame_countdown"] = s.pregame_countdown;
+  cfg["config.pregame_font_size"] = s.pregame_font_size;
+  cfg["config.pregame_color"] = s.pregame_color;
+  cfg["config.pregame_header_text"] = s.pregame_header_text;
   return from_document(doc);
 }
 
@@ -718,7 +721,8 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.buzzer.duration" || path == "config.buzzer.header_hold" ||
                path == "config.buzzer.countdown.minutes_before" ||
                path == "config.relay_count" ||
-               path == "config.pregame_countdown") {
+               path == "config.pregame_countdown" ||
+               path == "config.pregame_font_size") {
       if (!json_strict_int(v, &number) || number < 0 || number > 100000)
         return error_json(422, path + " must be a whole number of seconds or pixels (0 or more)");
       yaml = curling_engine::yaml_int(number);
@@ -755,7 +759,8 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
         return error_json(422, path + " must be a single line of text");
       yaml = curling_engine::yaml_quote(text);
     } else if (path == "config.relay1_function" || path == "config.relay2_function" ||
-               path == "config.relay3_function" || path == "config.relay4_function") {
+               path == "config.relay3_function" || path == "config.relay4_function" ||
+               path == "config.pregame_color" || path == "config.pregame_header_text") {
       if (!v.is<const char *>())
         return error_json(422, path + " must be a string");
       yaml = curling_engine::yaml_quote(v.as<const char *>());
