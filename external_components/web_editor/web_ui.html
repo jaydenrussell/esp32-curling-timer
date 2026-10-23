@@ -859,11 +859,14 @@ async function testRelay(eventName, btn) {
   try {
     const result = await api('/api/test_relay', { event: eventName });
     if (btn) {
+      const dur = (result.data && result.data.duration) ? result.data.duration * 1000 : 2000;
       btn.textContent = result.ok ? '✓' : '✗';
-      setTimeout(() => { btn.textContent = 'Test'; }, 1500);
+      btn.classList.add('primary');
+      btn.style.background = result.ok ? '#2ecc71' : '#e74c3c';
+      setTimeout(() => { btn.textContent = 'Test'; btn.classList.remove('primary'); btn.style.background = ''; }, dur);
     }
     if (!result.ok) showMessage(`Test failed: ${result.data.error}`);
-  } catch(e) { console.error(e); if (btn) btn.textContent = '✗'; }
+  } catch(e) { console.error(e); if (btn) { btn.textContent = '✗'; btn.style.background = '#e74c3c'; } }
 }
 
 function renderConfig() {
