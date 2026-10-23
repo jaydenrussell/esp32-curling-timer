@@ -520,6 +520,7 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
   opts.during_buzzer = during_buzzer;
   opts.header_hold = header_hold;
   opts.hold = live.settings.relay_msg_time;
+  opts.pregame_countdown = live.settings.pregame_countdown;
   Entry added;
   std::string new_version, err;
   SettingsStore *store = engine_->get_store();

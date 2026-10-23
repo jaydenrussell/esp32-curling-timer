@@ -74,7 +74,7 @@ bool quick_entry(const QuickStartOptions &opts, Entry *out, std::string *err) {
     *err = "header_hold must be a whole number of seconds (0 or more)";
     return false;
   }
-  int start = opts.now_sec;
+  int start = opts.now_sec + opts.pregame_countdown;
   if (start + opts.duration >= SECONDS_PER_DAY) {
     *err = "a " + format_duration(opts.duration) + " timer would end after midnight (at most " +
            format_duration(SECONDS_PER_DAY - 1 - start) + " left today)";
