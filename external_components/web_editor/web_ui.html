@@ -718,6 +718,13 @@ const CONFIG_SECTIONS = [
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
+function relayDisplayName(i) {
+  const enabled = state.configValues && state.configValues[`config.relay${i}_enabled`];
+  if (!enabled) return null;
+  const fn = (state.configValues && state.configValues[`config.relay${i}_function`]) || 'None';
+  if (fn === 'None') return null;
+  return fn + i;
+}
 function RELAY_NAMES() {
   const count = (state.configValues && state.configValues['config.relay_count']) || 0;
   const names = [];
@@ -725,7 +732,7 @@ function RELAY_NAMES() {
     const enabled = state.configValues && state.configValues[`config.relay${i}_enabled`];
     if (enabled) names.push(`RELAY${i}`);
   }
-  return names.length ? names : ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4'];
+  return names;
 }
 const RELAYS_PATHS = new Set(['config.buzzer.relays', 'config.buzzer.ring_at_start',
   'config.buzzer.countdown.relays']);
@@ -822,18 +829,22 @@ function configField(field) {
       value: value == null ? '' : String(value / 60),
       oninput: (event) => set(event.target.value === '' ? null : Math.round(Number(event.target.value) * 60)) }));
   }
-  if (type === 'relays') {
-    const selected = Array.isArray(value) ? value : [];
-    return el('div', { class: 'field' }, label, el('div', { class: 'row-actions', style: 'margin-top: 2px' },
-      RELAY_NAMES().map((name) => el('label', { class: 'check' },
-        el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
-          const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
-          const at = list.indexOf(name);
-          if (event.target.checked && at < 0) list.push(name);
-          if (!event.target.checked && at >= 0) list.splice(at, 1);
-          set(list);
-        } }), name))));
-  }
+   if (type === 'relays') {
+     const selected = Array.isArray(value) ? value : [];
+     return el('div', { class: 'field' }, label, el('div', { class: 'row-actions', style: 'margin-top: 2px' },
+       RELAY_NAMES().map((name) => {
+         const i = Number(name.replace('RELAY', ''));
+         const display = relayDisplayName(i) || name;
+         return el('label', { class: 'check' },
+           el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
+             const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
+             const at = list.indexOf(name);
+             if (event.target.checked && at < 0) list.push(name);
+             if (!event.target.checked && at >= 0) list.splice(at, 1);
+             set(list);
+           } }), display);
+       })));
+   }
   return el('div', {}, label);
 }
 
