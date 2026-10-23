@@ -52,6 +52,8 @@ logger:
   hardware_uart: USB_SERIAL_JTAG
   level: INFO
 
+json:
+
 # ---------------------------------------------------------------------
 # Networking: PoE Ethernet is the default and only requirement.
 # Wi-Fi (via the C6 SDIO co-processor) is an OPTIONAL add-on package —
