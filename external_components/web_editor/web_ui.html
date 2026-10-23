@@ -110,7 +110,16 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--bg); border: 1px 
 #login form { width: 100%; max-width: 360px; }
 #login input { width: 100%; margin: 8px 0 12px; }
 .hidden { display: none !important; }
-</style>
+/* mobile responsiveness */
+@media (max-width: 640px) {
+  nav { flex-wrap: nowrap; overflow-x: auto; }
+  .card { padding: 12px; }
+  .grid2 { grid-template-columns: 1fr; }
+  .savebar { left: 0; right: 0; width: 100%; }
+}
+/* consistent emoji icon spacing */
+.card h2, nav button { gap: 6px; }
+
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
