@@ -58,7 +58,8 @@ label.check input { min-height: 0; width: 18px; height: 18px; }
 .pill.ok { color: var(--ok); } .pill.bad { color: var(--bad); } .pill.quick { color: var(--quick); } .pill.warn { color: var(--warn); }
 .countdown { font-size: clamp(56px, 18vw, 120px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; margin: 8px 0; }
 .state { font-weight: 600; letter-spacing: .04em; }
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+.field { margin-bottom: 8px; }
 .grid2 label, .grid2 .field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
 .duration { display: flex; align-items: center; gap: 6px; }
 .duration input { width: 5.5em; }
@@ -662,13 +663,13 @@ const CONFIG_SECTIONS = [
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
       ['config.relay1_enabled', 'bool', 'RELAY1 enabled'],
-      ['config.relay1_function', 'text', 'RELAY1 function'],
+      ['config.relay1_function', 'select', 'RELAY1 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
       ['config.relay2_enabled', 'bool', 'RELAY2 enabled'],
-      ['config.relay2_function', 'text', 'RELAY2 function'],
+      ['config.relay2_function', 'select', 'RELAY2 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
       ['config.relay3_enabled', 'bool', 'RELAY3 enabled'],
-      ['config.relay3_function', 'text', 'RELAY3 function'],
+      ['config.relay3_function', 'select', 'RELAY3 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
       ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
-      ['config.relay4_function', 'text', 'RELAY4 function']] },
+      ['config.relay4_function', 'select', 'RELAY4 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom']] },
   { group: 'Display (HDMI output)', title: 'Header text',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
@@ -793,13 +794,23 @@ function configField(field) {
       el('input', { type: 'checkbox', checked: value === true, onchange: (event) => set(event.target.checked) }), label));
   }
   if (type === 'int') {
+    let width = '';
+    if (path === 'config.relay_count') width = '40px';
+    else if (path.endsWith('.duration') || path === 'config.buzzer.header_hold' || path.endsWith('header_hold')) width = '60px';
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 1, inputmode: 'numeric',
+      style: width ? `width: ${width}` : '',
       value: value == null ? '' : String(value),
       oninput: (event) => set(event.target.value === '' ? null : Number(event.target.value)) }));
   }
   if (type === 'text') {
     return el('label', {}, label, el('input', { type: 'text', maxlength: 80, value: value == null ? '' : value,
       placeholder: 'not set', oninput: (event) => set(event.target.value) }));
+  }
+  if (type === 'select') {
+    const options = field.slice(3).filter((x) => typeof x === 'string');
+    return el('label', {}, label, el('select', { value: value == null ? '' : value,
+      onchange: (event) => set(event.target.value) },
+      options.map((opt) => el('option', { value: opt, selected: value === opt }, opt))));
   }
   if (type === 'color') {
     return el('label', {}, label, el('input', { type: 'text', maxlength: 80, value: value == null ? '' : value,
@@ -845,7 +856,7 @@ function renderConfig() {
        const icon = currentGroup === 'Display (HDMI output)' ? '🖥 ' : currentGroup === 'Audio' ? '🔊 ' : '';
        nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, icon + currentGroup));
     }
-    nodes.push(el('div', { class: 'card' },
+    nodes.push(el('div', { class: 'card', style: section.title === 'Relays' ? 'border-color: var(--accent); background: var(--preset-bg);' : '' },
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
       el('h2', {}, section.title),
       el('div', { class: 'grid2' }, section.fields.map(configField)),
