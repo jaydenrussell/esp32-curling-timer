@@ -44,6 +44,7 @@ BLOCK_REPO = """\
 external_components:
   - source: ../external_components
     components: [curling_engine, web_editor, lt8912b]
+    refresh: always
 """
 
 BLOCK_HA = """\

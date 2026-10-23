@@ -199,7 +199,6 @@ external_components:
     # file: a cached checkout of an older "main" can never mismatch the
     # YAML (which is what broke the add-on builds).
     refresh: 0s
-    refresh: always
 
 curling_engine:
   id: engine
