@@ -733,7 +733,7 @@ const CONFIG_SECTIONS = [
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
       ['config.buzzer.countdown_duration', 'int', 'Output duration (seconds, 0=use default)', 0, 100000]] },
   { group: 'Outputs 🔊', title: 'Game End',
-    hint: 'Pulses its relays for the ring duration. Header hold: seconds the during-buzzer header text stays after ringing.',
+    hint: 'Default output duration for all events (0 = 2s). Individual events can override. Header hold: seconds the during-buzzer header text stays after ringing.',
     fields: [
       ['config.buzzer.relays', 'relays', 'Output'],
       ['config.buzzer.duration', 'int', 'Output duration (seconds)', 0, 100000],
