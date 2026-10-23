@@ -809,6 +809,12 @@ function configField(field) {
   return el('div', {}, label);
 }
 
+async function testRelay(eventName) {
+  try {
+    await fetch('/api/test_relay', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: eventName }) });
+  } catch(e) { console.error(e); }
+}
+
 function renderConfig() {
   if (!state.configValues) return;
   if (!document.getElementById('pygame-colors')) {
@@ -825,7 +831,8 @@ function renderConfig() {
     nodes.push(el('div', { class: 'card' },
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
       el('h2', {}, section.title),
-      el('div', { class: 'grid2' }, section.fields.map(configField))));
+      el('div', { class: 'grid2' }, section.fields.map(configField)),
+      section.group === 'Audio' ? el('button', { class: 'btn primary', onclick: () => testRelay(section.title) }, 'Test') : null));
   }
   $('tab-config').replaceChildren(...nodes);
 }
