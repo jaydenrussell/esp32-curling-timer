@@ -39,7 +39,7 @@ main { max-width: 960px; margin: 0 auto; padding: 16px 16px 96px; }
 .card h2 .spacer { flex: 1; }
 .muted { color: var(--muted); }
 .small { font-size: 14px; }
-button.btn { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 8px; padding: 8px 14px; cursor: pointer; min-height: 40px; }
+button.btn { cursor: pointer; font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 8px; padding: 8px 14px; cursor: pointer; min-height: 40px; }
 button.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
 button.btn.danger { color: var(--bad); }
 /* quick start presets: tinted, so the solid primary 'Start now' stays the main action */
@@ -855,12 +855,15 @@ function configField(field) {
   return el('div', {}, label);
 }
 
-async function testRelay(eventName) {
+async function testRelay(eventName, btn) {
   try {
     const result = await api('/api/test_relay', { event: eventName });
-    if (result.ok) showMessage(`Test triggered: ${eventName}`, 'ok');
-    else showMessage(`Test failed: ${result.data.error}`);
-  } catch(e) { console.error(e); showMessage('Test failed'); }
+    if (btn) {
+      btn.textContent = result.ok ? '✓' : '✗';
+      setTimeout(() => { btn.textContent = 'Test'; }, 1500);
+    }
+    if (!result.ok) showMessage(`Test failed: ${result.data.error}`);
+  } catch(e) { console.error(e); if (btn) btn.textContent = '✗'; }
 }
 
 function renderConfig() {
@@ -891,7 +894,7 @@ function renderConfig() {
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
       el('h2', {}, section.title),
       el('div', { class: 'grid2' }, fields.map(configField)),
-      section.group === 'Audio' ? el('button', { class: 'btn primary', onclick: () => testRelay(section.title) }, 'Test') : null));
+      section.group === 'Audio' ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null));
   }
   $('tab-config').replaceChildren(...nodes);
 }
