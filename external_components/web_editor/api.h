@@ -77,7 +77,7 @@ class PiTimerApi {
   ApiResponse restore(JsonObjectConst data);
   ApiResponse quick_start(JsonObjectConst data);
   ApiResponse cancel_quick_start(JsonObjectConst data);
-  ApiResponse get_config();
+  ApiResponse test_relay(JsonObjectConst data);  ApiResponse get_config();
   ApiResponse post_config(JsonObjectConst data);
   ApiResponse login(const ApiRequest &req, JsonObjectConst data);
   ApiResponse logout();

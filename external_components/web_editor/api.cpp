@@ -570,6 +570,14 @@ ApiResponse PiTimerApi::cancel_quick_start(JsonObjectConst data) {
   return from_document(doc);
 }
 
+ApiResponse PiTimerApi::test_relay(JsonObjectConst data) {
+  const char *ev = data["event"].as<const char *>();
+  std::string event = ev ? ev : "";
+  if (event != "Game End" && event != "Game Start" && event != "Countdown Warning")
+    return error_json(400, "invalid event");
+  return ok_json();
+}
+
 // -- config (new, no python parity) -------------------------------------------
 
 ApiResponse PiTimerApi::get_config() {
@@ -844,7 +852,8 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
     return quick_start(data);
   if (p == "/api/quickstart/cancel")
     return cancel_quick_start(data);
-  if (p == "/api/config")
+  if (p == "/api/test_relay")
+    return test_relay(data);  if (p == "/api/config")
     return post_config(data);
   return error_json(404, "not found");
 }
