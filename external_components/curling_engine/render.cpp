@@ -225,16 +225,19 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
   // enabled && a current game.
   if (settings.enabled && game.has_value()) {
     const PiTimerGame &g = *game;
-    const int seconds_left = g.seconds_until_buzzer.value_or(0);
+    const int since_start = g.seconds_since_start.value_or(0);
+    const bool pregame = since_start < 0 && settings.pregame_countdown > 0;
+    const int seconds_left = pregame ? (-since_start) : g.seconds_until_buzzer.value_or(0);
     out.show_countdown = true;
-    out.during_buzzer = seconds_left <= 0;
-    out.seconds_until_buzzer = seconds_left;
-    out.countdown = format_countdown(seconds_left);
-    out.countdown_color = color_to_hex(
-        [&settings](const char *key) {
+    out.during_buzzer = !pregame && seconds_left <= 0;
+    out.seconds_until_buzzer = pregame ? (g.seconds_until_buzzer.value_or(0) + settings.pregame_countdown) : seconds_left;
+    out.countdown = pregame ? std::to_string(seconds_left) : format_countdown(seconds_left);
+    out.countdown_color = color_to_hex(pregame ? settings.pregame_color : [&settings](const char *key) {
           auto it = settings.countdown_colors.find(key);
           return it != settings.countdown_colors.end() ? it->second : std::string("white");
         }(out.during_buzzer ? "during_buzzer" : "counting_down"));
+    if (pregame && !settings.pregame_header_text.empty())
+      out.header_text = settings.pregame_header_text;
 
     bool show_pace = settings.pace_of_play;
     if (g.pace_of_play_override.has_value())

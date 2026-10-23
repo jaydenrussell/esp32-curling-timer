@@ -1602,7 +1602,8 @@ std::optional<PiTimerGame> PiTimerSettings::find_current_game(int weekday,
   // into account extra buzzer header hold time and returns a negative
   // seconds_until_buzzer while inside that hold time
   for (const PiTimerGame &entry : *list) {
-    if (entry.start <= seconds_since_midnight &&
+    const int pregame = pregame_countdown;
+    if (seconds_since_midnight >= entry.start - pregame &&
         seconds_since_midnight <= entry.buzzer + header_hold(entry)) {
       PiTimerGame copy = entry;
       copy.seconds_until_buzzer = copy.buzzer - seconds_since_midnight;

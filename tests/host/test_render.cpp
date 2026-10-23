@@ -167,7 +167,7 @@ TEST_CASE("render_snapshot: during buzzer red + header override window") {
 
 TEST_CASE("render_snapshot: game window edges (idle after hold)") {
   auto s = parse_base();
-  auto before = render_snapshot(s, true, 0, 35999, "2026-09-28");  // Mon 09:59:59
+  auto before = render_snapshot(s, true, 0, 35989, "2026-09-28");  // Mon 09:59:49
   CHECK_FALSE(before.show_countdown);
   CHECK(before.header_text == "IDLE");
   CHECK_FALSE(before.show_game_name);

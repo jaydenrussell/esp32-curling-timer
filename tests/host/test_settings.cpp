@@ -223,7 +223,7 @@ PiTimerSettings base_settings() {
 
 TEST_CASE("no game before start") {
   PiTimerSettings s = base_settings();
-  CHECK(s.find_current_game(0, 36000 - 1, "2026-09-28") == std::nullopt);
+  CHECK(s.find_current_game(0, 36000 - 11, "2026-09-28") == std::nullopt);
 }
 
 TEST_CASE("game during countdown") {
