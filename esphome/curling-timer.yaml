@@ -191,6 +191,7 @@ sensor:
 external_components:
   - source: ../external_components
     components: [curling_engine, web_editor, lt8912b]
+    refresh: always
 
 curling_engine:
   id: engine
