@@ -589,8 +589,8 @@ ApiResponse PiTimerApi::get_config() {
   JsonDocument doc;
   doc["version"] = live.version;
   JsonObject cfg = doc["config"].to<JsonObject>();
-  cfg["enabled"] = s.enabled;
-  cfg["header.font_size"] = s.font_sizes.count("header") != 0 ? s.font_sizes.at("header") : 0;
+  cfg["config.enabled"] = s.enabled;
+  cfg["config.header.font_size"] = s.font_sizes.count("header") != 0 ? s.font_sizes.at("header") : 0;
   for (const char *event : {"when_disabled", "when_idle", "counting_down", "during_buzzer"}) {
     for (const char *attribute : {"text", "color"}) {
       std::string key = std::string("config.header.") + attribute + "." + event;
@@ -607,9 +607,9 @@ ApiResponse PiTimerApi::get_config() {
         cfg[key] = nullptr;
     }
   }
-  cfg["countdown.font_size_4_digits"] =
+  cfg["config.countdown.font_size_4_digits"] =
       s.font_sizes.count("timer_4_digits") != 0 ? s.font_sizes.at("timer_4_digits") : 0;
-  cfg["countdown.font_size_5_digits"] =
+  cfg["config.countdown.font_size_5_digits"] =
       s.font_sizes.count("timer_5_digits") != 0 ? s.font_sizes.at("timer_5_digits") : 0;
   auto countdown_color = [&](const char *event) {
     std::string key = std::string("config.countdown.color.") + event;
@@ -621,47 +621,47 @@ ApiResponse PiTimerApi::get_config() {
   };
   countdown_color("counting_down");
   countdown_color("during_buzzer");
-  cfg["pace_of_play.enabled"] = s.pace_of_play;
-  cfg["pace_of_play.font_size"] =
+  cfg["config.pace_of_play.enabled"] = s.pace_of_play;
+  cfg["config.pace_of_play.font_size"] =
       s.font_sizes.count("pace_of_play") != 0 ? s.font_sizes.at("pace_of_play") : 0;
-  cfg["pace_of_play.color"] = s.pace_color;
-  cfg["pace_of_play.unit_name"] = s.pace_unit_name;
-  cfg["pace_of_play.unit_duration"] = s.pace_unit_duration;
-  cfg["footer.font_size"] = s.font_sizes.count("footer") != 0 ? s.font_sizes.at("footer") : 0;
-  cfg["footer.datetime"] = s.date_and_time;
-  cfg["footer.entry_name"] = s.game_name;
+  cfg["config.pace_of_play.color"] = s.pace_color;
+  cfg["config.pace_of_play.unit_name"] = s.pace_unit_name;
+  cfg["config.pace_of_play.unit_duration"] = s.pace_unit_duration;
+  cfg["config.footer.font_size"] = s.font_sizes.count("footer") != 0 ? s.font_sizes.at("footer") : 0;
+  cfg["config.footer.datetime"] = s.date_and_time;
+  cfg["config.footer.entry_name"] = s.game_name;
   if (s.relays.has_value()) {
-    JsonArray relays = cfg["buzzer.relays"].to<JsonArray>();
+    JsonArray relays = cfg["config.buzzer.relays"].to<JsonArray>();
     for (const std::string &relay : *s.relays)
       relays.add(relay);
   } else {
-    cfg["buzzer.relays"] = nullptr;
+    cfg["config.buzzer.relays"] = nullptr;
   }
   if (s.ring_at_start.has_value()) {
-    JsonArray relays = cfg["buzzer.ring_at_start"].to<JsonArray>();
+    JsonArray relays = cfg["config.buzzer.ring_at_start"].to<JsonArray>();
     for (const std::string &relay : *s.ring_at_start)
       relays.add(relay);
   } else {
-    cfg["buzzer.ring_at_start"] = nullptr;
+    cfg["config.buzzer.ring_at_start"] = nullptr;
   }
-  cfg["buzzer.countdown.minutes_before"] = s.countdown_minutes_before;
+  cfg["config.buzzer.countdown.minutes_before"] = s.countdown_minutes_before;
   {
-    JsonArray relays = cfg["buzzer.countdown.relays"].to<JsonArray>();
+    JsonArray relays = cfg["config.buzzer.countdown.relays"].to<JsonArray>();
     for (const std::string &relay : s.countdown_relays)
       relays.add(relay);
   }
-  cfg["buzzer.duration"] = s.relay_duration;
-  cfg["buzzer.header_hold"] = s.relay_msg_time;
-  cfg["relays_enabled"] = s.relays_enabled;
-  cfg["relay_count"] = s.relay_count;
-  cfg["relay1_function"] = s.relay1_function;
-  cfg["relay2_function"] = s.relay2_function;
-  cfg["relay3_function"] = s.relay3_function;
-  cfg["relay4_function"] = s.relay4_function;
-  cfg["relay1_enabled"] = s.relay1_enabled;
-  cfg["relay2_enabled"] = s.relay2_enabled;
-  cfg["relay3_enabled"] = s.relay3_enabled;
-  cfg["relay4_enabled"] = s.relay4_enabled;
+  cfg["config.buzzer.duration"] = s.relay_duration;
+  cfg["config.buzzer.header_hold"] = s.relay_msg_time;
+  cfg["config.relays_enabled"] = s.relays_enabled;
+  cfg["config.relay_count"] = s.relay_count;
+  cfg["config.relay1_function"] = s.relay1_function;
+  cfg["config.relay2_function"] = s.relay2_function;
+  cfg["config.relay3_function"] = s.relay3_function;
+  cfg["config.relay4_function"] = s.relay4_function;
+  cfg["config.relay1_enabled"] = s.relay1_enabled;
+  cfg["config.relay2_enabled"] = s.relay2_enabled;
+  cfg["config.relay3_enabled"] = s.relay3_enabled;
+  cfg["config.relay4_enabled"] = s.relay4_enabled;
   return from_document(doc);
 }
 
