@@ -1037,6 +1037,23 @@ async function loadHistory() {
 
 // ---- start up -------------------------------------------------------------
 let started = false;
+async function checkVersion() {
+  try {
+    const res = await fetch('https://api.github.com/repos/jaydenrussell/esp32-curling-timer/releases/latest');
+    if (!res.ok) return;
+    const data = await res.json();
+    const latest = (data.tag_name || '').replace(/^v/, '');
+    const current = '{{version}}'.replace(/^v/, '');
+    if (latest && latest !== current) {
+      const dot = document.createElement('span');
+      dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-left:6px;vertical-align:middle;cursor:pointer;';
+      dot.title = `New version ${latest} available - click to view`;
+      dot.onclick = () => window.open('https://github.com/jaydenrussell/esp32-curling-timer/releases', '_blank');
+      const v = document.querySelector('.version');
+      if (v) v.appendChild(dot);
+    }
+  } catch(e) {}
+}
 function start() {
   renderTabs();
   selectTab(state.tab);
