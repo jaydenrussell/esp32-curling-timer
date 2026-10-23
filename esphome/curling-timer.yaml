@@ -114,14 +114,14 @@ api:
 ota:
   - platform: esphome
 
-web_server:
-  port: 80
-  auth:
-    # digest avoids sending the password in a reversible form
-    # (ESPHome deprecates basic auth in 2027.1)
-    type: digest
-    username: admin
-    password: !secret web_password
+# web_server:
+#   port: 80
+#   auth:
+#     # digest avoids sending the password in a reversible form
+#     # (ESPHome deprecates basic auth in 2027.1)
+#     type: digest
+#     username: admin
+#     password: !secret web_password
 
 time:
   - platform: sntp

@@ -178,8 +178,8 @@ bool start_web_httpd(WebEditorComponent *editor) {
   // A single user (the web editor) needs one or two connections; keeping
   // the defaults costs internal RAM on a device that also runs LVGL, the
   // HDMI driver and the API.
-  config.max_open_sockets = 4;
-  config.stack_size = 8192;
+  config.max_open_sockets = 2;
+  config.stack_size = 16384;
   // The LRU purge path takes the httpd's control-socket semaphore; with a
   // freed server that handle can be NULL and the take aborts the chip.
   // Without it the server just refuses extra connections.
