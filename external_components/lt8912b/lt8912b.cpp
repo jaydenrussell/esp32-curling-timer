@@ -89,7 +89,7 @@ void Lt8912b::setup() {
       // driver copies the pixels straight through (an RGB888 driver would
       // need a 2.8 MB framebuffer and convert every pixel).
       .in_color_format = LCD_COLOR_FMT_RGB565,
-      .num_fbs = 1,
+      .num_fbs = 2,
       .video_timing =
           {
               .h_size = 1280,
