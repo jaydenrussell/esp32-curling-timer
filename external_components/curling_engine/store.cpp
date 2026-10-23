@@ -109,7 +109,7 @@ SettingsStore::SettingsStore(StoreFs *fs, const std::string &settings_fn, int ba
       dir_(dirname_of(settings_fn)),
       stem_(stem_of(settings_fn)),
       tmp_path_(dir_ + "/." + stem_ + ".web-tmp.yml"),
-      backup_dir_(dir_ + "/" + BACKUP_DIR_NAME),
+      backup_dir_(dir_),
       backups_kept_(backups_kept) {}
 
 StoreStatus SettingsStore::read_unlocked(std::string *text, std::string *version,
