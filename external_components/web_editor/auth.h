@@ -18,7 +18,7 @@ inline constexpr int LOGIN_FAILURES_ALLOWED = 5;
 inline constexpr float LOGIN_WINDOW_SECONDS = 300;
 inline constexpr int SESSION_SECONDS = 30 * 24 * 60 * 60;
 inline constexpr const char *SESSION_COOKIE = "pitimer_session";
-inline constexpr size_t MAX_BODY_BYTES = 512 * 1024;
+inline constexpr size_t MAX_BODY_BYTES = 64 * 1024;
 
 // salted pbkdf2 hash in pitimer's stored form:
 //   pbkdf2_sha256$${iterations}$${salt_hex}$${digest_hex}
