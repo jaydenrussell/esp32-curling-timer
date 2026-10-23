@@ -142,8 +142,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--bg); border: 1px 
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', 'Status'], ['schedule', 'Schedule'], ['exceptions', 'Exceptions'],
-              ['history', 'Report'], ['raw', 'Custom Config'], ['config', '\u2699 Config']];
+const TABS = [['status', 'Status📊'], ['schedule', 'Schedule📅'], ['exceptions', 'Exceptions'], ['history', 'Report📈'], ['raw', 'Custom Config⚙'], ['config', 'Config⚙']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
@@ -646,10 +645,10 @@ function renderExceptions() {
 // types: bool, int (min..max), text, color (pygame name + datalist), minutes (UI minutes, sent as seconds),
 // relays (RELAY1..RELAY4 checkbox group)
 const CONFIG_SECTIONS = [
-  { title: 'Timer', hint: 'Every setting except the weekly schedule. Changes are written to the settings file only when you press Save & apply.',
+  { group: 'Display (HDMI output)', title: 'Timer', hint: 'Every setting except the weekly schedule. Changes are written to the settings file only when you press Save & apply.',
     fields: [
       ['config.enabled', 'bool', 'Timer enabled']] },
-  { title: 'Header text',
+  { group: 'Display (HDMI output)', title: 'Header text',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.header.text.when_disabled', 'text', 'Text when disabled'],
@@ -660,33 +659,38 @@ const CONFIG_SECTIONS = [
       ['config.header.color.when_idle', 'color', 'Colour when idle'],
       ['config.header.color.counting_down', 'color', 'Colour while counting down'],
       ['config.header.color.during_buzzer', 'color', 'Colour while the buzzer rings']] },
-  { title: 'Countdown clock',
+  { group: 'Display (HDMI output)', title: 'Countdown clock',
     fields: [
       ['config.countdown.font_size_4_digits', 'int', 'Timer font size under an hour', 0, 100000],
       ['config.countdown.font_size_5_digits', 'int', 'Timer font size an hour or more', 0, 100000],
       ['config.countdown.color.counting_down', 'color', 'Colour while counting down'],
       ['config.countdown.color.during_buzzer', 'color', 'Colour while the buzzer rings']] },
-  { title: 'Pace of play',
+  { group: 'Display (HDMI output)', title: 'Pace of play',
     fields: [
       ['config.pace_of_play.enabled', 'bool', 'Show pace of play'],
       ['config.pace_of_play.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.pace_of_play.color', 'color', 'Colour'],
       ['config.pace_of_play.unit_name', 'text', 'Unit name, e.g. END'],
       ['config.pace_of_play.unit_duration', 'minutes', 'Minutes per unit', 0.5, 43200]] },
-  { title: 'Footer',
+  { group: 'Display (HDMI output)', title: 'Footer',
     fields: [
       ['config.footer.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.entry_name', 'bool', 'Show entry name']] },
-  { title: 'Bell / buzzer',
-    hint: 'Each event pulses its own relays for the ring duration; an empty relay list switches that event off. The countdown warning only applies to games longer than the minutes set here.',
+  { group: 'Audio', title: 'Game End (buzzer)',
+    hint: 'Pulses its relays for the ring duration; an empty relay list switches that event off.',
     fields: [
       ['config.buzzer.relays', 'relays', 'Relays that ring at the buzzer time'],
       ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000],
-      ['config.buzzer.ring_at_start', 'relays', 'Relays that ring at game start (none = off)'],
-      ['config.buzzer.countdown.minutes_before', 'int', 'Countdown warning: minutes before the buzzer (0 = off)', 0, 100000],
-      ['config.buzzer.countdown.relays', 'relays', 'Relays that ring at the countdown warning'],
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
+  { group: 'Audio', title: 'Game Start',
+    fields: [
+      ['config.buzzer.ring_at_start', 'relays', 'Relays that ring at game start (none = off)']] },
+  { group: 'Audio', title: 'Countdown Warning',
+    hint: 'Only applies to games longer than the minutes set here.',
+    fields: [
+      ['config.buzzer.countdown.minutes_before', 'int', 'Countdown warning: minutes before the buzzer (0 = off)', 0, 100000],
+      ['config.buzzer.countdown.relays', 'relays', 'Relays that ring at the countdown warning']] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
 const RELAY_NAMES = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4'];
@@ -796,11 +800,19 @@ function renderConfig() {
     document.body.append(el('datalist', { id: 'pygame-colors' },
       PYGAME_COLORS.map((color) => el('option', { value: color }))));
   }
-  $('tab-config').replaceChildren(...CONFIG_SECTIONS.map((section) =>
-    el('div', { class: 'card' },
+  const nodes = [];
+  let currentGroup = null;
+  for (const section of CONFIG_SECTIONS) {
+    if (section.group !== currentGroup) {
+      currentGroup = section.group;
+      nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, currentGroup));
+    }
+    nodes.push(el('div', { class: 'card' },
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
       el('h2', {}, section.title),
-      el('div', { class: 'grid2' }, section.fields.map(configField)))));
+      el('div', { class: 'grid2' }, section.fields.map(configField))));
+  }
+  $('tab-config').replaceChildren(...nodes);
 }
 
 $('config-save').addEventListener('click', async () => {
@@ -879,7 +891,18 @@ async function loadRaw() {
     el('div', { class: 'row-actions' },
       el('button', { class: 'btn', onclick: validate }, 'Check'),
       el('button', { class: 'btn primary', onclick: save }, 'Save & apply'),
-      el('button', { class: 'btn', onclick: loadRaw }, 'Reload'))));
+      el('button', { class: 'btn', onclick: loadRaw }, 'Reload'),
+      el('button', { class: 'btn', onclick: () => {
+        const blob = new Blob([area.value], { type: 'text/yaml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'settings.yaml'; a.click();
+        URL.revokeObjectURL(url);
+      } }, 'Export YAML'),
+      el('label', { class: 'btn' }, 'Import YAML',
+        el('input', { type: 'file', accept: '.yaml,.yml,text/*', style: 'display:none', onchange: (e) => {
+          const file = e.target.files[0]; if (!file) return;
+          const r = new FileReader(); r.onload = () => { area.value = r.result; }; r.readAsText(file);
+        } })))));
 }
 
 // ---- history --------------------------------------------------------------
