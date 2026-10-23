@@ -857,10 +857,20 @@ function renderConfig() {
        const icon = currentGroup === 'Display (HDMI output)' ? '🖥 ' : currentGroup === 'Audio' ? '🔊 ' : '';
        nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, icon + currentGroup));
     }
+    let fields = section.fields;
+    if (section.title === 'Relays') {
+      const count = state.configValues['config.relay_count'] || 0;
+      const relayFields = [];
+      for (let i = 1; i <= count; i++) {
+        relayFields.push(['config.relay' + i + '_enabled', 'bool', 'RELAY' + i + ' enabled']);
+        relayFields.push(['config.relay' + i + '_function', 'select', 'RELAY' + i + ' function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom']);
+      }
+      fields = [['config.relay_count', 'int', 'Number of relays', 0, 4]].concat(relayFields);
+    }
     nodes.push(el('div', { class: 'card', style: section.title === 'Relays' ? 'border-color: var(--accent); background: var(--preset-bg);' : '' },
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
       el('h2', {}, section.title),
-      el('div', { class: 'grid2' }, section.fields.map(configField)),
+      el('div', { class: 'grid2' }, fields.map(configField)),
       section.group === 'Audio' ? el('button', { class: 'btn primary', onclick: () => testRelay(section.title) }, 'Test') : null));
   }
   $('tab-config').replaceChildren(...nodes);
