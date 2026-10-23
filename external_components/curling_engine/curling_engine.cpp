@@ -143,6 +143,27 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
   std::string err;
   if (!this->read_parsed(&settings, nullptr, nullptr, &err))
     return false;
+  // Test relay: if a test was requested, fire the configured relays for that event.
+  if (this->test_relay_pending()) {
+    std::string ev = this->test_relay_event();
+    this->clear_test_relay();
+    std::vector<std::string> relays;
+    if (ev == "Game End" && settings.relays.has_value()) relays = *settings.relays;
+    else if (ev == "Game Start" && settings.ring_at_start.has_value()) relays = *settings.ring_at_start;
+    else if (ev == "Countdown Warning") relays = settings.countdown_relays;
+    int mask = 0;
+    for (const auto &r : relays) {
+      if (r == "RELAY1") mask |= BELL_RELAY_1;
+      else if (r == "RELAY2") mask |= BELL_RELAY_2;
+    }
+    if (mask != 0) {
+      out->mask = mask;
+      out->duration_ms = static_cast<uint32_t>(settings.relay_duration) * 1000;
+      ESP_LOGI(TAG, "test relay: event %s, mask %d, %u ms", ev.c_str(), mask, static_cast<unsigned>(out->duration_ms));
+      return true;
+    }
+    return false;
+  }
   auto game = settings.find_current_game(weekday_mon0, seconds_of_day, date_iso);
   // Qualified: the member bell_tick() would otherwise hide the free function.
   if (!::esphome::curling_engine::bell_tick(settings, game, date_iso, &this->fired_keys_, out))

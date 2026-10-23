@@ -66,6 +66,10 @@ class CurlingEngineComponent : public Component {
   // the merged relay bitmask (BELL_RELAY_*) and pulse length. Each event
   // rings once per (date, start) game; see settings buzzer section.
   bool bell_tick(BellRing *out);
+  void request_test_relay(const std::string &event) { test_relay_event_ = event; test_relay_pending_ = true; }
+  bool test_relay_pending() const { return test_relay_pending_; }
+  std::string test_relay_event() const { return test_relay_event_; }
+  void clear_test_relay() { test_relay_pending_ = false; test_relay_event_.clear(); }
 
  protected:
   std::string store_path_{"/flash"};
@@ -75,7 +79,9 @@ class CurlingEngineComponent : public Component {
   bool ready_{false};
   int32_t wl_handle_{-1};  // wl_handle_t; FAT mount handle for unmount
   uint32_t last_error_log_ms_{0};  // throttle for repeated snapshot errors
-  std::set<std::string> fired_keys_;  // bell events already rung this game
+  std::set<std::string> fired_keys_;
+  std::string test_relay_event_;
+  bool test_relay_pending_{false};  // bell events already rung this game
                                       // ("date/start/buzzer|start|countdown")
 };
 

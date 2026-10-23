@@ -576,6 +576,8 @@ ApiResponse PiTimerApi::test_relay(JsonObjectConst data) {
   std::string event = ev ? ev : "";
   if (event != "Game End" && event != "Game Start" && event != "Countdown Warning")
     return error_json(400, "invalid event");
+  if (engine_ != nullptr)
+    engine_->request_test_relay(event);
   ParsedLive live;
   ApiResponse bad;
   if (!valid_settings(&live, &bad))
