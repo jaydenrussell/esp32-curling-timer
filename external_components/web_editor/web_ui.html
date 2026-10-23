@@ -437,7 +437,8 @@ async function launchQuick({ seconds, name, title, during_buzzer, header_hold },
   const called = title || name;
   const what = called ? `"${called}" (${durationText(seconds)})` : `a ${durationText(seconds)} timer`;
   if (!confirm(`Start ${what} now? Bell/buzzer at about ${pad(ends.getHours())}:${pad(ends.getMinutes())}:${pad(ends.getSeconds())}.`)) return;
-  const result = await api('/api/quickstart', { seconds, name, during_buzzer, header_hold, ...options });
+  if (!state.configVersion) await loadConfig();
+  const result = await api('/api/quickstart', { seconds, name, during_buzzer, header_hold, version: state.configVersion, ...options });
   if (!result.ok) return showMessage(result.data.error);
   showMessage(`Quick start timer running, bell/buzzer at ${result.data.buzzer_time}`, 'ok');
   quickForm.reset();
