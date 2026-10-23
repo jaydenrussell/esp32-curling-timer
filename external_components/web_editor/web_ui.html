@@ -655,9 +655,20 @@ function renderExceptions() {
 // types: bool, int (min..max), text, color (pygame name + datalist), minutes (UI minutes, sent as seconds),
 // relays (RELAY1..RELAY4 checkbox group)
 const CONFIG_SECTIONS = [
-  { group: 'Display (HDMI output)', title: 'Timer', hint: 'Every setting except the weekly schedule. Changes are written to the settings file only when you press Save & apply.',
+  { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
     fields: [
-      ['config.enabled', 'bool', 'Timer enabled']] },
+      ['config.enabled', 'bool', 'Timer enabled (master on/off)']] },
+  { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
+    fields: [
+      ['config.relay_count', 'int', 'Number of relays', 0, 4],
+      ['config.relay1_enabled', 'bool', 'RELAY1 enabled'],
+      ['config.relay1_function', 'text', 'RELAY1 function'],
+      ['config.relay2_enabled', 'bool', 'RELAY2 enabled'],
+      ['config.relay2_function', 'text', 'RELAY2 function'],
+      ['config.relay3_enabled', 'bool', 'RELAY3 enabled'],
+      ['config.relay3_function', 'text', 'RELAY3 function'],
+      ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
+      ['config.relay4_function', 'text', 'RELAY4 function']] },
   { group: 'Display (HDMI output)', title: 'Header text',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
