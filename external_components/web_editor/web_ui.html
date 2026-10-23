@@ -138,6 +138,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 <main>
   <div id="message" class="banner hidden"></div>
   <section id="tab-status"></section>
+  <section id="tab-quickstart" class="hidden"></section>
   <section id="tab-schedule" class="hidden"></section>
   <section id="tab-exceptions" class="hidden"></section>
   <section id="tab-history" class="hidden"></section>
@@ -152,7 +153,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', '📊 Status'], ['schedule', '📅 Schedule'], ['exceptions', '📋 Exceptions'], ['history', '📈 Report'], ['raw', '⚙ Custom Config'], ['config', '⚙ Config']];
+const TABS = [['status', '📊 Status'], ['quickstart', '⚡ Quick Start'], ['schedule', '📅 Schedule'], ['exceptions', '📋 Exceptions'], ['history', '📈 Report'], ['raw', '⚙ Custom Config'], ['config', '⚙ Config']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
@@ -248,6 +249,7 @@ function selectTab(id) {
   clearMessage();
   for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== id);
   if (id === 'status') loadStatus();
+  if (id === 'quickstart') { loadStatus(); renderQuickstart(); }
   if ((id === 'schedule' || id === 'exceptions') && !state.model) loadSettings();
   else if (id === 'schedule') renderSchedule();
   else if (id === 'exceptions') renderExceptions();
@@ -261,10 +263,12 @@ function selectTab(id) {
 async function loadStatus() {
   const result = await api('/api/status');
   if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
-  state.status = result.data;
-  state.statusAt = performance.now();
-  renderStatus();
-}
+   state.status = result.data;
+   state.statusAt = performance.now();
+   renderStatus();
+   if (state.tab === 'quickstart') renderQuickstart();
+ }
+
 
 // the quick start form is built once so the 5 second status refresh never wipes what is being typed
 let quickForm = null;
@@ -323,10 +327,7 @@ function renderStatus() {
   const s = state.status;
   const root = $('tab-status');
   if (!s) return;
-  if (!quickForm) {
-    quickForm = buildQuickForm();
-    root.replaceChildren(el('div', { id: 'status-now' }), quickForm, el('div', { id: 'status-today' }));
-  }
+  if (!document.getElementById('status-now')) root.replaceChildren(el('div', { id: 'status-now' }), el('div', { id: 'status-today' }));
   quickForm.classList.toggle('hidden', !s.valid);
   if (!s.valid) {
     $('status-now').replaceChildren(el('div', { class: 'card' },
@@ -336,7 +337,7 @@ function renderStatus() {
     $('status-today').replaceChildren();
     return;
   }
-  quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
+  if (quickForm) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
   const now = el('div', { class: 'card' });
   const head = el('h2', {}, 'On the display now', el('span', { class: 'spacer' }),
     el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Timer enabled' : 'Timer disabled'));
@@ -394,6 +395,15 @@ function renderStatus() {
   tick();
 }
 
+function renderQuickstart() {
+  const root = $('tab-quickstart');
+  if (!quickForm) quickForm = buildQuickForm();
+  if (!root.contains(quickForm)) root.replaceChildren(quickForm);
+  const s = state.status;
+  if (!s) { quickForm.classList.add('hidden'); return; }
+  quickForm.classList.toggle('hidden', !s.valid);
+  if (s.valid) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
+}
 function secondsNow() {
   const s = state.status;
   if (!s) return 0;
