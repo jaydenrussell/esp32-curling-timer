@@ -96,8 +96,10 @@ struct TempSettingsCase {
     std::vector<std::string> out;
     for (const auto &entry : stdfs::directory_iterator(dir)) {
       std::error_code ec;
-      if (entry.is_regular_file(ec) && !ec && entry.path().filename() != "pitimer_settings.yml")
-        out.push_back(entry.path().filename().string());
+      const std::string name = entry.path().filename().string();
+  if (entry.is_regular_file(ec) && !ec && name != "pitimer_settings.yml" &&
+      name.rfind("pitimer_settings-", 0) != 0)
+    out.push_back(name);
     }
     std::sort(out.begin(), out.end());
     return out;
@@ -232,8 +234,7 @@ TEST_CASE ("backups pruned to backups_kept") {
 TEST_CASE ("backup names restricted") {
   TempSettingsCase tc;
   std::error_code ec;
-  stdfs::create_directories(tc.dir / "backups", ec);
-  std::ofstream(tc.dir / "backups" / "secret.yml", std::ios::binary) << "x";
+  std::ofstream(tc.dir / "secret.yml", std::ios::binary) << "x";
   for (const std::string &name : {"../secret.yml", "secret.yml", "/etc/passwd"}) {
     CAPTURE(name);
     std::string text;
@@ -275,9 +276,8 @@ TEST_CASE ("live file stays readable after save") {
 TEST_CASE ("backup mtime parsed from filename stamp") {
   TempSettingsCase tc;
   std::error_code ec;
-  stdfs::create_directories(tc.dir / "backups", ec);
   const std::string crafted = "pitimer_settings-19700101-000000-000001.yml";
-  std::ofstream(tc.dir / "backups" / crafted, std::ios::binary) << "x";
+  std::ofstream(tc.dir / crafted, std::ios::binary) << "x";
   std::vector<BackupInfo> list;
   REQUIRE(tc.backups(&list) == StoreStatus::OK);
   REQUIRE(list.size() == 1);
