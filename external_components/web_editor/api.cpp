@@ -644,6 +644,16 @@ ApiResponse PiTimerApi::get_config() {
   }
   cfg["buzzer.duration"] = s.relay_duration;
   cfg["buzzer.header_hold"] = s.relay_msg_time;
+  cfg["relays_enabled"] = s.relays_enabled;
+  cfg["relay_count"] = s.relay_count;
+  cfg["relay1_function"] = s.relay1_function;
+  cfg["relay2_function"] = s.relay2_function;
+  cfg["relay3_function"] = s.relay3_function;
+  cfg["relay4_function"] = s.relay4_function;
+  cfg["relay1_enabled"] = s.relay1_enabled;
+  cfg["relay2_enabled"] = s.relay2_enabled;
+  cfg["relay3_enabled"] = s.relay3_enabled;
+  cfg["relay4_enabled"] = s.relay4_enabled;
   return from_document(doc);
 }
 
@@ -663,7 +673,10 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
     std::string yaml;
     long long number = 0;
     if (path == "config.enabled" || path == "config.pace_of_play.enabled" ||
-        path == "config.footer.datetime" || path == "config.footer.entry_name") {
+        path == "config.footer.datetime" || path == "config.footer.entry_name" ||
+        path == "config.relays_enabled" || path == "config.relay1_enabled" ||
+        path == "config.relay2_enabled" || path == "config.relay3_enabled" ||
+        path == "config.relay4_enabled") {
       if (!v.is<bool>())
         return error_json(422, path + " must be true or false");
       yaml = curling_engine::yaml_bool(v.as<bool>());
@@ -675,7 +688,8 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.countdown.font_size_5_digits" ||
                path == "config.pace_of_play.font_size" || path == "config.footer.font_size" ||
                path == "config.buzzer.duration" || path == "config.buzzer.header_hold" ||
-               path == "config.buzzer.countdown.minutes_before") {
+               path == "config.buzzer.countdown.minutes_before" ||
+               path == "config.relay_count") {
       if (!json_strict_int(v, &number) || number < 0 || number > 100000)
         return error_json(422, path + " must be a whole number of seconds or pixels (0 or more)");
       yaml = curling_engine::yaml_int(number);
@@ -711,6 +725,12 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
           text.find('\t') != std::string::npos)
         return error_json(422, path + " must be a single line of text");
       yaml = curling_engine::yaml_quote(text);
+    } else {
+    } else if (path == "config.relay1_function" || path == "config.relay2_function" ||
+               path == "config.relay3_function" || path == "config.relay4_function") {
+      if (!v.is<const char *>())
+        return error_json(422, path + " must be a string");
+      yaml = curling_engine::yaml_str(v.as<const char *>());
     } else {
       return error_json(422, "unknown config setting '" + path + "'");
     }
