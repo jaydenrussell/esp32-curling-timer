@@ -44,7 +44,6 @@ esp32:
       CONFIG_VFS_SUPPORT_DIR: y
       CONFIG_FATFS_LFN_HEAP: y
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: 30
-      CONFIG_ESP_INT_WDT: n
     advanced:
       execute_from_psram: true
 
@@ -67,6 +66,8 @@ json:
 # packages:
 #   wifi_addon: !include wifi-c6-failover.yaml
 # ---------------------------------------------------------------------
+network:
+
 ethernet:
   # M5Stack Unit PoE-P4: PHY IP101GRI @ address 1 (per M5Stack U213 pin map)
   # RXDV=G28 RXD0=G29 RXD1=G30 TXD0=G34 TXD1=G35 TXEN=G49 RMII_CLK=G50
@@ -190,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v1.0.15
+      ref: v1.0.16
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
