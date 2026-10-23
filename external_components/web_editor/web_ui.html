@@ -126,14 +126,14 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.10.6</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">{{version}}</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">v2026.10.6 &middot; <a
+<header><h1>🎯 Countdown Timer <span class="version">{{version}} &middot; <a
   href="https://sites.google.com/cityviewcurling.ca/cvcc-it/countdown-timer" target="_blank" rel="noopener"
   title="GitHub repository" href="https://github.com/jaydenrussell/esp32-curling-timer">Help</a></span></h1><button class="btn icon" id="logout" title="Log out">Log out</button></header>
 <nav id="tabs"></nav>
