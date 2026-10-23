@@ -662,11 +662,13 @@ function renderExceptions() {
 const CONFIG_SECTIONS = [
   { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
     fields: [
-      ['config.enabled', 'bool', 'Timer enabled (master on/off)'],
-      ['config.pregame_countdown', 'int', 'Pre-game countdown (seconds)', 0, 60],
-      ['config.pregame_font_size', 'int', 'Pre-game countdown font size', 0, 100000],
-      ['config.pregame_color', 'color', 'Pre-game countdown colour'],
-      ['config.pregame_header_text', 'text', 'Pre-game header text (e.g. Get ready)']] },
+      ['config.enabled', 'bool', 'Timer enabled (master on/off)']] },
+  { group: 'Global options', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
+    fields: [
+      ['config.pregame_countdown', 'int', 'Countdown (seconds)', 0, 60],
+      ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
+      ['config.pregame_color', 'color', 'Colour'],
+      ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
   { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
