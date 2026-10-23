@@ -90,6 +90,20 @@ config:
         duration: 2
         # header_hold - How long to hold the 'during_buzzer' header message in integer seconds
         header_hold: 299
+        # relays_enabled - Global enable for relay usage
+        relays_enabled: True
+        # relay_count - Number of relays configured
+        relay_count: 4
+        # relayN_function - Function mapping for each relay (Bell/Buzzer/Speaker/Light/Custom/None)
+        relay1_function: 'None'
+        relay2_function: 'None'
+        relay3_function: 'None'
+        relay4_function: 'None'
+        # relayN_enabled - Per-relay enable
+        relay1_enabled: True
+        relay2_enabled: True
+        relay3_enabled: True
+        relay4_enabled: True
 
 # schedule - Normal weekly defined schedule
 #            All weekdays must be defined and each as a list of entries (i.e. each entry starting with a dash '-')
