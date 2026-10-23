@@ -575,7 +575,25 @@ ApiResponse PiTimerApi::test_relay(JsonObjectConst data) {
   std::string event = ev ? ev : "";
   if (event != "Game End" && event != "Game Start" && event != "Countdown Warning")
     return error_json(400, "invalid event");
-  return ok_json();
+  ParsedLive live;
+  ApiResponse bad;
+  if (!valid_settings(&live, &bad))
+    return bad;
+  const PiTimerSettings &s = live.settings;
+  std::vector<std::string> relays;
+  if (event == "Game End" && s.relays.has_value())
+    relays = *s.relays;
+  else if (event == "Game Start" && s.ring_at_start.has_value())
+    relays = *s.ring_at_start;
+  else if (event == "Countdown Warning")
+    relays = s.countdown_relays;
+  JsonDocument doc;
+  doc["ok"] = true;
+  doc["event"] = event;
+  JsonArray arr = doc["relays"].to<JsonArray>();
+  for (const auto &r : relays) arr.add(r);
+  doc["duration"] = s.relay_duration;
+  return from_document(doc);
 }
 
 // -- config (new, no python parity) -------------------------------------------
