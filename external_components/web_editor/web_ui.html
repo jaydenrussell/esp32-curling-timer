@@ -349,15 +349,15 @@ function renderStatus() {
   }
   if (quickForm) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
   const now = el('div', { class: 'card' });
+  const cur = s.current;
   const head = el('h2', {}, 'On the display now', el('span', { class: 'spacer' }),
     el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Timer enabled' : 'Timer disabled'));
   const triggered = (cur && cur.seconds_until_buzzer != null && cur.seconds_until_buzzer <= 0) ? 'Buzzer' : null;
+  now.append(head);
   if (triggered) {
     now.append(el('div', { style: 'margin: 4px 0' },
       el('span', { class: 'pill', style: 'background: #f39c12; color: #fff; border: 1px solid #e67e22;' }, `Output: ${triggered}`)));
   }
-  now.append(head);
-  const cur = s.current;
   if (!s.enabled) {
     now.append(el('div', { class: 'state', style: 'color: var(--bad)' }, 'TIMER DISABLED'));
   } else if (!s.clock_synced) {
