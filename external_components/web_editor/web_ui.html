@@ -856,6 +856,7 @@ function renderConfig() {
 
 $('config-save').addEventListener('click', async () => {
   if (!state.configVersion) await loadConfig();
+  if (!state.configVersion) { showMessage('Config not loaded, please reload the page'); return; }
   const diff = configDiff();
   if (!Object.keys(diff).length) return setConfigDirty(false);
   const problem = validateConfigDiff(diff);
