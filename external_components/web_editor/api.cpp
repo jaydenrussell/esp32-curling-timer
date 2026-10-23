@@ -673,6 +673,8 @@ ApiResponse PiTimerApi::get_config() {
   }
   cfg["config.buzzer.duration"] = s.relay_duration;
   cfg["config.buzzer.header_hold"] = s.relay_msg_time;
+  cfg["config.buzzer.start_duration"] = s.relay_start_duration;
+  cfg["config.buzzer.countdown_duration"] = s.relay_countdown_duration;
   cfg["config.relays_enabled"] = s.relays_enabled;
   cfg["config.relay_count"] = s.relay_count;
   cfg["config.relay1_function"] = s.relay1_function;

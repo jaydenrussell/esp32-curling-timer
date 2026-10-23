@@ -105,6 +105,10 @@ config:
             relays: []
         # duration - How long to keep relays on (i.e. operating) in integer seconds
         duration: 2
+        # start_duration - Ring duration for game start (0 = use duration)
+        start_duration: 0
+        # countdown_duration - Ring duration for countdown warning (0 = use duration)
+        countdown_duration: 0
         # header_hold - How long to hold the 'during_buzzer' header message in integer seconds
         header_hold: 299
 

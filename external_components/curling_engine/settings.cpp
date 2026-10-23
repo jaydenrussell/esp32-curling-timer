@@ -1354,6 +1354,8 @@ void PiTimerSettings::reset() {
   countdown_minutes_before = 0;
   countdown_relays.clear();
   relay_duration = 0;
+  relay_start_duration = 0;
+  relay_countdown_duration = 0;
   relay_msg_time = 0;
   relays_enabled = true;
   relay_count = 4;
@@ -1554,6 +1556,8 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = require_(buzzer, "header_hold", YType::Int, where, err)) == nullptr)
     return false;
   relay_msg_time = static_cast<int>(v->i);
+  if ((v = buzzer->find("start_duration")) != nullptr && v->type == YType::Int) relay_start_duration = static_cast<int>(v->i);
+  if ((v = buzzer->find("countdown_duration")) != nullptr && v->type == YType::Int) relay_countdown_duration = static_cast<int>(v->i);
   if ((v = buzzer->find("relays_enabled")) != nullptr && v->type == YType::Bool) relays_enabled = v->b;
   if ((v = buzzer->find("relay_count")) != nullptr && v->type == YType::Int) relay_count = static_cast<int>(v->i);
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_function"; if((v=buzzer->find(key))!=nullptr && v->type==YType::Str){ if(i==1)relay1_function=v->s; if(i==2)relay2_function=v->s; if(i==3)relay3_function=v->s; if(i==4)relay4_function=v->s;} }

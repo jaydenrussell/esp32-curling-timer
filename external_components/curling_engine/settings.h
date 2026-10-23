@@ -94,6 +94,8 @@ class PiTimerSettings {
   int countdown_minutes_before{0};       // minutes before buzzer (0 = off)
   std::vector<std::string> countdown_relays;            // relays pulsed at that moment
   int relay_duration{0};
+  int relay_start_duration{0};
+  int relay_countdown_duration{0};
   int relay_msg_time{0};
   int pregame_countdown{10};
   int pregame_font_size{0};
