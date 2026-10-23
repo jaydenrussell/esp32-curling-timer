@@ -686,19 +686,18 @@ const CONFIG_SECTIONS = [
       ['config.footer.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.entry_name', 'bool', 'Show entry name']] },
-  { group: 'Audio', title: 'Relay mapping',
-    hint: 'Configure how many relays are active and what each is mapped to. Unchecked relays are disabled globally.',
+  { group: '🔊 Audio', title: 'Relays', icon: '🔌',
+    hint: 'Configure how many relays are active and what each is mapped to.',
     fields: [
-      ['config.relays_enabled', 'bool', 'Relays enabled globally'],
-      ['config.relay_count', 'int', 'Number of relays configured', 0, 4],
-      ['config.relay1_function', 'text', 'RELAY1 function (Bell/Buzzer/Speaker/Custom/None)'],
-      ['config.relay2_function', 'text', 'RELAY2 function (Bell/Buzzer/Speaker/Custom/None)'],
-      ['config.relay3_function', 'text', 'RELAY3 function (Bell/Buzzer/Speaker/Custom/None)'],
-      ['config.relay4_function', 'text', 'RELAY4 function (Bell/Buzzer/Speaker/Custom/None)'],
+      ['config.relay_count', 'int', 'Number of relays', 0, 4],
       ['config.relay1_enabled', 'bool', 'RELAY1 enabled'],
+      ['config.relay1_function', 'text', 'RELAY1 function'],
       ['config.relay2_enabled', 'bool', 'RELAY2 enabled'],
+      ['config.relay2_function', 'text', 'RELAY2 function'],
       ['config.relay3_enabled', 'bool', 'RELAY3 enabled'],
-      ['config.relay4_enabled', 'bool', 'RELAY4 enabled']] },
+      ['config.relay3_function', 'text', 'RELAY3 function'],
+      ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
+      ['config.relay4_function', 'text', 'RELAY4 function']] },
   { group: 'Audio', title: 'Game End',
     hint: 'Pulses its relays for the ring duration; an empty relay list switches that event off.',
     fields: [
@@ -717,7 +716,15 @@ const CONFIG_SECTIONS = [
       ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000]] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
-const RELAY_NAMES = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4'];
+function RELAY_NAMES() {
+  const count = (state.configValues && state.configValues['config.relay_count']) || 0;
+  const names = [];
+  for (let i = 1; i <= count; i++) {
+    const enabled = state.configValues && state.configValues[`config.relay${i}_enabled`];
+    if (enabled) names.push(`RELAY${i}`);
+  }
+  return names.length ? names : ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4'];
+}
 const RELAYS_PATHS = new Set(['config.buzzer.relays', 'config.buzzer.ring_at_start',
   'config.buzzer.countdown.relays']);
 // common pygame colour names — the file accepts any single line of text, this just assists typing
@@ -806,7 +813,7 @@ function configField(field) {
   if (type === 'relays') {
     const selected = Array.isArray(value) ? value : [];
     return el('div', { class: 'field' }, label, el('div', { class: 'row-actions', style: 'margin-top: 2px' },
-      RELAY_NAMES.map((name) => el('label', { class: 'check' },
+      RELAY_NAMES().map((name) => el('label', { class: 'check' },
         el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
           const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
           const at = list.indexOf(name);
