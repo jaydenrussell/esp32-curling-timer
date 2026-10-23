@@ -64,7 +64,7 @@ def emit_web_ui_header() -> None:
     html = (here / "web_ui.html").read_text(encoding="utf-8")
     if "{{version}}" not in html:
         raise cv.Invalid("web_ui.html must keep its {{version}} placeholder")
-    html = html.replace("{{version}}", f"v{ESPHOME_VERSION}")
+    html = html.replace("{{version}}", f"v{component_version()}")
     content = (
         "// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen"
         " time — edit web_ui.html, not this file.\n"
