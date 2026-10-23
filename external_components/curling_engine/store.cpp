@@ -195,6 +195,7 @@ StoreStatus SettingsStore::save_locked(const std::string &text,
       *err = "cannot write " + tmp_path_;
     return StoreStatus::IO;
   }
+  fs_->remove(path_);
   if (!fs_->rename(tmp_path_, path_)) {
     fs_->remove(tmp_path_);
     if (err)
