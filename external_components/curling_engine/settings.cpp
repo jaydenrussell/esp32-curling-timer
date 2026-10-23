@@ -1355,6 +1355,16 @@ void PiTimerSettings::reset() {
   countdown_relays.clear();
   relay_duration = 0;
   relay_msg_time = 0;
+  relays_enabled = true;
+  relay_count = 4;
+  relay1_function = "None";
+  relay2_function = "None";
+  relay3_function = "None";
+  relay4_function = "None";
+  relay1_enabled = true;
+  relay2_enabled = true;
+  relay3_enabled = true;
+  relay4_enabled = true;
   schedules.clear();
   exceptions.clear();
   valid = false;
@@ -1479,6 +1489,10 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = require_(footer, "entry_name", YType::Bool, where, err)) == nullptr)
     return false;
   game_name = v->b;
+  if ((v = cfg->find("relays_enabled")) != nullptr && v->type == YType::Bool) relays_enabled = v->b;
+  if ((v = cfg->find("relay_count")) != nullptr && v->type == YType::Int) relay_count = static_cast<int>(v->i);
+  for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_function"; if((v=cfg->find(key))!=nullptr && v->type==YType::Str){ if(i==1)relay1_function=v->s; if(i==2)relay2_function=v->s; if(i==3)relay3_function=v->s; if(i==4)relay4_function=v->s;} }
+  for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_enabled"; if((v=cfg->find(key))!=nullptr && v->type==YType::Bool){ if(i==1)relay1_enabled=v->b; if(i==2)relay2_enabled=v->b; if(i==3)relay3_enabled=v->b; if(i==4)relay4_enabled=v->b;} }
 
   // buzzer subsection
   const YamlValue *buzzer = require_(cfg, "buzzer", YType::Map, "main config section", err);
@@ -1532,6 +1546,10 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = require_(buzzer, "header_hold", YType::Int, where, err)) == nullptr)
     return false;
   relay_msg_time = static_cast<int>(v->i);
+  if ((v = buzzer->find("relays_enabled")) != nullptr && v->type == YType::Bool) relays_enabled = v->b;
+  if ((v = buzzer->find("relay_count")) != nullptr && v->type == YType::Int) relay_count = static_cast<int>(v->i);
+  for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_function"; if((v=buzzer->find(key))!=nullptr && v->type==YType::Str){ if(i==1)relay1_function=v->s; if(i==2)relay2_function=v->s; if(i==3)relay3_function=v->s; if(i==4)relay4_function=v->s;} }
+  for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_enabled"; if((v=buzzer->find(key))!=nullptr && v->type==YType::Bool){ if(i==1)relay1_enabled=v->b; if(i==2)relay2_enabled=v->b; if(i==3)relay3_enabled=v->b; if(i==4)relay4_enabled=v->b;} }
 
   const YamlValue *schedule = require_(&raw, "schedule", YType::Map, "settings file", err);
   if (schedule == nullptr)

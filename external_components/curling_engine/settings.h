@@ -95,6 +95,16 @@ class PiTimerSettings {
   std::vector<std::string> countdown_relays;            // relays pulsed at that moment
   int relay_duration{0};
   int relay_msg_time{0};
+  bool relays_enabled{true};
+  int relay_count{4};
+  std::string relay1_function{"None"};
+  std::string relay2_function{"None"};
+  std::string relay3_function{"None"};
+  std::string relay4_function{"None"};
+  bool relay1_enabled{true};
+  bool relay2_enabled{true};
+  bool relay3_enabled{true};
+  bool relay4_enabled{true};
   std::map<std::string, std::vector<PiTimerGame>> schedules;
   std::map<std::string, std::vector<PiTimerGame>> exceptions;
   bool valid{false};
