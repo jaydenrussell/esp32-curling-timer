@@ -2,6 +2,8 @@
 
 #include <nvs.h>
 #include <nvs_flash.h>
+#include "esp_netif.h"
+#include "esp_event.h"
 
 #include "esphome/core/log.h"
 #include "http.h"
@@ -87,6 +89,8 @@ void WebEditorComponent::setup() {
     return;
   }
   ESP_LOGI(TAG, "auth ready (session cookie %s, port %u)", SESSION_COOKIE, this->port_);
+  esp_netif_init();
+  esp_event_loop_create_default();
   delay(500);
   if (!start_web_httpd(this)) {
     this->set_status("failed: the HTTP server could not be started on port " +
