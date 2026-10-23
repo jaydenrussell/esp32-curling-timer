@@ -1015,8 +1015,8 @@ function start() {
   selectTab(state.tab);
   if (started) return;
   started = true;
-  setInterval(tick, 1000);
-  setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, 5000);
+  (function loop() { tick(); setTimeout(loop, 1000 - (performance.now() % 1000)); })();
+  setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, 3000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden && state.tab === 'status') loadStatus(); });
 }
 start();
