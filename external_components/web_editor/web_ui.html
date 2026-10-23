@@ -687,7 +687,7 @@ const CONFIG_SECTIONS = [
       ['config.footer.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.entry_name', 'bool', 'Show entry name']] },
-  { group: '🔊 Audio', title: 'Relays', icon: '🔌',
+  { group: '🔌 Relays', title: 'Relay configuration',
     hint: 'Configure how many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
@@ -699,22 +699,22 @@ const CONFIG_SECTIONS = [
       ['config.relay3_function', 'text', 'RELAY3 function'],
       ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
       ['config.relay4_function', 'text', 'RELAY4 function']] },
-  { group: 'Audio', title: 'Game End',
-    hint: 'Pulses its relays for the ring duration; an empty relay list switches that event off.',
-    fields: [
-      ['config.buzzer.relays', 'relays', 'Mapped devices'],
-      ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000],
-      ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
   { group: 'Audio', title: 'Game Start',
     fields: [
-      ['config.buzzer.ring_at_start', 'relays', 'Mapped devices'],
+      ['config.buzzer.ring_at_start', 'relays', 'Output'],
       ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000]] },
   { group: 'Audio', title: 'Countdown Warning',
     hint: 'Only applies to games longer than the minutes set here.',
     fields: [
       ['config.buzzer.countdown.minutes_before', 'int', 'Countdown warning: minutes before the buzzer (0 = off)', 0, 100000],
-      ['config.buzzer.countdown.relays', 'relays', 'Mapped devices'],
+      ['config.buzzer.countdown.relays', 'relays', 'Output'],
       ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000]] },
+  { group: 'Audio', title: 'Game End',
+    hint: 'Pulses its relays for the ring duration; an empty relay list switches that event off.',
+    fields: [
+      ['config.buzzer.relays', 'relays', 'Output'],
+      ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000],
+      ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
 function RELAY_NAMES() {
