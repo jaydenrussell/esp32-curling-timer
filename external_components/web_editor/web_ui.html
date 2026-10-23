@@ -130,9 +130,9 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--bg); border: 1px 
   <section id="tab-status"></section>
   <section id="tab-schedule" class="hidden"></section>
   <section id="tab-exceptions" class="hidden"></section>
-  <section id="tab-config" class="hidden"></section>
-  <section id="tab-raw" class="hidden"></section>
   <section id="tab-history" class="hidden"></section>
+  <section id="tab-raw" class="hidden"></section>
+  <section id="tab-config" class="hidden"></section>
 </main>
 <div class="savebar" id="savebar"><span>Unsaved schedule changes</span>
   <button class="btn" id="discard">Discard</button><button class="btn primary" id="save">Save &amp; apply</button></div>
@@ -143,7 +143,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--bg); border: 1px 
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const TABS = [['status', 'Status'], ['schedule', 'Weekly schedule'], ['exceptions', 'Date exceptions'],
-              ['config', 'Config'], ['raw', 'Raw YAML'], ['history', 'History']];
+              ['history', 'Report'], ['raw', 'Custom Config'], ['config', '\u2699 Config']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
