@@ -1022,7 +1022,11 @@ function start() {
   if (started) return;
   started = true;
   (function loop() { tick(); setTimeout(loop, 1000 - (performance.now() % 1000)); })();
-  setInterval(() => { if (state.tab === "status" && !document.hidden) loadStatus(); }, 1000);
+  let statusInterval = setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, 1000);
+  document.addEventListener('visibilitychange', () => {
+    clearInterval(statusInterval);
+    statusInterval = setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, document.hidden ? 5000 : 1000);
+  });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && state.tab === 'status') loadStatus(); });
 }
 start();
