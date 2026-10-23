@@ -111,6 +111,8 @@ binary_sensor:
 # it the API speaks plaintext and anyone on the network can drive the
 # device. Generate with: openssl rand -base64 32
 api:
+  encryption:
+    key: !secret curling_timer__encryption_key
 
 # # Over-the-air updates - encrypted, so a firmware image cannot be pushed
 # # or installed by anyone who only has network access. The key also
@@ -189,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v1.0.26
+      ref: v1.0.27
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
