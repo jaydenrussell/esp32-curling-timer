@@ -707,21 +707,21 @@ const CONFIG_SECTIONS = [
       ['config.footer.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.entry_name', 'bool', 'Show entry name']] },
-  { group: 'Audio', title: 'Game Start',
+  { group: 'Outputs 🔊', title: 'Game Start',
     fields: [
       ['config.buzzer.ring_at_start', 'relays', 'Output'],
-      ['config.buzzer.start_duration', 'int', 'Ring duration (seconds, 0=use default)', 0, 100000]] },
-  { group: 'Audio', title: 'Countdown Warning',
+      ['config.buzzer.start_duration', 'int', 'Output duration (seconds, 0=use default)', 0, 100000]] },
+  { group: 'Outputs 🔊', title: 'Countdown Warning',
     hint: 'Only applies to games longer than the minutes set here. For 8-end games, typical pace warning is 15-20 min before buzzer (7th end). For 6-end games, 10-12 min.',
     fields: [
       ['config.buzzer.countdown.minutes_before', 'int', 'Countdown warning: minutes before the buzzer (0 = off)', 0, 100000],
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
-      ['config.buzzer.countdown_duration', 'int', 'Ring duration (seconds, 0=use default)', 0, 100000]] },
-  { group: 'Audio', title: 'Game End',
+      ['config.buzzer.countdown_duration', 'int', 'Output duration (seconds, 0=use default)', 0, 100000]] },
+  { group: 'Outputs 🔊', title: 'Game End',
     hint: 'Pulses its relays for the ring duration; an empty relay list switches that event off.',
     fields: [
       ['config.buzzer.relays', 'relays', 'Output'],
-      ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000],
+      ['config.buzzer.duration', 'int', 'Output duration (seconds)', 0, 100000],
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
