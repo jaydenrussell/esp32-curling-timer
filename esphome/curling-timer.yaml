@@ -107,9 +107,7 @@ binary_sensor:
 # Native API - encrypted. The key is a 32-byte base64 secret; without
 # it the API speaks plaintext and anyone on the network can drive the
 # device. Generate with: openssl rand -base64 32
-# api:
-#   encryption:
-#     key: !secret curling_timer__encryption_key
+api:
 
 # # Over-the-air updates - encrypted, so a firmware image cannot be pushed
 # # or installed by anyone who only has network access. The key also
