@@ -75,7 +75,7 @@ bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame>
       mask |= relays_mask(settings.countdown_relays);
   }
   // Buzzer (pitimer buzz_if_due).
-  if (until >= -BUZZER_GRACE_SECONDS && until <= 0 && fires("buzzer") && settings.relays.has_value())
+  if (until >= -1 && until <= 0 && fires("buzzer") && settings.relays.has_value())
     mask |= relays_mask(*settings.relays);
   if (mask == 0)
     return false;
