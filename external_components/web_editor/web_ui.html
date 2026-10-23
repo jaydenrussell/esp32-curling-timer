@@ -309,6 +309,7 @@ function buildQuickForm() {
       el('label', {}, 'Name on display (optional)', name)),
     el('div', { class: 'row-actions' },
       el('label', { class: 'check' }, pace, 'Show pace of play'),
+      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: true }), 'Pre-game countdown'),
       el('label', { class: 'check' }, replace, 'Replace conflicting games today')),
     el('div', { class: 'row-actions' }, button, hint));
   form.update = (enabled, clockOk = true) => {
