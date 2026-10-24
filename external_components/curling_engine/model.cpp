@@ -741,6 +741,8 @@ bool set_enabled(const std::string &text, bool enabled, std::string *out, std::s
 }
 
 std::string format_time(int seconds) {
+  seconds = seconds % (24 * 60 * 60);
+  if (seconds < 0) seconds += (24 * 60 * 60);
   int hours = seconds / 3600;
   int rest = seconds % 3600;
   int minutes = rest / 60;
