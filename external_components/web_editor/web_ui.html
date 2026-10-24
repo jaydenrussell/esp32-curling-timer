@@ -419,7 +419,7 @@ function renderStatus() {
      mirror.append(el('div', { style: 'color:#e74c3c;font-size:48px;font-weight:bold;text-align:center;margin:auto' }, 'TIMER DISABLED'));
    } else {
      if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center` }, sm.header_text));
-     if (sm.show_countdown) mirror.append(el('div', { style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1` }, sm.countdown || ''));
+     if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1` }, sm.countdown || ''));
    }
    if (sm.show_pace && sm.pace_text) {
      mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center` }, sm.pace_text));
@@ -460,6 +460,11 @@ function tick() {
     const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
     box.textContent = countdownText(left);
     box.style.color = left <= 0 ? 'var(--bad)' : 'var(--ok)';
+  }
+  const mc = $('mirror-countdown');
+  if (mc && s && s.current && s.current.seconds_until_buzzer != null) {
+    const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
+    mc.textContent = countdownText(left);
   }
 }
 
