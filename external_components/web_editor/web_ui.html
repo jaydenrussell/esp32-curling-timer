@@ -1054,7 +1054,10 @@ async function loadHistory() {
 // ---- diagnostics tab -------------------------------------------------------
 function renderDiagnostics() {
   const root = $('tab-diagnostics');
-  const mode = el('select', { onchange: () => showMessage('Display test mode changed', 'ok') },
+  const mode = el('select', { onchange: async () => {
+    await api('/api/display_test_mode', { method: 'POST', body: JSON.stringify({ mode: mode.value }) });
+    showMessage('Display test mode changed', 'ok');
+  } },
     el('option', { value: 'normal' }, 'Normal'),
     el('option', { value: 'red' }, 'Test mode: Red'),
     el('option', { value: 'green' }, 'Test mode: Green'),
@@ -1066,7 +1069,19 @@ function renderDiagnostics() {
     el('label', {}, 'Mode', mode));
   const hwTime = el('span', {}, '--');
   const ntpTime = el('span', {}, '--');
-  const syncBtn = el('button', { class: 'btn primary', onclick: () => showMessage('Syncing NTP…', 'ok') }, 'Sync Now');
+  const syncBtn = el('button', { class: 'btn primary', onclick: async () => {
+    await api('/api/ntp_sync', { method: 'POST', body: JSON.stringify({}) });
+    await loadNtp();
+    showMessage('NTP sync requested', 'ok');
+  } }, 'Sync Now');
+  async function loadNtp() {
+    const r = await api('/api/ntp_status');
+    if (r.ok) {
+      hwTime.textContent = new Date(r.data.hardware_time * 1000).toLocaleString();
+      ntpTime.textContent = new Date(r.data.ntp_server_time * 1000).toLocaleString();
+    }
+  }
+  loadNtp();
   const section2 = el('div', { class: 'card' },
     el('h2', {}, 'NTP Time Sync'),
     el('div', { class: 'grid2' },
