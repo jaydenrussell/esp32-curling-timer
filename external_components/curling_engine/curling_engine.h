@@ -67,7 +67,11 @@ class CurlingEngineComponent : public Component {
   // rings once per (date, start) game; see settings buzzer section.
   bool bell_tick(BellRing *out);
   void request_test_relay(const std::string &event) { test_relay_event_ = event; test_relay_pending_ = true; }
-  bool test_relay_pending() const { return test_relay_pending_; }
+  void set_display_test_mode(const std::string &m) { display_test_mode_ = m; }
+  std::string get_display_test_mode() const { return display_test_mode_; }
+  void request_ntp_sync() { ntp_sync_requested_ = true; }
+  bool ntp_sync_requested() const { return ntp_sync_requested_; }
+  void clear_ntp_sync() { ntp_sync_requested_ = false; }  bool test_relay_pending() const { return test_relay_pending_; }
   std::string test_relay_event() const { return test_relay_event_; }
   void clear_test_relay() { test_relay_pending_ = false; test_relay_event_.clear(); }
 
@@ -83,6 +87,8 @@ class CurlingEngineComponent : public Component {
   std::string test_relay_event_;
   bool test_relay_pending_{false};  // bell events already rung this game
                                       // ("date/start/buzzer|start|countdown")
+  std::string display_test_mode_{"normal"};
+  bool ntp_sync_requested_{false};
 };
 
 }  // namespace curling_engine

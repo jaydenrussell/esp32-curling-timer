@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.78
+      ref: 2026.10.79
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -387,6 +387,11 @@ interval:
       - lvgl.label.update:
           id: lbl_header
           text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode == "red") return std::string("#ff0000 TEST: RED#");
+            if (mode == "green") return std::string("#00ff00 TEST: GREEN#");
+            if (mode == "blue") return std::string("#0000ff TEST: BLUE#");
+            if (mode == "white") return std::string("#ffffff TEST: WHITE#");
             auto &s = id(g_snap);
             return ::esphome::curling_engine::recolor(s.header_color, s.header_text);
       - lvgl.label.update:
@@ -476,14 +481,4 @@ interval:
           if (ring.mask & ::esphome::curling_engine::BELL_RELAY_2)
             id(pulse_relay_aux).execute(pulse_ms);
 
-select:
-  - platform: template
-    name: "Display Test Mode"
-    id: display_test_mode
-    options:
-      - "Normal"
-      - "Red"
-      - "Green"
-      - "Blue"
-      - "White"
-    optimistic: true
+

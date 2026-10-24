@@ -611,6 +611,8 @@ ApiResponse PiTimerApi::display_test_mode(JsonObjectConst data) {
     if (mode == v) { ok = true; break; }
   if (!ok)
     return error_json(400, "invalid mode");
+  if (engine_ != nullptr)
+    engine_->set_display_test_mode(mode);
   JsonDocument doc;
   doc["ok"] = true;
   doc["mode"] = mode;
@@ -619,14 +621,20 @@ ApiResponse PiTimerApi::display_test_mode(JsonObjectConst data) {
 
 ApiResponse PiTimerApi::ntp_status() {
   JsonDocument doc;
-  const std::time_t now = std::time(nullptr);
-  doc["hardware_time"] = (long long) now;
-  doc["ntp_server_time"] = (long long) now;
-  doc["synced"] = now > 1000000000;
+  std::time_t hw = std::time(nullptr);
+  if (engine_ != nullptr && engine_->get_time() != nullptr) {
+    auto t = engine_->get_time()->now();
+    hw = t.timestamp;
+  }
+  doc["hardware_time"] = (long long) hw;
+  doc["ntp_server_time"] = (long long) hw;
+  doc["synced"] = hw > 1000000000;
   return from_document(doc);
 }
 
 ApiResponse PiTimerApi::ntp_sync() {
+  if (engine_ != nullptr)
+    engine_->request_ntp_sync();
   JsonDocument doc;
   doc["ok"] = true;
   return from_document(doc);
