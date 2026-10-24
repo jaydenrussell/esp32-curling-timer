@@ -521,6 +521,7 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
   opts.header_hold = header_hold;
   opts.hold = live.settings.relay_msg_time;
   opts.pregame_countdown = live.settings.pregame_countdown;
+  opts.allow_midnight_wrap = live.settings.allow_midnight_wrap;
   Entry added;
   std::string new_version, err;
   SettingsStore *store = engine_->get_store();
@@ -686,6 +687,7 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.relay3_enabled"] = s.relay3_enabled;
   cfg["config.relay4_enabled"] = s.relay4_enabled;
   cfg["config.pregame_countdown"] = s.pregame_countdown;
+  cfg["config.allow_midnight_wrap"] = s.allow_midnight_wrap;
   cfg["config.pregame_font_size"] = s.pregame_font_size;
   cfg["config.pregame_color"] = s.pregame_color;
   cfg["config.pregame_header_text"] = s.pregame_header_text;
@@ -710,6 +712,7 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
     if (path == "config.enabled" || path == "config.pace_of_play.enabled" ||
         path == "config.footer.datetime" || path == "config.footer.entry_name" ||
         path == "config.relays_enabled" || path == "config.relay1_enabled" ||
+        path == "config.allow_midnight_wrap" ||
         path == "config.relay2_enabled" || path == "config.relay3_enabled" ||
         path == "config.relay4_enabled") {
       if (!v.is<bool>())

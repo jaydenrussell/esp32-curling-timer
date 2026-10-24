@@ -210,6 +210,7 @@ static bool insertable_config_path(const std::string &path) {
          path == "config.relay1_enabled" || path == "config.relay2_enabled" ||
          path == "config.relay3_enabled" || path == "config.relay4_enabled" ||
          path == "config.pregame_countdown" || path == "config.pregame_font_size" ||
+         path == "config.allow_midnight_wrap" ||
          path == "config.pregame_color" || path == "config.pregame_header_text" ||
          path == "config.buzzer.start_duration" ||
          path == "config.buzzer.countdown_duration";

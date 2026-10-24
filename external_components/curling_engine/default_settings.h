@@ -71,6 +71,8 @@ config:
         datetime: True
         # entry_name - Display the name associated with the entry/game in bottom footer (True=ON or False=OFF)
         entry_name: True
+    # allow_midnight_wrap - Allow quick-start timers to end after midnight
+    allow_midnight_wrap: False
     # relays - Relay configuration (count, enable, function mapping)
     relays_enabled: True
     relay_count: 4

@@ -683,7 +683,8 @@ function renderExceptions() {
 const CONFIG_SECTIONS = [
   { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
     fields: [
-      ['config.enabled', 'bool', 'Timer enabled (master on/off)']] },
+      ['config.enabled', 'bool', 'Timer enabled (master on/off)'],
+      ['config.allow_midnight_wrap', 'bool', 'Allow timers past midnight']] },
   { group: 'Global options', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
     fields: [
       ['config.pregame_countdown', 'int', 'Countdown (seconds)', 0, 60],

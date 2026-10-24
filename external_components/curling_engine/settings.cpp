@@ -1368,6 +1368,7 @@ void PiTimerSettings::reset() {
   relay3_enabled = true;
   relay4_enabled = true;
   pregame_countdown = 10;
+  allow_midnight_wrap = false;
   pregame_font_size = 0;
   pregame_color = "";
   pregame_header_text = "Get ready";
@@ -1500,6 +1501,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_function"; if((v=cfg->find(key))!=nullptr && v->type==YType::Str){ if(i==1)relay1_function=v->s; if(i==2)relay2_function=v->s; if(i==3)relay3_function=v->s; if(i==4)relay4_function=v->s;} }
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_enabled"; if((v=cfg->find(key))!=nullptr && v->type==YType::Bool){ if(i==1)relay1_enabled=v->b; if(i==2)relay2_enabled=v->b; if(i==3)relay3_enabled=v->b; if(i==4)relay4_enabled=v->b;} }
   if ((v = cfg->find("pregame_countdown")) != nullptr && v->type == YType::Int) pregame_countdown = static_cast<int>(v->i);
+  if ((v = cfg->find("allow_midnight_wrap")) != nullptr && v->type == YType::Bool) allow_midnight_wrap = v->b;
   if ((v = cfg->find("pregame_font_size")) != nullptr && v->type == YType::Int) pregame_font_size = static_cast<int>(v->i);
   if ((v = cfg->find("pregame_color")) != nullptr && v->type == YType::Str) pregame_color = v->s;
   if ((v = cfg->find("pregame_header_text")) != nullptr && v->type == YType::Str) pregame_header_text = v->s;
