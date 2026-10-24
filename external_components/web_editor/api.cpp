@@ -318,6 +318,7 @@ ApiResponse PiTimerApi::status() {
     doc["game_name"] = snap.game_name;
     doc["date_text"] = snap.date_text;
     doc["time_text"] = snap.time_text;
+    doc["footer_color"] = snap.footer_color;
     doc["show_countdown"] = snap.show_countdown;
     doc["show_pace"] = snap.show_pace;
     doc["show_status"] = snap.show_status;
