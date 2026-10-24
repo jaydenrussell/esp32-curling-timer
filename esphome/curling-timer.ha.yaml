@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.80
+      ref: 2026.10.81
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -447,7 +447,7 @@ interval:
             if (!s.show_game_name)
               return std::string();
             return ::esphome::curling_engine::recolor(
-                ::esphome::curling_engine::FOOTER_COLOR_HEX, s.game_name);
+                s.footer_color, s.game_name);
       - lvgl.label.update:
           id: lbl_date
           text: !lambda |-
@@ -455,7 +455,7 @@ interval:
             if (!s.show_date_time)
               return std::string();
             return ::esphome::curling_engine::recolor(
-                ::esphome::curling_engine::FOOTER_COLOR_HEX, s.date_text);
+                s.footer_color, s.date_text);
       - lvgl.label.update:
           id: lbl_time
           text: !lambda |-
@@ -463,7 +463,7 @@ interval:
             if (!s.show_date_time)
               return std::string();
             return ::esphome::curling_engine::recolor(
-                ::esphome::curling_engine::FOOTER_COLOR_HEX, s.time_text);
+                s.footer_color, s.time_text);
       # Bell: engine bell_tick — for the live game, pulse the configured
       # relays at game start, at the countdown warning, and at the buzzer
       # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->

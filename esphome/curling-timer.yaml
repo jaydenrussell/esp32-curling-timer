@@ -440,7 +440,7 @@ interval:
             if (!s.show_game_name)
               return std::string();
             return ::esphome::curling_engine::recolor(
-                ::esphome::curling_engine::FOOTER_COLOR_HEX, s.game_name);
+                s.footer_color, s.game_name);
       - lvgl.label.update:
           id: lbl_date
           text: !lambda |-
@@ -448,7 +448,7 @@ interval:
             if (!s.show_date_time)
               return std::string();
             return ::esphome::curling_engine::recolor(
-                ::esphome::curling_engine::FOOTER_COLOR_HEX, s.date_text);
+                s.footer_color, s.date_text);
       - lvgl.label.update:
           id: lbl_time
           text: !lambda |-
@@ -456,7 +456,7 @@ interval:
             if (!s.show_date_time)
               return std::string();
             return ::esphome::curling_engine::recolor(
-                ::esphome::curling_engine::FOOTER_COLOR_HEX, s.time_text);
+                s.footer_color, s.time_text);
       # Bell: engine bell_tick — for the live game, pulse the configured
       # relays at game start, at the countdown warning, and at the buzzer
       # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->

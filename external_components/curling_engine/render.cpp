@@ -212,6 +212,7 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
   if (event == "during_buzzer" && game.has_value() && game->during_buzzer_override.has_value())
     out.header_text = *game->during_buzzer_override;
   out.header_color = color_to_hex(headers_get(settings, "color", event, "white"));
+  out.footer_color = color_to_hex(settings.footer_color, FOOTER_COLOR_HEX);
 
   if (!clock_known) {
     // No sane local time yet: pitimer always had a clock; ask instead of

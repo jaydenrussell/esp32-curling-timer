@@ -69,6 +69,8 @@ struct DisplaySnapshot {
   bool show_status{false};
   std::string status_text;
   std::string status_color{FOOTER_COLOR_HEX};
+
+  std::string footer_color{FOOTER_COLOR_HEX};  // footer game name/date/time colour
 };
 
 // Pure draw_screen() data prep for valid settings: gates exactly like pitimer
