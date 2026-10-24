@@ -365,9 +365,7 @@ function renderStatus() {
       'Waiting for the clock to sync (SNTP). The countdown, today\'s games and quick start appear once the time is known.'));
   } else if (cur) {
     now.append(el('div', { class: 'state' }, cur.name || 'Game in progress',
-                  cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null),
-               el('div', { class: 'countdown', id: 'countdown' }, ''),
-               el('div', { class: 'muted' }, `Started ${shortTime(cur.start)} · buzzer at ${shortTime(cur.buzzer)}`));
+                  cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null));
   } else {
     now.append(el('div', { class: 'state muted' }, 'Idle'),
                el('div', { class: 'muted' }, s.next ? `Next: ${s.next.name || 'game'} at ${shortTime(s.next.start)}` : 'No more games today'));
