@@ -857,7 +857,7 @@ function configField(field) {
     return el('label', {}, label, el('select', { value: value == null ? '' : value,
       onchange: (event) => set(event.target.value) },
       [el('option', { value: '', selected: value == null || value === '' }, 'not set')]
-        .concat(colorOpts.map((opt) => el('option', { value: opt, selected: value === opt }, opt))));
+        .concat(colorOpts.map((opt) => el('option', { value: opt, selected: value === opt }, opt)))));
   }
   if (type === 'minutes') {
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.5, inputmode: 'decimal',
