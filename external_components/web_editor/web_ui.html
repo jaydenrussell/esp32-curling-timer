@@ -408,7 +408,7 @@ function renderStatus() {
    }
    const sm = state.status || {};
    function unswap(c) { if (!c || c.length < 7) return c; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
-   const scale = 0.35;
+   const scale = 0.45;
    const fh = Math.round((sm.font_header || 96) * scale);
    const ft = Math.round((sm.font_timer || 450) * scale);
    const fp = Math.round((sm.font_pace || 85) * scale);
@@ -419,7 +419,7 @@ function renderStatus() {
      mirror.append(el('div', { style: 'color:#e74c3c;font-size:48px;font-weight:bold;text-align:center;margin:auto' }, 'TIMER DISABLED'));
    } else {
      if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center` }, sm.header_text));
-     if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1` }, sm.countdown || ''));
+     if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1;width:100%` }, sm.countdown || ''));
    }
    if (sm.show_pace && sm.pace_text) {
      mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center` }, sm.pace_text));
