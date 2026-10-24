@@ -98,7 +98,7 @@ details.fold .fold-count { font-size: 14px; white-space: nowrap; }
 details.fold .fold-body { padding: 0 16px 16px; }
 .row-actions .spacer { flex: 1; }
 /* the message and buttons sit together in the middle, so they are not missed on a wide monitor */
-.savebar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px 16px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 6; }
+.savebar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px 16px; display: none; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 6; }
 .savebar.show { display: flex; }
 .savebar span { color: var(--warn); }
 /* on a narrow phone the message takes its own line, with both buttons centred under it */
@@ -133,7 +133,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">{{version}}</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><button class="btn icon" id="logout" title="Log out">Log out</button></header>
+<header><h1>🎯 Countdown Timer <span class="version">{{version}}</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;font-size:13px;"></span><button class="btn icon" id="logout" title="Log out">Log out</button></header>
 <nav id="tabs"></nav>
 <main>
   <div id="message" class="banner hidden"></div>
