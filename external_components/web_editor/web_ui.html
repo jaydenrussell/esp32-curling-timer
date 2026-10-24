@@ -213,7 +213,7 @@ function showMessage(text, kind = 'bad') {
   clearTimeout(messageTimer);
   if (kind === 'ok') messageTimer = setTimeout(() => { box.classList.add('hidden'); for (const id of ['savebar', 'config-savebar']) { const m = $(id)?.querySelector('.save-msg'); if (m) m.textContent = ''; } }, 4000);
 }
-function clearMessage() { $('message').classList.add('hidden'); }
+function clearMessage() { const h = $('header-msg'); if (h) h.classList.add('hidden'); }
 
 async function api(path, body) {
   const options = body === undefined ? {} : {
