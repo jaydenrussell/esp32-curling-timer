@@ -1067,6 +1067,7 @@ async function checkVersion() {
 function start() {
   renderTabs();
   selectTab(state.tab);
+  loadStatus();
   if (started) return;
   started = true;
   (function loop() { tick(); setTimeout(loop, 1000 - (performance.now() % 1000)); })();
