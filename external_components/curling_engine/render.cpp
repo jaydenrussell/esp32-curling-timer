@@ -70,9 +70,11 @@ constexpr ColorName kColorNames[] = {
 };
 
 std::string hex6(uint32_t rgb) {
+  // Swap R/B to compensate for LVGL 16-bit BGR vs LT8912B 24-bit RGB
+  uint32_t swapped = ((rgb & 0xFF) << 16) | (rgb & 0x00FF00) | ((rgb >> 16) & 0xFF);
   char buf[8];
-  snprintf(buf, sizeof(buf), "#%06X", static_cast<unsigned int>(rgb));
-  return buf;
+  snprintf(buf, sizeof(buf), "#%06X", swapped);
+  return std::string(buf);
 }
 
 std::string lower_copy(const std::string &in) {
