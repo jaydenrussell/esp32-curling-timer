@@ -31,7 +31,7 @@ class Lt8912b : public display::Display {
   void dump_config() override;
 
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_COLOR; }
-  display::ColorOrder get_color_mode() { return display::COLOR_ORDER_BGR; }
+  display::ColorOrder get_color_mode() { return display::COLOR_ORDER_RGB; }
 
   void set_reset_pin(GPIOPin *pin) { this->reset_pin_ = static_cast<InternalGPIOPin *>(pin); }
   void set_enable_pin(GPIOPin *pin) { this->enable_pin_ = static_cast<InternalGPIOPin *>(pin); }
