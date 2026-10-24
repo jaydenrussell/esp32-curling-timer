@@ -26,7 +26,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
-header h1 { font-size: 18px; margin: 0; flex: 1; }
+header h1 { font-size: 18px; margin: 0; }
 .version { font-size: 13px; font-weight: 400; color: var(--muted); }
 .version a { color: var(--accent); text-decoration: none; }
 .version a:hover { text-decoration: underline; }
@@ -133,7 +133,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">{{version}}</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;font-size:13px;text-align:center;flex:1;"></span><button class="btn icon" id="logout" title="Log out">Log out</button></header>
+<header><h1>🎯 Countdown Timer <span class="version">{{version}}</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;font-size:13px;text-align:center;"></span><button class="btn icon" id="logout" title="Log out">Log out</button></header>
 <nav id="tabs"></nav>
 <main>
   <section id="tab-status"></section>
