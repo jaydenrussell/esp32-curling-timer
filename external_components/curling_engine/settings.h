@@ -105,6 +105,7 @@ class PiTimerSettings {
   std::string date_color{};
   int time_font_size{52};
   std::string time_color{};
+  std::string footer_color{};
   std::string background_color{"black"};
   std::string pregame_header_text{"Get ready"};
   bool relays_enabled{true};

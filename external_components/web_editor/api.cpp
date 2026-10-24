@@ -694,6 +694,7 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.footer.date_color"] = s.date_color;
   cfg["config.footer.time_font_size"] = s.time_font_size;
   cfg["config.footer.time_color"] = s.time_color;
+  cfg["config.footer.color"] = s.footer_color;
   cfg["config.background_color"] = s.background_color;
   cfg["config.pregame_header_text"] = s.pregame_header_text;
   return from_document(doc);
@@ -778,6 +779,7 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.relay3_function" || path == "config.relay4_function" ||
                path == "config.pregame_color" || path == "config.pregame_header_text" ||
                path == "config.footer.date_color" || path == "config.footer.time_color" ||
+               path == "config.footer.color" ||
                path == "config.background_color") {
       if (!v.is<const char *>())
         return error_json(422, path + " must be a string");

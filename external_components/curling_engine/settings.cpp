@@ -1375,6 +1375,7 @@ void PiTimerSettings::reset() {
   date_color = "";
   time_font_size = 52;
   time_color = "";
+  footer_color = "";
   background_color = "black";
   pregame_header_text = "Get ready";
   schedules.clear();
@@ -1505,6 +1506,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = footer->find("date_color")) != nullptr && v->type == YType::Str) date_color = v->s;
   if ((v = footer->find("time_font_size")) != nullptr && v->type == YType::Int) time_font_size = static_cast<int>(v->i);
   if ((v = footer->find("time_color")) != nullptr && v->type == YType::Str) time_color = v->s;
+  if ((v = footer->find("color")) != nullptr && v->type == YType::Str) footer_color = v->s;
   if ((v = cfg->find("relays_enabled")) != nullptr && v->type == YType::Bool) relays_enabled = v->b;
   if ((v = cfg->find("relay_count")) != nullptr && v->type == YType::Int) relay_count = static_cast<int>(v->i);
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_function"; if((v=cfg->find(key))!=nullptr && v->type==YType::Str){ if(i==1)relay1_function=v->s; if(i==2)relay2_function=v->s; if(i==3)relay3_function=v->s; if(i==4)relay4_function=v->s;} }
