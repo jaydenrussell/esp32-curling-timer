@@ -400,21 +400,33 @@ function renderStatus() {
     el('span', { class: 'name' }, e.name || '',
        e.quick ? el('span', { class: 'pill quick' }, 'quick') : null)))));
   $('status-today').replaceChildren(today);
-  // Display mirror
-  let mirror = document.getElementById('display-mirror');
-  if (!mirror) {
-    mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:16px;font-family:monospace;border-radius:8px;margin-top:12px' });
-    $('tab-status').append(mirror);
-  }
-  const sm = state.status || {};
-  const lines = [];
-  if (sm.show_countdown) lines.push(`${sm.header_text || ''}  ${sm.countdown || ''}`);
-  if (sm.show_pace) lines.push(sm.pace_text || '');
-  if (sm.show_status) lines.push(sm.status_text || '');
-  if (sm.show_game_name) lines.push(sm.game_name || '');
-  if (sm.show_date_time) lines.push(`${sm.date_text || ''} ${sm.time_text || ''}`);
-  mirror.textContent = lines.join('\n') || '(display idle)';
-  tick();
+   // Display mirror (mimics HDMI output)
+   let mirror = document.getElementById('display-mirror');
+   if (!mirror) {
+     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:16px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:stretch;min-height:220px;gap:8px' });
+     $('tab-status').append(mirror);
+   }
+   const sm = state.status || {};
+   mirror.style.background = '#000';
+   mirror.replaceChildren();
+   if (sm.show_countdown) {
+     mirror.append(el('div', { style: `color:${sm.header_color || '#fff'};font-size:28px;font-weight:bold;text-align:center` }, sm.header_text || ''));
+     mirror.append(el('div', { style: `color:${sm.countdown_color || '#fff'};font-size:72px;font-weight:bold;text-align:center;line-height:1` }, sm.countdown || ''));
+   }
+   if (sm.show_pace && sm.pace_text) {
+     mirror.append(el('div', { style: `color:${sm.pace_color || '#fff'};font-size:24px;text-align:center` }, sm.pace_text));
+   }
+   if (sm.show_status && sm.status_text) {
+     mirror.append(el('div', { style: `color:${sm.status_color || '#fff'};font-size:20px;text-align:center` }, sm.status_text));
+   }
+   const footer = [];
+   if (sm.show_game_name && sm.game_name) footer.push(sm.game_name);
+   if (sm.show_date_time) { if (sm.date_text) footer.push(sm.date_text); if (sm.time_text) footer.push(sm.time_text); }
+   if (footer.length) {
+     mirror.append(el('div', { style: `color:${sm.footer_color || '#fff'};font-size:16px;text-align:center;margin-top:auto` }, footer.join('  ')));
+   }
+   if (!mirror.childElementCount) mirror.append(el('div', { style: 'color:#fff;text-align:center;margin:auto' }, '(display idle)'));
+   tick();
 }
 
 function renderQuickstart() {
