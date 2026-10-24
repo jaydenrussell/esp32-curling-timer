@@ -98,7 +98,7 @@ details.fold .fold-count { font-size: 14px; white-space: nowrap; }
 details.fold .fold-body { padding: 0 16px 16px; }
 .row-actions .spacer { flex: 1; }
 /* the message and buttons sit together in the middle, so they are not missed on a wide monitor */
-.savebar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px 16px; display: none; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 6; }
+.savebar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px 16px; display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 6; }
 .savebar.show { display: flex; }
 .savebar span { color: var(--warn); }
 /* on a narrow phone the message takes its own line, with both buttons centred under it */
@@ -922,7 +922,7 @@ function renderConfig() {
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
       el('h2', {}, section.title),
       el('div', { class: 'grid2' }, fields.map(configField)),
-      section.group === 'Audio' ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null));
+      section.group.startsWith('Outputs') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null));
   }
   $('tab-config').replaceChildren(...nodes);
 }
