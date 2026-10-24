@@ -92,7 +92,7 @@ void Lt8912b::setup() {
       // RGB565: the display and LVGL both work in 16-bit colour, so the
       // driver copies the pixels straight through (an RGB888 driver would
       // need a 2.8 MB framebuffer and convert every pixel).
-      .in_color_format = LCD_COLOR_FMT_RGB888,
+      .in_color_format = LCD_COLOR_FMT_RGB565,
       .num_fbs = 2,
       .video_timing =
           {
@@ -122,7 +122,7 @@ void Lt8912b::setup() {
   esp_lcd_panel_dev_config_t panel_config{};
   panel_config.reset_gpio_num = this->reset_pin_ != nullptr ? this->reset_pin_->get_pin() : -1;
   panel_config.rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB;
-  panel_config.bits_per_pixel = 24;
+  panel_config.bits_per_pixel = 16;
   panel_config.flags.reset_active_high = false;
   panel_config.vendor_config = &vendor_config;
 
