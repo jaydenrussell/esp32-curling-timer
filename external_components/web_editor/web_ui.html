@@ -51,7 +51,7 @@ textarea { width: 100%; min-height: 60vh; font: 13px/1.45 ui-monospace, SFMono-R
 label.check { display: inline-flex; align-items: center; gap: 6px; }
 label.check input { min-height: 0; width: 18px; height: 18px; }
 .row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
-.banner { border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; white-space: pre-wrap; }
+.banner { border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; }
 .banner.bad { background: var(--bad-bg); color: var(--bad); }
 .banner.ok { background: var(--ok-bg); color: var(--ok); }
 .banner.warn { background: var(--warn-bg); color: var(--warn); }
@@ -133,7 +133,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">{{version}}</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;font-size:13px;text-align:center;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
+<header><h1>🎯 Countdown Timer <span class="version">{{version}}</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
 <nav id="tabs"></nav>
 <main>
   <section id="tab-status"></section>
