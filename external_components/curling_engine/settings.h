@@ -101,6 +101,11 @@ class PiTimerSettings {
   bool allow_midnight_wrap{false};
   int pregame_font_size{0};
   std::string pregame_color{};
+  int date_font_size{52};
+  std::string date_color{};
+  int time_font_size{52};
+  std::string time_color{};
+  std::string background_color{"black"};
   std::string pregame_header_text{"Get ready"};
   bool relays_enabled{true};
   int relay_count{4};

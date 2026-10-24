@@ -1371,6 +1371,11 @@ void PiTimerSettings::reset() {
   allow_midnight_wrap = false;
   pregame_font_size = 0;
   pregame_color = "";
+  date_font_size = 52;
+  date_color = "";
+  time_font_size = 52;
+  time_color = "";
+  background_color = "black";
   pregame_header_text = "Get ready";
   schedules.clear();
   exceptions.clear();
@@ -1504,6 +1509,11 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = cfg->find("allow_midnight_wrap")) != nullptr && v->type == YType::Bool) allow_midnight_wrap = v->b;
   if ((v = cfg->find("pregame_font_size")) != nullptr && v->type == YType::Int) pregame_font_size = static_cast<int>(v->i);
   if ((v = cfg->find("pregame_color")) != nullptr && v->type == YType::Str) pregame_color = v->s;
+  if ((v = cfg->find("date_font_size")) != nullptr && v->type == YType::Int) date_font_size = static_cast<int>(v->i);
+  if ((v = cfg->find("date_color")) != nullptr && v->type == YType::Str) date_color = v->s;
+  if ((v = cfg->find("time_font_size")) != nullptr && v->type == YType::Int) time_font_size = static_cast<int>(v->i);
+  if ((v = cfg->find("time_color")) != nullptr && v->type == YType::Str) time_color = v->s;
+  if ((v = cfg->find("background_color")) != nullptr && v->type == YType::Str) background_color = v->s;
   if ((v = cfg->find("pregame_header_text")) != nullptr && v->type == YType::Str) pregame_header_text = v->s;
 
   // buzzer subsection
