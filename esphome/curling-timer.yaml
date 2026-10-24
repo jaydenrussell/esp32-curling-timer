@@ -413,7 +413,7 @@ interval:
             auto &s = id(g_snap);
             const bool five = s.show_countdown && s.seconds_until_buzzer >= 3600;
             lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
-            return 340 + (int) (0.3225f * lv_obj_get_height(timer));
+            return 200 + (int) (0.3225f * lv_obj_get_height(timer));
           text: !lambda |-
             auto &s = id(g_snap);
             if (!s.show_pace)
