@@ -472,6 +472,7 @@ async function launchQuick({ seconds, name, title, during_buzzer, header_hold },
   quickForm.reset();
   state.model = null;
   loadStatus();
+  selectTab('status');
 }
 
 async function cancelQuick(current) {
