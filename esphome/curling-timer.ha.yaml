@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.51
+      ref: 2026.10.52
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -283,11 +283,9 @@ globals:
 #   centre (errors / waiting for clock). All labels start empty; the
 #   1 Hz tick below fills them.
 # ---------------------------------------------------------------------
-# To test HDMI output without LVGL (shows LT8912B test card), comment out
-# the entire lvgl: block below by prefixing each line with #
-# lvgl:
-#   displays:
-#     - hdmi
+lvgl:
+  displays:
+    - hdmi
   widgets:
     - label:
         id: lbl_header
