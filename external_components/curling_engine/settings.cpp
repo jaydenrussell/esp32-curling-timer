@@ -1501,6 +1501,10 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = require_(footer, "entry_name", YType::Bool, where, err)) == nullptr)
     return false;
   game_name = v->b;
+  if ((v = footer->find("date_font_size")) != nullptr && v->type == YType::Int) date_font_size = static_cast<int>(v->i);
+  if ((v = footer->find("date_color")) != nullptr && v->type == YType::Str) date_color = v->s;
+  if ((v = footer->find("time_font_size")) != nullptr && v->type == YType::Int) time_font_size = static_cast<int>(v->i);
+  if ((v = footer->find("time_color")) != nullptr && v->type == YType::Str) time_color = v->s;
   if ((v = cfg->find("relays_enabled")) != nullptr && v->type == YType::Bool) relays_enabled = v->b;
   if ((v = cfg->find("relay_count")) != nullptr && v->type == YType::Int) relay_count = static_cast<int>(v->i);
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_function"; if((v=cfg->find(key))!=nullptr && v->type==YType::Str){ if(i==1)relay1_function=v->s; if(i==2)relay2_function=v->s; if(i==3)relay3_function=v->s; if(i==4)relay4_function=v->s;} }
@@ -1509,10 +1513,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = cfg->find("allow_midnight_wrap")) != nullptr && v->type == YType::Bool) allow_midnight_wrap = v->b;
   if ((v = cfg->find("pregame_font_size")) != nullptr && v->type == YType::Int) pregame_font_size = static_cast<int>(v->i);
   if ((v = cfg->find("pregame_color")) != nullptr && v->type == YType::Str) pregame_color = v->s;
-  if ((v = cfg->find("date_font_size")) != nullptr && v->type == YType::Int) date_font_size = static_cast<int>(v->i);
-  if ((v = cfg->find("date_color")) != nullptr && v->type == YType::Str) date_color = v->s;
-  if ((v = cfg->find("time_font_size")) != nullptr && v->type == YType::Int) time_font_size = static_cast<int>(v->i);
-  if ((v = cfg->find("time_color")) != nullptr && v->type == YType::Str) time_color = v->s;
+
   if ((v = cfg->find("background_color")) != nullptr && v->type == YType::Str) background_color = v->s;
   if ((v = cfg->find("pregame_header_text")) != nullptr && v->type == YType::Str) pregame_header_text = v->s;
 
