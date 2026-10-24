@@ -468,3 +468,15 @@ interval:
             id(pulse_relay_bell).execute(pulse_ms);
           if (ring.mask & ::esphome::curling_engine::BELL_RELAY_2)
             id(pulse_relay_aux).execute(pulse_ms);
+
+select:
+  - platform: template
+    name: "Display Test Mode"
+    id: display_test_mode
+    options:
+      - "Normal"
+      - "Red"
+      - "Green"
+      - "Blue"
+      - "White"
+    optimistic: true

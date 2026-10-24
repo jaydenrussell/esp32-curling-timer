@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.75
+      ref: 2026.10.76
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -475,3 +475,15 @@ interval:
             id(pulse_relay_bell).execute(pulse_ms);
           if (ring.mask & ::esphome::curling_engine::BELL_RELAY_2)
             id(pulse_relay_aux).execute(pulse_ms);
+
+select:
+  - platform: template
+    name: "Display Test Mode"
+    id: display_test_mode
+    options:
+      - "Normal"
+      - "Red"
+      - "Green"
+      - "Blue"
+      - "White"
+    optimistic: true

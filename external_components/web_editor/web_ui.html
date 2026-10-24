@@ -143,6 +143,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
   <section id="tab-history" class="hidden"></section>
   <section id="tab-raw" class="hidden"></section>
   <section id="tab-config" class="hidden"></section>
+  <section id="tab-diagnostics" class="hidden"></section>
 </main>
 <div class="savebar" id="savebar"><span>Unsaved schedule changes</span>
   <button class="btn" id="discard">Discard</button><button class="btn primary" id="save">Save &amp; apply</button></div>
@@ -152,7 +153,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', '📊 Status'], ['quickstart', '⚡ Quick Start'], ['schedule', '📅 Schedule'], ['exceptions', '📋 Exceptions'], ['history', '📈 Report'], ['raw', '⚙ Custom Config'], ['config', '⚙ Config']];
+const TABS = [['status', '📊 Status'], ['quickstart', '⚡ Quick Start'], ['schedule', '📅 Schedule'], ['exceptions', '📋 Exceptions'], ['history', '📈 Report'], ['raw', '⚙ Custom Config'], ['config', '⚙ Config'], ['diagnostics', '🩺 Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
@@ -265,6 +266,7 @@ function selectTab(id) {
   else if (id === 'config') renderConfig();
   if (id === 'raw') loadRaw();
   if (id === 'history') loadHistory();
+  if (id === 'diagnostics') renderDiagnostics();
 }
 
 // ---- status tab -----------------------------------------------------------
@@ -1046,6 +1048,31 @@ async function loadHistory() {
     el('h2', {}, 'Previous versions'),
     el('p', { class: 'muted small', style: 'margin-top: 0' }, 'A copy is kept automatically before every change (latest 30).'),
     result.data.backups.length ? list : el('p', { class: 'muted' }, 'No backups yet.'), view));
+}
+
+// ---- diagnostics tab -------------------------------------------------------
+function renderDiagnostics() {
+  const root = $('tab-diagnostics');
+  const mode = el('select', { onchange: () => showMessage('Display test mode changed', 'ok') },
+    el('option', { value: 'normal' }, 'Normal'),
+    el('option', { value: 'red' }, 'Test mode: Red'),
+    el('option', { value: 'green' }, 'Test mode: Green'),
+    el('option', { value: 'blue' }, 'Test mode: Blue'),
+    el('option', { value: 'white' }, 'Test mode: White'));
+  const section1 = el('div', { class: 'card' },
+    el('h2', {}, 'Display Test Mode'),
+    el('p', { class: 'muted small' }, 'Toggle the display between normal output and full-screen colour bars for testing.'),
+    el('label', {}, 'Mode', mode));
+  const hwTime = el('span', {}, '--');
+  const ntpTime = el('span', {}, '--');
+  const syncBtn = el('button', { class: 'btn primary', onclick: () => showMessage('Syncing NTP…', 'ok') }, 'Sync Now');
+  const section2 = el('div', { class: 'card' },
+    el('h2', {}, 'NTP Time Sync'),
+    el('div', { class: 'grid2' },
+      el('div', { class: 'field' }, 'Hardware (ESP32) time', hwTime),
+      el('div', { class: 'field' }, 'NTP server time', ntpTime)),
+    el('div', { class: 'row-actions' }, syncBtn));
+  root.replaceChildren(section1, section2);
 }
 
 // ---- start up -------------------------------------------------------------
