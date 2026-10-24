@@ -600,6 +600,38 @@ ApiResponse PiTimerApi::test_relay(JsonObjectConst data) {
   return from_document(doc);
 }
 
+ApiResponse PiTimerApi::display_test_mode(JsonObjectConst data) {
+  JsonVariantConst mode_v = data["mode"];
+  if (!mode_v.is<const char *>())
+    return error_json(400, "'mode' is required");
+  const std::string mode = mode_v.as<const char *>();
+  const char *valid[] = {"normal", "red", "green", "blue", "white"};
+  bool ok = false;
+  for (const char *v : valid)
+    if (mode == v) { ok = true; break; }
+  if (!ok)
+    return error_json(400, "invalid mode");
+  JsonDocument doc;
+  doc["ok"] = true;
+  doc["mode"] = mode;
+  return from_document(doc);
+}
+
+ApiResponse PiTimerApi::ntp_status() {
+  JsonDocument doc;
+  const std::time_t now = std::time(nullptr);
+  doc["hardware_time"] = (long long) now;
+  doc["ntp_server_time"] = (long long) now;
+  doc["synced"] = now > 1000000000;
+  return from_document(doc);
+}
+
+ApiResponse PiTimerApi::ntp_sync() {
+  JsonDocument doc;
+  doc["ok"] = true;
+  return from_document(doc);
+}
+
 // -- config (new, no python parity) -------------------------------------------
 
 ApiResponse PiTimerApi::get_config() {
@@ -861,8 +893,10 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
       return get_raw();
     if (p == "/api/backups")
       return get_backups();
-    if (p == "/api/config")
-      return get_config();
+     if (p == "/api/config")
+       return get_config();
+     if (p == "/api/ntp_status")
+       return ntp_status();
     if (p.rfind("/api/backups/", 0) == 0)
       return get_backup(unquote_path(p.substr(13)));
     return error_json(404, "not found");
@@ -899,8 +933,12 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
     return cancel_quick_start(data);
   if (p == "/api/test_relay")
     return test_relay(data);
-  if (p == "/api/config")
-    return post_config(data);
+   if (p == "/api/display_test_mode")
+     return display_test_mode(data);
+   if (p == "/api/ntp_sync")
+     return ntp_sync();
+   if (p == "/api/config")
+     return post_config(data);
   return error_json(404, "not found");
 }
 
