@@ -916,7 +916,7 @@ function renderConfig() {
       }
       fields = [['config.relay_count', 'int', 'Number of relays', 0, 4]].concat(relayFields);
     }
-    nodes.push(el('div', { class: 'card', style: section.title === 'Relays' ? 'border-color: var(--accent); background: var(--preset-bg);' : '' },
+    nodes.push(el('div', { class: 'card' },
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
       el('h2', {}, section.title),
       el('div', { class: 'grid2' }, fields.map(configField)),
