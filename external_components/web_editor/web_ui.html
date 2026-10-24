@@ -338,7 +338,7 @@ function renderStatus() {
   const root = $('tab-status');
   if (!s) return;
   if (!document.getElementById('status-now')) root.replaceChildren(el('div', { id: 'status-now' }), el('div', { id: 'status-today' }));
-  quickForm.classList.toggle('hidden', !s.valid);
+  if (quickForm) quickForm.classList.toggle('hidden', !s.valid);
   if (!s.valid) {
     $('status-now').replaceChildren(el('div', { class: 'card' },
       el('h2', {}, 'Settings file has an error'),
@@ -411,7 +411,7 @@ function renderQuickstart() {
   if (!root.contains(quickForm)) root.replaceChildren(quickForm);
   const s = state.status;
   if (!s) { quickForm.classList.add('hidden'); return; }
-  quickForm.classList.toggle('hidden', !s.valid);
+  if (quickForm) quickForm.classList.toggle('hidden', !s.valid);
   if (s.valid) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
 }
 function secondsNow() {
