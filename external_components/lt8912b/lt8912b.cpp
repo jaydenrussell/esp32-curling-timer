@@ -92,7 +92,7 @@ void Lt8912b::setup() {
       // RGB565: the display and LVGL both work in 16-bit colour, so the
       // driver copies the pixels straight through (an RGB888 driver would
       // need a 2.8 MB framebuffer and convert every pixel).
-      .in_color_format = LCD_COLOR_FMT_RGB565,
+      .in_color_format = LCD_COLOR_FMT_RGB888,
       .num_fbs = 2,
       .video_timing =
           {
