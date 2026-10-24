@@ -107,7 +107,7 @@ void Lt8912b::setup() {
           },
       .flags =
           {
-              .use_dma2d = false,
+              .use_dma2d = true,
               .disable_lp = true,
           },
   };
