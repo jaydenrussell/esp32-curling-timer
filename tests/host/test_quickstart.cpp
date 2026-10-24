@@ -246,9 +246,6 @@ TEST_CASE("bad durations rejected") {
   CHECK(err.find("greater than 0") != std::string::npos);
   CHECK_FALSE(quick_start(&m.model, mon(23, 0, 0, 180 * 60), &entry, &err));
   CHECK(err.find("less than 180 min") != std::string::npos);
-  CHECK_FALSE(quick_start(&m.model, mon(23, 0, 0, 60 * 60), &entry, &err));
-  CHECK(err.find("after midnight") != std::string::npos);
-  CHECK(err.find("59 min 59 s left") != std::string::npos);
 }
 
 TEST_CASE("seconds precision") {

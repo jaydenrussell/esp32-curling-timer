@@ -22,7 +22,8 @@ struct QuickStartOptions {
   std::optional<std::string> during_buzzer;
   std::optional<int> header_hold;
   int hold{0};  // file wide config.buzzer.header_hold
-  int pregame_countdown{0};  // seconds of countdown before game starts
+  int pregame_countdown{0};
+  bool allow_midnight_wrap{false};  // seconds of countdown before game starts
 };
 
 // Add a game starting now lasting duration seconds to today's exception in
