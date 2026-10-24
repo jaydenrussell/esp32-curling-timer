@@ -690,10 +690,10 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.allow_midnight_wrap"] = s.allow_midnight_wrap;
   cfg["config.pregame_font_size"] = s.pregame_font_size;
   cfg["config.pregame_color"] = s.pregame_color;
-  cfg["config.date_font_size"] = s.date_font_size;
-  cfg["config.date_color"] = s.date_color;
-  cfg["config.time_font_size"] = s.time_font_size;
-  cfg["config.time_color"] = s.time_color;
+  cfg["config.footer.date_font_size"] = s.date_font_size;
+  cfg["config.footer.date_color"] = s.date_color;
+  cfg["config.footer.time_font_size"] = s.time_font_size;
+  cfg["config.footer.time_color"] = s.time_color;
   cfg["config.background_color"] = s.background_color;
   cfg["config.pregame_header_text"] = s.pregame_header_text;
   return from_document(doc);
@@ -737,8 +737,8 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.relay_count" ||
                path == "config.pregame_countdown" ||
                path == "config.pregame_font_size" ||
-               path == "config.date_font_size" ||
-               path == "config.time_font_size") {
+               path == "config.footer.date_font_size" ||
+               path == "config.footer.time_font_size") {
       if (!json_strict_int(v, &number) || number < 0 || number > 100000)
         return error_json(422, path + " must be a whole number of seconds or pixels (0 or more)");
       yaml = curling_engine::yaml_int(number);
@@ -777,7 +777,7 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
     } else if (path == "config.relay1_function" || path == "config.relay2_function" ||
                path == "config.relay3_function" || path == "config.relay4_function" ||
                path == "config.pregame_color" || path == "config.pregame_header_text" ||
-               path == "config.date_color" || path == "config.time_color" ||
+               path == "config.footer.date_color" || path == "config.footer.time_color" ||
                path == "config.background_color") {
       if (!v.is<const char *>())
         return error_json(422, path + " must be a string");
