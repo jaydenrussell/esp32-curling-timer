@@ -402,6 +402,20 @@ function renderStatus() {
     el('span', { class: 'name' }, e.name || '',
        e.quick ? el('span', { class: 'pill quick' }, 'quick') : null)))));
   $('status-today').replaceChildren(today);
+  // Display mirror
+  let mirror = document.getElementById('display-mirror');
+  if (!mirror) {
+    mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:16px;font-family:monospace;border-radius:8px;margin-top:12px' });
+    $('tab-status').append(mirror);
+  }
+  const sm = state.status || {};
+  const lines = [];
+  if (sm.show_countdown) lines.push(`${sm.header_text || ''}  ${sm.countdown || ''}`);
+  if (sm.show_pace) lines.push(sm.pace_text || '');
+  if (sm.show_status) lines.push(sm.status_text || '');
+  if (sm.show_game_name) lines.push(sm.game_name || '');
+  if (sm.show_date_time) lines.push(`${sm.date_text || ''} ${sm.time_text || ''}`);
+  mirror.textContent = lines.join('\n') || '(display idle)';
   tick();
 }
 

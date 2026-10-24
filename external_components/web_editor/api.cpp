@@ -6,6 +6,7 @@
 
 #include "esphome/components/curling_engine/config_edit.h"
 #include "esphome/components/curling_engine/model.h"
+#include "esphome/components/curling_engine/render.h"
 #include "esphome/components/curling_engine/quickstart.h"
 #include "json_model.h"
 
@@ -17,6 +18,7 @@ using curling_engine::DAY_NAMES;
 using curling_engine::Entry;
 using curling_engine::ExceptionDay;
 using curling_engine::PiTimerSettings;
+using curling_engine::DisplaySnapshot;
 using curling_engine::ScheduleModel;
 using curling_engine::SettingsStore;
 using curling_engine::StoreStatus;
@@ -303,6 +305,26 @@ ApiResponse PiTimerApi::status() {
   JsonArray today_entries = today["entries"].to<JsonArray>();
   for (const Entry &entry : entries)
     add_entry_json(today_entries, entry);
+  if (clock_ok && live.valid && live.model_ok) {
+    const DisplaySnapshot snap = curling_engine::render_snapshot(live.settings, clock_ok, weekday, sec, date_iso);
+    doc["header_text"] = snap.header_text;
+    doc["header_color"] = snap.header_color;
+    doc["countdown"] = snap.countdown;
+    doc["countdown_color"] = snap.countdown_color;
+    doc["pace_text"] = snap.pace_text;
+    doc["pace_color"] = snap.pace_color;
+    doc["status_text"] = snap.status_text;
+    doc["status_color"] = snap.status_color;
+    doc["game_name"] = snap.game_name;
+    doc["date_text"] = snap.date_text;
+    doc["time_text"] = snap.time_text;
+    doc["show_countdown"] = snap.show_countdown;
+    doc["show_pace"] = snap.show_pace;
+    doc["show_status"] = snap.show_status;
+    doc["show_game_name"] = snap.show_game_name;
+    doc["show_date_time"] = snap.show_date_time;
+    doc["seconds_until_buzzer"] = snap.seconds_until_buzzer;
+  }
   return from_document(doc);
 }
 
