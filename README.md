@@ -1,8 +1,8 @@
 # ESP32 Curling Timer
 
 This project is an ESPHome port of the **rpi-buzzer / pitimer** curling timer
-firmware (originally by [joe-akeem](https://github.com/joe-akeem/rpi-buzzer),
-v2.4.4), rewritten from Raspberry Pi Python to ESP32-P4 / ESPHome.
+firmware, originally by the CVCC IT Committee (City View Curling Club):
+https://sites.google.com/cityviewcurling.ca/cvcc-it/countdown-timer
 
 ESPHome firmware for a curling bell timer: **M5Stack Unit PoE-P4 (U213)**
 driving a big-screen HDMI countdown (LT8912B add-on, 1280×720@60), two
