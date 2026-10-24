@@ -746,6 +746,7 @@ const CONFIG_SECTIONS = [
     hint: 'Default output duration for all events (0 = 2s). Individual events can override. Header hold: seconds the during-buzzer header text stays after ringing.',
     fields: [
       ['config.buzzer.relays', 'relays', 'Output'],
+      ['config.buzzer.duration', 'int', 'Output duration (seconds, 0=use default)', 0, 100000],
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
@@ -768,7 +769,7 @@ function RELAY_NAMES() {
 const RELAYS_PATHS = new Set(['config.buzzer.relays', 'config.buzzer.ring_at_start',
   'config.buzzer.countdown.relays']);
 // common pygame colour names — the file accepts any single line of text, this just assists typing
-const PYGAME_COLORS = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta', 'gray', 'grey',
+const PYGAME_COLORS = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta', 'gray', 'grey', 'orange', 'purple', 'pink', 'brown', 'navy', 'teal', 'lime', 'indigo', 'violet', 'gold', 'silver', 'maroon', 'olive', 'aqua', 'fuchsia', 'silver', 'darkred', 'darkgreen', 'darkblue', 'lightgray', 'lightgrey',
   'navy', 'skyblue', 'wheat', 'orange', 'purple', 'brown', 'pink', 'lime', 'teal', 'olive', 'maroon', 'silver',
   'gold', 'indigo', 'violet', 'coral', 'salmon', 'tan', 'beige', 'ivory', 'khaki', 'plum', 'azure', 'snow',
   'crimson', 'darkgreen', 'darkblue', 'darkred', 'lightblue', 'lightgreen', 'dgray', 'lgray'];
@@ -852,8 +853,11 @@ function configField(field) {
       options.map((opt) => el('option', { value: opt, selected: value === opt }, opt))));
   }
   if (type === 'color') {
-    return el('label', {}, label, el('input', { type: 'text', maxlength: 80, value: value == null ? '' : value,
-      placeholder: 'not set', list: 'pygame-colors', oninput: (event) => set(event.target.value) }));
+    const colorOpts = PYGAME_COLORS;
+    return el('label', {}, label, el('select', { value: value == null ? '' : value,
+      onchange: (event) => set(event.target.value) },
+      [el('option', { value: '', selected: value == null || value === '' }, 'not set')]
+        .concat(colorOpts.map((opt) => el('option', { value: opt, selected: value === opt }, opt))));
   }
   if (type === 'minutes') {
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.5, inputmode: 'decimal',
