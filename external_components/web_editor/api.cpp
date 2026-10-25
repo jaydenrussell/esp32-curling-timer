@@ -628,6 +628,8 @@ ApiResponse PiTimerApi::test_relay(JsonObjectConst data) {
     duration = s.relay_start_duration;
   else if (event == "Countdown Warning" && s.relay_countdown_duration > 0)
     duration = s.relay_countdown_duration;
+  else if (event == "Game End" && s.relay_end_duration > 0)
+    duration = s.relay_end_duration;
   doc["duration"] = duration;
   return from_document(doc);
 }
@@ -748,6 +750,7 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.buzzer.header_hold"] = s.relay_msg_time;
   cfg["config.buzzer.start_duration"] = s.relay_start_duration;
   cfg["config.buzzer.countdown_duration"] = s.relay_countdown_duration;
+  cfg["config.buzzer.end_duration"] = s.relay_end_duration;
   cfg["config.relays_enabled"] = s.relays_enabled;
   cfg["config.relay_count"] = s.relay_count;
   cfg["config.relay1_function"] = s.relay1_function;
@@ -807,6 +810,7 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.buzzer.countdown.minutes_before" ||
                path == "config.buzzer.start_duration" ||
                path == "config.buzzer.countdown_duration" ||
+               path == "config.buzzer.end_duration" ||
                path == "config.relay_count" ||
                path == "config.pregame_countdown" ||
                path == "config.pregame_font_size" ||

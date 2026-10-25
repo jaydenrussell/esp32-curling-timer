@@ -785,6 +785,7 @@ const CONFIG_SECTIONS = [
     hint: 'Header hold: seconds the during-buzzer header text stays after ringing.',
     fields: [
       ['config.buzzer.relays', 'relays', 'Output'],
+      ['config.buzzer.end_duration', 'int', 'Output duration (seconds, 0=use default)', 0, 100000],
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));

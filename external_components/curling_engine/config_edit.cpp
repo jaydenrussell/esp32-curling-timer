@@ -214,6 +214,7 @@ static bool insertable_config_path(const std::string &path) {
          path == "config.pregame_color" || path == "config.pregame_header_text" ||
          path == "config.buzzer.start_duration" ||
          path == "config.buzzer.countdown_duration" ||
+         path == "config.buzzer.end_duration" ||
          path == "config.footer.date_font_size" || path == "config.footer.date_color" ||
          path == "config.footer.time_font_size" || path == "config.footer.time_color" ||
          path == "config.footer.color" ||
