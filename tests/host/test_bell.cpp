@@ -31,6 +31,7 @@ PiTimerSettings make_settings(bool enabled = true,
   s.enabled = enabled;
   s.relays = relays;
   s.relay_duration = relay_duration;
+  s.relay_end_duration = relay_duration;
   return s;
 }
 
@@ -136,6 +137,9 @@ PiTimerSettings tick_settings() {
   s.countdown_minutes_before = 2;  // target = 120s before buzzer
   s.countdown_relays = {"RELAY1", "RELAY2"};
   s.relay_duration = 3;
+  s.relay_start_duration = 3;
+  s.relay_countdown_duration = 3;
+  s.relay_end_duration = 3;
   return s;
 }
 
