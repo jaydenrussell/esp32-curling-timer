@@ -411,12 +411,12 @@ function renderStatus() {
    const scale = 0.4;
    const fh = Math.round((sm.font_header || 96) * scale);
    const ft = Math.round((sm.font_timer || 450) * scale);
-   const fp = Math.round((sm.font_pace || 85) * scale);
+   const fp = Math.round((sm.font_pace || 85) * scale * 0.85);
    const ff = Math.round((sm.font_footer || 52) * scale);
    mirror.style.background = '#000';
    mirror.replaceChildren();
    if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center` }, sm.header_text));
-   if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1;width:100%` }, sm.countdown || ''));
+     if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:-50px` }, sm.countdown || ''));
    if (sm.show_pace && sm.pace_text) {
      mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center` }, sm.pace_text));
    }
