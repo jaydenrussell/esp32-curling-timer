@@ -427,12 +427,11 @@ function renderStatus() {
    if (sm.show_status && sm.status_text) {
      mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center` }, sm.status_text));
    }
-   const footer = [];
-   if (sm.show_game_name && sm.game_name) footer.push(sm.game_name);
-   if (sm.show_date_time) { if (sm.date_text) footer.push(sm.date_text); if (sm.time_text) footer.push(sm.time_text); }
-   if (footer.length) {
-     mirror.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px;text-align:center;margin-top:auto` }, footer.join('  ')));
-   }
+   const footerRow = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-top:auto;width:100%' });
+   if (sm.show_date_time && sm.date_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px` }, sm.date_text));
+   if (sm.show_game_name && sm.game_name) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px;text-align:center;flex:1` }, sm.game_name));
+   if (sm.show_date_time && sm.time_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px;text-align:right` }, sm.time_text));
+   if (footerRow.childElementCount) mirror.append(footerRow);
    if (!mirror.childElementCount) mirror.append(el('div', { style: 'color:#fff;text-align:center;margin:auto' }, '(display idle)'));
    tick();
 }
