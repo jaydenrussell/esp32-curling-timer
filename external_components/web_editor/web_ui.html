@@ -458,8 +458,15 @@ function tick() {
   }
   const mc = $('mirror-countdown');
   if (mc && s && s.current && s.current.seconds_until_buzzer != null) {
-    const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
-    mc.textContent = countdownText(left);
+    const snap = (s.countdown || '');
+    if (snap && !snap.includes(':')) {
+      // pre-game countdown: plain number, decrement live
+      const left = parseInt(snap, 10) - Math.floor((performance.now() - state.statusAt) / 1000);
+      mc.textContent = left > 0 ? String(left) : snap;
+    } else {
+      const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
+      mc.textContent = countdownText(left);
+    }
   }
 }
 
