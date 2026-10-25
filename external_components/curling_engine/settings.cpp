@@ -1368,7 +1368,7 @@ void PiTimerSettings::reset() {
   relay2_enabled = true;
   relay3_enabled = true;
   relay4_enabled = true;
-  pregame_countdown = 10;
+  pregame_countdown = 0;
   allow_midnight_wrap = false;
   pregame_font_size = 0;
   pregame_color = "";

@@ -98,7 +98,7 @@ class PiTimerSettings {
   int relay_countdown_duration{0};
   int relay_end_duration{0};
   int relay_msg_time{0};
-  int pregame_countdown{10};
+  int pregame_countdown{0};
   bool allow_midnight_wrap{false};
   int pregame_font_size{0};
   std::string pregame_color{};
