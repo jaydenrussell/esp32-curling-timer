@@ -623,12 +623,12 @@ ApiResponse PiTimerApi::test_relay(JsonObjectConst data) {
   doc["event"] = event;
   JsonArray arr = doc["relays"].to<JsonArray>();
   for (const auto &r : relays) arr.add(r);
-  int duration = 2;
-  if (event == "Game Start" && s.relay_start_duration > 0)
+  int duration = 0;
+  if (event == "Game Start")
     duration = s.relay_start_duration;
-  else if (event == "Countdown Warning" && s.relay_countdown_duration > 0)
+  else if (event == "Countdown Warning")
     duration = s.relay_countdown_duration;
-  else if (event == "Game End" && s.relay_end_duration > 0)
+  else if (event == "Game End")
     duration = s.relay_end_duration;
   doc["duration"] = duration;
   return from_document(doc);

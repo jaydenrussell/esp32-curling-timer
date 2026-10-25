@@ -46,7 +46,7 @@ int bell_check(const PiTimerSettings &settings, const std::optional<PiTimerGame>
   if (settings.relays.has_value())
     mask = relays_mask(*settings.relays);
   if (mask != 0 && duration_ms != nullptr)
-    *duration_ms = 2 * 1000;  // pitimer: 2s default
+    *duration_ms = 0;
   return mask;
 }
 
@@ -65,32 +65,29 @@ bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame>
   };
   int mask = 0;
   // Game start: seconds_since_start in [0, grace] (skip-tolerant like buzzer).
-  uint32_t start_dur = settings.relay_start_duration > 0 ? settings.relay_start_duration : 2;
-  if (settings.ring_at_start.has_value() && !settings.ring_at_start->empty() && since_start >= 0 &&
+  if (settings.ring_at_start.has_value() && !settings.ring_at_start->empty() && settings.relay_start_duration > 0 && since_start >= 0 &&
       since_start <= BUZZER_GRACE_SECONDS && fires("start")) {
     mask |= relays_mask(*settings.ring_at_start);
-    if (start_dur * 1000 > out->duration_ms) out->duration_ms = start_dur * 1000;
+    if (settings.relay_start_duration * 1000 > out->duration_ms) out->duration_ms = settings.relay_start_duration * 1000;
   }
   // Countdown warning: seconds_until_buzzer descending into [target-grace, target].
   if (settings.countdown_minutes_before > 0 && !settings.countdown_relays.empty()) {
     const int target = settings.countdown_minutes_before * 60;
-    if (until <= target && until >= target - BUZZER_GRACE_SECONDS && fires("countdown")) {
+    if (settings.relay_countdown_duration > 0 && until <= target && until >= target - BUZZER_GRACE_SECONDS && fires("countdown")) {
       mask |= relays_mask(settings.countdown_relays);
-      uint32_t cd_dur = settings.relay_countdown_duration > 0 ? settings.relay_countdown_duration : 2;
-      if (cd_dur * 1000 > out->duration_ms) out->duration_ms = cd_dur * 1000;
+      if (settings.relay_countdown_duration * 1000 > out->duration_ms) out->duration_ms = settings.relay_countdown_duration * 1000;
     }
   }
   // Buzzer (pitimer buzz_if_due).
-  if (until >= -1 && until <= 0 && fires("buzzer") && settings.relays.has_value()) {
+  if (until >= -1 && until <= 0 && settings.relay_end_duration > 0 && fires("buzzer") && settings.relays.has_value()) {
     mask |= relays_mask(*settings.relays);
-    uint32_t end_dur = settings.relay_end_duration > 0 ? settings.relay_end_duration : 2;
-    if (end_dur * 1000 > out->duration_ms) out->duration_ms = end_dur * 1000;
+    if (settings.relay_end_duration * 1000 > out->duration_ms) out->duration_ms = settings.relay_end_duration * 1000;
   }
   if (mask == 0)
     return false;
   out->mask = mask;
   if (out->duration_ms == 0)
-    out->duration_ms = 2 * 1000;
+    return false;
   return true;
 }
 

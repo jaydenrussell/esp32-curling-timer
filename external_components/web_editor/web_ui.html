@@ -922,22 +922,28 @@ async function testRelay(eventName, btn) {
   try {
     const result = await api('/api/test_relay', { event: eventName });
     if (btn) {
-      const dur = (result.data && result.data.duration) ? result.data.duration : 2;
-      btn.classList.add('primary');
-      btn.style.background = result.ok ? '#2ecc71' : '#e74c3c';
-      let remaining = dur;
-      btn.textContent = remaining;
-      const iv = setInterval(() => {
-        remaining -= 1;
-        if (remaining <= 0) {
-          clearInterval(iv);
-          btn.textContent = 'Test';
-          btn.classList.remove('primary');
-          btn.style.background = '';
-        } else {
-          btn.textContent = remaining;
-        }
-      }, 1000);
+      const dur = (result.data && result.data.duration) ? result.data.duration : 0;
+      if (dur <= 0) {
+        btn.textContent = result.ok ? '✓' : '✗';
+        btn.style.background = result.ok ? '#2ecc71' : '#e74c3c';
+        setTimeout(() => { btn.textContent = 'Test'; btn.style.background = ''; }, 1000);
+      } else {
+        btn.classList.add('primary');
+        btn.style.background = result.ok ? '#2ecc71' : '#e74c3c';
+        let remaining = dur;
+        btn.textContent = remaining;
+        const iv = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(iv);
+            btn.textContent = 'Test';
+            btn.classList.remove('primary');
+            btn.style.background = '';
+          } else {
+            btn.textContent = remaining;
+          }
+        }, 1000);
+      }
     }
     if (!result.ok) showMessage(`Test failed: ${result.data.error}`);
   } catch(e) { console.error(e); if (btn) { btn.textContent = '✗'; btn.style.background = '#e74c3c'; } }
