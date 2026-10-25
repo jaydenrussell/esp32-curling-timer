@@ -39,15 +39,15 @@ PiTimerSettings parse_base() {
 }  // namespace
 
 TEST_CASE("color_to_hex names, case, hex forms, fallback") {
-  CHECK(color_to_hex("red") == "#FF0000");
-  CHECK(color_to_hex("Red") == "#FF0000");
+  CHECK(color_to_hex("red") == "#0000FF");
+  CHECK(color_to_hex("Red") == "#0000FF");
   CHECK(color_to_hex("GREEN") == "#008000");  // CSS green is 0x80 not 0xFF00
   CHECK(color_to_hex("white") == "#FFFFFF");
   CHECK(color_to_hex("grey") == "#808080");
-  CHECK(color_to_hex("yellow") == "#FFFF00");
-  CHECK(color_to_hex("#ff0000") == "#FF0000");
+  CHECK(color_to_hex("yellow") == "#00FFFF");
+  CHECK(color_to_hex("#ff0000") == "#0000FF");
   CHECK(color_to_hex("#0f0") == "#00FF00");
-  CHECK(color_to_hex("  darkslategray ") == "#2F4F4F");
+  CHECK(color_to_hex("  darkslategray ") == "#4F4F2F");
   CHECK(color_to_hex("no-such-colour") == "#FFFFFF");
   CHECK(color_to_hex("no-such-colour", "#123456") == "#123456");
   CHECK(color_to_hex("#12") == "#FFFFFF");
@@ -99,8 +99,8 @@ TEST_CASE("header_event gating") {
 }
 
 TEST_CASE("recolor wraps text for LVGL") {
-  CHECK(recolor("#FF0000", "GO") == "#FF0000 GO#");
-  CHECK(recolor("#FFFF00", "") == "");
+  CHECK(recolor("#0000FF", "GO") == "#0000FF GO#");
+  CHECK(recolor("#00FFFF", "") == "");
   CHECK(recolor("", "GO") == "GO");
 }
 
@@ -123,7 +123,7 @@ TEST_CASE("render_snapshot: counting down with pace and footer") {
   auto snap = render_snapshot(s, true, 0, 36900, "2026-09-28");  // Mon 10:15
   CHECK(snap.valid);
   CHECK(snap.header_text == "COUNTING");
-  CHECK(snap.header_color == "#FFFF00");
+  CHECK(snap.header_color == "#00FFFF");
   REQUIRE(snap.show_countdown);
   CHECK_FALSE(snap.during_buzzer);
   CHECK(snap.seconds_until_buzzer == 2700);
@@ -154,9 +154,9 @@ TEST_CASE("render_snapshot: during buzzer red + header override window") {
   CHECK(snap.during_buzzer);
   CHECK(snap.seconds_until_buzzer == 0);
   CHECK(snap.countdown == std::string("00") + COLON + "00");
-  CHECK(snap.countdown_color == "#FF0000");
+  CHECK(snap.countdown_color == "#0000FF");
   CHECK(snap.header_text == "LAST END");
-  CHECK(snap.header_color == "#FFFF00");
+  CHECK(snap.header_color == "#00FFFF");
 
   // Inside header hold (39600 + 300): still during_buzzer, negative remaining.
   auto hold = render_snapshot(s, true, 0, 39750, "2026-09-28");
@@ -199,7 +199,7 @@ TEST_CASE("render_snapshot: disabled hides countdown, red header") {
   CHECK_FALSE(snap.show_pace);
   CHECK_FALSE(snap.show_game_name);
   CHECK(snap.header_text == "DISABLED");
-  CHECK(snap.header_color == "#FF0000");
+  CHECK(snap.header_color == "#0000FF");
 }
 
 TEST_CASE("render_snapshot: footer switches off via settings flags") {
