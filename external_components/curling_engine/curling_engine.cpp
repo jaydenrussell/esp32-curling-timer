@@ -158,7 +158,12 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
     }
     if (mask != 0) {
       out->mask = mask;
-      out->duration_ms = static_cast<uint32_t>(settings.relay_duration) * 1000;
+      int dur = 0;
+      if (ev == "Game Start") dur = settings.relay_start_duration;
+      else if (ev == "Countdown Warning") dur = settings.relay_countdown_duration;
+      else if (ev == "Game End") dur = settings.relay_end_duration;
+      if (dur <= 0) dur = settings.relay_duration;
+      out->duration_ms = static_cast<uint32_t>(dur) * 1000;
       ESP_LOGI(TAG, "test relay: event %s, mask %d, %u ms", ev.c_str(), mask, static_cast<unsigned>(out->duration_ms));
       return true;
     }
