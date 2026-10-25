@@ -46,7 +46,7 @@ int bell_check(const PiTimerSettings &settings, const std::optional<PiTimerGame>
   if (settings.relays.has_value())
     mask = relays_mask(*settings.relays);
   if (mask != 0 && duration_ms != nullptr)
-    *duration_ms = 0;
+    *duration_ms = settings.relay_end_duration > 0 ? settings.relay_end_duration * 1000 : (settings.relay_duration > 0 ? settings.relay_duration * 1000 : 0);
   return mask;
 }
 
