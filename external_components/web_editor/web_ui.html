@@ -403,7 +403,7 @@ function renderStatus() {
    // Display mirror (mimics HDMI output)
    let mirror = document.getElementById('display-mirror');
    if (!mirror) {
-     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:16px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:stretch;aspect-ratio:16/9;gap:8px' });
+     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:16px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:8px;position:relative' });
      $('status-now').append(mirror);
    }
    const sm = state.status || {};
@@ -416,7 +416,7 @@ function renderStatus() {
    mirror.style.background = '#000';
    mirror.replaceChildren();
    if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center` }, sm.header_text));
-     if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:-50px` }, sm.countdown || ''));
+     if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:25px` }, sm.countdown || ''));
    if (sm.show_pace && sm.pace_text) {
      mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center` }, sm.pace_text));
    }
