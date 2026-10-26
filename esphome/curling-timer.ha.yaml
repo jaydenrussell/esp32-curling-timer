@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.153
+      ref: 2026.10.154
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -397,7 +397,6 @@ lvgl:
         align: CENTER
         text: "1280x720"
         text_color: 0xffffff
-               text_color: 0xffffff
 
 # Non-blocking relay pulse used by the bell tick below (engine runs in
 # the same 1 Hz display interval; scripts keep the delay off that path).

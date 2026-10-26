@@ -390,7 +390,6 @@ lvgl:
         align: CENTER
         text: "1280x720"
         text_color: 0xffffff
-               text_color: 0xffffff
 
 # Non-blocking relay pulse used by the bell tick below (engine runs in
 # the same 1 Hz display interval; scripts keep the delay off that path).
