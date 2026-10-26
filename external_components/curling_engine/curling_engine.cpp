@@ -129,20 +129,13 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
   }
   *out = render_snapshot(settings, clock_known, weekday_mon0, seconds_of_day, date_iso);
   if (this->display_test_mode_ != "normal") {
-    out->header_text = "TEST PATTERN 1280x720";
+    out->header_text = "TEST 1280x720";
     out->header_color = color_to_hex("red");
-    out->game_name = "GREEN";
-    out->date_text = "RED";
-    out->time_text = "BLUE";
-    out->show_countdown = true;
-    out->countdown = "WHITE";
-    out->countdown_color = color_to_hex("white");
-    out->show_status = true;
-    out->status_text = "BLACK";
-    out->status_color = color_to_hex("black");
-    out->show_pace = true;
-    out->pace_text = "YELLOW";
-    out->pace_color = color_to_hex("yellow");
+    out->show_countdown = false;
+    out->show_pace = false;
+    out->show_game_name = false;
+    out->show_date_time = false;
+    out->show_status = false;
   }
   return true;
 }
