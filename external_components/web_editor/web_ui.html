@@ -30,8 +30,8 @@ header h1 { font-size: 18px; margin: 0; }
 .version { font-size: 13px; font-weight: 400; color: var(--muted); }
 .version a { color: var(--accent); text-decoration: none; }
 .version a:hover { text-decoration: underline; }
-nav { display: flex; gap: 4px; padding: 8px 16px; overflow-x: auto; background: var(--card); border-bottom: 1px solid var(--line); }
-nav button { background: none; border: 0; padding: 8px 12px; border-radius: 8px; color: var(--muted); font: inherit; cursor: pointer; white-space: nowrap; }
+nav { display: flex; gap: 2px; padding: 4px 8px; overflow-x: auto; background: var(--card); border-bottom: 1px solid var(--line); }
+nav button { background: none; border: 0; padding: 4px 6px; border-radius: 6px; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; white-space: nowrap; }
 nav button.active { background: var(--accent); color: var(--accent-text); }
 main { max-width: 960px; margin: 0 auto; padding: 16px 16px 96px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
@@ -154,7 +154,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', '📊 Status'], ['quickstart', '⚡ Quick Start'], ['schedule', '📅 Schedule'], ['exceptions', '📋 Exceptions'], ['history', '📈 Report'], ['raw', '⚙ Custom Config'], ['config', '⚙ Config'], ['leagues', '🏆 Leagues'], ['diagnostics', '🩺 Diagnostics']];
+const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['exceptions', '📋', 'Exceptions'], ['history', '📈', 'Report'], ['config', '⚙', 'Config'], ['diagnostics', '🩺', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
@@ -250,25 +250,27 @@ $('logout').addEventListener('click', async () => { await api('/api/logout', {})
 
 // ---- tabs -----------------------------------------------------------------
 function renderTabs() {
-  $('tabs').replaceChildren(...TABS.map(([id, label]) =>
-    el('button', { class: id === state.tab ? 'active' : '', onclick: () => selectTab(id) }, label)));
+  $('tabs').replaceChildren(...TABS.map(([id, icon, title]) =>
+    el('button', { class: id === state.tab ? 'active' : '', title, onclick: () => selectTab(id) }, icon)));
 }
-function selectTab(id) {
+async function selectTab(id) {
   state.tab = id;
   renderTabs();
   clearMessage();
   for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== id);
   if (id === 'status') loadStatus();
   if (id === 'quickstart') { loadStatus(); renderQuickstart(); }
-  if ((id === 'schedule' || id === 'exceptions') && !state.model) loadSettings();
+  if ((id === 'schedule' || id === 'exceptions') && !state.model) await loadSettings();
   else if (id === 'schedule') renderSchedule();
   else if (id === 'exceptions') renderExceptions();
-  if (id === 'config' && (!state.configOriginal || !state.configDirty)) loadConfig();
-  else if (id === 'config') renderConfig();
-  if (id === 'raw') loadRaw();
+  if (id === 'config') {
+    if (!state.configOriginal || !state.configDirty) await loadConfig();
+    else renderConfig();
+    await loadRaw();
+  }
   if (id === 'history') loadHistory();
   if (id === 'diagnostics') renderDiagnostics();
-  if (id === 'leagues') renderLeagues();
+  if (id === 'schedule') renderLeagues();
 }
 
 // ---- status tab -----------------------------------------------------------
@@ -1072,7 +1074,7 @@ async function loadRaw() {
     setDirty(false);
     loadRaw();
   };
-  $('tab-raw').replaceChildren(el('div', { class: 'card' },
+  $('tab-config').append(el('div', { class: 'card' },
     el('h2', {}, 'Raw settings file'),
     el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Full access to every setting (fonts, colours, relays…). Changes are checked before they are applied.'),
     area,
@@ -1162,7 +1164,7 @@ function renderDiagnostics() {
 
 // ---- leagues tab -----------------------------------------------------------
 function renderLeagues() {
-  const root = $('tab-leagues');
+  const root = $('tab-schedule');
   const form = el('form', { class: 'card', onsubmit: (e) => { e.preventDefault(); showMessage('League saved', 'ok'); } },
     el('h2', {}, 'Add / Edit League'),
     el('div', { class: 'grid2' },
@@ -1173,7 +1175,7 @@ function renderLeagues() {
     el('h2', {}, 'Leagues'),
     el('ul', { class: 'backups' },
       el('li', {}, el('span', {}, 'Example League'), el('button', { class: 'btn icon' }, 'Edit'), el('button', { class: 'btn icon danger' }, 'Delete'))));
-  root.replaceChildren(form, list);
+  root.append(form, list);
 }
 
 // ---- start up -------------------------------------------------------------
