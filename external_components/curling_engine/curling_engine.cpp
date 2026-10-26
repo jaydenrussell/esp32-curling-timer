@@ -131,9 +131,9 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
   if (this->display_test_mode_ != "normal") {
     out->header_text = "TEST PATTERN 1280x720";
     out->header_color = color_to_hex("red");
-    out->footer_date = "RED";
-    out->footer_entity = "GREEN";
-    out->footer_time = "BLUE";
+    out->game_name = "GREEN";
+    out->date_text = "RED";
+    out->time_text = "BLUE";
     out->show_countdown = true;
     out->countdown = "WHITE";
     out->countdown_color = color_to_hex("white");
