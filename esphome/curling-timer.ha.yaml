@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.144
+      ref: 2026.10.145
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -323,11 +323,14 @@ interval:
           text: !lambda |-
             auto &s = id(g_snap);
             return ::esphome::curling_engine::recolor(s.footer_color, s.footer_entity);
-      - lvgl.label.update:
-          id: lbl_time
-          text: !lambda |-
-            auto &s = id(g_snap);
-            return ::esphome::curling_engine::recolor(s.footer_color, s.footer_time);
+       - lvgl.label.update:
+           id: lbl_time
+           text: !lambda |-
+             auto &s = id(g_snap);
+             return ::esphome::curling_engine::recolor(s.footer_color, s.footer_time);
+       - lvgl.widget.update:
+           id: test_overlay
+           opa: !lambda "return id(engine)->get_display_test_mode() != \"normal\" ? 255 : 0;"
 
 # Latest display snapshot from CurlingEngineComponent::display_snapshot()
 # (the pitimer draw_screen data prep), written once per second below.
@@ -421,7 +424,76 @@ lvgl:
         text_font: font_footer
         recolor: true
         text: ""
-
+    - obj:
+        id: test_overlay
+        width: 1280
+        height: 720
+        align: CENTER
+        opa: 0
+        bg_opa: 0
+        border_width: 0
+        widgets:
+          - obj:
+              width: 183
+              height: 720
+              align: TOP_LEFT
+              x: 0
+              bg_color: 0xFFFFFF
+              border_width: 0
+          - obj:
+              width: 183
+              height: 720
+              align: TOP_LEFT
+              x: 183
+              bg_color: 0xFFFF00
+              border_width: 0
+          - obj:
+              width: 183
+              height: 720
+              align: TOP_LEFT
+              x: 366
+              bg_color: 0x00FFFF
+              border_width: 0
+          - obj:
+              width: 183
+              height: 720
+              align: TOP_LEFT
+              x: 549
+              bg_color: 0x00FF00
+              border_width: 0
+          - obj:
+              width: 183
+              height: 720
+              align: TOP_LEFT
+              x: 732
+              bg_color: 0xFF00FF
+              border_width: 0
+          - obj:
+              width: 183
+              height: 720
+              align: TOP_LEFT
+              x: 915
+              bg_color: 0xFF0000
+              border_width: 0
+          - obj:
+              width: 182
+              height: 720
+              align: TOP_LEFT
+              x: 1098
+              bg_color: 0x0000FF
+              border_width: 0
+          - obj:
+              width: 1260
+              height: 700
+              align: CENTER
+              bg_opa: 0
+              border_color: 0x808080
+              border_width: 2
+          - label:
+              align: CENTER
+              text: "1280x720"
+              text_font: font_pace
+              text_color: 0xFFFFFF
 # Non-blocking relay pulse used by the bell tick below (engine runs in
 # the same 1 Hz display interval; scripts keep the delay off that path).
 script:
