@@ -43,7 +43,7 @@ esp32:
     sdkconfig_options:
       CONFIG_VFS_SUPPORT_DIR: y
       CONFIG_FATFS_LFN_HEAP: y
-      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "60"
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "120"
     advanced:
       execute_from_psram: true
 
@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.134
+      ref: 2026.10.135
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
