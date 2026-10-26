@@ -1379,9 +1379,10 @@ void PiTimerSettings::reset() {
   footer_color = "";
   background_color = "black";
   pregame_header_text = "Get ready";
-  schedules.clear();
-  exceptions.clear();
-  valid = false;
+   schedules.clear();
+   exceptions.clear();
+   leagues.clear();
+   valid = false;
 }
 
 int PiTimerSettings::header_hold(const PiTimerGame &game) const {
@@ -1591,16 +1592,52 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if (!parse_schedules_into(*exceptions_v, &exceptions, relay_msg_time, err))
     return false;
 
-  // Check that all seven days of week accounted for in schedules
-  for (const char *day_of_week : DAY_NAMES) {
-    if (schedules.find(day_of_week) == schedules.end()) {
-      *err = std::string("missing ") + day_of_week +
-             " in schedule, define empty list '[]' as minimum";
-      return false;
-    }
-  }
+   // Check that all seven days of week accounted for in schedules
+   for (const char *day_of_week : DAY_NAMES) {
+     if (schedules.find(day_of_week) == schedules.end()) {
+       *err = std::string("missing ") + day_of_week +
+              " in schedule, define empty list '[]' as minimum";
+       return false;
+     }
+   }
 
-  valid = true;
+   // Optional leagues section (top-level "leagues:")
+   leagues.clear();
+   if ((v = raw.find("leagues")) != nullptr) {
+     if (v->type != YType::Seq) {
+       *err = std::string("'leagues' is not a valid list (" + yaml_repr(*v) + ")");
+       return false;
+     }
+     for (const YamlValue &lv : v->seq) {
+       if (lv.type != YType::Map) {
+         *err = std::string("league entry is not a valid mapping (" + yaml_repr(lv) + ")");
+         return false;
+       }
+       LeagueProfile lp;
+       if (const YamlValue *n = lv.find("name"); n && n->type == YType::Str) lp.name = n->s;
+       if (const YamlValue *g = lv.find("game_duration_minutes"); g && g->type == YType::Int)
+         lp.game_duration_minutes = static_cast<int>(g->i);
+       if (const YamlValue *p = lv.find("pregame_countdown_seconds"); p && p->type == YType::Int)
+         lp.pregame_countdown_seconds = static_cast<int>(p->i);
+       if (const YamlValue *h = lv.find("header_text"); h && h->type == YType::Str) lp.header_text = h->s;
+       if (const YamlValue *pe = lv.find("pace_enabled"); pe && pe->type == YType::Bool) lp.pace_enabled = pe->b;
+       if (const YamlValue *pm = lv.find("pace_minutes_per_end"); pm && pm->type == YType::Int)
+         lp.pace_minutes_per_end = static_cast<int>(pm->i);
+       if (const YamlValue *cm = lv.find("countdown_minutes_before"); cm && cm->type == YType::Int)
+         lp.countdown_minutes_before = static_cast<int>(cm->i);
+       if (const YamlValue *rl = lv.find("relays"); rl) {
+         if (rl->type != YType::Seq) {
+           *err = std::string("'relays' in league is not a valid list (" + yaml_repr(*rl) + ")");
+           return false;
+         }
+         if (!parse_relay_seq(*rl, "relays", "league", &lp.buzzer_relays, err))
+           return false;
+       }
+       leagues.push_back(lp);
+     }
+   }
+
+   valid = true;
   return true;
 }
 
