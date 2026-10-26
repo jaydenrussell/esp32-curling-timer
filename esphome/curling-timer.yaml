@@ -351,6 +351,66 @@ lvgl:
         bg_opa: 0
         border_width: 2
         border_color: 0x808080
+    - obj:
+        align: CENTER
+        x: -549
+        width: 183
+        height: 720
+        bg_color: 0xffffff
+        border_width: 0
+    - obj:
+        align: CENTER
+        x: -366
+        width: 183
+        height: 720
+        bg_color: 0xffff00
+        border_width: 0
+    - obj:
+        align: CENTER
+        x: -183
+        width: 183
+        height: 720
+        bg_color: 0x00ffff
+        border_width: 0
+    - obj:
+        align: CENTER
+        x: 0
+        width: 183
+        height: 720
+        bg_color: 0x00ff00
+        border_width: 0
+    - obj:
+        align: CENTER
+        x: 183
+        width: 183
+        height: 720
+        bg_color: 0xff00ff
+        border_width: 0
+    - obj:
+        align: CENTER
+        x: 366
+        width: 183
+        height: 720
+        bg_color: 0xff0000
+        border_width: 0
+    - obj:
+        align: CENTER
+        x: 549
+        width: 183
+        height: 720
+        bg_color: 0x0000ff
+        border_width: 0
+    - label:
+        align: CENTER
+        text: "1280x720"
+        text_color: 0x000000
+    - obj:
+        align: CENTER
+        width: 1260
+        height: 700
+        bg_opa: 0
+        border_width: 2
+        border_color: 0x808080
         hidden: true
         opa: 0
     - obj:
