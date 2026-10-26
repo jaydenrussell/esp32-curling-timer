@@ -71,6 +71,9 @@ struct DisplaySnapshot {
   std::string status_color{FOOTER_COLOR_HEX};
 
   std::string footer_color{FOOTER_COLOR_HEX};  // footer game name/date/time colour
+
+  // NTP status (shown in diagnostics / footer when clock known)
+  std::string ntp_status;  // "OK", "SYNCING", "ERROR", or ""
 };
 
 // Pure draw_screen() data prep for valid settings: gates exactly like pitimer
