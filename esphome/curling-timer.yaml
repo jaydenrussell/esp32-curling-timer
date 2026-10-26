@@ -400,6 +400,13 @@ lvgl:
         recolor: true
         text: ""
     - label:
+        id: lbl_entity
+        align: BOTTOM_MID
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
+    - label:
         id: lbl_time
         align: BOTTOM_RIGHT
         x: -10

@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.141
+      ref: 2026.10.142
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -402,6 +402,13 @@ lvgl:
         id: lbl_date
         align: BOTTOM_LEFT
         x: 10
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_entity
+        align: BOTTOM_MID
         y: -4
         text_font: font_footer
         recolor: true
