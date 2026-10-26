@@ -367,28 +367,29 @@ lvgl:
         bg_color: 0xffff00
         border_width: 0
     - obj:
-               width: 183
+        width: 183
         bg_color: 0x00ffff
-               border_width: 0
-           - obj:
-               width: 183
+        border_width: 0
+    - obj:
+        width: 183
         bg_color: 0x00ff00
-               border_width: 0
-           - obj:
-               width: 183
+        border_width: 0
+    - obj:
+        width: 183
         bg_color: 0xff00ff
-               border_width: 0
-           - obj:
-               width: 183
+        border_width: 0
+    - obj:
+        width: 183
         bg_color: 0xff0000
-               border_width: 0
-           - obj:
-               width: 183
+        border_width: 0
+    - obj:
+        width: 183
         bg_color: 0x0000ff
-               border_width: 0
-           - label:
-               align: CENTER
-               text: "1280x720"
+        border_width: 0
+    - label:
+        align: CENTER
+        text: "1280x720"
+        text_color: 0xffffff
                text_color: 0xffffff
 
 # Non-blocking relay pulse used by the bell tick below (engine runs in
