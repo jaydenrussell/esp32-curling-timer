@@ -941,14 +941,7 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
   return from_document(doc);
 }
 
-ApiResponse PiTimerApi::get_logs() {
-  auto lines = engine_->get_logs(200);
-  JsonDocument doc;
-  JsonArray arr = doc.to<JsonArray>();
-  for (const auto &l : lines) arr.add(l);
-  return from_document(doc);
-}
-
+// -- auth ---------------------------------------------------------------------
 
 ApiResponse PiTimerApi::login(const ApiRequest &req, JsonObjectConst data) {
   int weekday = -1, sec = -1;
@@ -1010,9 +1003,6 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
         return get_config();
       if (p == "/api/leagues")
         return get_leagues();
-      if (p == "/api/logs")
-        return get_logs();
-
 
      if (p == "/api/ntp_status")
        return ntp_status();

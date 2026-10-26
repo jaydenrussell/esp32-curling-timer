@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector>
-
+#include <memory>
+#include <set>
+#include <string>
 
 #include "bell.h"
 #include "esphome/components/time/real_time_clock.h"
@@ -70,9 +71,7 @@ class CurlingEngineComponent : public Component {
   std::string get_display_test_mode() const { return display_test_mode_; }
   void request_ntp_sync() { ntp_sync_requested_ = true; }
   bool ntp_sync_requested() const { return ntp_sync_requested_; }
-   void add_log(const std::string &line);
-   std::vector<std::string> get_logs(size_t n = 0) const;
-
+  void clear_ntp_sync() { ntp_sync_requested_ = false; }  bool test_relay_pending() const { return test_relay_pending_; }
   std::string test_relay_event() const { return test_relay_event_; }
   void clear_test_relay() { test_relay_pending_ = false; test_relay_event_.clear(); }
 
@@ -89,8 +88,7 @@ class CurlingEngineComponent : public Component {
   bool test_relay_pending_{false};  // bell events already rung this game
                                       // ("date/start/buzzer|start|countdown")
   std::string display_test_mode_{"normal"};
-   std::vector<std::string> log_ring_;
-   static constexpr size_t LOG_RING_MAX = 200;
+  bool ntp_sync_requested_{false};
 };
 
 }  // namespace curling_engine

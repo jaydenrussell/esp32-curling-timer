@@ -186,17 +186,5 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
   return true;
 }
 
-void CurlingEngineComponent::add_log(const std::string &line) {
-  log_ring_.push_back(line);
-  if (log_ring_.size() > LOG_RING_MAX) log_ring_.erase(log_ring_.begin());
-}
-std::vector<std::string> CurlingEngineComponent::get_logs(size_t n) const {
-  if (n == 0 || n > log_ring_.size()) n = log_ring_.size();
-  std::vector<std::string> out;
-  out.reserve(n);
-  size_t start = log_ring_.size() > n ? log_ring_.size() - n : 0;
-  for (size_t i = start; i < log_ring_.size(); i++) out.push_back(log_ring_[i]);
-  return out;
-}
-
 }  // namespace curling_engine
+}  // namespace esphome
