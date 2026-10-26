@@ -58,6 +58,17 @@ static constexpr const char *DAY_NAMES[7] = {"Monday",   "Tuesday", "Wednesday",
 static constexpr const char *VALID_RELAYS_REPR =
     "('RELAY1', 'RELAY2', 'RELAY3', 'RELAY4')";
 
+struct LeagueProfile {
+  std::string name;
+  int game_duration_minutes{0};
+  int pregame_countdown_seconds{0};
+  std::string header_text;
+  bool pace_enabled{false};
+  int pace_minutes_per_end{0};
+  std::vector<std::string> buzzer_relays;
+  int countdown_minutes_before{0};
+};
+
 struct PiTimerGame {
   int start{0};
   int buzzer{0};
@@ -121,6 +132,7 @@ class PiTimerSettings {
   bool relay4_enabled{true};
   std::map<std::string, std::vector<PiTimerGame>> schedules;
   std::map<std::string, std::vector<PiTimerGame>> exceptions;
+  std::vector<LeagueProfile> leagues;
   bool valid{false};
 
   // Restore the pre-parse defaults (also called by the constructor so two
