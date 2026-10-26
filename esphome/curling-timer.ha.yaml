@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.150
+      ref: 2026.10.151
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -343,37 +343,37 @@ lvgl:
         text_font: font_footer
         recolor: true
         text: ""
-     - label:
-    id: lbl_time
-    align: BOTTOM_RIGHT
-    x: -10
-    y: -4
-    text_font: font_footer
-    recolor: true
-    text: ""
-     - obj:
-         id: test_overlay
-         align: CENTER
-         width: 1260
-         height: 700
-         bg_opa: 0
-         border_width: 2
-         border_color: 0x808080
-         hidden: true
-         opa: 0
-         flex_flow: ROW
-         flex_main_place: START
-         flex_cross_place: STRETCH
-         widgets:
-           - obj:
-               width: 183
+    - label:
+        id: lbl_time
+        align: BOTTOM_RIGHT
+        x: -10
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
+    - obj:
+        id: test_overlay
+        align: CENTER
+        width: 1260
+        height: 700
+        bg_opa: 0
+        border_width: 2
+        border_color: 0x808080
+        hidden: true
+        opa: 0
+        flex_flow: ROW
+        flex_main_place: START
+        flex_cross_place: STRETCH
+        widgets:
+    - obj:
+        width: 183
                bg_color: 0xffffff
-               border_width: 0
-           - obj:
-               width: 183
+        border_width: 0
+    - obj:
+        width: 183
                bg_color: 0xffff00
-               border_width: 0
-           - obj:
+        border_width: 0
+    - obj:
                width: 183
                bg_color: 0x00ffff
                border_width: 0
