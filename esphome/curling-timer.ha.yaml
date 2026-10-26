@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.181
+      ref: 2026.10.182
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -535,7 +535,7 @@ script:
 # check (pitimer buzz_if_due) after the labels.
 # ---------------------------------------------------------------------
 interval:
-  - interval: 2s
+  - interval: 1s
     then:
       - lambda: |-
           auto *eng = id(engine);
