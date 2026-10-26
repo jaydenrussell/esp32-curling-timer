@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.182
+      ref: 2026.10.183
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -290,6 +290,79 @@ lvgl:
   bg_color: 0x000000
   scrollbar_mode: "OFF"
   widgets:
+    - obj:
+        id: test_bar_white
+        width: 183
+        height: 720
+        x: 0
+        bg_color: 16777215
+    - obj:
+        id: test_bar_yellow
+        width: 183
+        height: 720
+        x: 183
+        bg_color: 16776960
+    - obj:
+        id: test_bar_cyan
+        width: 183
+        height: 720
+        x: 366
+        bg_color: 65535
+    - obj:
+        id: test_bar_green
+        width: 183
+        height: 720
+        x: 549
+        bg_color: 65280
+    - obj:
+        id: test_bar_magenta
+        width: 183
+        height: 720
+        x: 732
+        bg_color: 16711935
+    - obj:
+        id: test_bar_red
+        width: 183
+        height: 720
+        x: 915
+        bg_color: 16711680
+    - obj:
+        id: test_bar_blue
+        width: 183
+        height: 720
+        x: 1098
+        bg_color: 255
+    - obj:
+        id: test_overscan
+        width: 1260
+        height: 700
+        x: 10
+        y: 10
+        border_width: 2
+        border_color: 8421504
+        bg_opa: 0
+    - label:
+        id: test_res_label
+        text: 1280x720
+        align: CENTER
+    - obj:
+        id: test_pluge_black
+        width: 427
+        height: 720
+        x: 0
+        bg_color: 0
+    - obj:
+        id: test_pluge_dark
+        width: 427
+        height: 720
+        x: 427
+        bg_color: 263172
+    - obj:
+        id: test_pluge_darker
+        width: 426
+        height: 720
+        x: 854
+        bg_color: 526344
     - label:
         id: lbl_header
         align: TOP_MID
@@ -352,164 +425,134 @@ lvgl:
         recolor: true
         text: ""
     - obj:
-        id: test_overlay
-        hidden: true
-        
-        align: CENTER
+        width: 183
+        height: 720
+        x: 0
+        bg_color: 0xffffff
+    - obj:
+        width: 183
+        height: 720
+        x: 183
+        bg_color: 0xffff00
+    - obj:
+        width: 183
+        height: 720
+        x: 366
+        bg_color: 0x00ffff
+    - obj:
+        width: 183
+        height: 720
+        x: 549
+        bg_color: 0x00ff00
+    - obj:
+        width: 183
+        height: 720
+        x: 732
+        bg_color: 0xff00ff
+    - obj:
+        width: 183
+        height: 720
+        x: 915
+        bg_color: 0xff0000
+    - obj:
+        width: 183
+        height: 720
+        x: 1098
+        bg_color: 0x0000ff
+    - obj:
+        width: 427
+        height: 720
+        x: 0
+        bg_color: 0x000000
+    - obj:
+        width: 427
+        height: 720
+        x: 427
+        bg_color: 0x040404
+    - obj:
+        width: 426
+        height: 720
+        x: 854
+        bg_color: 0x080808
+    - obj:
+        width: 1260
+        height: 700
+        border_width: 2
+        border_color: 0x808080
+        bg_opa: 0
+    - label:
+        text: "1280x720"
+
+    - obj:
+        width: 160
+        height: 720
+        x: 0
+        bg_color: 0x000000
+    - obj:
+        width: 160
+        height: 720
+        x: 160
+        bg_color: 0x242424
+    - obj:
+        width: 160
+        height: 720
+        x: 320
+        bg_color: 0x484848
+    - obj:
+        width: 160
+        height: 720
+        x: 480
+        bg_color: 0x6c6c6c
+    - obj:
+        width: 160
+        height: 720
+        x: 640
+        bg_color: 0x909090
+    - obj:
+        width: 160
+        height: 720
+        x: 800
+        bg_color: 0xb4b4b4
+    - obj:
+        width: 160
+        height: 720
+        x: 960
+        bg_color: 0xd8d8d8
+    - obj:
+        width: 160
+        height: 720
+        x: 1120
+        bg_color: 0xffffff
+    - obj:
+        width: 4
+        height: 1018
+        x: 640
+        y: 0
+        bg_color: 0xffffff
+        border_width: 0
+    - obj:
+        width: 4
+        height: 1018
+        x: 640
+        y: 0
+        bg_color: 0xffffff
+        border_width: 0
+    - obj:
         width: 1280
         height: 720
+        x: 0
+        y: 0
         bg_opa: 0
-        widgets:
-          - obj:
-              width: 183
-              height: 720
-              x: 0
-              y: 0
-              bg_color: 0xffffff
-          - obj:
-              width: 183
-              height: 720
-              x: 183
-              y: 0
-              bg_color: 0xffff00
-          - obj:
-              width: 183
-              height: 720
-              x: 366
-              y: 0
-              bg_color: 0x00ffff
-          - obj:
-              width: 183
-              height: 720
-              x: 549
-              y: 0
-              bg_color: 0x00ff00
-          - obj:
-              width: 183
-              height: 720
-              x: 732
-              y: 0
-              bg_color: 0xff00ff
-          - obj:
-              width: 183
-              height: 720
-              x: 915
-              y: 0
-              bg_color: 0xff0000
-          - obj:
-              width: 183
-              height: 720
-              x: 1098
-              y: 0
-              bg_color: 0x0000ff
-          - obj:
-              width: 427
-              height: 720
-              x: 0
-              y: 0
-              bg_color: 0x000000
-          - obj:
-              width: 427
-              height: 720
-              x: 427
-              y: 0
-              bg_color: 0x040404
-          - obj:
-              width: 426
-              height: 720
-              x: 854
-              y: 0
-              bg_color: 0x080808
-          - obj:
-              width: 1260
-              height: 700
-              x: 10
-              y: 10
-              border_width: 2
-              border_color: 0x808080
-              bg_opa: 0
-          - label:
-              x: 0
-              y: 0
-              text: "1280x720"
-          - obj:
-              width: 160
-              height: 720
-              x: 0
-              y: 0
-              bg_color: 0x000000
-          - obj:
-              width: 160
-              height: 720
-              x: 160
-              y: 0
-              bg_color: 0x242424
-          - obj:
-              width: 160
-              height: 720
-              x: 320
-              y: 0
-              bg_color: 0x484848
-          - obj:
-              width: 160
-              height: 720
-              x: 480
-              y: 0
-              bg_color: 0x6c6c6c
-          - obj:
-              width: 160
-              height: 720
-              x: 640
-              y: 0
-              bg_color: 0x909090
-          - obj:
-              width: 160
-              height: 720
-              x: 800
-              y: 0
-              bg_color: 0xb4b4b4
-          - obj:
-              width: 160
-              height: 720
-              x: 960
-              y: 0
-              bg_color: 0xd8d8d8
-          - obj:
-              width: 160
-              height: 720
-              x: 1120
-              y: 0
-              bg_color: 0xffffff
-          - obj:
-              width: 4
-              height: 1018
-              x: 640
-              y: 0
-              bg_color: 0xffffff
-              border_width: 0
-          - obj:
-              width: 4
-              height: 1018
-              x: 640
-              y: 0
-              bg_color: 0xffffff
-              border_width: 0
-          - obj:
-              width: 1280
-              height: 720
-              x: 0
-              y: 0
-              bg_opa: 0
-              border_width: 2
-              border_color: 0x808080
-          - obj:
-              width: 640
-              height: 360
-              x: 320
-              y: 180
-              bg_opa: 0
-              border_width: 2
-              border_color: 0x808080
+        border_width: 2
+        border_color: 0x808080
+    - obj:
+        width: 640
+        height: 360
+        x: 320
+        y: 180
+        bg_opa: 0
+        border_width: 2
+        border_color: 0x808080
 
 # Non-blocking relay pulse used by the bell tick below (engine runs in
 # the same 1 Hz display interval; scripts keep the delay off that path).
@@ -548,7 +591,7 @@ interval:
           id: lbl_header
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string("#ff0000 TEST PATTERN 1280x720#");
+            if (mode != "normal") return std::string();
             auto &s = id(g_snap);
             return ::esphome::curling_engine::recolor(s.header_color, s.header_text);
       - lvgl.label.update:
@@ -560,7 +603,7 @@ interval:
             return id(g_snap).show_pace ? -30 : 0;
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string("#00ff00 GREEN#");
+            if (mode != "normal") return std::string();
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer >= 3600)
               return std::string();
@@ -572,7 +615,7 @@ interval:
             return id(g_snap).show_pace ? -30 : 0;
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string("#0000ff BLUE#");
+            if (mode != "normal") return std::string();
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer < 3600)
               return std::string();
@@ -591,7 +634,7 @@ interval:
             return 50 + (int) (0.3225f * lv_obj_get_height(timer));
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string("#ffffff WHITE#");
+            if (mode != "normal") return std::string();
             auto &s = id(g_snap);
             if (!s.show_pace)
               return std::string();
@@ -600,7 +643,7 @@ interval:
           id: lbl_status
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string("#ffff00 1280x720#");
+            if (mode != "normal") return std::string();
             auto &s = id(g_snap);
             if (!s.show_status)
               return std::string();
@@ -609,7 +652,7 @@ interval:
           id: lbl_game
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string("#000000 BLACK#");
+            if (mode != "normal") return std::string();
             auto &s = id(g_snap);
             if (!s.show_game_name)
               return std::string();
@@ -619,7 +662,7 @@ interval:
           id: lbl_date
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string("#ff00ff MAGENTA#");
+            if (mode != "normal") return std::string();
             auto &s = id(g_snap);
             if (!s.show_date_time)
               return std::string();
@@ -629,16 +672,12 @@ interval:
           id: lbl_time
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string("#00ffff CYAN#");
+            if (mode != "normal") return std::string();
             auto &s = id(g_snap);
             if (!s.show_date_time)
               return std::string();
             return ::esphome::curling_engine::recolor(
                 s.footer_color, s.time_text);
-      - lvgl.widget.update:
-          id: test_overlay
-          hidden: !lambda |-
-            return id(engine)->get_display_test_mode() == "normal";
       # Bell: engine bell_tick — for the live game, pulse the configured
       # relays at game start, at the countdown warning, and at the buzzer
       # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->
