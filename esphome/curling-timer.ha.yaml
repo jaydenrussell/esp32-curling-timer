@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.147
+      ref: 2026.10.148
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -328,9 +328,6 @@ interval:
           text: !lambda |-
             auto &s = id(g_snap);
             return ::esphome::curling_engine::recolor(s.footer_color, s.time_text);
-      - lvgl.widget.update:
-          id: test_overlay
-          opa: !lambda "return id(engine)->get_display_test_mode() != \"normal\" ? 255 : 0;"
 
 # Latest display snapshot from CurlingEngineComponent::display_snapshot()
 # (the pitimer draw_screen data prep), written once per second below.
