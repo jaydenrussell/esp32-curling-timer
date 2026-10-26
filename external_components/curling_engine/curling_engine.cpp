@@ -128,12 +128,6 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
     return false;
   }
   *out = render_snapshot(settings, clock_known, weekday_mon0, seconds_of_day, date_iso);
-  if (this->time_ != nullptr) {
-    auto now = this->time_->now();
-    out->ntp_status = now.is_valid() ? "OK" : "SYNCING";
-  } else {
-    out->ntp_status = "NO TIME";
-  }
   if (this->display_test_mode_ != "normal") {
     out->header_text = "TEST 1280x720";
     out->header_color = color_to_hex("red");
