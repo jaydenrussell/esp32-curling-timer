@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.177
+      ref: 2026.10.178
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -353,7 +353,7 @@ lvgl:
         text: ""
     - obj:
         id: test_overlay
-        hidden: true
+        
         align: CENTER
         width: 1280
         height: 720
@@ -534,7 +534,7 @@ script:
 # check (pitimer buzz_if_due) after the labels.
 # ---------------------------------------------------------------------
 interval:
-  - interval: 1s
+  - interval: 2s
     then:
       - lambda: |-
           auto *eng = id(engine);
@@ -634,10 +634,6 @@ interval:
               return std::string();
             return ::esphome::curling_engine::recolor(
                 s.footer_color, s.time_text);
-      - lvgl.widget.update:
-          id: test_overlay
-          hidden: !lambda |-
-            return id(engine)->get_display_test_mode() == "normal";
       # Bell: engine bell_tick — for the live game, pulse the configured
       # relays at game start, at the countdown warning, and at the buzzer
       # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->
