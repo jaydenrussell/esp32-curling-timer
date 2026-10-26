@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.129
+      ref: 2026.10.130
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -389,10 +389,7 @@ interval:
           id: lbl_header
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
-            if (mode == "red") return std::string("#ff0000 TEST: RED#");
-            if (mode == "green") return std::string("#00ff00 TEST: GREEN#");
-            if (mode == "blue") return std::string("#0000ff TEST: BLUE#");
-            if (mode == "white") return std::string("#ffffff TEST: WHITE#");
+            if (mode != "normal") return std::string("#ff0000 TEST PATTERN 1280x720#");
             auto &s = id(g_snap);
             return ::esphome::curling_engine::recolor(s.header_color, s.header_text);
       - lvgl.label.update:
@@ -403,6 +400,8 @@ interval:
             // is shown; otherwise it sits dead centre.
             return id(g_snap).show_pace ? -30 : 0;
           text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string("#00ff00 GREEN#");
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer >= 3600)
               return std::string();
@@ -413,6 +412,8 @@ interval:
           y: !lambda |-
             return id(g_snap).show_pace ? -30 : 0;
           text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string("#0000ff BLUE#");
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer < 3600)
               return std::string();
@@ -430,6 +431,8 @@ interval:
             lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
             return 50 + (int) (0.3225f * lv_obj_get_height(timer));
           text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string("#ffffff WHITE#");
             auto &s = id(g_snap);
             if (!s.show_pace)
               return std::string();
@@ -437,6 +440,8 @@ interval:
       - lvgl.label.update:
           id: lbl_status
           text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string("#ffff00 1280x720#");
             auto &s = id(g_snap);
             if (!s.show_status)
               return std::string();
@@ -444,6 +449,8 @@ interval:
       - lvgl.label.update:
           id: lbl_game
           text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string("#000000 BLACK#");
             auto &s = id(g_snap);
             if (!s.show_game_name)
               return std::string();
@@ -452,6 +459,8 @@ interval:
       - lvgl.label.update:
           id: lbl_date
           text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string("#ff00ff MAGENTA#");
             auto &s = id(g_snap);
             if (!s.show_date_time)
               return std::string();
@@ -460,6 +469,8 @@ interval:
       - lvgl.label.update:
           id: lbl_time
           text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string("#00ffff CYAN#");
             auto &s = id(g_snap);
             if (!s.show_date_time)
               return std::string();
