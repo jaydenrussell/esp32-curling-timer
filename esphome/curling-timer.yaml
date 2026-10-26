@@ -629,25 +629,9 @@ interval:
             return ::esphome::curling_engine::recolor(
                 s.footer_color, s.time_text);
       - lvgl.widget.update:
-          id: test_smpte
+          id: test_overlay
           hidden: !lambda |-
-            return id(engine)->get_display_test_mode() != "smpte";
-      - lvgl.widget.update:
-          id: test_pluge
-          hidden: !lambda |-
-            return id(engine)->get_display_test_mode() != "pluge";
-      - lvgl.widget.update:
-          id: test_grayscale
-          hidden: !lambda |-
-            return id(engine)->get_display_test_mode() != "grayscale";
-      - lvgl.widget.update:
-          id: test_geometry
-          hidden: !lambda |-
-            return id(engine)->get_display_test_mode() != "geometry";
-      - lvgl.widget.update:
-          id: test_colorbars
-          hidden: !lambda |-
-            return id(engine)->get_display_test_mode() != "colorbars";
+            return id(engine)->get_display_test_mode() == "normal";
       # Bell: engine bell_tick — for the live game, pulse the configured
       # relays at game start, at the countdown warning, and at the buzzer
       # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->
