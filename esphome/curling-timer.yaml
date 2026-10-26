@@ -280,14 +280,14 @@ interval:
           text: !lambda |-
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer >= 3600)
-              return std::string();
+            return std::string();
             return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
       - lvgl.label.update:
           id: lbl_cnt5
           text: !lambda |-
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer < 3600)
-              return std::string();
+            return std::string();
             return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
       - lvgl.label.update:
           id: lbl_pace
@@ -316,14 +316,14 @@ interval:
           text: !lambda |-
             auto &s = id(g_snap);
             return ::esphome::curling_engine::recolor(s.footer_color, s.footer_entity);
-       - lvgl.label.update:
-           id: lbl_time
-           text: !lambda |-
-             auto &s = id(g_snap);
-             return ::esphome::curling_engine::recolor(s.footer_color, s.footer_time);
-       - lvgl.widget.update:
-           id: test_overlay
-           opa: !lambda "return id(engine)->get_display_test_mode() != \"normal\" ? 255 : 0;"
+      - lvgl.label.update:
+          id: lbl_time
+          text: !lambda |-
+            auto &s = id(g_snap);
+            return ::esphome::curling_engine::recolor(s.footer_color, s.footer_time);
+      - lvgl.widget.update:
+          id: test_overlay
+          opa: !lambda "return id(engine)->get_display_test_mode() != \"normal\" ? 255 : 0;"
 
 # Latest display snapshot from CurlingEngineComponent::display_snapshot()
 # (the pitimer draw_screen data prep), written once per second below.
