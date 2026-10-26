@@ -639,7 +639,7 @@ ApiResponse PiTimerApi::display_test_mode(JsonObjectConst data) {
   if (!mode_v.is<const char *>())
     return error_json(400, "'mode' is required");
   const std::string mode = mode_v.as<const char *>();
-  const char *valid[] = {"normal", "red", "green", "blue", "white"};
+  const char *valid[] = {"normal", "smpte", "pluge", "grayscale", "geometry", "colorbars", "red", "green", "blue", "white"};
   bool ok = false;
   for (const char *v : valid)
     if (mode == v) { ok = true; break; }
