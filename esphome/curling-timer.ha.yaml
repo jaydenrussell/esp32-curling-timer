@@ -191,7 +191,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: 2026.10.157
+      ref: 2026.10.158
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -351,6 +351,84 @@ lvgl:
         text_font: font_footer
         recolor: true
         text: ""
+    - obj:
+        align: CENTER
+        width: 1260
+        height: 700
+        bg_opa: 0
+        border_width: 2
+        border_color: 0x808080
+        hidden: true
+        opa: 0
+    - obj:
+        align: CENTER
+        x: -539
+        width: 183
+        height: 720
+        bg_color: 0xffffff
+        border_width: 0
+        hidden: true
+        opa: 0
+    - obj:
+        align: CENTER
+        x: -356
+        width: 183
+        height: 720
+        bg_color: 0xffff00
+        border_width: 0
+        hidden: true
+        opa: 0
+    - obj:
+        align: CENTER
+        x: -173
+        width: 183
+        height: 720
+        bg_color: 0x00ffff
+        border_width: 0
+        hidden: true
+        opa: 0
+    - obj:
+        align: CENTER
+        x: 10
+        width: 183
+        height: 720
+        bg_color: 0x00ff00
+        border_width: 0
+        hidden: true
+        opa: 0
+    - obj:
+        align: CENTER
+        x: 193
+        width: 183
+        height: 720
+        bg_color: 0xff00ff
+        border_width: 0
+        hidden: true
+        opa: 0
+    - obj:
+        align: CENTER
+        x: 376
+        width: 183
+        height: 720
+        bg_color: 0xff0000
+        border_width: 0
+        hidden: true
+        opa: 0
+    - obj:
+        align: CENTER
+        x: 559
+        width: 183
+        height: 720
+        bg_color: 0x0000ff
+        border_width: 0
+        hidden: true
+        opa: 0
+    - label:
+        align: CENTER
+        text: "1280x720"
+        text_color: 0x000000
+        hidden: true
+        opa: 0
 
 # Non-blocking relay pulse used by the bell tick below (engine runs in
 # the same 1 Hz display interval; scripts keep the delay off that path).
