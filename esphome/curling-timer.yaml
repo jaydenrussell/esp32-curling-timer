@@ -285,48 +285,56 @@ lvgl:
   widgets:
     - obj:
         id: test_bar_white
+        hidden: true
         width: 183
         height: 720
         x: 0
         bg_color: 16777215
     - obj:
         id: test_bar_yellow
+        hidden: true
         width: 183
         height: 720
         x: 183
         bg_color: 16776960
     - obj:
         id: test_bar_cyan
+        hidden: true
         width: 183
         height: 720
         x: 366
         bg_color: 65535
     - obj:
         id: test_bar_green
+        hidden: true
         width: 183
         height: 720
         x: 549
         bg_color: 65280
     - obj:
         id: test_bar_magenta
+        hidden: true
         width: 183
         height: 720
         x: 732
         bg_color: 16711935
     - obj:
         id: test_bar_red
+        hidden: true
         width: 183
         height: 720
         x: 915
         bg_color: 16711680
     - obj:
         id: test_bar_blue
+        hidden: true
         width: 183
         height: 720
         x: 1098
         bg_color: 255
     - obj:
         id: test_overscan
+        hidden: true
         width: 1260
         height: 700
         x: 10
@@ -336,22 +344,26 @@ lvgl:
         bg_opa: 0
     - label:
         id: test_res_label
+        hidden: true
         text: 1280x720
         align: CENTER
     - obj:
         id: test_pluge_black
+        hidden: true
         width: 427
         height: 720
         x: 0
         bg_color: 0
     - obj:
         id: test_pluge_dark
+        hidden: true
         width: 427
         height: 720
         x: 427
         bg_color: 263172
     - obj:
         id: test_pluge_darker
+        hidden: true
         width: 426
         height: 720
         x: 854
@@ -671,6 +683,55 @@ interval:
               return std::string();
             return ::esphome::curling_engine::recolor(
                 s.footer_color, s.time_text);
+      - lvgl.widget.update:
+          id: test_bar_white
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "smpte" && id(engine)->get_display_test_mode() != "colorbars";
+      - lvgl.widget.update:
+          id: test_bar_yellow
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "smpte" && id(engine)->get_display_test_mode() != "colorbars";
+      - lvgl.widget.update:
+          id: test_bar_cyan
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "smpte" && id(engine)->get_display_test_mode() != "colorbars";
+      - lvgl.widget.update:
+          id: test_bar_green
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "smpte" && id(engine)->get_display_test_mode() != "colorbars";
+      - lvgl.widget.update:
+          id: test_bar_magenta
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "smpte" && id(engine)->get_display_test_mode() != "colorbars";
+      - lvgl.widget.update:
+          id: test_bar_red
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "smpte" && id(engine)->get_display_test_mode() != "colorbars";
+      - lvgl.widget.update:
+          id: test_bar_blue
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "smpte" && id(engine)->get_display_test_mode() != "colorbars";
+      - lvgl.widget.update:
+          id: test_overscan
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "smpte" && id(engine)->get_display_test_mode() != "colorbars";
+      - lvgl.widget.update:
+          id: test_res_label
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "smpte" && id(engine)->get_display_test_mode() != "colorbars";
+      - lvgl.widget.update:
+          id: test_pluge_black
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "pluge";
+      - lvgl.widget.update:
+          id: test_pluge_dark
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "pluge";
+      - lvgl.widget.update:
+          id: test_pluge_darker
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() != "pluge";
+
       # Bell: engine bell_tick — for the live game, pulse the configured
       # relays at game start, at the countdown warning, and at the buzzer
       # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->
