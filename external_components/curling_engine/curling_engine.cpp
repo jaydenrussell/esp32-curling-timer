@@ -128,6 +128,22 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
     return false;
   }
   *out = render_snapshot(settings, clock_known, weekday_mon0, seconds_of_day, date_iso);
+  if (this->display_test_mode_ != "normal") {
+    out->header_text = "TEST PATTERN 1280x720";
+    out->header_color = color_to_hex("red");
+    out->footer_date = "RED";
+    out->footer_entity = "GREEN";
+    out->footer_time = "BLUE";
+    out->show_countdown = true;
+    out->countdown = "WHITE";
+    out->countdown_color = color_to_hex("white");
+    out->show_status = true;
+    out->status_text = "BLACK";
+    out->status_color = color_to_hex("black");
+    out->show_pace = true;
+    out->pace_text = "YELLOW";
+    out->pace_color = color_to_hex("yellow");
+  }
   return true;
 }
 
