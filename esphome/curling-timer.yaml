@@ -344,6 +344,52 @@ lvgl:
         text_font: font_footer
         recolor: true
         text: ""
+    - obj:
+        id: test_overlay
+        align: CENTER
+        width: 1260
+        height: 700
+        bg_opa: 0
+        border_width: 2
+        border_color: 0x808080
+        hidden: true
+        opa: 0
+        flex_flow: ROW
+        flex_main_place: START
+        flex_cross_place: STRETCH
+        widgets:
+    - obj:
+        width: 183
+        bg_color: 0xffffff
+        border_width: 0
+    - obj:
+        width: 183
+        bg_color: 0xffff00
+        border_width: 0
+    - obj:
+        width: 183
+        bg_color: 0x00ffff
+        border_width: 0
+    - obj:
+        width: 183
+        bg_color: 0x00ff00
+        border_width: 0
+    - obj:
+        width: 183
+        bg_color: 0xff00ff
+        border_width: 0
+    - obj:
+        width: 183
+        bg_color: 0xff0000
+        border_width: 0
+    - obj:
+        width: 183
+        bg_color: 0x0000ff
+        border_width: 0
+    - label:
+        align: CENTER
+        text: "1280x720"
+        text_color: 0xffffff
 
 # Non-blocking relay pulse used by the bell tick below (engine runs in
 # the same 1 Hz display interval; scripts keep the delay off that path).
