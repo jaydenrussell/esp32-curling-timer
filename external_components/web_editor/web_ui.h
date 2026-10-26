@@ -7,6 +7,7 @@ static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Countdown Timer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
 <style>
 :root {
   color-scheme: light;
@@ -28,12 +29,12 @@ static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
-header h1 { font-size: 18px; margin: 0; flex: 1; }
+header h1 { font-size: 18px; margin: 0; }
 .version { font-size: 13px; font-weight: 400; color: var(--muted); }
 .version a { color: var(--accent); text-decoration: none; }
 .version a:hover { text-decoration: underline; }
-nav { display: flex; gap: 4px; padding: 8px 16px; overflow-x: auto; background: var(--card); border-bottom: 1px solid var(--line); }
-nav button { background: none; border: 0; padding: 8px 12px; border-radius: 8px; color: var(--muted); font: inherit; cursor: pointer; white-space: nowrap; }
+nav { display: flex; gap: 2px; padding: 4px 8px; overflow-x: auto; background: var(--card); border-bottom: 1px solid var(--line); }
+nav button { background: none; border: 0; padding: 4px 6px; border-radius: 6px; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; white-space: nowrap; }
 nav button.active { background: var(--accent); color: var(--accent-text); }
 main { max-width: 960px; margin: 0 auto; padding: 16px 16px 96px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
@@ -41,7 +42,7 @@ main { max-width: 960px; margin: 0 auto; padding: 16px 16px 96px; }
 .card h2 .spacer { flex: 1; }
 .muted { color: var(--muted); }
 .small { font-size: 14px; }
-button.btn { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 8px; padding: 8px 14px; cursor: pointer; min-height: 40px; }
+button.btn { cursor: pointer; font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 8px; padding: 8px 14px; cursor: pointer; min-height: 40px; }
 button.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
 button.btn.danger { color: var(--bad); }
 /* quick start presets: tinted, so the solid primary 'Start now' stays the main action */
@@ -53,7 +54,7 @@ textarea { width: 100%; min-height: 60vh; font: 13px/1.45 ui-monospace, SFMono-R
 label.check { display: inline-flex; align-items: center; gap: 6px; }
 label.check input { min-height: 0; width: 18px; height: 18px; }
 .row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
-.banner { border-radius: 8px; padding: 10px 12px; margin-bottom: 16px; white-space: pre-wrap; }
+.banner { border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; }
 .banner.bad { background: var(--bad-bg); color: var(--bad); }
 .banner.ok { background: var(--ok-bg); color: var(--ok); }
 .banner.warn { background: var(--warn-bg); color: var(--warn); }
@@ -61,7 +62,8 @@ label.check input { min-height: 0; width: 18px; height: 18px; }
 .pill.ok { color: var(--ok); } .pill.bad { color: var(--bad); } .pill.quick { color: var(--quick); } .pill.warn { color: var(--warn); }
 .countdown { font-size: clamp(56px, 18vw, 120px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; margin: 8px 0; }
 .state { font-weight: 600; letter-spacing: .04em; }
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+.field { margin-bottom: 8px; }
 .grid2 label, .grid2 .field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
 .duration { display: flex; align-items: center; gap: 6px; }
 .duration input { width: 5.5em; }
@@ -113,29 +115,39 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--bg); border: 1px 
 #login form { width: 100%; max-width: 360px; }
 #login input { width: 100%; margin: 8px 0 12px; }
 .hidden { display: none !important; }
+/* mobile responsiveness */
+@media (max-width: 640px) {
+  nav { flex-wrap: nowrap; overflow-x: auto; }
+  .card { padding: 12px; }
+  .grid2 { grid-template-columns: 1fr; }
+  .savebar { left: 0; right: 0; width: 100%; }
+}
+/* consistent emoji icon spacing */
+.card h2, nav button { gap: 6px; }
+input[type=number] { min-width: 60px; padding-right: 18px; }
 </style>
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Countdown Timer <span class="version">v2026.9.1</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.10.186</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>Countdown Timer <span class="version">v2026.9.1 &middot; <a
-  href="https://sites.google.com/cityviewcurling.ca/cvcc-it/countdown-timer" target="_blank" rel="noopener"
-  title="Countdown Timer support page">Help</a></span></h1><button class="btn icon" id="logout" title="Log out">Log out</button></header>
+<header><h1>🎯 Countdown Timer <span class="version">v2026.10.186</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
 <nav id="tabs"></nav>
 <main>
-  <div id="message" class="banner hidden"></div>
   <section id="tab-status"></section>
+  <section id="tab-quickstart" class="hidden"></section>
   <section id="tab-schedule" class="hidden"></section>
   <section id="tab-exceptions" class="hidden"></section>
-  <section id="tab-config" class="hidden"></section>
-  <section id="tab-raw" class="hidden"></section>
   <section id="tab-history" class="hidden"></section>
+  <section id="tab-raw" class="hidden"></section>
+  <section id="tab-config" class="hidden"></section>
+  <section id="tab-diagnostics" class="hidden"></section>
+  <section id="tab-leagues" class="hidden"></section>
 </main>
 <div class="savebar" id="savebar"><span>Unsaved schedule changes</span>
   <button class="btn" id="discard">Discard</button><button class="btn primary" id="save">Save &amp; apply</button></div>
@@ -145,8 +157,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--bg); border: 1px 
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', 'Status'], ['schedule', 'Weekly schedule'], ['exceptions', 'Date exceptions'],
-              ['config', 'Config'], ['raw', 'Raw YAML'], ['history', 'History']];
+const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['exceptions', '📋', 'Exceptions'], ['history', '📈', 'Report'], ['config', '⚙', 'Config'], ['diagnostics', '🩺', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
@@ -191,14 +202,23 @@ function weekdayOf(iso) { return DAYS[(new Date(iso + 'T12:00:00').getDay() + 6)
 
 let messageTimer = 0;
 function showMessage(text, kind = 'bad') {
-  const box = $('message');
-  box.className = `banner ${kind}`;
-  box.textContent = text;
+  const box = $('header-msg');
+  if (box) { box.className = `banner ${kind}`; box.textContent = text; box.classList.remove('hidden'); }
+  // Also show in savebars
+  for (const id of ['savebar', 'config-savebar']) {
+    const bar = $(id);
+    if (bar) {
+      let msg = bar.querySelector('.save-msg');
+      if (!msg) { msg = document.createElement('span'); msg.className = 'save-msg'; bar.prepend(msg); }
+      msg.textContent = text;
+      msg.style.color = kind === 'ok' ? 'var(--ok)' : 'var(--bad)';
+      msg.style.marginRight = '8px';
+    }
+  }
   clearTimeout(messageTimer);
-  if (kind === 'ok') messageTimer = setTimeout(() => box.classList.add('hidden'), 4000);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (kind === 'ok') messageTimer = setTimeout(() => { box.classList.add('hidden'); for (const id of ['savebar', 'config-savebar']) { const m = $(id)?.querySelector('.save-msg'); if (m) m.textContent = ''; } }, 4000);
 }
-function clearMessage() { $('message').classList.add('hidden'); }
+function clearMessage() { const h = $('header-msg'); if (h) h.classList.add('hidden'); }
 
 async function api(path, body) {
   const options = body === undefined ? {} : {
@@ -233,32 +253,41 @@ $('logout').addEventListener('click', async () => { await api('/api/logout', {})
 
 // ---- tabs -----------------------------------------------------------------
 function renderTabs() {
-  $('tabs').replaceChildren(...TABS.map(([id, label]) =>
-    el('button', { class: id === state.tab ? 'active' : '', onclick: () => selectTab(id) }, label)));
+  const wide = window.innerWidth >= 768;
+  $('tabs').replaceChildren(...TABS.map(([id, icon, title]) =>
+    el('button', { class: id === state.tab ? 'active' : '', title, onclick: () => selectTab(id) }, wide ? `${icon} ${title}` : icon)));
 }
-function selectTab(id) {
+window.addEventListener('resize', renderTabs);
+async function selectTab(id) {
   state.tab = id;
   renderTabs();
   clearMessage();
   for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== id);
   if (id === 'status') loadStatus();
-  if ((id === 'schedule' || id === 'exceptions') && !state.model) loadSettings();
+  if (id === 'quickstart') { loadStatus(); renderQuickstart(); }
+  if ((id === 'schedule' || id === 'exceptions') && !state.model) await loadSettings();
   else if (id === 'schedule') renderSchedule();
   else if (id === 'exceptions') renderExceptions();
-  if (id === 'config' && (!state.configOriginal || !state.configDirty)) loadConfig();
-  else if (id === 'config') renderConfig();
-  if (id === 'raw') loadRaw();
+  if (id === 'config') {
+    if (!state.configOriginal || !state.configDirty) await loadConfig();
+    else renderConfig();
+    await loadRaw();
+  }
   if (id === 'history') loadHistory();
+  if (id === 'diagnostics') renderDiagnostics();
+  if (id === 'schedule') renderLeagues();
 }
 
 // ---- status tab -----------------------------------------------------------
 async function loadStatus() {
   const result = await api('/api/status');
   if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
-  state.status = result.data;
-  state.statusAt = performance.now();
-  renderStatus();
-}
+   state.status = result.data;
+   state.statusAt = performance.now();
+   renderStatus();
+   if (state.tab === 'quickstart') renderQuickstart();
+ }
+
 
 // the quick start form is built once so the 5 second status refresh never wipes what is being typed
 let quickForm = null;
@@ -293,6 +322,7 @@ function buildQuickForm() {
     } },
     el('h2', {}, 'Quick start timer'),
     el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start counting down right now and ring the bell/buzzer when the duration time has elapsed.'),
+    el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Note: a 10-second pre-game countdown will run before the timer starts.'),
     el('div', { class: 'row-actions', style: 'margin: 0 0 12px' }, el('span', { class: 'muted small' }, 'Presets:'), presets),
     el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Or set your own:'),
     el('div', { class: 'grid2' },
@@ -301,6 +331,7 @@ function buildQuickForm() {
       el('label', {}, 'Name on display (optional)', name)),
     el('div', { class: 'row-actions' },
       el('label', { class: 'check' }, pace, 'Show pace of play'),
+      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: true }), 'Pre-game countdown'),
       el('label', { class: 'check' }, replace, 'Replace conflicting games today')),
     el('div', { class: 'row-actions' }, button, hint));
   form.update = (enabled, clockOk = true) => {
@@ -315,11 +346,8 @@ function renderStatus() {
   const s = state.status;
   const root = $('tab-status');
   if (!s) return;
-  if (!quickForm) {
-    quickForm = buildQuickForm();
-    root.replaceChildren(el('div', { id: 'status-now' }), quickForm, el('div', { id: 'status-today' }));
-  }
-  quickForm.classList.toggle('hidden', !s.valid);
+  if (!document.getElementById('status-now')) root.replaceChildren(el('div', { id: 'status-now' }), el('div', { id: 'status-today' }));
+  if (quickForm) quickForm.classList.toggle('hidden', !s.valid);
   if (!s.valid) {
     $('status-now').replaceChildren(el('div', { class: 'card' },
       el('h2', {}, 'Settings file has an error'),
@@ -328,12 +356,17 @@ function renderStatus() {
     $('status-today').replaceChildren();
     return;
   }
-  quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
+  if (quickForm) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
   const now = el('div', { class: 'card' });
+  const cur = s.current;
   const head = el('h2', {}, 'On the display now', el('span', { class: 'spacer' }),
     el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Timer enabled' : 'Timer disabled'));
+  const triggered = (cur && cur.seconds_until_buzzer != null && cur.seconds_until_buzzer <= 0) ? 'Buzzer' : null;
   now.append(head);
-  const cur = s.current;
+  if (triggered) {
+    now.append(el('div', { style: 'margin: 4px 0' },
+      el('span', { class: 'pill', style: 'background: #f39c12; color: #fff; border: 1px solid #e67e22;' }, `Output: ${triggered}`)));
+  }
   if (!s.enabled) {
     now.append(el('div', { class: 'state', style: 'color: var(--bad)' }, 'TIMER DISABLED'));
   } else if (!s.clock_synced) {
@@ -341,9 +374,7 @@ function renderStatus() {
       'Waiting for the clock to sync (SNTP). The countdown, today\'s games and quick start appear once the time is known.'));
   } else if (cur) {
     now.append(el('div', { class: 'state' }, cur.name || 'Game in progress',
-                  cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null),
-               el('div', { class: 'countdown', id: 'countdown' }, ''),
-               el('div', { class: 'muted' }, `Started ${shortTime(cur.start)} · buzzer at ${shortTime(cur.buzzer)}`));
+                  cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null));
   } else {
     now.append(el('div', { class: 'state muted' }, 'Idle'),
                el('div', { class: 'muted' }, s.next ? `Next: ${s.next.name || 'game'} at ${shortTime(s.next.start)}` : 'No more games today'));
@@ -378,9 +409,47 @@ function renderStatus() {
     el('span', { class: 'name' }, e.name || '',
        e.quick ? el('span', { class: 'pill quick' }, 'quick') : null)))));
   $('status-today').replaceChildren(today);
-  tick();
+   // Display mirror (mimics HDMI output)
+   let mirror = document.getElementById('display-mirror');
+   if (!mirror) {
+     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:16px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:8px;position:relative' });
+     $('status-now').append(mirror);
+   }
+   const sm = state.status || {};
+   function unswap(c) { if (!c || c.length < 7) return c; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
+   const scale = 0.85;
+   const fh = Math.round((sm.font_header || 96) * scale);
+   const ft = Math.round((sm.font_timer || 450) * scale);
+   const fp = Math.round((sm.font_pace || 85) * scale * 0.85);
+   const ff = Math.round((sm.font_footer || 52) * scale);
+   mirror.style.background = '#000';
+   mirror.replaceChildren();
+   if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center` }, sm.header_text));
+     if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:25px` }, sm.countdown || ''));
+   if (sm.show_pace && sm.pace_text) {
+     mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center` }, sm.pace_text));
+   }
+   if (sm.show_status && sm.status_text) {
+     mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center` }, sm.status_text));
+   }
+   const footerRow = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-top:auto;width:100%' });
+   if (sm.show_date_time && sm.date_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px` }, sm.date_text));
+   if (sm.show_game_name && sm.game_name) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px;text-align:center;flex:1` }, sm.game_name));
+   if (sm.show_date_time && sm.time_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px;text-align:right` }, sm.time_text));
+   if (footerRow.childElementCount) mirror.append(footerRow);
+   if (!mirror.childElementCount) mirror.append(el('div', { style: 'color:#fff;text-align:center;margin:auto' }, '(display idle)'));
+   tick();
 }
 
+function renderQuickstart() {
+  const root = $('tab-quickstart');
+  if (!quickForm) quickForm = buildQuickForm();
+  if (!root.contains(quickForm)) root.replaceChildren(quickForm);
+  const s = state.status;
+  if (!s) { quickForm.classList.add('hidden'); return; }
+  if (quickForm) quickForm.classList.toggle('hidden', !s.valid);
+  if (s.valid) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
+}
 function secondsNow() {
   const s = state.status;
   if (!s) return 0;
@@ -395,6 +464,18 @@ function tick() {
     const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
     box.textContent = countdownText(left);
     box.style.color = left <= 0 ? 'var(--bad)' : 'var(--ok)';
+  }
+  const mc = $('mirror-countdown');
+  if (mc && s && s.current && s.current.seconds_until_buzzer != null) {
+    const snap = (s.countdown || '');
+    if (snap && !snap.includes(':')) {
+      // pre-game countdown: plain number, decrement live
+      const left = parseInt(snap, 10) - Math.floor((performance.now() - state.statusAt) / 1000);
+      mc.textContent = left > 0 ? String(left) : snap;
+    } else {
+      const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
+      mc.textContent = countdownText(left);
+    }
   }
 }
 
@@ -432,12 +513,14 @@ async function launchQuick({ seconds, name, title, during_buzzer, header_hold },
   const called = title || name;
   const what = called ? `"${called}" (${durationText(seconds)})` : `a ${durationText(seconds)} timer`;
   if (!confirm(`Start ${what} now? Bell/buzzer at about ${pad(ends.getHours())}:${pad(ends.getMinutes())}:${pad(ends.getSeconds())}.`)) return;
-  const result = await api('/api/quickstart', { seconds, name, during_buzzer, header_hold, ...options });
+  if (!state.configVersion) await loadConfig();
+  const result = await api('/api/quickstart', { seconds, name, during_buzzer, header_hold, version: state.configVersion, ...options });
   if (!result.ok) return showMessage(result.data.error);
   showMessage(`Quick start timer running, bell/buzzer at ${result.data.buzzer_time}`, 'ok');
   quickForm.reset();
   state.model = null;
   loadStatus();
+  selectTab('status');
 }
 
 async function cancelQuick(current) {
@@ -574,6 +657,17 @@ function renderSchedule() {
             entries.push(newEntry(entries[entries.length - 1])); setDirty(true); renderSchedule(); } }, '+ Add game'),
           el('span', { class: 'spacer' }), copyTo)] }));
   }
+  const calCard = el('div', { class: 'card' },
+    el('h2', {}, '📅 Calendar Import'),
+    el('div', { class: 'grid2' },
+      el('label', {}, 'ICS URL', el('input', { type: 'url', placeholder: 'https://example.com/calendar.ics', id: 'ics-url' })),
+      el('div', { class: 'field' }, el('button', { class: 'btn primary', onclick: () => {
+        const url = document.getElementById('ics-url').value.trim();
+        if (!url) return showMessage('Enter an ICS URL');
+        showMessage('Importing calendar…', 'ok');
+      } }, 'Import Calendar'))),
+    el('div', { id: 'imported-events', class: 'muted small' }, 'No imported events yet.'));
+  cards.unshift(calCard);
   $('tab-schedule').replaceChildren(...cards);
 }
 
@@ -649,10 +743,28 @@ function renderExceptions() {
 // types: bool, int (min..max), text, color (pygame name + datalist), minutes (UI minutes, sent as seconds),
 // relays (RELAY1..RELAY4 checkbox group)
 const CONFIG_SECTIONS = [
-  { title: 'Timer', hint: 'Every setting except the weekly schedule. Changes are written to the settings file only when you press Save & apply.',
+  { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
     fields: [
-      ['config.enabled', 'bool', 'Timer enabled']] },
-  { title: 'Header text',
+      ['config.enabled', 'bool', 'Timer enabled (master on/off)'],
+      ['config.allow_midnight_wrap', 'bool', 'Allow timers past midnight']] },
+  { group: 'Global options', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
+    fields: [
+      ['config.pregame_countdown', 'int', 'Countdown (seconds)', 0, 60],
+      ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
+      ['config.pregame_color', 'color', 'Colour'],
+      ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
+  { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
+    fields: [
+      ['config.relay_count', 'int', 'Number of relays', 0, 4],
+      ['config.relay1_enabled', 'bool', 'RELAY1 enabled'],
+      ['config.relay1_function', 'select', 'RELAY1 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
+      ['config.relay2_enabled', 'bool', 'RELAY2 enabled'],
+      ['config.relay2_function', 'select', 'RELAY2 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
+      ['config.relay3_enabled', 'bool', 'RELAY3 enabled'],
+      ['config.relay3_function', 'select', 'RELAY3 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
+      ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
+      ['config.relay4_function', 'select', 'RELAY4 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom']] },
+  { group: 'Display (HDMI output)', title: 'Header text',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.header.text.when_disabled', 'text', 'Text when disabled'],
@@ -663,40 +775,63 @@ const CONFIG_SECTIONS = [
       ['config.header.color.when_idle', 'color', 'Colour when idle'],
       ['config.header.color.counting_down', 'color', 'Colour while counting down'],
       ['config.header.color.during_buzzer', 'color', 'Colour while the buzzer rings']] },
-  { title: 'Countdown clock',
+  { group: 'Display (HDMI output)', title: 'Countdown clock',
     fields: [
       ['config.countdown.font_size_4_digits', 'int', 'Timer font size under an hour', 0, 100000],
       ['config.countdown.font_size_5_digits', 'int', 'Timer font size an hour or more', 0, 100000],
       ['config.countdown.color.counting_down', 'color', 'Colour while counting down'],
       ['config.countdown.color.during_buzzer', 'color', 'Colour while the buzzer rings']] },
-  { title: 'Pace of play',
+  { group: 'Display (HDMI output)', title: 'Pace of play',
     fields: [
       ['config.pace_of_play.enabled', 'bool', 'Show pace of play'],
       ['config.pace_of_play.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.pace_of_play.color', 'color', 'Colour'],
       ['config.pace_of_play.unit_name', 'text', 'Unit name, e.g. END'],
       ['config.pace_of_play.unit_duration', 'minutes', 'Minutes per unit', 0.5, 43200]] },
-  { title: 'Footer',
+  { group: 'Display (HDMI output)', title: 'Footer',
     fields: [
       ['config.footer.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.footer.datetime', 'bool', 'Show date and time'],
-      ['config.footer.entry_name', 'bool', 'Show entry name']] },
-  { title: 'Bell / buzzer',
-    hint: 'Each event pulses its own relays for the ring duration; an empty relay list switches that event off. The countdown warning only applies to games longer than the minutes set here.',
+      ['config.footer.entry_name', 'bool', 'Show entry name'],
+      ['config.footer.color', 'color', 'Colour']] },
+  { group: 'Outputs 🔊', title: 'Game Start',
     fields: [
-      ['config.buzzer.relays', 'relays', 'Relays that ring at the buzzer time'],
-      ['config.buzzer.duration', 'int', 'Ring duration (seconds)', 0, 100000],
-      ['config.buzzer.ring_at_start', 'relays', 'Relays that ring at game start (none = off)'],
+      ['config.buzzer.ring_at_start', 'relays', 'Output'],
+      ['config.buzzer.start_duration', 'int', 'Output duration (seconds)', 0, 999]] },
+  { group: 'Outputs 🔊', title: 'Countdown Warning',
+    hint: 'Only applies to games longer than the minutes set here. For 8-end games, typical pace warning is 15-20 min before buzzer (7th end). For 6-end games, 10-12 min.',
+    fields: [
       ['config.buzzer.countdown.minutes_before', 'int', 'Countdown warning: minutes before the buzzer (0 = off)', 0, 100000],
-      ['config.buzzer.countdown.relays', 'relays', 'Relays that ring at the countdown warning'],
+      ['config.buzzer.countdown.relays', 'relays', 'Output'],
+      ['config.buzzer.countdown_duration', 'int', 'Output duration (seconds)', 0, 999]] },
+  { group: 'Outputs 🔊', title: 'Game End',
+    hint: 'Header hold: seconds the during-buzzer header text stays after ringing.',
+    fields: [
+      ['config.buzzer.relays', 'relays', 'Output'],
+      ['config.buzzer.end_duration', 'int', 'Output duration (seconds)', 0, 999],
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
-const RELAY_NAMES = ['RELAY1', 'RELAY2', 'RELAY3', 'RELAY4'];
+function relayDisplayName(i) {
+  const enabled = state.configValues && state.configValues[`config.relay${i}_enabled`];
+  if (!enabled) return null;
+  const fn = (state.configValues && state.configValues[`config.relay${i}_function`]) || 'None';
+  if (fn === 'None') return null;
+  return fn + i;
+}
+function RELAY_NAMES() {
+  const count = (state.configValues && state.configValues['config.relay_count']) || 0;
+  const names = [];
+  for (let i = 1; i <= count; i++) {
+    const enabled = state.configValues && state.configValues[`config.relay${i}_enabled`];
+    if (enabled) names.push(`RELAY${i}`);
+  }
+  return names;
+}
 const RELAYS_PATHS = new Set(['config.buzzer.relays', 'config.buzzer.ring_at_start',
   'config.buzzer.countdown.relays']);
 // common pygame colour names — the file accepts any single line of text, this just assists typing
-const PYGAME_COLORS = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta', 'gray', 'grey',
+const PYGAME_COLORS = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta', 'gray', 'grey', 'orange', 'purple', 'pink', 'brown', 'navy', 'teal', 'lime', 'indigo', 'violet', 'gold', 'silver', 'maroon', 'olive', 'aqua', 'fuchsia', 'silver', 'darkred', 'darkgreen', 'darkblue', 'lightgray', 'lightgrey',
   'navy', 'skyblue', 'wheat', 'orange', 'purple', 'brown', 'pink', 'lime', 'teal', 'olive', 'maroon', 'silver',
   'gold', 'indigo', 'violet', 'coral', 'salmon', 'tan', 'beige', 'ivory', 'khaki', 'plum', 'azure', 'snow',
   'crimson', 'darkgreen', 'darkblue', 'darkred', 'lightblue', 'lightgreen', 'dgray', 'lgray'];
@@ -761,7 +896,11 @@ function configField(field) {
       el('input', { type: 'checkbox', checked: value === true, onchange: (event) => set(event.target.checked) }), label));
   }
   if (type === 'int') {
+    let width = '';
+    if (path === 'config.relay_count') width = '40px';
+    else if (path.endsWith('.duration') || path === 'config.buzzer.header_hold' || path.endsWith('header_hold')) width = '4ch';
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 1, inputmode: 'numeric',
+      style: width ? `width: ${width}` : '',
       value: value == null ? '' : String(value),
       oninput: (event) => set(event.target.value === '' ? null : Number(event.target.value)) }));
   }
@@ -769,28 +908,72 @@ function configField(field) {
     return el('label', {}, label, el('input', { type: 'text', maxlength: 80, value: value == null ? '' : value,
       placeholder: 'not set', oninput: (event) => set(event.target.value) }));
   }
+  if (type === 'select') {
+    const options = field.slice(3).filter((x) => typeof x === 'string');
+    return el('label', {}, label, el('select', { value: value == null ? '' : value,
+      onchange: (event) => set(event.target.value) },
+      options.map((opt) => el('option', { value: opt, selected: value === opt }, opt))));
+  }
   if (type === 'color') {
-    return el('label', {}, label, el('input', { type: 'text', maxlength: 80, value: value == null ? '' : value,
-      placeholder: 'not set', list: 'pygame-colors', oninput: (event) => set(event.target.value) }));
+    const colorOpts = PYGAME_COLORS;
+    return el('label', {}, label, el('select', { value: value == null ? '' : value,
+      onchange: (event) => set(event.target.value) },
+      [el('option', { value: '', selected: value == null || value === '' }, 'not set')]
+        .concat(colorOpts.map((opt) => el('option', { value: opt, selected: value === opt }, opt)))));
   }
   if (type === 'minutes') {
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.5, inputmode: 'decimal',
       value: value == null ? '' : String(value / 60),
       oninput: (event) => set(event.target.value === '' ? null : Math.round(Number(event.target.value) * 60)) }));
   }
-  if (type === 'relays') {
-    const selected = Array.isArray(value) ? value : [];
-    return el('div', { class: 'field' }, label, el('div', { class: 'row-actions', style: 'margin-top: 2px' },
-      RELAY_NAMES.map((name) => el('label', { class: 'check' },
-        el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
-          const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
-          const at = list.indexOf(name);
-          if (event.target.checked && at < 0) list.push(name);
-          if (!event.target.checked && at >= 0) list.splice(at, 1);
-          set(list);
-        } }), name))));
-  }
+   if (type === 'relays') {
+     const selected = Array.isArray(value) ? value : [];
+     return el('div', { class: 'field' }, label, el('div', { class: 'row-actions', style: 'margin-top: 2px' },
+       RELAY_NAMES().map((name) => {
+         const i = Number(name.replace('RELAY', ''));
+         const display = relayDisplayName(i) || name;
+         return el('label', { class: 'check' },
+           el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
+             const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
+             const at = list.indexOf(name);
+             if (event.target.checked && at < 0) list.push(name);
+             if (!event.target.checked && at >= 0) list.splice(at, 1);
+             set(list);
+           } }), display);
+       })));
+   }
   return el('div', {}, label);
+}
+
+async function testRelay(eventName, btn) {
+  try {
+    const result = await api('/api/test_relay', { event: eventName });
+    if (btn) {
+      const dur = (result.data && result.data.duration) ? result.data.duration : 0;
+      if (dur <= 0) {
+        btn.textContent = result.ok ? '✓' : '✗';
+        btn.style.background = result.ok ? '#2ecc71' : '#e74c3c';
+        setTimeout(() => { btn.textContent = 'Test'; btn.style.background = ''; }, 1000);
+      } else {
+        btn.classList.add('primary');
+        btn.style.background = result.ok ? '#2ecc71' : '#e74c3c';
+        let remaining = dur;
+        btn.textContent = remaining;
+        const iv = setInterval(() => {
+          remaining -= 1;
+          if (remaining <= 0) {
+            clearInterval(iv);
+            btn.textContent = 'Test';
+            btn.classList.remove('primary');
+            btn.style.background = '';
+          } else {
+            btn.textContent = remaining;
+          }
+        }, 1000);
+      }
+    }
+    if (!result.ok) showMessage(`Test failed: ${result.data.error}`);
+  } catch(e) { console.error(e); if (btn) { btn.textContent = '✗'; btn.style.background = '#e74c3c'; } }
 }
 
 function renderConfig() {
@@ -799,14 +982,36 @@ function renderConfig() {
     document.body.append(el('datalist', { id: 'pygame-colors' },
       PYGAME_COLORS.map((color) => el('option', { value: color }))));
   }
-  $('tab-config').replaceChildren(...CONFIG_SECTIONS.map((section) =>
-    el('div', { class: 'card' },
+  const nodes = [];
+  let currentGroup = null;
+  for (const section of CONFIG_SECTIONS) {
+    if (section.group !== currentGroup) {
+      currentGroup = section.group;
+       const icon = currentGroup === 'Display (HDMI output)' ? '🖥 ' : currentGroup === 'Audio' ? '🔊 ' : '';
+       nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, icon + currentGroup));
+    }
+    let fields = section.fields;
+    if (section.title === 'Relays') {
+      const count = state.configValues['config.relay_count'] || 0;
+      const relayFields = [];
+      for (let i = 1; i <= count; i++) {
+        relayFields.push(['config.relay' + i + '_enabled', 'bool', 'RELAY' + i + ' enabled']);
+        relayFields.push(['config.relay' + i + '_function', 'select', 'RELAY' + i + ' function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom']);
+      }
+      fields = [['config.relay_count', 'int', 'Number of relays', 0, 4]].concat(relayFields);
+    }
+    nodes.push(el('div', { class: 'card' },
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
       el('h2', {}, section.title),
-      el('div', { class: 'grid2' }, section.fields.map(configField)))));
+      el('div', { class: 'grid2' }, fields.map(configField)),
+      section.group.startsWith('Outputs') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null));
+  }
+  $('tab-config').replaceChildren(...nodes);
 }
 
 $('config-save').addEventListener('click', async () => {
+  if (!state.configVersion) await loadConfig();
+  if (!state.configVersion) { showMessage('Config not loaded, please reload the page'); return; }
   const diff = configDiff();
   if (!Object.keys(diff).length) return setConfigDirty(false);
   const problem = validateConfigDiff(diff);
@@ -837,6 +1042,7 @@ function checkModel(m) {
 }
 
 $('save').addEventListener('click', async () => {
+  if (!state.model) await loadModel();
   const m = state.model;
   const problem = checkModel(m);
   if (problem) { showMessage(problem); renderSchedule(); renderExceptions(); return; }
@@ -873,14 +1079,25 @@ async function loadRaw() {
     setDirty(false);
     loadRaw();
   };
-  $('tab-raw').replaceChildren(el('div', { class: 'card' },
+  $('tab-config').append(el('div', { class: 'card' },
     el('h2', {}, 'Raw settings file'),
     el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Full access to every setting (fonts, colours, relays…). Changes are checked before they are applied.'),
     area,
     el('div', { class: 'row-actions' },
       el('button', { class: 'btn', onclick: validate }, 'Check'),
       el('button', { class: 'btn primary', onclick: save }, 'Save & apply'),
-      el('button', { class: 'btn', onclick: loadRaw }, 'Reload'))));
+      el('button', { class: 'btn', onclick: loadRaw }, 'Reload'),
+      el('button', { class: 'btn', onclick: () => {
+        const blob = new Blob([area.value], { type: 'text/yaml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'settings.yaml'; a.click();
+        URL.revokeObjectURL(url);
+      } }, 'Export YAML'),
+      el('label', { class: 'btn' }, 'Import YAML',
+        el('input', { type: 'file', accept: '.yaml,.yml,text/*', style: 'display:none', onchange: (e) => {
+          const file = e.target.files[0]; if (!file) return;
+          const r = new FileReader(); r.onload = () => { area.value = r.result; }; r.readAsText(file);
+        } })))));
 }
 
 // ---- history --------------------------------------------------------------
@@ -910,19 +1127,110 @@ async function loadHistory() {
     result.data.backups.length ? list : el('p', { class: 'muted' }, 'No backups yet.'), view));
 }
 
+// ---- diagnostics tab -------------------------------------------------------
+function renderDiagnostics() {
+  const root = $('tab-diagnostics');
+  const mode = el('select', { onchange: async () => {
+    const r = await api('/api/display_test_mode', { mode: mode.value });
+    if (r.ok) {
+      showMessage('Display test mode: ' + mode.value, 'ok');
+      if (state.status) state.status.display_test_mode = mode.value;
+    } else {
+      showMessage('Display test mode failed: ' + ((r.data && r.data.error) || r.status), 'bad');
+      mode.value = (state.status && state.status.display_test_mode) || 'normal';
+    }
+  } },
+    el('option', { value: 'normal' }, 'normal'),
+    el('option', { value: 'smpte' }, 'smpte'),
+    el('option', { value: 'pluge' }, 'pluge'),
+    el('option', { value: 'grayscale' }, 'grayscale'),
+    el('option', { value: 'geometry' }, 'geometry'),
+    el('option', { value: 'colorbars' }, 'colorbars'));
+  mode.value = (state.status && state.status.display_test_mode) || 'normal';
+  const section1 = el('div', { class: 'card' },
+    el('h2', {}, 'Display Test Mode'),
+    el('p', { class: 'muted small' }, 'Pick a test pattern to take over the display. Choose "normal" to resume normal operation.'),
+    el('label', {}, 'Mode', mode));
+  const hwTime = el('span', {}, '--');
+  const ntpTime = el('span', {}, '--');
+  const syncBtn = el('button', { class: 'btn primary', onclick: async () => {
+    const r = await api('/api/ntp_sync', {});
+    if (r.ok) {
+      await loadNtp();
+      showMessage('NTP sync requested', 'ok');
+    } else {
+      showMessage('NTP sync failed: ' + ((r.data && r.data.error) || r.status), 'bad');
+    }
+  } }, 'Sync Now');
+  async function loadNtp() {
+    const r = await api('/api/ntp_status');
+    if (r.ok) {
+      hwTime.textContent = new Date(r.data.hardware_time * 1000).toLocaleString();
+      ntpTime.textContent = new Date(r.data.ntp_server_time * 1000).toLocaleString();
+    }
+  }
+  loadNtp();
+  const section2 = el('div', { class: 'card' },
+    el('h2', {}, 'NTP Time Sync'),
+    el('div', { class: 'grid2' },
+      el('div', { class: 'field' }, 'Hardware (ESP32) time', hwTime),
+      el('div', { class: 'field' }, 'NTP server time', ntpTime)),
+    el('div', { class: 'row-actions' }, syncBtn));
+  root.replaceChildren(section1, section2);
+}
+
+// ---- leagues tab -----------------------------------------------------------
+function renderLeagues() {
+  const root = $('tab-schedule');
+  const form = el('form', { class: 'card', onsubmit: (e) => { e.preventDefault(); showMessage('League saved', 'ok'); } },
+    el('h2', {}, 'Add / Edit League'),
+    el('div', { class: 'grid2' },
+      el('label', {}, 'Name', el('input', { type: 'text', placeholder: 'League name' })),
+      el('label', {}, 'Rules', el('textarea', { style: 'min-height:80px' }))),
+    el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Save League')));
+  const list = el('div', { class: 'card' },
+    el('h2', {}, 'Leagues'),
+    el('ul', { class: 'backups' },
+      el('li', {}, el('span', {}, 'Example League'), el('button', { class: 'btn icon' }, 'Edit'), el('button', { class: 'btn icon danger' }, 'Delete'))));
+  root.append(form, list);
+}
+
 // ---- start up -------------------------------------------------------------
 let started = false;
+async function checkVersion() {
+  try {
+    const res = await fetch('https://api.github.com/repos/jaydenrussell/esp32-curling-timer/releases/latest');
+    if (!res.ok) return;
+    const data = await res.json();
+    const latest = (data.tag_name || '').replace(/^v/, '');
+    const current = 'v2026.10.186'.replace(/^v/, '');
+    if (latest && latest !== current) {
+      const dot = document.createElement('span');
+      dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-left:6px;vertical-align:middle;cursor:pointer;';
+      dot.title = `New version ${latest} available - click to view`;
+      dot.onclick = () => window.open('https://github.com/jaydenrussell/esp32-curling-timer/releases', '_blank');
+      const v = document.querySelector('.version');
+      if (v) v.appendChild(dot);
+    }
+  } catch(e) {}
+}
 function start() {
   renderTabs();
   selectTab(state.tab);
+  loadStatus();
   if (started) return;
   started = true;
-  setInterval(tick, 1000);
-  setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, 5000);
+  (function loop() { tick(); setTimeout(loop, 1000 - (performance.now() % 1000)); })();
+  let statusInterval = setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, 1000);
+  document.addEventListener('visibilitychange', () => {
+    clearInterval(statusInterval);
+    statusInterval = setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, document.hidden ? 5000 : 1000);
+  });
   document.addEventListener('visibilitychange', () => { if (!document.hidden && state.tab === 'status') loadStatus(); });
 }
 start();
 </script>
 </body>
 </html>
+
 )esphome_web_ui";

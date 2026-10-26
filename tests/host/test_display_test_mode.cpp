@@ -193,6 +193,35 @@ TEST_CASE("display test mode: the server accepts every mode the dropdown offers"
   }
 }
 
+TEST_CASE("display test mode: the lvgl widget list holds nothing unexpected") {
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+  REQUIRE(!yaml.empty());
+
+  // The widget list may contain only the normal display labels and the test
+  // pattern widgets. An anonymous widget (no id) is always a bug: it can
+  // never be toggled, so it is painted over the display forever. That is
+  // exactly how an orphaned copy of the colour bars survived in the list and
+  // showed up at boot no matter what the dropdown did.
+  const std::vector<std::string> normal_labels = {"lbl_header", "lbl_cnt4", "lbl_cnt5", "lbl_pace",
+                                                  "lbl_status", "lbl_game", "lbl_date", "lbl_time"};
+  size_t patterns = 0;
+  for (const std::string &block : widget_blocks(yaml)) {
+    const std::string id = block_id(block);
+    if (id.empty()) {
+      INFO("anonymous widget block:\n" << block.substr(0, 120));
+      CHECK(false);
+      continue;
+    }
+    if (id.rfind("tp_", 0) == 0) {
+      patterns++;
+      continue;
+    }
+    INFO("unexpected widget id " << id);
+    CHECK(contains(normal_labels, id));
+  }
+  CHECK(patterns > 0);
+}
+
 TEST_CASE("display test mode: every pattern widget is hidden at creation") {
   const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   REQUIRE(!yaml.empty());
