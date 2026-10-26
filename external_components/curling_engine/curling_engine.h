@@ -76,7 +76,8 @@ class CurlingEngineComponent : public Component {
   std::string ntp_status() const;
   int64_t ntp_last_sync() const { return ntp_last_sync_; }
   int32_t ntp_drift_ms() const { return ntp_drift_ms_; }
-  bool test_relay_pending() const { return test_relay_pending_; }
+  std::string ntp_server() const { return ntp_server_.empty() ? std::string("unknown") : ntp_server_; }
+  void set_ntp_server(const std::string &s) { ntp_server_ = s; }  bool test_relay_pending() const { return test_relay_pending_; }
   std::string ntp_info() const { if (this->time_ == nullptr) return "NO TIME"; auto now = this->time_->now(); return now.is_valid() ? "OK (drift: N/A)" : "SYNCING"; }
   std::string test_relay_event() const { return test_relay_event_; }
   void clear_test_relay() { test_relay_pending_ = false; test_relay_event_.clear(); }
@@ -98,6 +99,7 @@ class CurlingEngineComponent : public Component {
   int64_t ntp_last_sync_{0};
   int32_t ntp_drift_ms_{0};
   bool ntp_ok_{false};
+  std::string ntp_server_{};
 };
 
 }  // namespace curling_engine

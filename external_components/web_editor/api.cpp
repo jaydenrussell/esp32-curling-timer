@@ -664,6 +664,8 @@ ApiResponse PiTimerApi::ntp_status() {
   doc["hardware_time"] = (long long) hw;
   doc["ntp_server_time"] = (long long) hw;
   doc["synced"] = hw > 1000000000;
+  if (engine_ != nullptr)
+    doc["ntp_server"] = engine_->ntp_server();
   return from_document(doc);
 }
 
@@ -681,6 +683,7 @@ ApiResponse PiTimerApi::ntp() {
     doc["status"] = engine_->ntp_status();
     doc["drift_ms"] = engine_->ntp_drift_ms();
     doc["last_sync"] = (long long) engine_->ntp_last_sync();
+    doc["server"] = engine_->ntp_server();
   } else {
     doc["status"] = "ERROR";
     doc["drift_ms"] = 0;

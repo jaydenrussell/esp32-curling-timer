@@ -129,14 +129,14 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.10.186</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.10.187</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">v2026.10.186</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
+<header><h1>🎯 Countdown Timer <span class="version">v2026.10.187</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
 <nav id="tabs"></nav>
 <main>
   <section id="tab-status"></section>
@@ -425,9 +425,11 @@ function renderStatus() {
    mirror.style.background = '#000';
    mirror.replaceChildren();
    if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center` }, sm.header_text));
-     if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${ft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:25px` }, sm.countdown || ''));
+     const pregame = !!(sm.countdown && !String(sm.countdown).includes('\u02F8'));
+   const cft = pregame ? Math.round(ft * 0.55) : ft;
+   if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:25px` }, sm.countdown || ''));
    if (sm.show_pace && sm.pace_text) {
-     mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center` }, sm.pace_text));
+     mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-top:-10px` }, sm.pace_text));
    }
    if (sm.show_status && sm.status_text) {
      mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center` }, sm.status_text));
@@ -468,10 +470,12 @@ function tick() {
   const mc = $('mirror-countdown');
   if (mc && s && s.current && s.current.seconds_until_buzzer != null) {
     const snap = (s.countdown || '');
-    if (snap && !snap.includes(':')) {
+    if (snap && !String(snap).includes('\u02F8')) {
       // pre-game countdown: plain number, decrement live
       const left = parseInt(snap, 10) - Math.floor((performance.now() - state.statusAt) / 1000);
-      mc.textContent = left > 0 ? String(left) : snap;
+      if (left > 0) { mc.textContent = String(left); return; }
+      const nleft = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
+      mc.textContent = countdownText(nleft);
     } else {
       const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
       mc.textContent = countdownText(left);
@@ -1153,6 +1157,7 @@ function renderDiagnostics() {
     el('label', {}, 'Mode', mode));
   const hwTime = el('span', {}, '--');
   const ntpTime = el('span', {}, '--');
+  const ntpServer = el('span', {}, '--');
   const syncBtn = el('button', { class: 'btn primary', onclick: async () => {
     const r = await api('/api/ntp_sync', {});
     if (r.ok) {
@@ -1167,6 +1172,7 @@ function renderDiagnostics() {
     if (r.ok) {
       hwTime.textContent = new Date(r.data.hardware_time * 1000).toLocaleString();
       ntpTime.textContent = new Date(r.data.ntp_server_time * 1000).toLocaleString();
+      if (r.data.ntp_server) ntpServer.textContent = r.data.ntp_server;
     }
   }
   loadNtp();
@@ -1174,7 +1180,8 @@ function renderDiagnostics() {
     el('h2', {}, 'NTP Time Sync'),
     el('div', { class: 'grid2' },
       el('div', { class: 'field' }, 'Hardware (ESP32) time', hwTime),
-      el('div', { class: 'field' }, 'NTP server time', ntpTime)),
+      el('div', { class: 'field' }, 'NTP server time', ntpTime),
+      el('div', { class: 'field' }, 'NTP server', ntpServer)),
     el('div', { class: 'row-actions' }, syncBtn));
   root.replaceChildren(section1, section2);
 }
@@ -1203,7 +1210,7 @@ async function checkVersion() {
     if (!res.ok) return;
     const data = await res.json();
     const latest = (data.tag_name || '').replace(/^v/, '');
-    const current = 'v2026.10.186'.replace(/^v/, '');
+    const current = 'v2026.10.187'.replace(/^v/, '');
     if (latest && latest !== current) {
       const dot = document.createElement('span');
       dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-left:6px;vertical-align:middle;cursor:pointer;';

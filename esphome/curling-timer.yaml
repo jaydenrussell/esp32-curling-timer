@@ -41,6 +41,10 @@ esp32:
       CONFIG_VFS_SUPPORT_DIR: y
       CONFIG_FATFS_LFN_HEAP: y
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "60"
+      # Persist crash diagnostics to flash for post-mortem analysis.
+      CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH: y
+      CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF: y
+      CONFIG_ESP_COREDUMP_CHECKSUM_CRC32: y
     advanced:
       execute_from_psram: true
 
@@ -119,14 +123,15 @@ api:
 ota:
   - platform: esphome
 
-# web_server:
-#   port: 80
-#   auth:
-#     # digest avoids sending the password in a reversible form
-#     # (ESPHome deprecates basic auth in 2027.1)
-#     type: digest
-#     username: admin
-#     password: !secret web_password
+web_server:
+  port: 80
+  log: true
+  auth:
+    # digest avoids sending the password in a reversible form
+    # (ESPHome deprecates basic auth in 2027.1)
+    type: digest
+    username: admin
+    password: !secret web_password
 
 time:
   - platform: sntp

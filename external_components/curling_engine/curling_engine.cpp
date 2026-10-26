@@ -19,8 +19,11 @@ void CurlingEngineComponent::ntp_sync() {
   if (time_ != nullptr) {
     auto now = time_->now();
     if (now.is_valid()) {
+      if (ntp_last_sync_ > 0) {
+        // Drift = difference between new sync time and previous, in ms.
+        ntp_drift_ms_ = (int32_t)((now.timestamp - ntp_last_sync_) * 1000LL);
+      }
       ntp_last_sync_ = now.timestamp;
-      ntp_drift_ms_ = 0;
       ntp_ok_ = true;
       return;
     }
