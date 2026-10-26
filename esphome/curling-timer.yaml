@@ -337,13 +337,13 @@ lvgl:
         recolor: true
         text: ""
      - label:
-         id: lbl_time
-         align: BOTTOM_RIGHT
-         x: -10
-         y: -4
-         text_font: font_footer
-         recolor: true
-         text: ""
+    id: lbl_time
+    align: BOTTOM_RIGHT
+    x: -10
+    y: -4
+    text_font: font_footer
+    recolor: true
+    text: ""
      - obj:
          id: test_overlay
          align: CENTER
@@ -506,13 +506,13 @@ interval:
             return ::esphome::curling_engine::recolor(
                 s.footer_color, s.date_text);
       - lvgl.label.update:
-          id: lbl_time
-          text: !lambda |-
-            std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string("#00ffff CYAN#");
-            auto &s = id(g_snap);
-            if (!s.show_date_time)
-              return std::string();
+    id: lbl_time
+    text: !lambda |-
+    std::string mode = id(engine)->get_display_test_mode();
+    if (mode != "normal") return std::string("#00ffff CYAN#");
+    auto &s = id(g_snap);
+    if (!s.show_date_time)
+    return std::string();
             return ::esphome::curling_engine::recolor(
                 s.footer_color, s.time_text);
              - lvgl.widget.update:
