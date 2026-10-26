@@ -250,9 +250,11 @@ $('logout').addEventListener('click', async () => { await api('/api/logout', {})
 
 // ---- tabs -----------------------------------------------------------------
 function renderTabs() {
+  const wide = window.innerWidth >= 768;
   $('tabs').replaceChildren(...TABS.map(([id, icon, title]) =>
-    el('button', { class: id === state.tab ? 'active' : '', title, onclick: () => selectTab(id) }, icon)));
+    el('button', { class: id === state.tab ? 'active' : '', title, onclick: () => selectTab(id) }, wide ? `${icon} ${title}` : icon)));
 }
+window.addEventListener('resize', renderTabs);
 async function selectTab(id) {
   state.tab = id;
   renderTabs();
