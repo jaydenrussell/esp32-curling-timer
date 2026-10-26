@@ -13,7 +13,6 @@
 // HTTP handler or the ESPHome config fails the build instead of shipping.
 #include "doctest.h"
 
-#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -48,12 +47,11 @@ std::vector<std::string> dropdown_modes(const std::string &html) {
   const std::string anchor = "api('/api/display_test_mode'";
   const size_t at = html.find(anchor);
   REQUIRE(at != std::string::npos);
-  // The options follow the onchange handler; stop at the next card.
   const size_t stop = html.find("const section1", at);
   REQUIRE(stop != std::string::npos);
-  std::vector<std::string> out;
   const std::string chunk = html.substr(at, stop - at);
   const std::string opt = "el('option', { value: '";
+  std::vector<std::string> out;
   size_t pos = 0;
   while ((pos = chunk.find(opt, pos)) != std::string::npos) {
     pos += opt.size();
@@ -84,16 +82,40 @@ std::vector<std::string> server_modes(const std::string &api) {
   return out;
 }
 
-// True when `needle` appears inside the block that starts at `start`.
-bool contains_between(const std::string &hay, size_t start, const std::string &needle) {
-  const size_t at = hay.find(needle, start);
-  if (at == std::string::npos)
-    return false;
-  const size_t stop = hay.find("\n    - ", at);
-  return stop == std::string::npos || at < stop;
+// One entry per LVGL widget in the lvgl: widgets list.
+std::vector<std::string> widget_blocks(const std::string &yaml) {
+  std::vector<std::string> out;
+  size_t pos = yaml.find("\n  widgets:\n");
+  REQUIRE(pos != std::string::npos);
+  pos += 12;
+  const size_t stop = yaml.find("\ninterval:", pos);
+  REQUIRE(stop != std::string::npos);
+  const std::string chunk = yaml.substr(pos, stop - pos);
+  size_t cur = 0;
+  while (true) {
+    const size_t next = chunk.find("\n    - ", cur + 1);
+    if (next == std::string::npos) {
+      out.push_back(chunk.substr(cur));
+      break;
+    }
+    out.push_back(chunk.substr(cur, next - cur));
+    cur = next + 1;
+  }
+  return out;
 }
 
-// Every "      - lvgl.widget.update:" block in the interval.
+// The id of a widget block, or "" when it has none.
+std::string block_id(const std::string &block) {
+  const std::string prefix = "\n        id: ";
+  const size_t at = block.find(prefix);
+  if (at == std::string::npos)
+    return {};
+  const size_t start = at + prefix.size();
+  const size_t end = block.find('\n', start);
+  return block.substr(start, end - start);
+}
+
+// One entry per "      - lvgl.widget.update:" action in the interval.
 std::vector<std::string> update_blocks(const std::string &yaml) {
   std::vector<std::string> out;
   const std::string anchor = "      - lvgl.widget.update:";
@@ -104,6 +126,32 @@ std::vector<std::string> update_blocks(const std::string &yaml) {
     pos = stop == std::string::npos ? yaml.size() : stop;
   }
   return out;
+}
+
+// The widget ids listed by an update action.
+std::vector<std::string> update_ids(const std::string &block) {
+  const std::string id_at = "\n          id:\n";
+  const std::string item = "            - ";
+  const size_t at = block.find(id_at);
+  if (at == std::string::npos)
+    return {};
+  std::vector<std::string> out;
+  size_t pos = at + id_at.size();
+  while (pos < block.size() && block.compare(pos, item.size(), item) == 0) {
+    const size_t end = block.find('\n', pos);
+    if (end == std::string::npos)
+      break;
+    out.push_back(block.substr(pos + item.size(), end - pos - item.size()));
+    pos = end + 1;
+  }
+  return out;
+}
+
+bool contains(const std::vector<std::string> &hay, const std::string &needle) {
+  for (const std::string &h : hay)
+    if (h == needle)
+      return true;
+  return false;
 }
 
 }  // namespace
@@ -141,63 +189,106 @@ TEST_CASE("display test mode: the server accepts every mode the dropdown offers"
 
   for (const std::string &mode : options) {
     INFO("dropdown mode " << mode);
-    bool found = false;
-    for (const std::string &v : valid)
-      if (v == mode)
-        found = true;
-    CHECK(found);
+    CHECK(contains(valid, mode));
   }
 }
 
-TEST_CASE("display test mode: every non-normal mode has a hidden pattern group") {
-  const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
+TEST_CASE("display test mode: every pattern widget is hidden at creation") {
   const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
-  REQUIRE(!html.empty());
   REQUIRE(!yaml.empty());
 
-  const std::vector<std::string> options = dropdown_modes(html);
-  REQUIRE(!options.empty());
+  size_t found = 0;
+  for (const std::string &block : widget_blocks(yaml)) {
+    const std::string id = block_id(block);
+    if (id.rfind("tp_", 0) != 0)
+      continue;
+    found++;
+    INFO("pattern widget " << id);
+    // Nothing may be visible at boot: every pattern widget starts hidden and
+    // is only revealed by the matching mode.
+    CHECK(block.find("hidden: true") != std::string::npos);
+  }
+  CHECK(found > 0);
+}
 
+TEST_CASE("display test mode: every pattern widget is toggled exactly once") {
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+  const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
+  REQUIRE(!yaml.empty());
+  REQUIRE(!html.empty());
+
+  std::vector<std::string> patterns;
+  for (const std::string &block : widget_blocks(yaml)) {
+    const std::string id = block_id(block);
+    if (id.rfind("tp_", 0) == 0)
+      patterns.push_back(id);
+  }
+  REQUIRE(!patterns.empty());
+
+  const std::vector<std::string> updates = update_blocks(yaml);
+  REQUIRE(!updates.empty());
+
+  for (const std::string &id : patterns) {
+    INFO("pattern widget " << id);
+    size_t hits = 0;
+    for (const std::string &u : updates)
+      if (contains(update_ids(u), id))
+        hits++;
+    CHECK(hits == 1);
+  }
+}
+
+TEST_CASE("display test mode: the normal output is blanked while a pattern is up") {
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+  REQUIRE(!yaml.empty());
+
+  // Every normal label must render nothing when a test pattern is selected,
+  // so the pattern is the only thing on screen.
+  const std::vector<std::string> labels = {"lbl_header", "lbl_cnt4", "lbl_cnt5", "lbl_pace",
+                                           "lbl_status", "lbl_game", "lbl_date", "lbl_time"};
+  const std::string guard = "if (mode != \"normal\") return std::string();";
+  for (const std::string &label : labels) {
+    INFO("label " << label);
+    const size_t at = yaml.find("id: " + label);
+    REQUIRE(at != std::string::npos);
+    const size_t stop = yaml.find("hidden: true", at);
+    const size_t limit = stop == std::string::npos ? yaml.size() : stop;
+    const size_t guard_at = yaml.find(guard, at);
+    REQUIRE(guard_at != std::string::npos);
+    CHECK(guard_at < limit);
+  }
+}
+
+TEST_CASE("display test mode: each pattern group keys off a real dropdown mode") {  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+  const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
+  REQUIRE(!yaml.empty());
+  REQUIRE(!html.empty());
+
+  const std::vector<std::string> options = dropdown_modes(html);
+  const std::vector<std::string> updates = update_blocks(yaml);
+  REQUIRE(!options.empty());
+  REQUIRE(!updates.empty());
+
+  // Every non-normal mode in the dropdown must be named by some toggle, so
+  // picking it can never be a no-op.
   for (const std::string &mode : options) {
     if (mode == "normal")
       continue;
     INFO("mode " << mode);
-
-    // smpte and colorbars share one group of bars.
-    const std::string group = mode == "colorbars" ? "test_smpte" : "test_" + mode;
-
-    const size_t cid = yaml.find("id: " + group);
-    REQUIRE(cid != std::string::npos);
-
-    // The group must start hidden so nothing shows at boot.
-    const size_t block_end = yaml.find("\n    - ", cid + 1);
-    REQUIRE(block_end != std::string::npos);
-    CHECK(yaml.substr(cid, block_end - cid).find("hidden: true") != std::string::npos);
-
-    // Exactly one interval toggle must drive that group, and it must key off
-    // the selected mode.
-    const std::vector<std::string> updates = update_blocks(yaml);
-    std::vector<std::string> mine;
-    for (const std::string &u : updates)
-      if (u.find("id: " + group) != std::string::npos)
-        mine.push_back(u);
-    REQUIRE(mine.size() == 1);
-    CHECK(mine[0].find("get_display_test_mode()") != std::string::npos);
-    CHECK(mine[0].find("\"" + mode + "\"") != std::string::npos);
+    bool found = false;
+    for (const std::string &u : updates) {
+      if (u.find("get_display_test_mode()") == std::string::npos)
+        continue;
+      if (u.find("\"" + mode + "\"") != std::string::npos)
+        found = true;
+    }
+    CHECK(found);
   }
-}
 
-TEST_CASE("display test mode: normal hides every pattern group") {
-  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
-  REQUIRE(!yaml.empty());
-
-  // Every group toggle must be driven by the mode, so "normal" leaves them
-  // hidden (the lambda only unhides on a matching non-normal mode).
-  const std::vector<std::string> groups = {"test_smpte", "test_pluge", "test_grayscale", "test_geometry"};
-  for (const std::string &group : groups) {
-    INFO("group " << group);
-    const size_t upd = yaml.find("id: " + group);
-    REQUIRE(upd != std::string::npos);
-    CHECK(contains_between(yaml, upd, "get_display_test_mode()"));
+  // "normal" must never unhide a pattern: no toggle may name it.
+  for (const std::string &u : updates) {
+    if (u.find("get_display_test_mode()") == std::string::npos)
+      continue;
+    CHECK(u.find("\"normal\"") == std::string::npos);
   }
 }
