@@ -901,13 +901,9 @@ ApiResponse PiTimerApi::get_leagues() {
 
 ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
   JsonVariantConst v = data["leagues"];
-  if (!v.is<JsonArrayConst>() && !data.is<JsonArrayConst>())
-    ; // accept either wrapped or bare? expect wrapped
   JsonArrayConst arr;
   if (v.is<JsonArrayConst>())
     arr = v.as<JsonArrayConst>();
-  else if (data.as<JsonVariantConst>().is<JsonArrayConst>())
-    arr = data.as<JsonVariantConst>().as<JsonArrayConst>();
   else
     return error_json(400, "'leagues' is required");
 
