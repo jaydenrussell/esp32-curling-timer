@@ -387,6 +387,24 @@ lvgl:
         bg_color: 0x0000ff
         hidden: true
     - obj:
+        width: 427
+        height: 720
+        x: 0
+        bg_color: 0x000000
+        hidden: true
+    - obj:
+        width: 427
+        height: 720
+        x: 427
+        bg_color: 0x040404
+        hidden: true
+    - obj:
+        width: 426
+        height: 720
+        x: 854
+        bg_color: 0x080808
+        hidden: true
+    - obj:
         width: 1260
         height: 700
         border_width: 2
