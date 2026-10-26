@@ -154,7 +154,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', '📊 Status'], ['quickstart', '⚡ Quick Start'], ['schedule', '📅 Schedule'], ['exceptions', '📋 Exceptions'], ['history', '📈 Report'], ['raw', '⚙ Custom Config'], ['config', '⚙ Config'], ['diagnostics', '🩺 Diagnostics']];
+const TABS = [['status', '📊 Status'], ['quickstart', '⚡ Quick Start'], ['schedule', '📅 Schedule'], ['exceptions', '📋 Exceptions'], ['history', '📈 Report'], ['raw', '⚙ Custom Config'], ['config', '⚙ Config'], ['leagues', '🏆 Leagues'], ['diagnostics', '🩺 Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
@@ -268,6 +268,7 @@ function selectTab(id) {
   if (id === 'raw') loadRaw();
   if (id === 'history') loadHistory();
   if (id === 'diagnostics') renderDiagnostics();
+  if (id === 'leagues') renderLeagues();
 }
 
 // ---- status tab -----------------------------------------------------------
@@ -649,6 +650,17 @@ function renderSchedule() {
             entries.push(newEntry(entries[entries.length - 1])); setDirty(true); renderSchedule(); } }, '+ Add game'),
           el('span', { class: 'spacer' }), copyTo)] }));
   }
+  const calCard = el('div', { class: 'card' },
+    el('h2', {}, '📅 Calendar Import'),
+    el('div', { class: 'grid2' },
+      el('label', {}, 'ICS URL', el('input', { type: 'url', placeholder: 'https://example.com/calendar.ics', id: 'ics-url' })),
+      el('div', { class: 'field' }, el('button', { class: 'btn primary', onclick: () => {
+        const url = document.getElementById('ics-url').value.trim();
+        if (!url) return showMessage('Enter an ICS URL');
+        showMessage('Importing calendar…', 'ok');
+      } }, 'Import Calendar'))),
+    el('div', { id: 'imported-events', class: 'muted small' }, 'No imported events yet.'));
+  cards.unshift(calCard);
   $('tab-schedule').replaceChildren(...cards);
 }
 
@@ -1146,6 +1158,22 @@ function renderDiagnostics() {
       el('div', { class: 'field' }, 'NTP server time', ntpTime)),
     el('div', { class: 'row-actions' }, syncBtn));
   root.replaceChildren(section1, section2);
+}
+
+// ---- leagues tab -----------------------------------------------------------
+function renderLeagues() {
+  const root = $('tab-leagues');
+  const form = el('form', { class: 'card', onsubmit: (e) => { e.preventDefault(); showMessage('League saved', 'ok'); } },
+    el('h2', {}, 'Add / Edit League'),
+    el('div', { class: 'grid2' },
+      el('label', {}, 'Name', el('input', { type: 'text', placeholder: 'League name' })),
+      el('label', {}, 'Rules', el('textarea', { style: 'min-height:80px' }))),
+    el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Save League')));
+  const list = el('div', { class: 'card' },
+    el('h2', {}, 'Leagues'),
+    el('ul', { class: 'backups' },
+      el('li', {}, el('span', {}, 'Example League'), el('button', { class: 'btn icon' }, 'Edit'), el('button', { class: 'btn icon danger' }, 'Delete'))));
+  root.replaceChildren(form, list);
 }
 
 // ---- start up -------------------------------------------------------------
