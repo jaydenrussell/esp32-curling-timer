@@ -346,6 +346,7 @@ lvgl:
         text: ""
     - obj:
         id: test_overlay
+        hidden: true
         
         align: CENTER
         width: 1280
@@ -627,6 +628,10 @@ interval:
               return std::string();
             return ::esphome::curling_engine::recolor(
                 s.footer_color, s.time_text);
+      - lvgl.widget.update:
+          id: test_overlay
+          hidden: !lambda |-
+            return id(engine)->get_display_test_mode() == "normal";
       # Bell: engine bell_tick — for the live game, pulse the configured
       # relays at game start, at the countdown warning, and at the buzzer
       # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->
