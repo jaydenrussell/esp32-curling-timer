@@ -91,7 +91,7 @@ class CurlingEngineComponent : public Component {
   std::string display_test_mode_{"normal"};
    std::vector<std::string> log_ring_;
    static constexpr size_t LOG_RING_MAX = 200;
-
+};
 
 }  // namespace curling_engine
 }  // namespace esphome
