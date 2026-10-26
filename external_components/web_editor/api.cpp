@@ -674,6 +674,20 @@ ApiResponse PiTimerApi::ntp_sync() {
   return from_document(doc);
 }
 
+ApiResponse PiTimerApi::ntp() {
+  JsonDocument doc;
+  if (engine_ != nullptr) {
+    doc["status"] = engine_->ntp_status();
+    doc["drift_ms"] = engine_->ntp_drift_ms();
+    doc["last_sync"] = (long long) engine_->ntp_last_sync();
+  } else {
+    doc["status"] = "ERROR";
+    doc["drift_ms"] = 0;
+    doc["last_sync"] = 0;
+  }
+  return from_document(doc);
+}
+
 // -- config (new, no python parity) -------------------------------------------
 
 ApiResponse PiTimerApi::get_config() {
@@ -1006,6 +1020,8 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
 
      if (p == "/api/ntp_status")
        return ntp_status();
+     if (p == "/api/ntp")
+       return ntp();
     if (p.rfind("/api/backups/", 0) == 0)
       return get_backup(unquote_path(p.substr(13)));
     return error_json(404, "not found");

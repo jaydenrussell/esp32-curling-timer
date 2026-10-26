@@ -81,6 +81,7 @@ class PiTimerApi {
   ApiResponse display_test_mode(JsonObjectConst data);
   ApiResponse ntp_status();
   ApiResponse ntp_sync();
+  ApiResponse ntp();
    ApiResponse get_config();
    ApiResponse post_config(JsonObjectConst data);
    ApiResponse get_leagues();

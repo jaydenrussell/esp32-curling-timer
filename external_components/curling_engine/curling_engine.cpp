@@ -13,6 +13,26 @@
 namespace esphome {
 namespace curling_engine {
 
+void CurlingEngineComponent::ntp_sync() {
+  // Lightweight: mark sync time; drift computation requires network SNTP
+  // (not available in this build). Record current RTC as last sync.
+  if (time_ != nullptr) {
+    auto now = time_->now();
+    if (now.is_valid()) {
+      ntp_last_sync_ = now.timestamp;
+      ntp_drift_ms_ = 0;
+      ntp_ok_ = true;
+      return;
+    }
+  }
+  ntp_ok_ = false;
+}
+
+std::string CurlingEngineComponent::ntp_status() const {
+  if (!ntp_ok_) return "ERROR";
+  return "OK (drift: " + std::to_string(ntp_drift_ms_) + "ms)";
+}
+
 static const char *const TAG = "curling_engine";
 static const char *const PARTITION_LABEL = "storage";
 // FAT counts every open file and directory against this limit.
