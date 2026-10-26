@@ -1161,8 +1161,17 @@ function renderDiagnostics() {
       el('div', { class: 'field' }, 'Hardware (ESP32) time', hwTime),
       el('div', { class: 'field' }, 'NTP server time', ntpTime)),
     el('div', { class: 'row-actions' }, syncBtn));
-  root.replaceChildren(section1, section2);
-}
+  const logsArea = el('textarea', { style: 'min-height:200px;width:100%', readonly: true });
+  async function loadLogs() { const r = await api('/api/logs'); if (r.ok) logsArea.value = (r.data || []).join('\\n'); }
+  const refreshBtn = el('button', { class: 'btn', onclick: loadLogs }, 'Auto-refresh');
+  const clearBtn = el('button', { class: 'btn', onclick: () => { logsArea.value = ''; } }, 'Clear');
+  const section3 = el('div', { class: 'card' },
+    el('h2', {}, 'Logs'),
+    logsArea,
+    el('div', { class: 'row-actions' }, refreshBtn, clearBtn));
+  loadLogs();
+  root.replaceChildren(section1, section2, section3);
+
 
 // ---- leagues tab -----------------------------------------------------------
 function renderLeagues() {
