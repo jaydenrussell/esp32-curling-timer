@@ -344,6 +344,58 @@ lvgl:
         text_font: font_footer
         recolor: true
         text: ""
+    - obj:
+        width: 183
+        height: 720
+        x: 0
+        bg_color: 0xffffff
+        hidden: true
+    - obj:
+        width: 183
+        height: 720
+        x: 183
+        bg_color: 0xffff00
+        hidden: true
+    - obj:
+        width: 183
+        height: 720
+        x: 366
+        bg_color: 0x00ffff
+        hidden: true
+    - obj:
+        width: 183
+        height: 720
+        x: 549
+        bg_color: 0x00ff00
+        hidden: true
+    - obj:
+        width: 183
+        height: 720
+        x: 732
+        bg_color: 0xff00ff
+        hidden: true
+    - obj:
+        width: 183
+        height: 720
+        x: 915
+        bg_color: 0xff0000
+        hidden: true
+    - obj:
+        width: 183
+        height: 720
+        x: 1098
+        bg_color: 0x0000ff
+        hidden: true
+    - obj:
+        width: 1260
+        height: 700
+        border_width: 2
+        border_color: 0x808080
+        bg_opa: 0
+        hidden: true
+    - label:
+        text: "1280x720"
+        hidden: true
 
 # Non-blocking relay pulse used by the bell tick below (engine runs in
 # the same 1 Hz display interval; scripts keep the delay off that path).
