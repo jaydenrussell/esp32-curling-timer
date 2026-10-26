@@ -248,6 +248,7 @@ ApiResponse PiTimerApi::status() {
   doc["version"] = live.version;
   doc["valid"] = live.valid;
   doc["error"] = live.error;
+  doc["display_test_mode"] = engine_ != nullptr ? engine_->get_display_test_mode() : std::string("normal");
   int weekday = -1, sec = -1;
   std::string date_iso;
   const bool clock_ok = now_ok(&weekday, &sec, &date_iso);

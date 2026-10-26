@@ -1128,8 +1128,14 @@ async function loadHistory() {
 function renderDiagnostics() {
   const root = $('tab-diagnostics');
   const mode = el('select', { onchange: async () => {
-    await api('/api/display_test_mode', { method: 'POST', body: JSON.stringify({ mode: mode.value }) });
-    showMessage('Display test mode changed', 'ok');
+    const r = await api('/api/display_test_mode', { mode: mode.value });
+    if (r.ok) {
+      showMessage('Display test mode: ' + mode.value, 'ok');
+      if (state.status) state.status.display_test_mode = mode.value;
+    } else {
+      showMessage('Display test mode failed: ' + ((r.data && r.data.error) || r.status), 'bad');
+      mode.value = (state.status && state.status.display_test_mode) || 'normal';
+    }
   } },
     el('option', { value: 'normal' }, 'normal'),
     el('option', { value: 'smpte' }, 'smpte'),
@@ -1137,16 +1143,21 @@ function renderDiagnostics() {
     el('option', { value: 'grayscale' }, 'grayscale'),
     el('option', { value: 'geometry' }, 'geometry'),
     el('option', { value: 'colorbars' }, 'colorbars'));
+  mode.value = (state.status && state.status.display_test_mode) || 'normal';
   const section1 = el('div', { class: 'card' },
     el('h2', {}, 'Display Test Mode'),
-    el('p', { class: 'muted small' }, 'Toggle the display between normal output and full-screen colour bars for testing.'),
+    el('p', { class: 'muted small' }, 'Pick a test pattern to take over the display. Choose "normal" to resume normal operation.'),
     el('label', {}, 'Mode', mode));
   const hwTime = el('span', {}, '--');
   const ntpTime = el('span', {}, '--');
   const syncBtn = el('button', { class: 'btn primary', onclick: async () => {
-    await api('/api/ntp_sync', { method: 'POST', body: JSON.stringify({}) });
-    await loadNtp();
-    showMessage('NTP sync requested', 'ok');
+    const r = await api('/api/ntp_sync', {});
+    if (r.ok) {
+      await loadNtp();
+      showMessage('NTP sync requested', 'ok');
+    } else {
+      showMessage('NTP sync failed: ' + ((r.data && r.data.error) || r.status), 'bad');
+    }
   } }, 'Sync Now');
   async function loadNtp() {
     const r = await api('/api/ntp_status');
