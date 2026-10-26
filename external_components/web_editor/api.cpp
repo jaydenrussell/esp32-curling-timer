@@ -879,6 +879,72 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
   return from_document(doc);
 }
 
+ApiResponse PiTimerApi::get_leagues() {
+  ParsedLive live;
+  ApiResponse bad;
+  if (!valid_settings(&live, &bad))
+    return bad;
+  JsonDocument doc;
+  JsonArray arr = doc.to<JsonArray>();
+  for (const auto &lp : live.settings.leagues) {
+    JsonObject o = arr.add<JsonObject>();
+    o["name"] = lp.name;
+    o["game_duration_minutes"] = lp.game_duration_minutes;
+    o["pregame_countdown_seconds"] = lp.pregame_countdown_seconds;
+    o["header_text"] = lp.header_text;
+    o["pace_enabled"] = lp.pace_enabled;
+    o["pace_minutes_per_end"] = lp.pace_minutes_per_end;
+    o["countdown_minutes_before"] = lp.countdown_minutes_before;
+  }
+  return from_document(doc);
+}
+
+ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
+  JsonVariantConst v = data["leagues"];
+  if (!v.is<JsonArrayConst>() && !data.is<JsonArrayConst>())
+    ; // accept either wrapped or bare? expect wrapped
+  JsonArrayConst arr;
+  if (v.is<JsonArrayConst>())
+    arr = v.as<JsonArrayConst>();
+  else if (data.as<JsonVariantConst>().is<JsonArrayConst>())
+    arr = data.as<JsonVariantConst>().as<JsonArrayConst>();
+  else
+    return error_json(400, "'leagues' is required");
+
+  // build yaml
+  std::string yaml = "\nleagues:\n";
+  for (JsonVariantConst item : arr) {
+    if (!item.is<JsonObjectConst>())
+      return error_json(400, "league must be an object");
+    const char *name = item["name"].as<const char *>();
+    yaml += "  - name: " + std::string(name ? name : "") + "\n";
+    yaml += "    game_duration_minutes: " + std::to_string(item["game_duration_minutes"].as<int>()) + "\n";
+    yaml += "    pregame_countdown_seconds: " + std::to_string(item["pregame_countdown_seconds"].as<int>()) + "\n";
+    const char *ht = item["header_text"].as<const char *>();
+    yaml += "    header_text: " + std::string(ht ? ht : "") + "\n";
+    yaml += "    pace_enabled: " + std::string(item["pace_enabled"].as<bool>() ? "true" : "false") + "\n";
+    yaml += "    pace_minutes_per_end: " + std::to_string(item["pace_minutes_per_end"].as<int>()) + "\n";
+    yaml += "    countdown_minutes_before: " + std::to_string(item["countdown_minutes_before"].as<int>()) + "\n";
+  }
+
+  SettingsStore *store = engine_->get_store();
+  std::string text, version, err;
+  if (store == nullptr || store->read(&text, &version, &err) != StoreStatus::OK)
+    return error_json(500, first_line(err));
+  size_t pos = text.find("\nleagues:");
+  if (pos != std::string::npos)
+    text.erase(pos);
+  text += yaml;
+  std::string new_version;
+  const StoreStatus status = store->save(text, &version, &new_version, &err);
+  if (status != StoreStatus::OK)
+    return store_error(status, err);
+  JsonDocument doc;
+  doc["ok"] = true;
+  doc["version"] = new_version;
+  return from_document(doc);
+}
+
 // -- auth ---------------------------------------------------------------------
 
 ApiResponse PiTimerApi::login(const ApiRequest &req, JsonObjectConst data) {
@@ -937,8 +1003,11 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
       return get_raw();
     if (p == "/api/backups")
       return get_backups();
-     if (p == "/api/config")
-       return get_config();
+      if (p == "/api/config")
+        return get_config();
+      if (p == "/api/leagues")
+        return get_leagues();
+
      if (p == "/api/ntp_status")
        return ntp_status();
     if (p.rfind("/api/backups/", 0) == 0)
@@ -981,8 +1050,11 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
      return display_test_mode(data);
    if (p == "/api/ntp_sync")
      return ntp_sync();
-   if (p == "/api/config")
-     return post_config(data);
+    if (p == "/api/config")
+      return post_config(data);
+    if (p == "/api/leagues")
+      return post_leagues(data);
+
   return error_json(404, "not found");
 }
 
