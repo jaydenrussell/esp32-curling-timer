@@ -129,14 +129,14 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.10.206</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.10.208</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">v2026.10.206</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
+<header><h1>🎯 Countdown Timer <span class="version">v2026.10.208</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
 <nav id="tabs"></nav>
 <main>
   <section id="tab-status"></section>
@@ -1170,6 +1170,7 @@ async function renderDiagnostics() {
   const hwTime = el('span', {}, '--');
   const ntpTime = el('span', {}, '--');
   const ntpServer = el('span', {}, '--');
+  const ntpDrift = el('span', {}, '--');
   const syncBtn = el('button', { class: 'btn primary', onclick: async () => {
     const r = await api('/api/ntp_sync', {});
     if (r.ok) {
@@ -1185,6 +1186,7 @@ async function renderDiagnostics() {
       hwTime.textContent = new Date(r.data.hardware_time * 1000).toLocaleString();
       ntpTime.textContent = new Date(r.data.ntp_server_time * 1000).toLocaleString();
       if (r.data.ntp_server) ntpServer.textContent = r.data.ntp_server;
+      if (r.data.drift_ms != null) ntpDrift.textContent = r.data.drift_ms + ' ms';
     }
   }
   loadNtp();
@@ -1193,7 +1195,8 @@ async function renderDiagnostics() {
     el('div', { class: 'grid2' },
       el('div', { class: 'field' }, 'Hardware (ESP32) time', hwTime),
       el('div', { class: 'field' }, 'NTP server time', ntpTime),
-      el('div', { class: 'field' }, 'NTP server', ntpServer)),
+      el('div', { class: 'field' }, 'NTP server', ntpServer),
+      el('div', { class: 'field' }, 'Drift', ntpDrift)),
     el('div', { class: 'row-actions' }, syncBtn));
   const cfgRes = await api('/api/config');
   const savedLevel = (cfgRes.ok && cfgRes.data && cfgRes.data.config && cfgRes.data.config['config.log_level'] != null) ? cfgRes.data.config['config.log_level'] : 3;
@@ -1298,7 +1301,7 @@ async function checkVersion() {
     if (!res.ok) return;
     const data = await res.json();
     const latest = (data.tag_name || '').replace(/^v/, '');
-    const current = 'v2026.10.206'.replace(/^v/, '');
+    const current = 'v2026.10.208'.replace(/^v/, '');
     if (latest && latest !== current) {
       const dot = document.createElement('span');
       dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-left:6px;vertical-align:middle;cursor:pointer;';

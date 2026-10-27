@@ -1167,6 +1167,7 @@ async function renderDiagnostics() {
   const hwTime = el('span', {}, '--');
   const ntpTime = el('span', {}, '--');
   const ntpServer = el('span', {}, '--');
+  const ntpDrift = el('span', {}, '--');
   const syncBtn = el('button', { class: 'btn primary', onclick: async () => {
     const r = await api('/api/ntp_sync', {});
     if (r.ok) {
@@ -1182,6 +1183,7 @@ async function renderDiagnostics() {
       hwTime.textContent = new Date(r.data.hardware_time * 1000).toLocaleString();
       ntpTime.textContent = new Date(r.data.ntp_server_time * 1000).toLocaleString();
       if (r.data.ntp_server) ntpServer.textContent = r.data.ntp_server;
+      if (r.data.drift_ms != null) ntpDrift.textContent = r.data.drift_ms + ' ms';
     }
   }
   loadNtp();
@@ -1190,7 +1192,8 @@ async function renderDiagnostics() {
     el('div', { class: 'grid2' },
       el('div', { class: 'field' }, 'Hardware (ESP32) time', hwTime),
       el('div', { class: 'field' }, 'NTP server time', ntpTime),
-      el('div', { class: 'field' }, 'NTP server', ntpServer)),
+      el('div', { class: 'field' }, 'NTP server', ntpServer),
+      el('div', { class: 'field' }, 'Drift', ntpDrift)),
     el('div', { class: 'row-actions' }, syncBtn));
   const cfgRes = await api('/api/config');
   const savedLevel = (cfgRes.ok && cfgRes.data && cfgRes.data.config && cfgRes.data.config['config.log_level'] != null) ? cfgRes.data.config['config.log_level'] : 3;
