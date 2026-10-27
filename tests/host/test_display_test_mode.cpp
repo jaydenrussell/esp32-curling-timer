@@ -86,14 +86,17 @@ std::vector<std::string> server_modes(const std::string &api) {
 std::vector<std::string> widget_blocks(const std::string &yaml) {
   std::vector<std::string> out;
   size_t pos = yaml.find("\n  widgets:");
+  if (pos == std::string::npos) pos = yaml.find("\r\n  widgets:");
   REQUIRE(pos != std::string::npos);
   pos = yaml.find("\n", pos + 1) + 1;
-  const size_t stop = yaml.find("\ninterval:", pos);
+  size_t stop = yaml.find("\ninterval:", pos);
+  if (stop == std::string::npos) stop = yaml.find("\r\ninterval:", pos);
   REQUIRE(stop != std::string::npos);
   const std::string chunk = yaml.substr(pos, stop - pos);
   size_t cur = 0;
   while (true) {
-    const size_t next = chunk.find("\n    - ", cur + 1);
+    size_t next = chunk.find("\n    - ", cur + 1);
+    if (next == std::string::npos) next = chunk.find("\r\n    - ", cur + 1);
     if (next == std::string::npos) {
       out.push_back(chunk.substr(cur));
       break;
@@ -106,13 +109,15 @@ std::vector<std::string> widget_blocks(const std::string &yaml) {
 
 // The id of a widget block, or "" when it has none.
 std::string block_id(const std::string &block) {
-  const std::string prefix = "\r\n        id: ";
-  const size_t at = block.find(prefix);
+  size_t at = block.find("\n        id: ");
+  if (at == std::string::npos)
+    at = block.find("\r\n        id: ");
   if (at == std::string::npos)
     return {};
-  const size_t start = at + prefix.size();
+  const size_t prefix_len = (at + 1 < block.size() && block[at + 1] == '\r') ? 14 : 13;
+  const size_t start = at + prefix_len;
   const size_t end = block.find('\n', start);
-  std::string r = block.substr(start, end - start);
+  std::string r = block.substr(start, (end == std::string::npos ? block.size() : end) - start);
   if (!r.empty() && r.back() == '\r') r.pop_back();
   return r;
 }
@@ -123,7 +128,8 @@ std::vector<std::string> update_blocks(const std::string &yaml) {
   const std::string anchor = "      - lvgl.widget.update:";
   size_t pos = 0;
   while ((pos = yaml.find(anchor, pos)) != std::string::npos) {
-    const size_t stop = yaml.find("\r\n      - ", pos + 1);
+    size_t stop = yaml.find("\n      - ", pos + 1);
+    if (stop == std::string::npos) stop = yaml.find("\r\n      - ", pos + 1);
     out.push_back(yaml.substr(pos, stop == std::string::npos ? std::string::npos : stop - pos));
     pos = stop == std::string::npos ? yaml.size() : stop;
   }
@@ -132,13 +138,16 @@ std::vector<std::string> update_blocks(const std::string &yaml) {
 
 // The widget ids listed by an update action.
 std::vector<std::string> update_ids(const std::string &block) {
-  const std::string id_at = "\r\n          id:\r\n";
-  const std::string item = "            - ";
-  const size_t at = block.find(id_at);
+  size_t at = block.find("\n          id:\n");
+  if (at == std::string::npos) at = block.find("\r\n          id:\r\n");
+  if (at == std::string::npos) at = block.find("\n          id:\r\n");
+  if (at == std::string::npos) at = block.find("\r\n          id:\n");
   if (at == std::string::npos)
     return {};
+  const size_t id_at_len = (at + 1 < block.size() && block[at + 1] == '\r') ? 16 : 15;
+  const std::string item = "            - ";
   std::vector<std::string> out;
-  size_t pos = at + id_at.size();
+  size_t pos = at + id_at_len;
   while (pos < block.size() && block.compare(pos, item.size(), item) == 0) {
     const size_t end = block.find('\n', pos);
     if (end == std::string::npos)
