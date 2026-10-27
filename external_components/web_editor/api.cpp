@@ -845,8 +845,9 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.buzzer.start_duration" ||
                path == "config.buzzer.countdown_duration" ||
                path == "config.buzzer.end_duration" ||
-               path == "config.relay_count" ||
-               path == "config.pregame_countdown" ||
+                path == "config.relay_count" ||
+                path == "config.log_level" ||
+                path == "config.pregame_countdown" ||
                path == "config.pregame_font_size" ||
                path == "config.footer.date_font_size" ||
                path == "config.footer.time_font_size") {

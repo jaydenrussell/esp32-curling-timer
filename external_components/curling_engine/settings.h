@@ -133,6 +133,7 @@ class PiTimerSettings {
   std::map<std::string, std::vector<PiTimerGame>> schedules;
   std::map<std::string, std::vector<PiTimerGame>> exceptions;
   std::vector<LeagueProfile> leagues;
+  int log_level{3};
   bool valid{false};
 
   // Restore the pre-parse defaults (also called by the constructor so two

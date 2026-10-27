@@ -204,7 +204,8 @@ static size_t insert_child_value(std::vector<std::string> *lines, size_t parent,
 static bool insertable_config_path(const std::string &path) {
   return path == "config.buzzer.ring_at_start" || path == "config.buzzer.countdown.minutes_before" ||
          path == "config.buzzer.countdown.relays" ||
-         path == "config.relays_enabled" || path == "config.relay_count" ||
+          path == "config.relays_enabled" || path == "config.relay_count" ||
+          path == "config.log_level" ||
          path == "config.relay1_function" || path == "config.relay2_function" ||
          path == "config.relay3_function" || path == "config.relay4_function" ||
          path == "config.relay1_enabled" || path == "config.relay2_enabled" ||

@@ -1544,6 +1544,8 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
 
   if ((v = cfg->find("background_color")) != nullptr && v->type == YType::Str) background_color = v->s;
   if ((v = cfg->find("pregame_header_text")) != nullptr && v->type == YType::Str) pregame_header_text = v->s;
+  if ((v = cfg->find("log_level")) != nullptr && v->type == YType::Int) log_level = static_cast<int>(v->i);
+  if ((v = raw.find("log_level")) != nullptr && v->type == YType::Int) log_level = static_cast<int>(v->i);
 
   // buzzer subsection
   const YamlValue *buzzer = require_(cfg, "buzzer", YType::Map, "main config section", err);

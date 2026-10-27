@@ -1195,8 +1195,12 @@ function renderDiagnostics() {
       el('div', { class: 'field' }, 'NTP server time', ntpTime),
       el('div', { class: 'field' }, 'NTP server', ntpServer)),
     el('div', { class: 'row-actions' }, syncBtn));
-  const levelSelect = el('select', { onchange: async () => {
-    const r = await api('/api/log_level', { level: parseInt(levelSelect.value, 10) });
+  const cfgRes = await api('/api/config');
+  const savedLevel = (cfgRes.ok && cfgRes.data && cfgRes.data.config && cfgRes.data.config['config.log_level'] != null) ? cfgRes.data.config['config.log_level'] : 3;
+  const levelSelect = el('select', { value: String(savedLevel), onchange: async () => {
+    const level = parseInt(levelSelect.value, 10);
+    const r = await api('/api/log_level', { level: level });
+    await api('/api/config', { version: state.configVersion, config: { 'config.log_level': level } });
     if (r.ok) showMessage('Log level set', 'ok'); else showMessage('Failed: ' + r.status, 'bad');
   } },
     el('option', { value: '0' }, 'NONE'),

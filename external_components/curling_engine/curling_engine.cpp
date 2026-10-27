@@ -70,20 +70,24 @@ void CurlingEngineComponent::setup() {
   this->ready_ = true;
   this->register_log_callback();
 
-  if (!this->fs_->exists(this->settings_path())) {
-    ESP_LOGI(TAG, "No settings file yet, writing first-boot defaults to %s",
-             this->settings_path().c_str());
-    if (!this->fs_->write_bytes(this->settings_path(), DEFAULT_SETTINGS_YAML))
-      ESP_LOGE(TAG, "Failed to write default settings to %s", this->settings_path().c_str());
-  } else {
-    // Never rewrite an existing file — only warn so the web editor can fix it.
-    std::string text, version, err_msg;
-    if (this->store_->read(&text, &version, &err_msg) == StoreStatus::OK) {
-      PiTimerSettings settings;
-      if (!settings.parse_settings_text(text, SETTINGS_BASENAME, &err_msg))
-        ESP_LOGW(TAG, "Existing settings file does not validate: %s", err_msg.c_str());
-    }
-  }
+   if (!this->fs_->exists(this->settings_path())) {
+     ESP_LOGI(TAG, "No settings file yet, writing first-boot defaults to %s",
+              this->settings_path().c_str());
+     if (!this->fs_->write_bytes(this->settings_path(), DEFAULT_SETTINGS_YAML))
+       ESP_LOGE(TAG, "Failed to write default settings to %s", this->settings_path().c_str());
+   } else {
+     // Never rewrite an existing file — only warn so the web editor can fix it.
+     std::string text, version, err_msg;
+     if (this->store_->read(&text, &version, &err_msg) == StoreStatus::OK) {
+       PiTimerSettings settings;
+       if (settings.parse_settings_text(text, SETTINGS_BASENAME, &err_msg)) {
+         if (logger::global_logger != nullptr)
+           logger::global_logger->set_log_level(settings.log_level);
+       } else {
+         ESP_LOGW(TAG, "Existing settings file does not validate: %s", err_msg.c_str());
+       }
+     }
+   }
 }
 
 void CurlingEngineComponent::dump_config() {
