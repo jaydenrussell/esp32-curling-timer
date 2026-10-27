@@ -157,7 +157,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['exceptions', '📋', 'Exceptions'], ['history', '📈', 'Report'], ['config', '⚙', 'Config'], ['diagnostics', '🩺', 'Diagnostics']];
+const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['leagues', '🏆', 'Leagues'], ['history', '📈', 'Report'], ['config', '⚙', 'Config'], ['diagnostics', '🩺', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
@@ -275,7 +275,8 @@ async function selectTab(id) {
   }
   if (id === 'history') loadHistory();
   if (id === 'diagnostics') renderDiagnostics();
-  if (id === 'schedule') renderLeagues();
+  if (id === 'schedule') renderSchedule();
+  if (id === 'leagues') renderLeagues();
 }
 
 // ---- status tab -----------------------------------------------------------
@@ -757,6 +758,9 @@ const CONFIG_SECTIONS = [
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
       ['config.pregame_color', 'color', 'Colour'],
       ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
+  { group: 'Global options', title: 'Curling Club Manager', hint: 'URL of the public leagues page (Curling Club Manager). Used for league import.',
+    fields: [
+      ['config.curling_club_manager_url', 'text', 'Leagues page URL']] },
   { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
@@ -1183,7 +1187,7 @@ function renderDiagnostics() {
       el('div', { class: 'field' }, 'NTP server time', ntpTime),
       el('div', { class: 'field' }, 'NTP server', ntpServer)),
     el('div', { class: 'row-actions' }, syncBtn));
-  const logsUrl = (location.protocol + '//' + location.hostname + (location.port && location.port !== '80' ? ':80' : '') + '/logs');
+  const logsUrl = (location.protocol + '//' + location.hostname + '/logs');
   const section3 = el('div', { class: 'card' },
     el('h2', {}, 'Logs'),
     el('p', { class: 'muted small' }, 'Live ESPHome log viewer (web_server, port 80). Crash backtraces are stored as flash core dumps.'),

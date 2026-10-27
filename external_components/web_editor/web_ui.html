@@ -272,7 +272,8 @@ async function selectTab(id) {
   }
   if (id === 'history') loadHistory();
   if (id === 'diagnostics') renderDiagnostics();
-  if (id === 'schedule') renderLeagues();
+  if (id === 'schedule') renderSchedule();
+  if (id === 'leagues') renderLeagues();
 }
 
 // ---- status tab -----------------------------------------------------------
@@ -754,6 +755,9 @@ const CONFIG_SECTIONS = [
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
       ['config.pregame_color', 'color', 'Colour'],
       ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
+  { group: 'Global options', title: 'Curling Club Manager', hint: 'URL of the public leagues page (Curling Club Manager). Used for league import.',
+    fields: [
+      ['config.curling_club_manager_url', 'text', 'Leagues page URL']] },
   { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
