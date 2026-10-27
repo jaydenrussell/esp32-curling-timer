@@ -1158,10 +1158,8 @@ async function renderDiagnostics() {
   } },
     el('option', { value: 'normal' }, 'normal'),
     el('option', { value: 'smpte' }, 'smpte'),
-    el('option', { value: 'pluge' }, 'pluge'),
-    el('option', { value: 'grayscale' }, 'grayscale'),
     el('option', { value: 'geometry' }, 'geometry'),
-    el('option', { value: 'colorbars' }, 'colorbars'));
+    el('option', { value: 'geometry' }, 'geometry'));
   mode.value = (state.status && state.status.display_test_mode) || 'normal';
   const section1 = el('div', { class: 'card' },
     el('h2', {}, 'Display Test Mode'),
