@@ -41,6 +41,8 @@ esp32:
       CONFIG_VFS_SUPPORT_DIR: y
       CONFIG_FATFS_LFN_HEAP: y
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "120"
+      CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0: y
+      CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU1: y
       # Persist crash diagnostics to flash for post-mortem analysis.
       CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH: y
       CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF: y
@@ -296,7 +298,7 @@ lvgl:
   update_interval: never
   bg_color: 0x000000
   full_refresh: false
-  buffer_size: 20%
+  buffer_size: 10%
   scrollbar_mode: "OFF"
   widgets:
     - obj:
