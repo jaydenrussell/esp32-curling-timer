@@ -114,7 +114,7 @@ std::string block_id(const std::string &block) {
     at = block.find("\r\n        id: ");
   if (at == std::string::npos)
     return {};
-  const size_t prefix_len = (at + 1 < block.size() && block[at + 1] == '\r') ? 14 : 13;
+  const size_t prefix_len = (at + 1 < block.size() && block[at] == '\r') ? 14 : 13;
   const size_t start = at + prefix_len;
   const size_t end = block.find('\n', start);
   std::string r = block.substr(start, (end == std::string::npos ? block.size() : end) - start);
@@ -144,7 +144,7 @@ std::vector<std::string> update_ids(const std::string &block) {
   if (at == std::string::npos) at = block.find("\r\n          id:\n");
   if (at == std::string::npos)
     return {};
-  const size_t id_at_len = (at + 1 < block.size() && block[at + 1] == '\r') ? 16 : 15;
+  const size_t id_at_len = (at + 1 < block.size() && block[at] == '\r') ? 17 : 15;
   const std::string item = "            - ";
   std::vector<std::string> out;
   size_t pos = at + id_at_len;
