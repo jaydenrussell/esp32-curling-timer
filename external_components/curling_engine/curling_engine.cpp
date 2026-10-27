@@ -9,12 +9,16 @@
 #include "esp_vfs_fat.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
+#include "esp_sntp.h"
 
 namespace esphome {
 namespace curling_engine {
 
 void CurlingEngineComponent::ntp_sync() {
   if (time_ != nullptr) {
+    const char *srv = esp_sntp_getservername(0);
+    if (srv != nullptr && srv[0] != '\0')
+      ntp_server_ = srv;
     auto now = time_->now();
     if (now.is_valid()) {
       if (ntp_last_sync_ > 0) {
