@@ -55,7 +55,7 @@ psram:
 logger:
   # USB Serial/JTAG on the U213 USB-C port is the bench console.
   hardware_uart: USB_SERIAL_JTAG
-  level: INFO
+  level: VERBOSE
   task_log_buffer_size: 8192
 
 select:
