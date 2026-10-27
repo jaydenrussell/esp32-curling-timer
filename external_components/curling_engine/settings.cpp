@@ -1204,9 +1204,21 @@ static std::string game_msg(const PiTimerGame &g) {
 }
 
 // Port of PiTimerSettings.parse_schedules: validate one day->entries map.
+static bool league_name_match(const std::string &a, const std::string &b) {
+  std::string la, lb;
+  for (char c : a) if (std::isalnum((unsigned char)c)) la += (char)std::tolower((unsigned char)c);
+  for (char c : b) if (std::isalnum((unsigned char)c)) lb += (char)std::tolower((unsigned char)c);
+  if (la.empty() || lb.empty()) return false;
+  if (la == lb) return true;
+  // token-subset: all tokens of shorter present in longer
+  // simple: contains
+  return la.find(lb) != std::string::npos || lb.find(la) != std::string::npos;
+}
+
 static bool parse_schedules_into(const YamlValue &src,
                                  std::map<std::string, std::vector<PiTimerGame>> *dest,
-                                 int default_header_hold, std::string *err) {
+                                 int default_header_hold, std::string *err,
+                                 const std::vector<LeagueProfile> *leagues = nullptr) {
   dest->clear();
   auto hold = [default_header_hold](const PiTimerGame &g) {
     return g.header_hold_override.has_value() ? *g.header_hold_override : default_header_hold;
@@ -1267,6 +1279,18 @@ static bool parse_schedules_into(const YamlValue &src,
         if (*g.pace_unit_override <= 0) {
           *err = "'pace_unit_duration' must be positive for " + day;
           return false;
+        }
+      }
+
+      // Apply per-league pace_of_play override when the game name matches a league
+      // profile (fuzzy) and the entry did not explicitly set pace.
+      if (leagues != nullptr && g.message.has_value() && !g.pace_of_play_override.has_value()) {
+        for (const auto &lp : *leagues) {
+          if (!league_name_match(lp.name, *g.message)) continue;
+          g.pace_of_play_override = lp.pace_enabled;
+          if (lp.pace_minutes_per_end > 0)
+            g.pace_unit_override = lp.pace_minutes_per_end * 60;
+          break;
         }
       }
 
@@ -1636,6 +1660,26 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
        leagues.push_back(lp);
      }
    }
+
+   // Apply per-league pace_of_play override to scheduled games (fuzzy name match).
+   for (auto &day_kv : schedules)
+     for (auto &g : day_kv.second)
+       if (g.message.has_value() && !g.pace_of_play_override.has_value())
+         for (const auto &lp : leagues)
+           if (league_name_match(lp.name, *g.message)) {
+             g.pace_of_play_override = lp.pace_enabled;
+             if (lp.pace_minutes_per_end > 0) g.pace_unit_override = lp.pace_minutes_per_end * 60;
+             break;
+           }
+   for (auto &day_kv : exceptions)
+     for (auto &g : day_kv.second)
+       if (g.message.has_value() && !g.pace_of_play_override.has_value())
+         for (const auto &lp : leagues)
+           if (league_name_match(lp.name, *g.message)) {
+             g.pace_of_play_override = lp.pace_enabled;
+             if (lp.pace_minutes_per_end > 0) g.pace_unit_override = lp.pace_minutes_per_end * 60;
+             break;
+           }
 
    valid = true;
   return true;

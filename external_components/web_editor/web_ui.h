@@ -295,10 +295,11 @@ let quickForm = null;
 // an optional title (wording for the tooltip and confirmation when it differs from the name on the display)
 // and the optional during_buzzer/header_hold overrides for the header shown after the buzzer
 const QUICK_PRESETS = [
-  { label: 'Practice (5m)', name: 'PRACTICE', title: 'Practice', seconds: 5 * 60,
+  { label: 'Practice (7m)', name: 'PRACTICE', title: 'Practice', seconds: 7 * 60,
     during_buzzer: '--- PRACTICE DONE ---', header_hold: 60 },
   { label: 'Game (6 ends)', name: 'Game (6 ends)', seconds: 75 * 60 },
   { label: 'Game (8 ends)', name: 'Game (8 ends)', seconds: 105 * 60 },
+  { label: 'Doubles (8 ends)', name: 'Doubles (8 ends)', seconds: 105 * 60 },
 ];
 
 function buildQuickForm() {
@@ -322,7 +323,6 @@ function buildQuickForm() {
     } },
     el('h2', {}, 'Quick start timer'),
     el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start counting down right now and ring the bell/buzzer when the duration time has elapsed.'),
-    el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Note: a 10-second pre-game countdown will run before the timer starts.'),
     el('div', { class: 'row-actions', style: 'margin: 0 0 12px' }, el('span', { class: 'muted small' }, 'Presets:'), presets),
     el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Or set your own:'),
     el('div', { class: 'grid2' },
@@ -331,7 +331,7 @@ function buildQuickForm() {
       el('label', {}, 'Name on display (optional)', name)),
     el('div', { class: 'row-actions' },
       el('label', { class: 'check' }, pace, 'Show pace of play'),
-      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: true }), 'Pre-game countdown'),
+      el('label', { class: 'check' }, el('input', { type: 'checkbox' }), 'Pre-game countdown'),
       el('label', { class: 'check' }, replace, 'Replace conflicting games today')),
     el('div', { class: 'row-actions' }, button, hint));
   form.update = (enabled, clockOk = true) => {
@@ -474,8 +474,8 @@ function tick() {
       // pre-game countdown: plain number, decrement live
       const left = parseInt(snap, 10) - Math.floor((performance.now() - state.statusAt) / 1000);
       if (left > 0) { mc.textContent = String(left); return; }
-      const nleft = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
-      mc.textContent = countdownText(nleft);
+      // pre-game finished: defer to the normal countdown rendered on the next status update
+      return;
     } else {
       const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
       mc.textContent = countdownText(left);
@@ -1183,23 +1183,84 @@ function renderDiagnostics() {
       el('div', { class: 'field' }, 'NTP server time', ntpTime),
       el('div', { class: 'field' }, 'NTP server', ntpServer)),
     el('div', { class: 'row-actions' }, syncBtn));
-  root.replaceChildren(section1, section2);
+  const logsUrl = (location.protocol + '//' + location.hostname + (location.port && location.port !== '80' ? ':80' : '') + '/logs');
+  const section3 = el('div', { class: 'card' },
+    el('h2', {}, 'Logs'),
+    el('p', { class: 'muted small' }, 'Live ESPHome log viewer (web_server, port 80). Crash backtraces are stored as flash core dumps.'),
+    el('div', { class: 'row-actions' },
+      el('a', { class: 'btn', href: logsUrl, target: '_blank', rel: 'noopener' }, 'View logs')));
+  root.replaceChildren(section1, section2, section3);
 }
 
 // ---- leagues tab -----------------------------------------------------------
-function renderLeagues() {
+async function renderLeagues() {
   const root = $('tab-schedule');
-  const form = el('form', { class: 'card', onsubmit: (e) => { e.preventDefault(); showMessage('League saved', 'ok'); } },
+  const r = await api('/api/leagues');
+  const leagues = (r.ok && Array.isArray(r.data)) ? r.data : [];
+  const list = el('ul', { class: 'backups' });
+  leagues.forEach((lp, idx) => {
+    list.append(el('li', {},
+      el('span', {}, lp.name || '(unnamed)'),
+      el('button', { class: 'btn icon', onclick: () => editLeague(idx) }, 'Edit'),
+      el('button', { class: 'btn icon danger', onclick: async () => {
+        leagues.splice(idx, 1);
+        await saveLeagues(leagues);
+        renderLeagues();
+      } }, 'Delete')));
+  });
+  if (!leagues.length) list.append(el('li', { class: 'muted' }, 'No leagues configured.'));
+  const form = el('form', { class: 'card', onsubmit: async (e) => {
+    e.preventDefault();
+    const name = $('lg-name').value.trim();
+    if (!name) { showMessage('Name required', 'bad'); return; }
+    const entry = {
+      name,
+      game_duration_minutes: parseInt($('lg-dur').value || '0', 10),
+      pregame_countdown_seconds: parseInt($('lg-pregame').value || '0', 10),
+      header_text: $('lg-header').value,
+      pace_enabled: $('lg-pace').checked,
+      pace_minutes_per_end: parseInt($('lg-pace-min').value || '0', 10),
+      countdown_minutes_before: parseInt($('lg-cmb').value || '0', 10),
+    };
+    const ei = $('lg-editidx').value;
+    if (ei !== '') leagues[parseInt(ei, 10)] = entry; else leagues.push(entry);
+    await saveLeagues(leagues);
+    showMessage('League saved', 'ok');
+    renderLeagues();
+  } },
     el('h2', {}, 'Add / Edit League'),
+    el('input', { type: 'hidden', id: 'lg-editidx', value: '' }),
     el('div', { class: 'grid2' },
-      el('label', {}, 'Name', el('input', { type: 'text', placeholder: 'League name' })),
-      el('label', {}, 'Rules', el('textarea', { style: 'min-height:80px' }))),
+      el('label', {}, 'Name', el('input', { type: 'text', id: 'lg-name', placeholder: 'League name' })),
+      el('label', {}, 'Game duration (min)', el('input', { type: 'number', id: 'lg-dur', min: 0 }))),
+    el('div', { class: 'grid2' },
+      el('label', {}, 'Pre-game countdown (s)', el('input', { type: 'number', id: 'lg-pregame', min: 0 })),
+      el('label', {}, 'Header text', el('input', { type: 'text', id: 'lg-header' }))),
+    el('div', { class: 'grid2' },
+      el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-pace' }), 'Pace of play'),
+      el('label', {}, 'Pace minutes/end', el('input', { type: 'number', id: 'lg-pace-min', min: 0 }))),
+    el('label', {}, 'Countdown warning minutes before', el('input', { type: 'number', id: 'lg-cmb', min: 0 })),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Save League')));
-  const list = el('div', { class: 'card' },
-    el('h2', {}, 'Leagues'),
-    el('ul', { class: 'backups' },
-      el('li', {}, el('span', {}, 'Example League'), el('button', { class: 'btn icon' }, 'Edit'), el('button', { class: 'btn icon danger' }, 'Delete'))));
-  root.append(form, list);
+  window.editLeague = (idx) => {
+    const lp = leagues[idx];
+    $('lg-editidx').value = idx;
+    $('lg-name').value = lp.name || '';
+    $('lg-dur').value = lp.game_duration_minutes || '';
+    $('lg-pregame').value = lp.pregame_countdown_seconds || '';
+    $('lg-header').value = lp.header_text || '';
+    $('lg-pace').checked = !!lp.pace_enabled;
+    $('lg-pace-min').value = lp.pace_minutes_per_end || '';
+    $('lg-cmb').value = lp.countdown_minutes_before || '';
+  };
+  window.saveLeagues = async (arr) => {
+    await api('/api/leagues', { leagues: arr });
+  };
+  const importBtn = el('button', { class: 'btn', onclick: async () => {
+    const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', '');
+    const endpoint = url && url.trim() ? url.trim() : null;
+    showMessage('Import not yet implemented server-side; paste league names manually.', 'warn');
+  } }, 'Import from Club Manager');
+  root.replaceChildren(form, el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list, el('div', { class: 'row-actions' }, importBtn)));
 }
 
 // ---- start up -------------------------------------------------------------
