@@ -219,7 +219,8 @@ static bool insertable_config_path(const std::string &path) {
          path == "config.footer.time_font_size" || path == "config.footer.time_color" ||
          path == "config.footer.color" ||
          path == "config.background_color" ||
-         path == "config.club_website_url";
+         path == "config.club_website_url" ||
+         path == "config.league_page_url";
 }
 
 // The countdown section needs both keys (minutes_before and relays), so a
