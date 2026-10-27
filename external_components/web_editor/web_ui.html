@@ -1141,7 +1141,7 @@ async function loadHistory() {
 }
 
 // ---- diagnostics tab -------------------------------------------------------
-function renderDiagnostics() {
+async function renderDiagnostics() {
   const root = $('tab-diagnostics');
   const mode = el('select', { onchange: async () => {
     const r = await api('/api/display_test_mode', { mode: mode.value });
