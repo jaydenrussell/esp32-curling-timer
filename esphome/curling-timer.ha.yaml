@@ -59,6 +59,12 @@ logger:
   # USB Serial/JTAG on the U213 USB-C port is the bench console.
   hardware_uart: USB_SERIAL_JTAG
   level: INFO
+  task_log_buffer_size: 8192
+
+select:
+  - platform: logger
+    name: "Log Level"
+    id: log_level_select
 
 json:
 
@@ -196,7 +202,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.10.195
+      ref: v2026.10.199
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]

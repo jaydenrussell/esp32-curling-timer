@@ -13,23 +13,8 @@
 namespace esphome {
 namespace curling_engine {
 
-#include "esphome/components/sntp/sntp_component.h"
-
-namespace {
-class SntpAccessor : public esphome::sntp::SNTPComponent {
- public:
-  using esphome::sntp::SNTPComponent::servers_;
-  using esphome::sntp::SNTPComponent::time_synced;
-};
-}
-
 void CurlingEngineComponent::ntp_sync() {
   if (time_ != nullptr) {
-    auto *sntp = static_cast<SntpAccessor *>(time_);
-    if (sntp->servers_.size() > 0 && sntp->servers_[0] != nullptr) {
-      ntp_server_ = sntp->servers_[0];
-    }
-    sntp->time_synced();
     auto now = time_->now();
     if (now.is_valid()) {
       if (ntp_last_sync_ > 0) {
