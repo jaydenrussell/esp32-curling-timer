@@ -890,7 +890,9 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.pregame_color" || path == "config.pregame_header_text" ||
                path == "config.footer.date_color" || path == "config.footer.time_color" ||
                path == "config.footer.color" ||
-               path == "config.background_color") {
+               path == "config.background_color" ||
+               path == "config.club_website_url" || path == "config.league_page_url" ||
+               path == "config.curling_club_manager_url") {
       if (!v.is<const char *>())
         return error_json(422, path + " must be a string");
       yaml = curling_engine::yaml_quote(v.as<const char *>());
