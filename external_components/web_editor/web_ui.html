@@ -292,10 +292,11 @@ let quickForm = null;
 // an optional title (wording for the tooltip and confirmation when it differs from the name on the display)
 // and the optional during_buzzer/header_hold overrides for the header shown after the buzzer
 const QUICK_PRESETS = [
-  { label: 'Practice (5m)', name: 'PRACTICE', title: 'Practice', seconds: 5 * 60,
+  { label: 'Practice (7m)', name: 'PRACTICE', title: 'Practice', seconds: 7 * 60,
     during_buzzer: '--- PRACTICE DONE ---', header_hold: 60 },
   { label: 'Game (6 ends)', name: 'Game (6 ends)', seconds: 75 * 60 },
   { label: 'Game (8 ends)', name: 'Game (8 ends)', seconds: 105 * 60 },
+  { label: 'Doubles (8 ends)', name: 'Doubles (8 ends)', seconds: 105 * 60 },
 ];
 
 function buildQuickForm() {
