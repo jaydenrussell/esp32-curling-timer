@@ -53,7 +53,7 @@ psram:
   speed: 200MHz
 
 safe_mode:
-  disabled: true
+  disabled: false
 
 logger:
   # USB Serial/JTAG on the U213 USB-C port is the bench console.
