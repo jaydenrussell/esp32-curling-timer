@@ -44,6 +44,7 @@ esp32:
       CONFIG_VFS_SUPPORT_DIR: y
       CONFIG_FATFS_LFN_HEAP: y
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "60"
+      # Persist crash diagnostics to flash for post-mortem analysis.
       CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH: y
       CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF: y
       CONFIG_ESP_COREDUMP_CHECKSUM_CRC32: y
