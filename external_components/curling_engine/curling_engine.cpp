@@ -211,9 +211,6 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
   return true;
 }
 
-}  // namespace curling_engine
-}  // namespace esphome
-
 void CurlingEngineComponent::register_log_callback() {
 #ifdef USE_LOG_LISTENERS
   if (logger::global_logger != nullptr)
@@ -246,3 +243,5 @@ void CurlingEngineComponent::set_log_level(uint8_t level) {
   if (logger::global_logger != nullptr)
     logger::global_logger->set_log_level(level);
 }
+}  // namespace curling_engine
+}  // namespace esphome
