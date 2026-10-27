@@ -1184,7 +1184,7 @@ function renderDiagnostics() {
       el('div', { class: 'field' }, 'NTP server time', ntpTime),
       el('div', { class: 'field' }, 'NTP server', ntpServer)),
     el('div', { class: 'row-actions' }, syncBtn));
-  const logsUrl = (location.protocol + '//' + location.hostname + '/logs');
+  const logsUrl = (location.protocol + '//' + location.hostname + ':80/logs');
   const section3 = el('div', { class: 'card' },
     el('h2', {}, 'Logs'),
     el('p', { class: 'muted small' }, 'Live ESPHome log viewer (web_server, port 80). Crash backtraces are stored as flash core dumps.'),
