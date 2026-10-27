@@ -692,6 +692,22 @@ ApiResponse PiTimerApi::ntp() {
   return from_document(doc);
 }
 
+ApiResponse PiTimerApi::get_logs() {
+  ApiResponse resp;
+  resp.content_type = "text/plain";
+  if (engine_ != nullptr)
+    resp.body = engine_->get_logs();
+  return resp;
+}
+
+ApiResponse PiTimerApi::set_log_level(JsonObjectConst data) {
+  if (engine_ != nullptr && data["level"].is<int>())
+    engine_->set_log_level((uint8_t) data["level"].as<int>());
+  ApiResponse resp;
+  resp.body = "{}";
+  return resp;
+}
+
 // -- config (new, no python parity) -------------------------------------------
 
 ApiResponse PiTimerApi::get_config() {
@@ -1026,6 +1042,8 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
        return ntp_status();
      if (p == "/api/ntp")
        return ntp();
+     if (p == "/api/logs")
+       return get_logs();
     if (p.rfind("/api/backups/", 0) == 0)
       return get_backup(unquote_path(p.substr(13)));
     return error_json(404, "not found");
@@ -1070,6 +1088,8 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
       return post_config(data);
     if (p == "/api/leagues")
       return post_leagues(data);
+    if (p == "/api/log_level")
+      return set_log_level(data);
 
   return error_json(404, "not found");
 }

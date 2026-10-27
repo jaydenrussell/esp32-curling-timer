@@ -68,6 +68,7 @@ void CurlingEngineComponent::setup() {
   this->fs_.reset(make_posix_store_fs());
   this->store_ = std::make_unique<SettingsStore>(this->fs_.get(), this->settings_path());
   this->ready_ = true;
+  this->register_log_callback();
 
   if (!this->fs_->exists(this->settings_path())) {
     ESP_LOGI(TAG, "No settings file yet, writing first-boot defaults to %s",
@@ -212,3 +213,36 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
 
 }  // namespace curling_engine
 }  // namespace esphome
+
+void CurlingEngineComponent::register_log_callback() {
+#ifdef USE_LOG_LISTENERS
+  if (logger::global_logger != nullptr)
+    logger::global_logger->add_log_callback(this, &CurlingEngineComponent::log_callback);
+#endif
+}
+
+void CurlingEngineComponent::log_callback(void *instance, uint8_t level, const char *tag, const char *message, size_t message_size) {
+  auto *self = static_cast<CurlingEngineComponent *>(instance);
+  std::string line;
+  if (tag) line += std::string("[") + tag + "] ";
+  if (message && message_size) line.append(message, message_size);
+  std::lock_guard<std::mutex> lock(self->log_mutex_);
+  self->log_buffer_.push_back(line);
+  if (self->log_buffer_.size() > LOG_BUFFER_LINES)
+    self->log_buffer_.pop_front();
+}
+
+std::string CurlingEngineComponent::get_logs() const {
+  std::lock_guard<std::mutex> lock(log_mutex_);
+  std::string out;
+  for (const auto &l : log_buffer_) {
+    out += l;
+    out += "\n";
+  }
+  return out;
+}
+
+void CurlingEngineComponent::set_log_level(uint8_t level) {
+  if (logger::global_logger != nullptr)
+    logger::global_logger->set_log_level(level);
+}

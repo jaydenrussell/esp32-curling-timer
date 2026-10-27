@@ -7,7 +7,10 @@
 #include "bell.h"
 #include "esphome/components/time/real_time_clock.h"
 #include "esphome/core/component.h"
+#include "esphome/components/logger/logger.h"
 #include "render.h"
+#include <deque>
+#include <mutex>
 #include "settings.h"
 #include "store.h"
 
@@ -45,6 +48,11 @@ class CurlingEngineComponent : public Component {
   bool ready() const { return ready_; }
   std::string settings_path() const { return store_path_ + "/" + SETTINGS_BASENAME; }
   time::RealTimeClock *get_time() { return time_; }
+
+  void register_log_callback();
+  std::string get_logs() const;
+  void set_log_level(uint8_t level);
+  static void log_callback(void *instance, uint8_t level, const char *tag, const char *message, size_t message_size);
 
   // Local wall-clock snapshot: weekday Mon=0, seconds since midnight,
   // YYYY-MM-DD. False until the RTC has a sane time (login + quick-start gate).
@@ -84,6 +92,9 @@ class CurlingEngineComponent : public Component {
 
  protected:
   std::string store_path_{"/flash"};
+  mutable std::mutex log_mutex_;
+  std::deque<std::string> log_buffer_;
+  static constexpr size_t LOG_BUFFER_LINES = 500;
   time::RealTimeClock *time_{nullptr};
   std::unique_ptr<StoreFs> fs_;
   std::unique_ptr<SettingsStore> store_;
