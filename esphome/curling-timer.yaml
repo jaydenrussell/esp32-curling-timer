@@ -1018,6 +1018,9 @@ interval:
               return std::string();
             return ::esphome::curling_engine::recolor(
                 s.footer_color, s.time_text);
+
+  - interval: 5s
+    then:
       - lvgl.widget.update:
           id:
             - tp_smpte_t0
