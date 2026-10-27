@@ -129,14 +129,14 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.10.187</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.10.189</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">v2026.10.187</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
+<header><h1>🎯 Countdown Timer <span class="version">v2026.10.189</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
 <nav id="tabs"></nav>
 <main>
   <section id="tab-status"></section>
@@ -1187,7 +1187,7 @@ function renderDiagnostics() {
       el('div', { class: 'field' }, 'NTP server time', ntpTime),
       el('div', { class: 'field' }, 'NTP server', ntpServer)),
     el('div', { class: 'row-actions' }, syncBtn));
-  const logsUrl = (location.protocol + '//' + location.hostname + '/logs');
+  const logsUrl = (location.protocol + '//' + location.hostname + ':80/logs');
   const section3 = el('div', { class: 'card' },
     el('h2', {}, 'Logs'),
     el('p', { class: 'muted small' }, 'Live ESPHome log viewer (web_server, port 80). Crash backtraces are stored as flash core dumps.'),
@@ -1275,7 +1275,7 @@ async function checkVersion() {
     if (!res.ok) return;
     const data = await res.json();
     const latest = (data.tag_name || '').replace(/^v/, '');
-    const current = 'v2026.10.187'.replace(/^v/, '');
+    const current = 'v2026.10.189'.replace(/^v/, '');
     if (latest && latest !== current) {
       const dot = document.createElement('span');
       dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-left:6px;vertical-align:middle;cursor:pointer;';
