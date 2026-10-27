@@ -267,7 +267,7 @@ async function selectTab(id) {
   if (id === 'quickstart') { loadStatus(); renderQuickstart(); }
   if ((id === 'schedule' || id === 'exceptions') && !state.model) await loadSettings();
   else if (id === 'schedule') renderSchedule();
-  else if (id === 'exceptions') renderExceptions();
+
   if (id === 'config') {
     if (!state.configOriginal || !state.configDirty) await loadConfig();
     else renderConfig();
@@ -544,7 +544,7 @@ async function loadSettings() {
   state.model = result.data;
   setDirty(false);
   if (state.tab === 'schedule') renderSchedule();
-  if (state.tab === 'exceptions') renderExceptions();
+
 }
 
 function updateSavebars() {
@@ -673,6 +673,11 @@ function renderSchedule() {
       } }, 'Import Calendar'))),
     el('div', { id: 'imported-events', class: 'muted small' }, 'No imported events yet.'));
   cards.unshift(calCard);
+  const excContainer = el('div', { style: 'margin-top:16px' });
+  state.exceptionsRoot = excContainer;
+  renderExceptions();
+  state.exceptionsRoot = null;
+  cards.push(excContainer);
   $('tab-schedule').replaceChildren(...cards);
 }
 
@@ -740,7 +745,8 @@ function renderExceptions() {
             if (!confirm(`Delete the exception for ${day.date}? The weekly schedule will apply again.`)) return;
             m.exceptions.splice(m.exceptions.indexOf(day), 1); state.openDates.delete(day.date); setDirty(true); renderExceptions(); } }, 'Delete date'))] }));
   }
-  $('tab-exceptions').replaceChildren(...cards);
+  const target = state.exceptionsRoot || $('tab-exceptions');
+  target.replaceChildren(...cards);
 }
 
 // ---- config tab (every parameter that is not the schedule) ----------------
