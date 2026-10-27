@@ -3,9 +3,6 @@
 #include <array>
 #include <cstring>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
 namespace esphome {
 namespace curling_engine {
 
@@ -97,7 +94,6 @@ void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
       process_block(c, c->buf);
       c->buf_len = 0;
     }
-    vTaskDelay(1);
   }
 }
 
@@ -198,7 +194,6 @@ std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &s
                   32, u.data());
       for (int j = 0; j < 32; j++)
         t[j] ^= u[j];
-      vTaskDelay(1);
     }
     size_t n = 32;
     if (n > dk_len - produced)
