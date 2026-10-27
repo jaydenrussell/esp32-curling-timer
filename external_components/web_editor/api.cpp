@@ -760,6 +760,7 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.footer.font_size"] = s.font_sizes.count("footer") != 0 ? s.font_sizes.at("footer") : 0;
   cfg["config.footer.datetime"] = s.date_and_time;
   cfg["config.footer.entry_name"] = s.game_name;
+  cfg["config.log_level"] = s.log_level;
   if (s.relays.has_value()) {
     JsonArray relays = cfg["config.buzzer.relays"].to<JsonArray>();
     for (const std::string &relay : *s.relays)

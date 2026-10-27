@@ -129,14 +129,14 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.10.205</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.10.206</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">v2026.10.205</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
+<header><h1>🎯 Countdown Timer <span class="version">v2026.10.206</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
 <nav id="tabs"></nav>
 <main>
   <section id="tab-status"></section>
@@ -1197,7 +1197,7 @@ async function renderDiagnostics() {
     el('div', { class: 'row-actions' }, syncBtn));
   const cfgRes = await api('/api/config');
   const savedLevel = (cfgRes.ok && cfgRes.data && cfgRes.data.config && cfgRes.data.config['config.log_level'] != null) ? cfgRes.data.config['config.log_level'] : 3;
-  const levelSelect = el('select', { value: String(savedLevel), onchange: async () => {
+  const levelSelect = el('select', { onchange: async () => {
     const level = parseInt(levelSelect.value, 10);
     const r = await api('/api/log_level', { level: level });
     await api('/api/config', { version: state.configVersion, config: { 'config.log_level': level } });
@@ -1209,6 +1209,7 @@ async function renderDiagnostics() {
     el('option', { value: '3' }, 'INFO'),
     el('option', { value: '4' }, 'DEBUG'),
     el('option', { value: '5' }, 'VERBOSE'));
+  levelSelect.value = String(savedLevel);
   const section3 = el('div', { class: 'card' },
     el('h2', {}, 'Logs'),
     el('p', { class: 'muted small' }, 'Download captured logs (500-line ring buffer).'),
@@ -1297,7 +1298,7 @@ async function checkVersion() {
     if (!res.ok) return;
     const data = await res.json();
     const latest = (data.tag_name || '').replace(/^v/, '');
-    const current = 'v2026.10.205'.replace(/^v/, '');
+    const current = 'v2026.10.206'.replace(/^v/, '');
     if (latest && latest !== current) {
       const dot = document.createElement('span');
       dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-left:6px;vertical-align:middle;cursor:pointer;';

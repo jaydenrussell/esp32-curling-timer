@@ -1194,7 +1194,7 @@ async function renderDiagnostics() {
     el('div', { class: 'row-actions' }, syncBtn));
   const cfgRes = await api('/api/config');
   const savedLevel = (cfgRes.ok && cfgRes.data && cfgRes.data.config && cfgRes.data.config['config.log_level'] != null) ? cfgRes.data.config['config.log_level'] : 3;
-  const levelSelect = el('select', { value: String(savedLevel), onchange: async () => {
+  const levelSelect = el('select', { onchange: async () => {
     const level = parseInt(levelSelect.value, 10);
     const r = await api('/api/log_level', { level: level });
     await api('/api/config', { version: state.configVersion, config: { 'config.log_level': level } });
@@ -1206,6 +1206,7 @@ async function renderDiagnostics() {
     el('option', { value: '3' }, 'INFO'),
     el('option', { value: '4' }, 'DEBUG'),
     el('option', { value: '5' }, 'VERBOSE'));
+  levelSelect.value = String(savedLevel);
   const section3 = el('div', { class: 'card' },
     el('h2', {}, 'Logs'),
     el('p', { class: 'muted small' }, 'Download captured logs (500-line ring buffer).'),
