@@ -341,11 +341,11 @@ int Lt8912b::get_height() {
   switch (this->rotation_) {
     case display::DISPLAY_ROTATION_0_DEGREES:
     case display::DISPLAY_ROTATION_180_DEGREES:
-      return this->get_height_internal();
+      return this->get_width_internal();
     case display::DISPLAY_ROTATION_90_DEGREES:
     case display::DISPLAY_ROTATION_270_DEGREES:
     default:
-      return this->get_width_internal();
+      return this->get_height_internal();
   }
 }
 
