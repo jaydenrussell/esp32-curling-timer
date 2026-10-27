@@ -63,7 +63,7 @@ class Lt8912b : public display::Display {
   InternalGPIOPin *enable_pin_{nullptr};
   InternalGPIOPin *sda_pin_{nullptr};
   InternalGPIOPin *scl_pin_{nullptr};
-  uint32_t i2c_frequency_{400000};
+  uint32_t i2c_frequency_{100000};
   float lane_bit_rate_{960};
 
   i2c_master_bus_handle_t i2c_bus_{};
