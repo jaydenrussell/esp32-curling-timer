@@ -671,6 +671,7 @@ function renderSchedule() {
     el('div', { id: 'imported-events', class: 'muted small' }, 'No imported events yet.'));
   cards.unshift(calCard);
   const excContainer = el('div', { style: 'margin-top:16px' });
+  excContainer.append(el('h2', { style: 'margin-top:0' }, 'Schedule Exceptions'));
   state.exceptionsRoot = excContainer;
   renderExceptions();
   state.exceptionsRoot = null;
