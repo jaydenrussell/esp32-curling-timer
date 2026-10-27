@@ -471,8 +471,8 @@ function tick() {
       // pre-game countdown: plain number, decrement live
       const left = parseInt(snap, 10) - Math.floor((performance.now() - state.statusAt) / 1000);
       if (left > 0) { mc.textContent = String(left); return; }
-      const nleft = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
-      mc.textContent = countdownText(nleft);
+      // pre-game finished: defer to the normal countdown rendered on the next status update
+      return;
     } else {
       const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
       mc.textContent = countdownText(left);
