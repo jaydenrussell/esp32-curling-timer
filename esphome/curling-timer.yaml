@@ -56,6 +56,12 @@ logger:
   # USB Serial/JTAG on the U213 USB-C port is the bench console.
   hardware_uart: USB_SERIAL_JTAG
   level: INFO
+  task_log_buffer_size: 8192
+
+select:
+  - platform: logger
+    name: "Log Level"
+    id: log_level_select
 
 json:
 
