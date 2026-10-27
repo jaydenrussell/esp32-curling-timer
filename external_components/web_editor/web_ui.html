@@ -319,7 +319,6 @@ function buildQuickForm() {
     } },
     el('h2', {}, 'Quick start timer'),
     el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start counting down right now and ring the bell/buzzer when the duration time has elapsed.'),
-    el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Note: a 10-second pre-game countdown will run before the timer starts.'),
     el('div', { class: 'row-actions', style: 'margin: 0 0 12px' }, el('span', { class: 'muted small' }, 'Presets:'), presets),
     el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Or set your own:'),
     el('div', { class: 'grid2' },
@@ -328,7 +327,7 @@ function buildQuickForm() {
       el('label', {}, 'Name on display (optional)', name)),
     el('div', { class: 'row-actions' },
       el('label', { class: 'check' }, pace, 'Show pace of play'),
-      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: true }), 'Pre-game countdown'),
+      el('label', { class: 'check' }, el('input', { type: 'checkbox' }), 'Pre-game countdown'),
       el('label', { class: 'check' }, replace, 'Replace conflicting games today')),
     el('div', { class: 'row-actions' }, button, hint));
   form.update = (enabled, clockOk = true) => {
