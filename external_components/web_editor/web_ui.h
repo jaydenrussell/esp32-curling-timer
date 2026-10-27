@@ -1206,7 +1206,7 @@ function renderDiagnostics() {
 
 // ---- leagues tab -----------------------------------------------------------
 async function renderLeagues() {
-  const root = $('tab-schedule');
+  const root = $('tab-leagues');
   const r = await api('/api/leagues');
   const leagues = (r.ok && Array.isArray(r.data)) ? r.data : [];
   const list = el('ul', { class: 'backups' });
