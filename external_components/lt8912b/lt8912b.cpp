@@ -10,13 +10,9 @@ namespace lt8912b {
 
 static bool notify_refresh_ready(esp_lcd_panel_handle_t panel, esp_lcd_dpi_panel_event_data_t *edata, void *user_ctx) {
   SemaphoreHandle_t sem = static_cast<SemaphoreHandle_t>(user_ctx);
-  if (xPortInIsrContext()) {
-    BaseType_t need_yield = pdFALSE;
-    xSemaphoreGiveFromISR(sem, &need_yield);
-    return (need_yield == pdTRUE);
-  }
-  xSemaphoreGive(sem);
-  return pdFALSE;
+  BaseType_t need_yield = pdFALSE;
+  xSemaphoreGiveFromISR(sem, &need_yield);
+  return (need_yield == pdTRUE);
 }
 
 static esp_lcd_panel_io_i2c_config_t make_io_config(uint32_t address, uint32_t frequency) {

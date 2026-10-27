@@ -85,9 +85,9 @@ std::vector<std::string> server_modes(const std::string &api) {
 // One entry per LVGL widget in the lvgl: widgets list.
 std::vector<std::string> widget_blocks(const std::string &yaml) {
   std::vector<std::string> out;
-  size_t pos = yaml.find("\n  widgets:\n");
+  size_t pos = yaml.find("\n  widgets:");
   REQUIRE(pos != std::string::npos);
-  pos += 12;
+  pos = yaml.find("\n", pos + 1) + 1;
   const size_t stop = yaml.find("\ninterval:", pos);
   REQUIRE(stop != std::string::npos);
   const std::string chunk = yaml.substr(pos, stop - pos);
@@ -106,13 +106,15 @@ std::vector<std::string> widget_blocks(const std::string &yaml) {
 
 // The id of a widget block, or "" when it has none.
 std::string block_id(const std::string &block) {
-  const std::string prefix = "\n        id: ";
+  const std::string prefix = "\r\n        id: ";
   const size_t at = block.find(prefix);
   if (at == std::string::npos)
     return {};
   const size_t start = at + prefix.size();
   const size_t end = block.find('\n', start);
-  return block.substr(start, end - start);
+  std::string r = block.substr(start, end - start);
+  if (!r.empty() && r.back() == '\r') r.pop_back();
+  return r;
 }
 
 // One entry per "      - lvgl.widget.update:" action in the interval.
@@ -121,7 +123,7 @@ std::vector<std::string> update_blocks(const std::string &yaml) {
   const std::string anchor = "      - lvgl.widget.update:";
   size_t pos = 0;
   while ((pos = yaml.find(anchor, pos)) != std::string::npos) {
-    const size_t stop = yaml.find("\n      - ", pos + 1);
+    const size_t stop = yaml.find("\r\n      - ", pos + 1);
     out.push_back(yaml.substr(pos, stop == std::string::npos ? std::string::npos : stop - pos));
     pos = stop == std::string::npos ? yaml.size() : stop;
   }
@@ -130,7 +132,7 @@ std::vector<std::string> update_blocks(const std::string &yaml) {
 
 // The widget ids listed by an update action.
 std::vector<std::string> update_ids(const std::string &block) {
-  const std::string id_at = "\n          id:\n";
+  const std::string id_at = "\r\n          id:\r\n";
   const std::string item = "            - ";
   const size_t at = block.find(id_at);
   if (at == std::string::npos)
@@ -141,7 +143,9 @@ std::vector<std::string> update_ids(const std::string &block) {
     const size_t end = block.find('\n', pos);
     if (end == std::string::npos)
       break;
-    out.push_back(block.substr(pos + item.size(), end - pos - item.size()));
+    std::string id = block.substr(pos + item.size(), end - pos - item.size());
+    if (!id.empty() && id.back() == '\r') id.pop_back();
+    out.push_back(id);
     pos = end + 1;
   }
   return out;
