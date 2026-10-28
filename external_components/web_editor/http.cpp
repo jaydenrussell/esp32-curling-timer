@@ -4,6 +4,7 @@
 #include <string>
 
 #include "esp_http_server.h"
+#include "esp_task_wdt.h"
 #include "esp_heap_caps.h"
 #include "esp_system.h"
 #include "lwip/inet.h"
@@ -188,7 +189,9 @@ bool start_web_httpd(WebEditorComponent *editor) {
   ESP_LOGI(TAG, "free heap before the web server: %u bytes (largest block %u)",
            static_cast<unsigned>(esp_get_free_heap_size()),
            static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL)));
+  esp_task_wdt_reset();
   esp_err_t err = httpd_start(&s_server, &config);
+  esp_task_wdt_reset();
   if (err != ESP_OK) {
     ESP_LOGE(TAG, "httpd_start on port %u failed: %s (free heap %u bytes)", editor->port(),
              esp_err_to_name(err), static_cast<unsigned>(esp_get_free_heap_size()));
@@ -212,6 +215,7 @@ bool start_web_httpd(WebEditorComponent *editor) {
     s_server = nullptr;
     return false;
   }
+  esp_task_wdt_reset();
   ESP_LOGI(TAG, "web API listening on port %u", editor->port());
   return true;
 }
