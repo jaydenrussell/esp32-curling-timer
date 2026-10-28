@@ -1,0 +1,31 @@
+name: Build and publish ESPHome firmware
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # allows manual trigger
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: Install esphome
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade esphome==2024.9.1
+      - name: Compile firmware
+        run: esphome compile esphome/curling-timer.yaml
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware
+          path: |
+            build/firmware.bin
+            build/firmware.elf
