@@ -172,12 +172,7 @@ void Lt8912b::setup() {
 void Lt8912b::update() {
   if (this->is_failed())
     return;
-  if (this->auto_clear_enabled_) {
-    this->clear();
-  }
-  if (this->show_test_card_) {
-    this->test_card();
-  } else if (this->page_ != nullptr) {
+  if (this->page_ != nullptr) {
     this->page_->get_writer()(*this);
   } else if (this->writer_.has_value()) {
     (*this->writer_)(*this);
@@ -369,3 +364,4 @@ void Lt8912b::dump_config() {
 }  // namespace lt8912b
 }  // namespace esphome
 #endif  // USE_ESP32_VARIANT_ESP32P4
+
