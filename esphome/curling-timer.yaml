@@ -745,48 +745,44 @@ interval:
           ::esphome::curling_engine::DisplaySnapshot snap;
           eng->display_snapshot(&snap);
           id(g_snap) = snap;
-      - if:
-          condition:
-            lambda: 'return id(engine)->get_display_test_mode() != "normal";'
-          then:
-            - lvgl.widget.update:
-                id:
-                  - tp_smpte_t0
-                  - tp_smpte_t1
-                  - tp_smpte_t2
-                  - tp_smpte_t3
-                  - tp_smpte_t4
-                  - tp_smpte_t5
-                  - tp_smpte_t6
-                  - tp_smpte_b0
-                  - tp_smpte_b1
-                  - tp_smpte_b2
-                  - tp_smpte_b3
-                  - tp_smpte_b4
-                  - tp_smpte_b5
-                  - tp_smpte_b6
-                  - tp_smpte_res
-                hidden: !lambda 'return !(id(engine)->get_display_test_mode() == "smpte");'
-            - lvgl.widget.update:
-                id:
-                  - tp_geom_border
-                  - tp_geom_v0
-                  - tp_geom_v1
-                  - tp_geom_v2
-                  - tp_geom_v3
-                  - tp_geom_v4
-                  - tp_geom_v5
-                  - tp_geom_v6
-                  - tp_geom_v7
-                  - tp_geom_h0
-                  - tp_geom_h1
-                  - tp_geom_h2
-                  - tp_geom_h3
-                  - tp_geom_h4
-                  - tp_geom_h5
-                  - tp_geom_cv
-                  - tp_geom_ch
-                hidden: !lambda 'return !(id(engine)->get_display_test_mode() == "geometry");'
+      - lvgl.widget.update:
+          id:
+            - tp_smpte_t0
+            - tp_smpte_t1
+            - tp_smpte_t2
+            - tp_smpte_t3
+            - tp_smpte_t4
+            - tp_smpte_t5
+            - tp_smpte_t6
+            - tp_smpte_b0
+            - tp_smpte_b1
+            - tp_smpte_b2
+            - tp_smpte_b3
+            - tp_smpte_b4
+            - tp_smpte_b5
+            - tp_smpte_b6
+            - tp_smpte_res
+          hidden: !lambda 'return !(id(engine)->get_display_test_mode() == "smpte");'
+      - lvgl.widget.update:
+          id:
+            - tp_geom_border
+            - tp_geom_v0
+            - tp_geom_v1
+            - tp_geom_v2
+            - tp_geom_v3
+            - tp_geom_v4
+            - tp_geom_v5
+            - tp_geom_v6
+            - tp_geom_v7
+            - tp_geom_h0
+            - tp_geom_h1
+            - tp_geom_h2
+            - tp_geom_h3
+            - tp_geom_h4
+            - tp_geom_h5
+            - tp_geom_cv
+            - tp_geom_ch
+          hidden: !lambda 'return !(id(engine)->get_display_test_mode() == "geometry");'
       - lvgl.label.update:
           id: lbl_header
           text: !lambda |-
