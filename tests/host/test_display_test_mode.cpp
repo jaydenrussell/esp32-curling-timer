@@ -125,7 +125,7 @@ std::string block_id(const std::string &block) {
 // One entry per "      - lvgl.widget.update:" action in the interval.
 std::vector<std::string> update_blocks(const std::string &yaml) {
   std::vector<std::string> out;
-  const std::string anchor = "      - lvgl.widget.update:";
+  const std::string anchor = "- lvgl.widget.update:";
   size_t pos = 0;
   while ((pos = yaml.find(anchor, pos)) != std::string::npos) {
     size_t stop = yaml.find("\n      - ", pos + 1);
@@ -138,24 +138,57 @@ std::vector<std::string> update_blocks(const std::string &yaml) {
 
 // The widget ids listed by an update action.
 std::vector<std::string> update_ids(const std::string &block) {
-  size_t at = block.find("\n          id:\n");
-  if (at == std::string::npos) at = block.find("\r\n          id:\r\n");
-  if (at == std::string::npos) at = block.find("\n          id:\r\n");
-  if (at == std::string::npos) at = block.find("\r\n          id:\n");
+  // Find "id:" at any indentation, followed by a list of "            - " items
+  // or an inline "[a, b]" list.
+  size_t at = block.find("id:");
   if (at == std::string::npos)
     return {};
-  const size_t id_at_len = (at + 1 < block.size() && block[at] == '\r') ? 17 : 15;
-  const std::string item = "            - ";
+  // inline list form: id: [a, b, ...]
+  size_t bracket = block.find('[', at);
+  size_t nl = block.find('\n', at);
+  if (bracket != std::string::npos && bracket < nl) {
+    size_t close = block.find(']', bracket);
+    if (close == std::string::npos) return {};
+    std::string inner = block.substr(bracket + 1, close - bracket - 1);
+    std::vector<std::string> out;
+    size_t pos = 0;
+    while (pos < inner.size()) {
+      while (pos < inner.size() && (inner[pos] == ' ' || inner[pos] == ',')) pos++;
+      if (pos >= inner.size()) break;
+      size_t end = inner.find(',', pos);
+      if (end == std::string::npos) end = inner.size();
+      std::string id = inner.substr(pos, end - pos);
+      // trim
+      while (!id.empty() && (id.front() == ' ')) id.erase(id.begin());
+      while (!id.empty() && (id.back() == ' ')) id.pop_back();
+      if (!id.empty()) out.push_back(id);
+      pos = end + 1;
+    }
+    return out;
+  }
+  // multi-line list form
+  size_t line_end = block.find('\n', at);
+  if (line_end == std::string::npos) return {};
+  size_t pos = line_end + 1;
+  // determine item indentation from first list item
+  while (pos < block.size() && block[pos] == ' ') pos++;
+  if (pos >= block.size() || block[pos] != '-') return {};
+  size_t item_indent = pos;
+  std::string item_prefix(item_indent, ' ');
+  item_prefix += "- ";
   std::vector<std::string> out;
-  size_t pos = at + id_at_len;
-  while (pos < block.size() && block.compare(pos, item.size(), item) == 0) {
-    const size_t end = block.find('\n', pos);
-    if (end == std::string::npos)
-      break;
-    std::string id = block.substr(pos + item.size(), end - pos - item.size());
+  while (pos < block.size()) {
+    if (block.compare(pos, item_prefix.size(), item_prefix) != 0) break;
+    size_t end = block.find('\n', pos);
+    if (end == std::string::npos) break;
+    std::string id = block.substr(pos + item_prefix.size(), end - pos - item_prefix.size());
     if (!id.empty() && id.back() == '\r') id.pop_back();
-    out.push_back(id);
+    if (!id.empty()) out.push_back(id);
     pos = end + 1;
+    while (pos < block.size() && (block[pos] == ' ' || block[pos] == '\n' || block[pos] == '\r')) {
+      if (block[pos] == '\n') { pos++; break; }
+      pos++;
+    }
   }
   return out;
 }
