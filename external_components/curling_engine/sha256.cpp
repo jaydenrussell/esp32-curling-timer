@@ -4,9 +4,8 @@
 #include <cstring>
 
 #ifdef ESP_PLATFORM
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
-#define SHA256_YIELD() vTaskDelay(1)
+#include <esp_task_wdt.h>
+#define SHA256_YIELD() esp_task_wdt_reset()
 #else
 #define SHA256_YIELD() (void)0
 #endif
@@ -91,6 +90,7 @@ void process_block(Sha256Ctx *c, const uint8_t *p) {
 void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
   c->total_len += len;
   while (len > 0) {
+    SHA256_YIELD();
     size_t n = 64 - c->buf_len;
     if (n > len)
       n = len;
@@ -101,7 +101,6 @@ void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
     if (c->buf_len == 64) {
       process_block(c, c->buf);
       c->buf_len = 0;
-      SHA256_YIELD();
     }
   }
 }
