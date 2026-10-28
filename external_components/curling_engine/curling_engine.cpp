@@ -46,7 +46,6 @@ static constexpr size_t FAT_MAX_FILES = 16;
 void CurlingEngineComponent::setup() {
   // Disable task watchdog during init - FAT mount can block
   esp_task_wdt_delete(NULL);
-  esp_task_wdt_deinit();
   esp_vfs_fat_mount_config_t conf = {};
   conf.format_if_mount_failed = true;
   conf.max_files = FAT_MAX_FILES;
