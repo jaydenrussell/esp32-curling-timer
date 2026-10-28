@@ -175,7 +175,9 @@ void Lt8912b::update() {
   if (this->auto_clear_enabled_) {
     this->clear();
   }
-  if (this->page_ != nullptr) {
+  if (this->show_test_card_) {
+    this->test_card();
+  } else if (this->page_ != nullptr) {
     this->page_->get_writer()(*this);
   } else if (this->writer_.has_value()) {
     (*this->writer_)(*this);
