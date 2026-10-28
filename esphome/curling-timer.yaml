@@ -43,8 +43,6 @@ esp32:
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "300"
       CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU0: n
       CONFIG_ESP_TASK_WDT_CHECK_IDLE_TASK_CPU1: n
-      # Disable task watchdog entirely - init sequence takes too long
-      CONFIG_ESP_TASK_WDT_EN: n
       # Persist crash diagnostics to flash for post-mortem analysis.
       CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH: y
       CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF: y
