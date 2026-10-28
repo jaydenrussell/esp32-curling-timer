@@ -84,7 +84,7 @@ class CurlingEngineComponent : public Component {
   std::string ntp_status() const;
   int64_t ntp_last_sync() const { return ntp_last_sync_; }
   int32_t ntp_drift_ms() const { return ntp_drift_ms_; }
-  std::string ntp_server() const { return ntp_server_.empty() ? std::string("unknown") : ntp_server_; }
+  std::string ntp_server() const { if (!ntp_server_.empty()) return ntp_server_; const char *s = esp_sntp_getservername(0); return (s && s[0]) ? std::string(s) : std::string("unknown"); }
   void set_ntp_server(const std::string &s) { ntp_server_ = s; }  bool test_relay_pending() const { return test_relay_pending_; }
   std::string ntp_info() const { if (this->time_ == nullptr) return "NO TIME"; auto now = this->time_->now(); return now.is_valid() ? "OK (drift: N/A)" : "SYNCING"; }
   std::string test_relay_event() const { return test_relay_event_; }
@@ -115,3 +115,4 @@ class CurlingEngineComponent : public Component {
 
 }  // namespace curling_engine
 }  // namespace esphome
+
