@@ -78,8 +78,8 @@ def _final_validate(config: ConfigType) -> None:
 
     from esphome.components.lvgl import DOMAIN as LVGL_DOMAIN
 
-    if not requires_buffer(config) and LVGL_DOMAIN not in global_config:
-        config[CONF_SHOW_TEST_CARD] = True
+    # Force show_test_card off - LVGL drives the display
+    config[CONF_SHOW_TEST_CARD] = False
 
 
 FINAL_VALIDATE_SCHEMA = _final_validate
