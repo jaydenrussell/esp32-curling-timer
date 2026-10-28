@@ -258,6 +258,7 @@ bool Lt8912b::check_buffer_() {
     this->mark_failed_(LOG_STR("Could not allocate buffer for display!"), ESP_ERR_NO_MEM);
     return false;
   }
+  memset(this->buffer_, 0, this->height_ * this->width_ * bytes_per_pixel);
   return true;
 }
 
@@ -364,4 +365,5 @@ void Lt8912b::dump_config() {
 }  // namespace lt8912b
 }  // namespace esphome
 #endif  // USE_ESP32_VARIANT_ESP32P4
+
 
