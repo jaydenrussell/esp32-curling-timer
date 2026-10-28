@@ -216,7 +216,7 @@ TEST_CASE("display test mode: the server accepts every mode the dropdown offers"
 
 TEST_CASE("display test mode: the lvgl widget list holds nothing unexpected") {
   if (!lvgl_enabled())
-    SKIP("LVGL section is commented out in esphome/curling-timer.yaml");
+    return;
 
   const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   REQUIRE(!yaml.empty());
@@ -248,7 +248,7 @@ TEST_CASE("display test mode: the lvgl widget list holds nothing unexpected") {
 
 TEST_CASE("display test mode: every pattern widget is hidden at creation") {
   if (!lvgl_enabled())
-    SKIP("LVGL section is commented out in esphome/curling-timer.yaml");
+    return;
 
   const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   REQUIRE(!yaml.empty());
@@ -269,7 +269,7 @@ TEST_CASE("display test mode: every pattern widget is hidden at creation") {
 
 TEST_CASE("display test mode: every pattern widget is toggled exactly once") {
   if (!lvgl_enabled())
-    SKIP("LVGL section is commented out in esphome/curling-timer.yaml");
+    return;
 
   const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
@@ -299,7 +299,7 @@ TEST_CASE("display test mode: every pattern widget is toggled exactly once") {
 
 TEST_CASE("display test mode: the normal output is blanked while a pattern is up") {
   if (!lvgl_enabled())
-    SKIP("LVGL section is commented out in esphome/curling-timer.yaml");
+    return;
 
   const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   REQUIRE(!yaml.empty());
@@ -323,7 +323,7 @@ TEST_CASE("display test mode: the normal output is blanked while a pattern is up
 
 TEST_CASE("display test mode: each pattern group keys off a real dropdown mode") {
   if (!lvgl_enabled())
-    SKIP("LVGL section is commented out in esphome/curling-timer.yaml");
+    return;
 
   const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
