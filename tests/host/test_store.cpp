@@ -235,7 +235,7 @@ TEST_CASE ("backup names restricted") {
   TempSettingsCase tc;
   std::error_code ec;
   std::ofstream(tc.dir / "secret.yml", std::ios::binary) << "x";
-  for (const std::string &name : {"../secret.yml", "secret.yml", "/etc/passwd"}) {
+  for (const std::string name : {"../secret.yml", "secret.yml", "/etc/passwd"}) {
     CAPTURE(name);
     std::string text;
     std::string err;
