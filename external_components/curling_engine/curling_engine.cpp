@@ -6,6 +6,7 @@
 #include "esp_err.h"
 #include "esp_heap_caps.h"
 #include "esp_system.h"
+#include "esp_task_wdt.h"
 #include "esp_vfs_fat.h"
 #include "esphome/core/hal.h"
 #include "esphome/core/log.h"
@@ -66,6 +67,7 @@ void CurlingEngineComponent::setup() {
            static_cast<unsigned>(heap_caps_get_free_size(MALLOC_CAP_INTERNAL)));
 
   this->fs_.reset(make_posix_store_fs());
+  esp_task_wdt_reset();
   this->store_ = std::make_unique<SettingsStore>(this->fs_.get(), this->settings_path());
   this->ready_ = true;
   this->register_log_callback();
