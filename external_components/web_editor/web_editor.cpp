@@ -93,10 +93,7 @@ void WebEditorComponent::setup() {
   }
   ESP_LOGI(TAG, "auth ready (session cookie %s, port %u)", SESSION_COOKIE, this->port_);
   esp_netif_init();
-  esp_task_wdt_reset();
   esp_event_loop_create_default();
-  esp_task_wdt_reset();
-  esp_task_wdt_reset();
   if (!start_web_httpd(this)) {
     this->set_status("failed: the HTTP server could not be started on port " +
                      std::to_string(this->port_));
