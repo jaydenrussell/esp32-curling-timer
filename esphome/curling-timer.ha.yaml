@@ -207,7 +207,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.10.233
+      ref: v2026.10.234
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -242,7 +242,7 @@ esp_ldo:
 lt8912b:
   id: hdmi
   show_test_card: false
-  auto_clear_enabled: true
+  auto_clear_enabled: false
   reset_pin: GPIO4
   enable_pin: GPIO33
   sda_pin: GPIO0
