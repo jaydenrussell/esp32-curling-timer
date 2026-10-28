@@ -758,7 +758,6 @@ interval:
       - lvgl.label.update:
           id: lbl_header
           text: !lambda |-
-          text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
             auto &s = id(g_snap);
