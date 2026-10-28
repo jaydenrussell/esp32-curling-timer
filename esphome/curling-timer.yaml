@@ -292,425 +292,425 @@ globals:
 #   centre (errors / waiting for clock). All labels start empty; the
 #   1 Hz tick below fills them.
 # ---------------------------------------------------------------------
-# lvgl:
-#   displays:
-#     - hdmi
-#   update_interval: never
-#   bg_color: 0x000000
-#   full_refresh: false
-#   buffer_size: 10%
-#   scrollbar_mode: "OFF"
-#   widgets:
-#     - obj:
-#         id: tp_smpte_t0
-#         align: TOP_LEFT
-#         x: 0
-#         y: 0
-#         width: 183
-#         height: 480
-#         bg_color: 12566463
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_t1
-#         align: TOP_LEFT
-#         x: 183
-#         y: 0
-#         width: 183
-#         height: 480
-#         bg_color: 65535
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_t2
-#         align: TOP_LEFT
-#         x: 366
-#         y: 0
-#         width: 183
-#         height: 480
-#         bg_color: 16776960
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_t3
-#         align: TOP_LEFT
-#         x: 549
-#         y: 0
-#         width: 183
-#         height: 480
-#         bg_color: 65280
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_t4
-#         align: TOP_LEFT
-#         x: 732
-#         y: 0
-#         width: 183
-#         height: 480
-#         bg_color: 16711935
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_t5
-#         align: TOP_LEFT
-#         x: 915
-#         y: 0
-#         width: 183
-#         height: 480
-#         bg_color: 255
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_t6
-#         align: TOP_LEFT
-#         x: 1098
-#         y: 0
-#         width: 182
-#         height: 480
-#         bg_color: 16711680
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_b0
-#         align: TOP_LEFT
-#         x: 0
-#         y: 480
-#         width: 183
-#         height: 240
-#         bg_color: 16711680
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_b1
-#         align: TOP_LEFT
-#         x: 183
-#         y: 480
-#         width: 183
-#         height: 240
-#         bg_color: 0
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_b2
-#         align: TOP_LEFT
-#         x: 366
-#         y: 480
-#         width: 183
-#         height: 240
-#         bg_color: 16711935
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_b3
-#         align: TOP_LEFT
-#         x: 549
-#         y: 480
-#         width: 183
-#         height: 240
-#         bg_color: 0
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_b4
-#         align: TOP_LEFT
-#         x: 732
-#         y: 480
-#         width: 183
-#         height: 240
-#         bg_color: 0
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_b5
-#         align: TOP_LEFT
-#         x: 915
-#         y: 480
-#         width: 183
-#         height: 240
-#         bg_color: 0
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_smpte_b6
-#         align: TOP_LEFT
-#         x: 1098
-#         y: 480
-#         width: 182
-#         height: 240
-#         bg_color: 0
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - label:
-#         id: tp_smpte_res
-#         align: CENTER
-#         text: 1280x720
-#         text_font: font_header
-#         recolor: true
-#         hidden: true
-#     - obj:
-#         id: tp_geom_border
-#         align: TOP_LEFT
-#         x: 10
-#         y: 10
-#         width: 1260
-#         height: 700
-#         bg_opa: 0
-#         border_width: 2
-#         border_color: 8421504
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_v0
-#         align: TOP_LEFT
-#         x: 0
-#         y: 0
-#         width: 2
-#         height: 720
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_v1
-#         align: TOP_LEFT
-#         x: 160
-#         y: 0
-#         width: 2
-#         height: 720
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_v2
-#         align: TOP_LEFT
-#         x: 320
-#         y: 0
-#         width: 2
-#         height: 720
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_v3
-#         align: TOP_LEFT
-#         x: 480
-#         y: 0
-#         width: 2
-#         height: 720
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_v4
-#         align: TOP_LEFT
-#         x: 640
-#         y: 0
-#         width: 2
-#         height: 720
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_v5
-#         align: TOP_LEFT
-#         x: 800
-#         y: 0
-#         width: 2
-#         height: 720
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_v6
-#         align: TOP_LEFT
-#         x: 960
-#         y: 0
-#         width: 2
-#         height: 720
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_v7
-#         align: TOP_LEFT
-#         x: 1120
-#         y: 0
-#         width: 2
-#         height: 720
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_h0
-#         align: TOP_LEFT
-#         x: 0
-#         y: 0
-#         width: 1280
-#         height: 2
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_h1
-#         align: TOP_LEFT
-#         x: 0
-#         y: 120
-#         width: 1280
-#         height: 2
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_h2
-#         align: TOP_LEFT
-#         x: 0
-#         y: 240
-#         width: 1280
-#         height: 2
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_h3
-#         align: TOP_LEFT
-#         x: 0
-#         y: 360
-#         width: 1280
-#         height: 2
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_h4
-#         align: TOP_LEFT
-#         x: 0
-#         y: 480
-#         width: 1280
-#         height: 2
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_h5
-#         align: TOP_LEFT
-#         x: 0
-#         y: 600
-#         width: 1280
-#         height: 2
-#         bg_color: 4210752
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_cv
-#         align: TOP_LEFT
-#         x: 638
-#         y: 0
-#         width: 4
-#         height: 720
-#         bg_color: 16777215
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - obj:
-#         id: tp_geom_ch
-#         align: TOP_LEFT
-#         x: 0
-#         y: 358
-#         width: 1280
-#         height: 4
-#         bg_color: 16777215
-#         border_width: 0
-#         pad_all: 0
-#         hidden: true
-#     - label:
-#         id: lbl_header
-#         align: TOP_MID
-#         y: 20
-#         text_font: font_header
-#         long_mode: CLIP
-#         recolor: true
-#         text: ""
-#     - label:
-#         id: lbl_cnt4
-#         align: CENTER
-#         y: 0
-#         text_font: font_timer_4
-#         recolor: true
-#         text: ""
-#     - label:
-#         id: lbl_cnt5
-#         align: CENTER
-#         y: 0
-#         text_font: font_timer_5
-#         recolor: true
-#         text: ""
-#     - label:
-#         id: lbl_pace
-#         align: CENTER
-#         y: 0
-#         text_font: font_pace
-#         long_mode: CLIP
-#         recolor: true
-#         text: ""
-#     - label:
-#         id: lbl_status
-#         align: CENTER
-#         y: 0
-#         text_font: font_header
-#         long_mode: CLIP
-#         recolor: true
-#         text: ""
-#     - label:
-#         id: lbl_game
-#         align: BOTTOM_MID
-#         y: -4
-#         text_font: font_footer
-#         recolor: true
-#         text: ""
-#     - label:
-#         id: lbl_date
-#         align: BOTTOM_LEFT
-#         x: 10
-#         y: -4
-#         text_font: font_footer
-#         recolor: true
-#         text: ""
-#     - label:
-#         id: lbl_time
-#         align: BOTTOM_RIGHT
-#         x: -10
-#         y: -4
-#         text_font: font_footer
-#         recolor: true
-#         text: ""
+lvgl:
+  displays:
+    - hdmi
+  update_interval: never
+  bg_color: 0x000000
+  full_refresh: false
+  buffer_size: 10%
+  scrollbar_mode: "OFF"
+  widgets:
+    - obj:
+        id: tp_smpte_t0
+        align: TOP_LEFT
+        x: 0
+        y: 0
+        width: 183
+        height: 480
+        bg_color: 12566463
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_t1
+        align: TOP_LEFT
+        x: 183
+        y: 0
+        width: 183
+        height: 480
+        bg_color: 65535
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_t2
+        align: TOP_LEFT
+        x: 366
+        y: 0
+        width: 183
+        height: 480
+        bg_color: 16776960
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_t3
+        align: TOP_LEFT
+        x: 549
+        y: 0
+        width: 183
+        height: 480
+        bg_color: 65280
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_t4
+        align: TOP_LEFT
+        x: 732
+        y: 0
+        width: 183
+        height: 480
+        bg_color: 16711935
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_t5
+        align: TOP_LEFT
+        x: 915
+        y: 0
+        width: 183
+        height: 480
+        bg_color: 255
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_t6
+        align: TOP_LEFT
+        x: 1098
+        y: 0
+        width: 182
+        height: 480
+        bg_color: 16711680
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b0
+        align: TOP_LEFT
+        x: 0
+        y: 480
+        width: 183
+        height: 240
+        bg_color: 16711680
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b1
+        align: TOP_LEFT
+        x: 183
+        y: 480
+        width: 183
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b2
+        align: TOP_LEFT
+        x: 366
+        y: 480
+        width: 183
+        height: 240
+        bg_color: 16711935
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b3
+        align: TOP_LEFT
+        x: 549
+        y: 480
+        width: 183
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b4
+        align: TOP_LEFT
+        x: 732
+        y: 480
+        width: 183
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b5
+        align: TOP_LEFT
+        x: 915
+        y: 480
+        width: 183
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b6
+        align: TOP_LEFT
+        x: 1098
+        y: 480
+        width: 182
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - label:
+        id: tp_smpte_res
+        align: CENTER
+        text: 1280x720
+        text_font: font_header
+        recolor: true
+        hidden: true
+    - obj:
+        id: tp_geom_border
+        align: TOP_LEFT
+        x: 10
+        y: 10
+        width: 1260
+        height: 700
+        bg_opa: 0
+        border_width: 2
+        border_color: 8421504
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v0
+        align: TOP_LEFT
+        x: 0
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v1
+        align: TOP_LEFT
+        x: 160
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v2
+        align: TOP_LEFT
+        x: 320
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v3
+        align: TOP_LEFT
+        x: 480
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v4
+        align: TOP_LEFT
+        x: 640
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v5
+        align: TOP_LEFT
+        x: 800
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v6
+        align: TOP_LEFT
+        x: 960
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v7
+        align: TOP_LEFT
+        x: 1120
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h0
+        align: TOP_LEFT
+        x: 0
+        y: 0
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h1
+        align: TOP_LEFT
+        x: 0
+        y: 120
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h2
+        align: TOP_LEFT
+        x: 0
+        y: 240
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h3
+        align: TOP_LEFT
+        x: 0
+        y: 360
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h4
+        align: TOP_LEFT
+        x: 0
+        y: 480
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h5
+        align: TOP_LEFT
+        x: 0
+        y: 600
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_cv
+        align: TOP_LEFT
+        x: 638
+        y: 0
+        width: 4
+        height: 720
+        bg_color: 16777215
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_ch
+        align: TOP_LEFT
+        x: 0
+        y: 358
+        width: 1280
+        height: 4
+        bg_color: 16777215
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - label:
+        id: lbl_header
+        align: TOP_MID
+        y: 20
+        text_font: font_header
+        long_mode: CLIP
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_cnt4
+        align: CENTER
+        y: 0
+        text_font: font_timer_4
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_cnt5
+        align: CENTER
+        y: 0
+        text_font: font_timer_5
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_pace
+        align: CENTER
+        y: 0
+        text_font: font_pace
+        long_mode: CLIP
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_status
+        align: CENTER
+        y: 0
+        text_font: font_header
+        long_mode: CLIP
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_game
+        align: BOTTOM_MID
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_date
+        align: BOTTOM_LEFT
+        x: 10
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_time
+        align: BOTTOM_RIGHT
+        x: -10
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
 
 # # Non-blocking relay pulse used by the bell tick below (engine runs in
 # # the same 1 Hz display interval; scripts keep the delay off that path).
@@ -735,143 +735,143 @@ script:
 # into every label (empty string hides the label). Also runs the bell
 # check (pitimer buzz_if_due) after the labels.
 # ---------------------------------------------------------------------
-# interval:
-#   - interval: 1s
-#     then:
-#       - lambda: |-
-#           auto *eng = id(engine);
-#           if (eng == nullptr || !eng->ready())
-#             return;
-#           ::esphome::curling_engine::DisplaySnapshot snap;
-#           eng->display_snapshot(&snap);
-#           id(g_snap) = snap;
-#       - lvgl.widget.update:
-#           id:
-#             - tp_smpte_t0
-#             - tp_smpte_t1
-#             - tp_smpte_t2
-#             - tp_smpte_t3
-#             - tp_smpte_t4
-#             - tp_smpte_t5
-#             - tp_smpte_t6
-#             - tp_smpte_b0
-#             - tp_smpte_b1
-#             - tp_smpte_b2
-#             - tp_smpte_b3
-#             - tp_smpte_b4
-#             - tp_smpte_b5
-#             - tp_smpte_b6
-#             - tp_smpte_res
-#           hidden: !lambda 'return !(id(engine)->get_display_test_mode() == "smpte");'
-#       - lvgl.widget.update:
-#           id:
-#             - tp_geom_border
-#             - tp_geom_v0
-#             - tp_geom_v1
-#             - tp_geom_v2
-#             - tp_geom_v3
-#             - tp_geom_v4
-#             - tp_geom_v5
-#             - tp_geom_v6
-#             - tp_geom_v7
-#             - tp_geom_h0
-#             - tp_geom_h1
-#             - tp_geom_h2
-#             - tp_geom_h3
-#             - tp_geom_h4
-#             - tp_geom_h5
-#             - tp_geom_cv
-#             - tp_geom_ch
-#           hidden: !lambda 'return !(id(engine)->get_display_test_mode() == "geometry");'
-#       - lvgl.label.update:
-#           id: lbl_header
-#           text: !lambda |-
-#             std::string mode = id(engine)->get_display_test_mode();
-#             if (mode != "normal") return std::string();
-#             auto &s = id(g_snap);
-#             return ::esphome::curling_engine::recolor(s.header_color, s.header_text);
-#       - lvgl.label.update:
-#           id: lbl_cnt4
-#           align: CENTER
-#           y: !lambda |-
-#             // pitimer raises the timer by height/24 only while the pace line
-#             // is shown; otherwise it sits dead centre.
-#             return id(g_snap).show_pace ? -30 : 0;
-#           text: !lambda |-
-#             std::string mode = id(engine)->get_display_test_mode();
-#             if (mode != "normal") return std::string();
-#             auto &s = id(g_snap);
-#             if (!s.show_countdown || s.seconds_until_buzzer >= 3600)
-#               return std::string();
-#             return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
-#       - lvgl.label.update:
-#           id: lbl_cnt5
-#           align: CENTER
-#           y: !lambda |-
-#             return id(g_snap).show_pace ? -30 : 0;
-#           text: !lambda |-
-#             std::string mode = id(engine)->get_display_test_mode();
-#             if (mode != "normal") return std::string();
-#             auto &s = id(g_snap);
-#             if (!s.show_countdown || s.seconds_until_buzzer < 3600)
-#               return std::string();
-#             return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
-#       - lvgl.label.update:
-#           id: lbl_pace
-#           align: CENTER
-#           y: !lambda |-
-#             // pitimer: the pace line sits just below the timer, overlapping
-#             // its bottom padding. The timer's box height (LVGL line height)
-#             // gives the glyph height the digits occupy, so the line follows
-#             // whichever timer font is in use.
-#             auto &s = id(g_snap);
-#             const bool five = s.show_countdown && s.seconds_until_buzzer >= 3600;
-#             lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
-#             return 50 + (int) (0.3225f * lv_obj_get_height(timer));
-#           text: !lambda |-
-#             std::string mode = id(engine)->get_display_test_mode();
-#             if (mode != "normal") return std::string();
-#             auto &s = id(g_snap);
-#             if (!s.show_pace)
-#               return std::string();
-#             return ::esphome::curling_engine::recolor(s.pace_color, s.pace_text);
-#       - lvgl.label.update:
-#           id: lbl_status
-#           text: !lambda |-
-#             std::string mode = id(engine)->get_display_test_mode();
-#             if (mode != "normal") return std::string();
-#             auto &s = id(g_snap);
-#             if (!s.show_status)
-#               return std::string();
-#             return ::esphome::curling_engine::recolor(s.status_color, s.status_text);
-#       - lvgl.label.update:
-#           id: lbl_game
-#           text: !lambda |-
-#             std::string mode = id(engine)->get_display_test_mode();
-#             if (mode != "normal") return std::string();
-#             auto &s = id(g_snap);
-#             if (!s.show_game_name)
-#               return std::string();
-#             return ::esphome::curling_engine::recolor(
-#                 s.footer_color, s.game_name);
-#       - lvgl.label.update:
-#           id: lbl_date
-#           text: !lambda |-
-#             std::string mode = id(engine)->get_display_test_mode();
-#             if (mode != "normal") return std::string();
-#             auto &s = id(g_snap);
-#             if (!s.show_date_time)
-#               return std::string();
-#             return ::esphome::curling_engine::recolor(
-#                 s.footer_color, s.date_text);
-#       - lvgl.label.update:
-#           id: lbl_time
-#           text: !lambda |-
-#             std::string mode = id(engine)->get_display_test_mode();
-#             if (mode != "normal") return std::string();
-#             auto &s = id(g_snap);
-#             if (!s.show_date_time)
-#               return std::string();
-#             return ::esphome::curling_engine::recolor(
-#                 s.footer_color, s.time_text);
+interval:
+  - interval: 1s
+    then:
+      - lambda: |-
+          auto *eng = id(engine);
+          if (eng == nullptr || !eng->ready())
+            return;
+          ::esphome::curling_engine::DisplaySnapshot snap;
+          eng->display_snapshot(&snap);
+          id(g_snap) = snap;
+      - lvgl.widget.update:
+          id:
+            - tp_smpte_t0
+            - tp_smpte_t1
+            - tp_smpte_t2
+            - tp_smpte_t3
+            - tp_smpte_t4
+            - tp_smpte_t5
+            - tp_smpte_t6
+            - tp_smpte_b0
+            - tp_smpte_b1
+            - tp_smpte_b2
+            - tp_smpte_b3
+            - tp_smpte_b4
+            - tp_smpte_b5
+            - tp_smpte_b6
+            - tp_smpte_res
+          hidden: !lambda 'return !(id(engine)->get_display_test_mode() == "smpte");'
+      - lvgl.widget.update:
+          id:
+            - tp_geom_border
+            - tp_geom_v0
+            - tp_geom_v1
+            - tp_geom_v2
+            - tp_geom_v3
+            - tp_geom_v4
+            - tp_geom_v5
+            - tp_geom_v6
+            - tp_geom_v7
+            - tp_geom_h0
+            - tp_geom_h1
+            - tp_geom_h2
+            - tp_geom_h3
+            - tp_geom_h4
+            - tp_geom_h5
+            - tp_geom_cv
+            - tp_geom_ch
+          hidden: !lambda 'return !(id(engine)->get_display_test_mode() == "geometry");'
+      - lvgl.label.update:
+          id: lbl_header
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            return ::esphome::curling_engine::recolor(s.header_color, s.header_text);
+      - lvgl.label.update:
+          id: lbl_cnt4
+          align: CENTER
+          y: !lambda |-
+            // pitimer raises the timer by height/24 only while the pace line
+            // is shown; otherwise it sits dead centre.
+            return id(g_snap).show_pace ? -30 : 0;
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_countdown || s.seconds_until_buzzer >= 3600)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+      - lvgl.label.update:
+          id: lbl_cnt5
+          align: CENTER
+          y: !lambda |-
+            return id(g_snap).show_pace ? -30 : 0;
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_countdown || s.seconds_until_buzzer < 3600)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+      - lvgl.label.update:
+          id: lbl_pace
+          align: CENTER
+          y: !lambda |-
+            // pitimer: the pace line sits just below the timer, overlapping
+            // its bottom padding. The timer's box height (LVGL line height)
+            // gives the glyph height the digits occupy, so the line follows
+            // whichever timer font is in use.
+            auto &s = id(g_snap);
+            const bool five = s.show_countdown && s.seconds_until_buzzer >= 3600;
+            lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
+            return 50 + (int) (0.3225f * lv_obj_get_height(timer));
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_pace)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.pace_color, s.pace_text);
+      - lvgl.label.update:
+          id: lbl_status
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_status)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.status_color, s.status_text);
+      - lvgl.label.update:
+          id: lbl_game
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_game_name)
+              return std::string();
+            return ::esphome::curling_engine::recolor(
+                s.footer_color, s.game_name);
+      - lvgl.label.update:
+          id: lbl_date
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_date_time)
+              return std::string();
+            return ::esphome::curling_engine::recolor(
+                s.footer_color, s.date_text);
+      - lvgl.label.update:
+          id: lbl_time
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_date_time)
+              return std::string();
+            return ::esphome::curling_engine::recolor(
+                s.footer_color, s.time_text);
 
