@@ -125,11 +125,12 @@ std::string block_id(const std::string &block) {
 // One entry per "      - lvgl.widget.update:" action in the interval.
 std::vector<std::string> update_blocks(const std::string &yaml) {
   std::vector<std::string> out;
-  const std::string anchor = "- lvgl.widget.update:";
+  const std::string anchor = "            - lvgl.widget.update:";
   size_t pos = 0;
   while ((pos = yaml.find(anchor, pos)) != std::string::npos) {
-    size_t stop = yaml.find("\n      - ", pos + 1);
-    if (stop == std::string::npos) stop = yaml.find("\r\n      - ", pos + 1);
+    size_t stop = yaml.find("\n            - ", pos + anchor.size());
+    if (stop == std::string::npos) stop = yaml.find("\n      - ", pos + anchor.size());
+    if (stop == std::string::npos) stop = yaml.find("\r\n      - ", pos + anchor.size());
     out.push_back(yaml.substr(pos, stop == std::string::npos ? std::string::npos : stop - pos));
     pos = stop == std::string::npos ? yaml.size() : stop;
   }
@@ -185,10 +186,8 @@ std::vector<std::string> update_ids(const std::string &block) {
     if (!id.empty() && id.back() == '\r') id.pop_back();
     if (!id.empty()) out.push_back(id);
     pos = end + 1;
-    while (pos < block.size() && (block[pos] == ' ' || block[pos] == '\n' || block[pos] == '\r')) {
-      if (block[pos] == '\n') { pos++; break; }
-      pos++;
-    }
+    while (pos < block.size() && block[pos] == '\n') pos++;
+    while (pos < block.size() && block[pos] == ' ') pos++;
   }
   return out;
 }
