@@ -6,6 +6,7 @@
 
 #include "bell.h"
 #include "esphome/components/time/real_time_clock.h"
+#include <esp_sntp.h>
 #include "esphome/core/component.h"
 #include "esphome/components/logger/logger.h"
 #include "render.h"
@@ -115,4 +116,5 @@ class CurlingEngineComponent : public Component {
 
 }  // namespace curling_engine
 }  // namespace esphome
+
 
