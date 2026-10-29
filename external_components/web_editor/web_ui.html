@@ -1297,7 +1297,7 @@ async function checkVersion() {
     if (!res.ok) return;
     const data = await res.json();
     const latest = (data.tag_name || '').replace(/^v/, '');
-    const current = '{{version}}'.replace(/^v/, '');
+    const v = document.querySelector('.version'); if (v && latest) v.textContent = 'v' + latest;
     if (latest && latest !== current) {
       const dot = document.createElement('span');
       dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-left:6px;vertical-align:middle;cursor:pointer;';
