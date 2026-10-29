@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cstring>
-#if defined(ESP_PLATFORM)
+ #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
 #include <esp_task_wdt.h>
 #endif
 
@@ -86,7 +86,7 @@ void process_block(Sha256Ctx *c, const uint8_t *p) {
 void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
   c->total_len += len;
   while (len > 0) {
-#if defined(ESP_PLATFORM)
+ #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
     esp_task_wdt_reset();
 #endif
     size_t n = 64 - c->buf_len;
@@ -196,7 +196,7 @@ std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &s
                 reinterpret_cast<const uint8_t *>(u_prev.data()), u_prev.size(), u.data());
     std::array<uint8_t, 32> t = u;
     for (int i = 1; i < iterations; i++) {
-#if defined(ESP_PLATFORM)
+ #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
       esp_task_wdt_reset();
 #endif
       hmac_sha256(reinterpret_cast<const uint8_t *>(password.data()), password.size(), u.data(),
