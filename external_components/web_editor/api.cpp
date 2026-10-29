@@ -808,6 +808,30 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.footer.time_color"] = s.time_color;
   cfg["config.footer.color"] = s.footer_color;
   cfg["config.background_color"] = s.background_color;
+  {
+    std::string _t, _v, _e;
+    if (engine_->get_store() != nullptr && engine_->get_store()->read(&_t, &_v, &_e) == StoreStatus::OK) {
+      auto getval = [&_t](const char *key) -> std::string {
+        std::string needle = std::string(key) + ":";
+        size_t pos = _t.find(needle);
+        if (pos == std::string::npos) return std::string();
+        size_t vs = _t.find(':', pos) + 1;
+        while (vs < _t.size() && (_t[vs] == ' ' || _t[vs] == '	')) vs++;
+        size_t ve = vs;
+        if (ve < _t.size() && _t[ve] == ''') {
+          ve++;
+          while (ve < _t.size() && _t[ve] != ''') ve++;
+          if (ve < _t.size()) ve++;
+        } else {
+          while (ve < _t.size() && _t[ve] != '
+' && _t[ve] != ' ' && _t[ve] != '	' && _t[ve] != '#') ve++;
+        }
+        return _t.substr(vs, ve - vs);
+      };
+      cfg["config.club_website_url"] = getval("config.club_website_url");
+      cfg["config.league_page_url"] = getval("config.league_page_url");
+    }
+  }
   cfg["config.pregame_header_text"] = s.pregame_header_text;
   return from_document(doc);
 }
