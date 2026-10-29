@@ -86,6 +86,9 @@ void process_block(Sha256Ctx *c, const uint8_t *p) {
 void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
   c->total_len += len;
   while (len > 0) {
+#if defined(ESP_PLATFORM)
+    esp_task_wdt_reset();
+#endif
     size_t n = 64 - c->buf_len;
     if (n > len)
       n = len;
