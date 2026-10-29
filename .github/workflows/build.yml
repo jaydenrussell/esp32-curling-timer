@@ -10,13 +10,13 @@ jobs:
   host-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build and run host tests (engine + web auth/config)
         run: bash tests/host/run.sh
   compile:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Generate dummy secrets for compile check
         run: cp esphome/secrets.yaml.example esphome/secrets.yaml
       - name: Compile curling-timer.ha.yaml
