@@ -33,7 +33,7 @@ std::string read_file(const std::string &path) {
 std::string repo_root() {
   std::string dir = ".";
   for (int i = 0; i < 8; i++) {
-    if (!read_file(dir + "/esphome/curling-timer.yaml").empty())
+    if (!read_file(dir + "/esphome/curling-timer.ha.yaml").empty())
       return dir;
     dir += "/..";
   }
@@ -207,7 +207,7 @@ TEST_CASE("display test mode: the server accepts every mode the dropdown offers"
 }
 
 TEST_CASE("display test mode: the lvgl widget list holds nothing unexpected") {
-  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
   REQUIRE(!yaml.empty());
 
   // The widget list may contain only the normal display labels and the test
@@ -236,7 +236,7 @@ TEST_CASE("display test mode: the lvgl widget list holds nothing unexpected") {
 }
 
 TEST_CASE("display test mode: every pattern widget is hidden at creation") {
-  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
   REQUIRE(!yaml.empty());
 
   size_t found = 0;
@@ -254,7 +254,7 @@ TEST_CASE("display test mode: every pattern widget is hidden at creation") {
 }
 
 TEST_CASE("display test mode: every pattern widget is toggled exactly once") {
-  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
   const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
   REQUIRE(!yaml.empty());
   REQUIRE(!html.empty());
@@ -281,7 +281,7 @@ TEST_CASE("display test mode: every pattern widget is toggled exactly once") {
 }
 
 TEST_CASE("display test mode: the normal output is blanked while a pattern is up") {
-  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
   REQUIRE(!yaml.empty());
 
   // Every normal label must render nothing when a test pattern is selected,
@@ -301,7 +301,7 @@ TEST_CASE("display test mode: the normal output is blanked while a pattern is up
   }
 }
 
-TEST_CASE("display test mode: each pattern group keys off a real dropdown mode") {  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+TEST_CASE("display test mode: each pattern group keys off a real dropdown mode") {  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
   const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
   REQUIRE(!yaml.empty());
   REQUIRE(!html.empty());
@@ -334,3 +334,4 @@ TEST_CASE("display test mode: each pattern group keys off a real dropdown mode")
     CHECK(u.find("\"normal\"") == std::string::npos);
   }
 }
+
