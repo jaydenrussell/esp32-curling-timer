@@ -60,7 +60,6 @@ void WebEditorComponent::set_status(const std::string &status) {
 
 void WebEditorComponent::setup() {
   // Disable task watchdog during init - httpd_start() blocks too long
-  esp_task_wdt_delete(NULL);
   if (!this->load_auth_from_nvs()) {
     this->set_status("failed: NVS is not available");
     this->mark_failed();
@@ -145,3 +144,4 @@ void WebEditorComponent::dump_config() {
 
 }  // namespace web_editor
 }  // namespace esphome
+
