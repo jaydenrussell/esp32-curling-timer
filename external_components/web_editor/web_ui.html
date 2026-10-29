@@ -639,8 +639,8 @@ function renderSchedule() {
   const cards = [el('div', { class: 'row-actions', style: 'margin: 0 0 16px' },
     el('span', { class: 'spacer' }), foldButtons(state.openDays, () => DAYS, renderSchedule))];
   if (m.inner_comments) cards.unshift(commentWarning(m.inner_comments));
-  // 'today' only when today's games really come from the weekly schedule (no date exception)
   const todayWeekday = m.exceptions.some((d) => d.date === todayIso()) ? null : weekdayOf(todayIso());
+  cards.push(el('h2', { style: 'margin-top: 8px' }, 'Schedule'));
   for (const day of DAYS) {
     const entries = m.schedule[day];
     const copyTo = el('select', { onchange: (event) => {
@@ -671,11 +671,13 @@ function renderSchedule() {
     el('div', { id: 'imported-events', class: 'muted small' }, 'No imported events yet.'));
   cards.unshift(calCard);
   const excContainer = el('div', { style: 'margin-top:16px' });
-  excContainer.append(el('h2', { style: 'margin-top:0' }, 'Schedule Exceptions'));
+  excContainer.append(el('h2', { style: 'margin-top:0' }, 'Exceptions'));
   state.exceptionsRoot = excContainer;
   renderExceptions();
   state.exceptionsRoot = null;
   cards.push(excContainer);
+  cards.push(el('div', { class: 'card' }, el('h2', {}, 'Schedule Summary'),
+    el('p', { class: 'muted small' }, `${DAYS.length} weekday(s), ${m.exceptions.length} exception(s).`)));
   $('tab-schedule').replaceChildren(...cards);
 }
 
@@ -1281,12 +1283,19 @@ async function renderLeagues() {
   window.saveLeagues = async (arr) => {
     await api('/api/leagues', { leagues: arr });
   };
+  const cfg = state.model && state.model.config ? state.model.config : {};
+  const base = (cfg.league_page_url || cfg.club_website_url || '').trim();
   const importBtn = el('button', { class: 'btn', onclick: async () => {
-    const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', '');
-    const endpoint = url && url.trim() ? url.trim() : null;
+    const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
+    const endpoint = url && url.trim() ? url.trim() : (base || null);
     showMessage('Import not yet implemented server-side; paste league names manually.', 'warn');
   } }, 'Import from Club Manager');
-  root.replaceChildren(form, el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list, el('div', { class: 'row-actions' }, importBtn)));
+  const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
+    (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
+  root.replaceChildren(el('div', { class: 'row-actions', style: 'margin: 0 0 16px' }, importBtn),
+    form,
+    el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list),
+    summary);
 }
 
 // ---- start up -------------------------------------------------------------
