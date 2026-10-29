@@ -2,6 +2,9 @@
 
 #include <array>
 #include <cstring>
+#if defined(ESP_PLATFORM)
+#include <esp_task_wdt.h>
+#endif
 
 namespace esphome {
 namespace curling_engine {
@@ -190,6 +193,9 @@ std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &s
                 reinterpret_cast<const uint8_t *>(u_prev.data()), u_prev.size(), u.data());
     std::array<uint8_t, 32> t = u;
     for (int i = 1; i < iterations; i++) {
+#if defined(ESP_PLATFORM)
+      esp_task_wdt_reset();
+#endif
       hmac_sha256(reinterpret_cast<const uint8_t *>(password.data()), password.size(), u.data(),
                   32, u.data());
       for (int j = 0; j < 32; j++)
