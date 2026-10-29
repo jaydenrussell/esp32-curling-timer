@@ -11,8 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check paste variant is in sync with curling-timer.yaml
-        run: python3 tools/make_ha_yaml.py --check
       - name: Build and run host tests (engine + web auth/config)
         run: bash tests/host/run.sh
   compile:
@@ -21,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Generate dummy secrets for compile check
         run: cp esphome/secrets.yaml.example esphome/secrets.yaml
-      - name: Compile curling-timer.yaml
+      - name: Compile curling-timer.ha.yaml
         uses: esphome/build-action@v8.1.0
         with:
-          yaml-file: esphome/curling-timer.yaml
+          yaml-file: esphome/curling-timer.ha.yaml
