@@ -4,6 +4,7 @@
 #include "esp_heap_caps.h"
 #include "esp_system.h"
 #include "esphome/core/helpers.h"
+#include <cstring>
 
 namespace esphome {
 namespace lt8912b {
@@ -225,7 +226,7 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
 void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
                                 int x_pad) {
   esp_err_t err = ESP_OK;
-  auto bytes_per_pixel = 3 - this->color_depth_;
+  auto bytes_per_pixel = 3;
   auto stride = (x_offset + w + x_pad) * bytes_per_pixel;
   ptr += y_offset * stride + x_offset * bytes_per_pixel;
   // Wait for the previous transfer to finish (the callback gives the lock
@@ -254,11 +255,13 @@ bool Lt8912b::check_buffer_() {
     return false;
   if (this->buffer_ != nullptr)
     return true;
-  auto bytes_per_pixel = 3 - this->color_depth_;
+  auto bytes_per_pixel = 3;
   // A full screen is 1.8 MB at 1280x720 - far too much for the internal
   // heap, so ask for external (PSRAM) memory.
   RAMAllocator<uint8_t> allocator(true);
   this->buffer_ = allocator.allocate(this->height_ * this->width_ * bytes_per_pixel);
+  if (this->buffer_ != nullptr)
+    memset(this->buffer_, 0, this->height_ * this->width_ * bytes_per_pixel);
   if (this->buffer_ == nullptr) {
     this->mark_failed_(LOG_STR("Could not allocate buffer for display!"), ESP_ERR_NO_MEM);
     return false;
@@ -369,3 +372,4 @@ void Lt8912b::dump_config() {
 }  // namespace lt8912b
 }  // namespace esphome
 #endif  // USE_ESP32_VARIANT_ESP32P4
+
