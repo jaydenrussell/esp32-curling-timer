@@ -5,6 +5,8 @@
 #include <cstddef>
  #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
 #include <esp_task_wdt.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #endif
 
 namespace esphome {
@@ -32,6 +34,16 @@ struct Sha256Ctx {
   uint8_t buf[64];
   size_t buf_len;
 };
+
+#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+static bool s_wdt_added = false;
+static void wdt_ensure() {
+  if (!s_wdt_added) {
+    esp_task_wdt_add(NULL);
+    s_wdt_added = true;
+  }
+}
+#endif
 
 void ctx_init(Sha256Ctx *c) {
   c->h[0] = 0x6a09e667;
@@ -73,6 +85,11 @@ void process_block(Sha256Ctx *c, const uint8_t *p) {
     cc = b;
     b = a;
     a = t1 + t2;
+    if ((i & 15) == 15) {
+#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+      esp_task_wdt_reset();
+#endif
+    }
   }
   c->h[0] += a;
   c->h[1] += b;
@@ -86,7 +103,7 @@ void process_block(Sha256Ctx *c, const uint8_t *p) {
 
 void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-  esp_task_wdt_add(NULL); // ignore ESP_ERR_INVALID_STATE
+  wdt_ensure();
 #endif
   c->total_len += len;
   while (len > 0) {
@@ -103,6 +120,9 @@ void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
     if (c->buf_len == 64) {
       process_block(c, c->buf);
       c->buf_len = 0;
+#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+      vTaskDelay(1);
+#endif
     }
   }
 }
@@ -187,7 +207,7 @@ std::string hmac_sha256_hex(const std::string &key, const std::string &msg) {
 std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &salt,
                                int iterations, size_t dk_len) {
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-  esp_task_wdt_add(NULL); // ignore ESP_ERR_INVALID_STATE
+  wdt_ensure();
 #endif
   std::string out;
   out.reserve(dk_len);
