@@ -1,5 +1,6 @@
 #include "auth.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <random>
@@ -80,9 +81,11 @@ static bool parse_iterations(const std::string &text, long *out) {
     if (c < '0' || c > '9')
       return false;
     value = value * 10 + (c - '0');
-    if (value > 1000000000L)
+    if (value > 1000000L)
       return false;
   }
+  if (value <= 0)
+    return false;
   *out = value;
   return true;
 }
@@ -116,10 +119,10 @@ bool check_password(const std::string &password, const std::string &stored) {
   long iterations = 0;
   if (!parse_iterations(stored.substr(p1 + 1, p2 - p1 - 1), &iterations))
     return false;
-  if (iterations <= 0)
-    iterations = PASSWORD_ITERATIONS;
-  if (iterations > 1000000L)
-    iterations = 1000000L;
+  if (iterations <= 0 || iterations > 1000000L) {
+    std::fprintf(stderr, "auth: invalid PBKDF2 iteration count\n");
+    return false;
+  }
   std::string salt;
   if (!from_hex(stored.substr(p2 + 1, p3 - p2 - 1), &salt))
     return false;
