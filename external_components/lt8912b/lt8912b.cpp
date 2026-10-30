@@ -370,8 +370,8 @@ void Lt8912b::dump_config() {
                 "\n  Rotation: %d degrees"
                 "\n  DSI Lanes: 2"
                 "\n  Lane Bit Rate: %.0fMbps"
-                "\n  I2C Frequency: %uHz"
-                "\n  Buffer Color Depth: 24 bit",
+                "\n  I2C Frequency: %luHz"
+                "\n  Buffer Color Depth: 16 bit",
                 this->width_, this->height_, this->rotation_, this->lane_bit_rate_, this->i2c_frequency_);
   LOG_PIN("  Reset Pin ", this->reset_pin_);
   LOG_PIN("  Enable Pin ", this->enable_pin_);
