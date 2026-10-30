@@ -818,9 +818,9 @@ ApiResponse PiTimerApi::get_config() {
         size_t vs = _t.find(':', pos) + 1;
         while (vs < _t.size() && (_t[vs] == ' ' || _t[vs] == '	')) vs++;
         size_t ve = vs;
-        if (ve < _t.size() && _t[ve] == ''') {
+        if (ve < _t.size() && _t[ve] == '\'') {
           ve++;
-          while (ve < _t.size() && _t[ve] != ''') ve++;
+          while (ve < _t.size() && _t[ve] != '\'') ve++;
           if (ve < _t.size()) ve++;
         } else {
           while (ve < _t.size() && _t[ve] != '
