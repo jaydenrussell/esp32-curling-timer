@@ -196,7 +196,7 @@ void Lt8912b::update() {
 }
 
 void Lt8912b::flush_pending_() {
-  if (this->buffer_ == nullptr || this->x_low_ > this->x_high_ || this->y_low_ > this->y_high_)
+  if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr || this->x_low_ > this->x_high_ || this->y_low_ > this->y_high_)
     return;
   ESP_LOGV(TAG, "x_low %d, y_low %d, x_high %d, y_high %d", this->x_low_, this->y_low_, this->x_high_,
            this->y_high_);
@@ -214,6 +214,10 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
                              display::ColorBitness bitness, bool big_endian, int x_offset, int y_offset, int x_pad) {
   if (w <= 0 || h <= 0)
     return;
+  if (this->is_failed() || this->panel_ == nullptr)
+    return;
+  if (ptr == nullptr)
+    return;
   if (bitness != this->color_depth_) {
     display::Display::draw_pixels_at(x_start, y_start, w, h, ptr, order, bitness, big_endian, x_offset, y_offset,
                                      x_pad);
@@ -225,14 +229,20 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
 
 void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
                                 int x_pad) {
+  if (this->is_failed() || this->panel_ == nullptr || ptr == nullptr)
+    return;
   esp_err_t err = ESP_OK;
   auto bytes_per_pixel = 3;
   auto stride = (x_offset + w + x_pad) * bytes_per_pixel;
   ptr += y_offset * stride + x_offset * bytes_per_pixel;
   // Wait for the previous transfer to finish (the callback gives the lock
   // when it completes) before handing the driver new pixels.
-  if (this->io_lock_ != nullptr)
-    xSemaphoreTake(this->io_lock_, portMAX_DELAY);
+  if (this->io_lock_ != nullptr) {
+    if (xSemaphoreTake(this->io_lock_, pdMS_TO_TICKS(1000)) != pdTRUE) {
+      ESP_LOGE(TAG, "io_lock_ timeout");
+      return;
+    }
+  }
   if (x_offset == 0 && x_pad == 0) {
     err = esp_lcd_panel_draw_bitmap(this->panel_, x_start, y_start, x_start + w, y_start + h, ptr);
   } else {
