@@ -171,7 +171,7 @@ void Lt8912b::setup() {
 }
 
 void Lt8912b::update() {
-  if (this->is_failed())
+  if (this->is_failed() || this->panel_ == nullptr)
     return;
   if (this->auto_clear_enabled_) {
     this->clear();
@@ -280,6 +280,8 @@ bool Lt8912b::check_buffer_() {
 }
 
 void Lt8912b::draw_pixel_at(int x, int y, Color color) {
+  if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr)
+    return;
   if (!this->get_clipping().inside(x, y))
     return;
 
@@ -319,6 +321,8 @@ void Lt8912b::draw_pixel_at(int x, int y, Color color) {
 }
 
 void Lt8912b::fill(Color color) {
+  if (this->is_failed() || this->panel_ == nullptr)
+    return;
   if (!this->check_buffer_())
     return;
 
