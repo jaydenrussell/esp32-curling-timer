@@ -80,9 +80,11 @@ static bool parse_iterations(const std::string &text, long *out) {
     if (c < '0' || c > '9')
       return false;
     value = value * 10 + (c - '0');
-    if (value > 100000000L)
+    if (value > 1000000L)
       return false;
   }
+  if (value <= 0)
+    return false;
   *out = value;
   return true;
 }
@@ -114,7 +116,14 @@ bool check_password(const std::string &password, const std::string &stored) {
   std::string salt;
   if (!from_hex(stored.substr(p2 + 1, p3 - p2 - 1), &salt))
     return false;
+  if (salt.empty() || salt.size() != 16)
+    return false;
   const std::string digest_hex = stored.substr(p3 + 1);
+  if (digest_hex.size() != 64)
+    return false;
+  std::string digest_check;
+  if (!from_hex(digest_hex, &digest_check) || digest_check.size() != 32)
+    return false;
   const std::string digest = curling_engine::pbkdf2_hmac_sha256(password, salt,
                                                                  static_cast<int>(iterations), 32);
   return hex_equal(to_hex(reinterpret_cast<const uint8_t *>(digest.data()), digest.size()), digest_hex);
