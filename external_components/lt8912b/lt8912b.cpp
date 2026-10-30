@@ -331,10 +331,10 @@ void Lt8912b::fill(Color color) {
     return;
   }
 
+  uint16_t rgb565 = ((color.r & 0xF8) << 8) | ((color.g & 0xFC) << 3) | (color.b >> 3);
   for (size_t i = 0; i != this->width_ * this->height_; i++) {
-    this->buffer_[i * 3 + 0] = color.r;
-    this->buffer_[i * 3 + 1] = color.g;
-    this->buffer_[i * 3 + 2] = color.b;
+    this->buffer_[i * 2] = (rgb565 >> 8) & 0xFF;
+    this->buffer_[i * 2 + 1] = rgb565 & 0xFF;
   }
   this->x_low_ = 0;
   this->y_low_ = 0;
@@ -386,4 +386,3 @@ void Lt8912b::dump_config() {
 }  // namespace lt8912b
 }  // namespace esphome
 #endif  // USE_ESP32_VARIANT_ESP32P4
-
