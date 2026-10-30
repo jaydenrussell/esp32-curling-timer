@@ -80,9 +80,9 @@ static bool parse_iterations(const std::string &text, long *out) {
   for (char c : text) {
     if (c < '0' || c > '9')
       return false;
-    value = value * 10 + (c - '0');
-    if (value > 1000000L)
+    if (value > (1000000L - (c - '0')) / 10)
       return false;
+    value = value * 10 + (c - '0');
   }
   if (value <= 0)
     return false;
