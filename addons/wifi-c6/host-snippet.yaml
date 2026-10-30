@@ -1,0 +1,17 @@
+# Optional P4 host snippet for the ESP32-C6 Wi-Fi addon.
+# The P4 auto-detects the module over SDIO and stays offline when absent.
+
+esp32_hosted:
+  variant: ESP32C6
+  type: sdio
+  bus_width: 1
+  clk_pin: GPIO40
+  cmd_pin: GPIO39
+  d0_pin: GPIO41
+  sdio_frequency: 20MHz
+  active_high: true
+  reset_pin: GPIO27
+  use_psram: true
+
+wifi:
+  # No AP fallback: the P4 has no built-in wireless radio.
