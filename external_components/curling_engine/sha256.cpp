@@ -195,10 +195,13 @@ std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &s
     hmac_sha256(reinterpret_cast<const uint8_t *>(password.data()), password.size(),
                 reinterpret_cast<const uint8_t *>(u_prev.data()), u_prev.size(), u.data());
     std::array<uint8_t, 32> t = u;
+#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+    (void) esp_task_wdt_add(NULL);
+#endif
     for (int i = 1; i < iterations; i++) {
- #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-      esp_task_wdt_add(NULL);
-      esp_task_wdt_reset();
+#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+      if (i % 100 == 0)
+        esp_task_wdt_reset();
 #endif
       hmac_sha256(reinterpret_cast<const uint8_t *>(password.data()), password.size(), u.data(),
                   32, u.data());
