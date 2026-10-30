@@ -300,6 +300,7 @@ globals:
 lvgl:
   displays:
     - hdmi
+  color_depth: 24  # driver panel is RGB565 (16-bit); LVGL renders 24-bit and converts
   update_interval: never
   bg_color: 0x000000
   full_refresh: false
