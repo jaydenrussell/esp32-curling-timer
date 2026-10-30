@@ -1,4 +1,4 @@
-#include "sha256.h"
+﻿#include "sha256.h"
 
 #include <array>
 #include <cstring>
@@ -196,7 +196,10 @@ std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &s
                 reinterpret_cast<const uint8_t *>(u_prev.data()), u_prev.size(), u.data());
     std::array<uint8_t, 32> t = u;
     for (int i = 1; i < iterations; i++) {
- #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)\n      esp_task_wdt_add(NULL);\n      esp_task_wdt_reset();\n#endif
+ #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+      esp_task_wdt_add(NULL);
+      esp_task_wdt_reset();
+#endif
       hmac_sha256(reinterpret_cast<const uint8_t *>(password.data()), password.size(), u.data(),
                   32, u.data());
       for (int j = 0; j < 32; j++)
