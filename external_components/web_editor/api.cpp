@@ -823,8 +823,7 @@ ApiResponse PiTimerApi::get_config() {
           while (ve < _t.size() && _t[ve] != '\'') ve++;
           if (ve < _t.size()) ve++;
         } else {
-          while (ve < _t.size() && _t[ve] != '
-' && _t[ve] != ' ' && _t[ve] != '	' && _t[ve] != '#') ve++;
+          while (ve < _t.size() && _t[ve] != '\n' && _t[ve] != ' ' && _t[ve] != '	' && _t[ve] != '#') ve++;
         }
         return _t.substr(vs, ve - vs);
       };
