@@ -830,6 +830,8 @@ ApiResponse PiTimerApi::get_config() {
       };
       cfg["config.club_website_url"] = getval("config.club_website_url");
       cfg["config.league_page_url"] = getval("config.league_page_url");
+      const std::string mirror_scale = getval("config.mirror_scale");
+      if (!mirror_scale.empty()) cfg["config.mirror_scale"] = std::stod(mirror_scale);
     }
   }
   cfg["config.pregame_header_text"] = s.pregame_header_text;
@@ -924,6 +926,13 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
       if (!v.is<const char *>())
         return error_json(422, path + " must be a string");
       yaml = curling_engine::yaml_quote(v.as<const char *>());
+    } else if (path == "config.mirror_scale") {
+      if (!v.is<double>() && !v.is<float>() && !v.is<int>())
+        return error_json(422, path + " must be a number");
+      const double scale = v.as<double>();
+      if (scale < 0.1 || scale > 3.0)
+        return error_json(422, path + " must be between 0.1 and 3.0");
+      yaml = std::to_string(scale);
     } else {
       return error_json(422, "unknown config setting '" + path + "'");
     }
