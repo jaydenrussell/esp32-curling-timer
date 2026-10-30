@@ -104,7 +104,8 @@ void process_block(Sha256Ctx *c, const uint8_t *p) {
 
 void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-  wdt_ensure();
+  if (esp_task_wdt_status(NULL) != ESP_OK)
+    esp_task_wdt_add(NULL);
 #endif
   c->total_len += len;
   while (len > 0) {
@@ -208,7 +209,8 @@ std::string hmac_sha256_hex(const std::string &key, const std::string &msg) {
 std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &salt,
                                int iterations, size_t dk_len) {
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-  wdt_ensure();
+  if (esp_task_wdt_status(NULL) != ESP_OK)
+    esp_task_wdt_add(NULL);
 #endif
   std::string out;
   out.reserve(dk_len);

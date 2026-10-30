@@ -67,6 +67,8 @@ struct LeagueProfile {
   int pace_minutes_per_end{0};
   std::vector<std::string> buzzer_relays;
   int countdown_minutes_before{0};
+  std::string format;
+  int team_size{0};
 };
 
 struct PiTimerGame {
@@ -112,7 +114,7 @@ class PiTimerSettings {
   int pregame_countdown{0};
   bool allow_midnight_wrap{false};
   int pregame_font_size{0};
-  std::string pregame_color{};
+  int mirror_scale{100};  std::string pregame_color{};
   int date_font_size{52};
   std::string date_color{};
   int time_font_size{52};

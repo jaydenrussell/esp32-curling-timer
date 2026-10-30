@@ -1395,7 +1395,7 @@ void PiTimerSettings::reset() {
   pregame_countdown = 0;
   allow_midnight_wrap = false;
   pregame_font_size = 0;
-  pregame_color = "";
+  mirror_scale = 100;  pregame_color = "";
   date_font_size = 52;
   date_color = "";
   time_font_size = 52;
@@ -1540,7 +1540,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = cfg->find("pregame_countdown")) != nullptr && v->type == YType::Int) pregame_countdown = static_cast<int>(v->i);
   if ((v = cfg->find("allow_midnight_wrap")) != nullptr && v->type == YType::Bool) allow_midnight_wrap = v->b;
   if ((v = cfg->find("pregame_font_size")) != nullptr && v->type == YType::Int) pregame_font_size = static_cast<int>(v->i);
-  if ((v = cfg->find("pregame_color")) != nullptr && v->type == YType::Str) pregame_color = v->s;
+  if ((v = cfg->find("mirror_scale")) != nullptr && v->type == YType::Int) mirror_scale = static_cast<int>(v->i);  if ((v = cfg->find("pregame_color")) != nullptr && v->type == YType::Str) pregame_color = v->s;
 
   if ((v = cfg->find("background_color")) != nullptr && v->type == YType::Str) background_color = v->s;
   if ((v = cfg->find("pregame_header_text")) != nullptr && v->type == YType::Str) pregame_header_text = v->s;
@@ -1651,6 +1651,9 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
          lp.pace_minutes_per_end = static_cast<int>(pm->i);
        if (const YamlValue *cm = lv.find("countdown_minutes_before"); cm && cm->type == YType::Int)
          lp.countdown_minutes_before = static_cast<int>(cm->i);
+       if (const YamlValue *f = lv.find("format"); f && f->type == YType::Str) lp.format = f->s;
+       if (const YamlValue *ts = lv.find("team_size"); ts && ts->type == YType::Int)
+         lp.team_size = static_cast<int>(ts->i);
        if (const YamlValue *rl = lv.find("relays"); rl) {
          if (rl->type != YType::Seq) {
            *err = std::string("'relays' in league is not a valid list (" + yaml_repr(*rl) + ")");

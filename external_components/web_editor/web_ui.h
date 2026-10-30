@@ -763,7 +763,7 @@ const CONFIG_SECTIONS = [
     fields: [
       ['config.pregame_countdown', 'int', 'Countdown (seconds)', 0, 60],
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
-      ['config.pregame_color', 'color', 'Colour'],
+      ['config.mirror_scale', 'int', 'Manual scale (%)', 25, 200],      ['config.pregame_color', 'color', 'Colour'],
       ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
   { group: 'Global options', title: 'Curling Club Manager', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
     fields: [
@@ -1251,6 +1251,8 @@ async function renderLeagues() {
       pace_enabled: $('lg-pace').checked,
       pace_minutes_per_end: parseInt($('lg-pace-min').value || '0', 10),
       countdown_minutes_before: parseInt($('lg-cmb').value || '0', 10),
+      format: $('lg-format').value,
+      team_size: parseInt($('lg-team-size').value || '0', 10),
     };
     const ei = $('lg-editidx').value;
     if (ei !== '') leagues[parseInt(ei, 10)] = entry; else leagues.push(entry);
@@ -1270,6 +1272,9 @@ async function renderLeagues() {
       el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-pace' }), 'Pace of play'),
       el('label', {}, 'Pace minutes/end', el('input', { type: 'number', id: 'lg-pace-min', min: 0 }))),
     el('label', {}, 'Countdown warning minutes before', el('input', { type: 'number', id: 'lg-cmb', min: 0 })),
+    el('div', { class: 'grid2' },
+      el('label', {}, 'Format', el('input', { type: 'text', id: 'lg-format' })),
+      el('label', {}, 'Team size', el('input', { type: 'number', id: 'lg-team-size', min: 0 }))),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Save League')));
   window.editLeague = (idx) => {
     const lp = leagues[idx];
@@ -1281,6 +1286,8 @@ async function renderLeagues() {
     $('lg-pace').checked = !!lp.pace_enabled;
     $('lg-pace-min').value = lp.pace_minutes_per_end || '';
     $('lg-cmb').value = lp.countdown_minutes_before || '';
+    $('lg-format').value = lp.format || '';
+    $('lg-team-size').value = lp.team_size || '';
   };
   window.saveLeagues = async (arr) => {
     await api('/api/leagues', { leagues: arr });

@@ -801,7 +801,7 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.pregame_countdown"] = s.pregame_countdown;
   cfg["config.allow_midnight_wrap"] = s.allow_midnight_wrap;
   cfg["config.pregame_font_size"] = s.pregame_font_size;
-  cfg["config.pregame_color"] = s.pregame_color;
+  cfg["config.mirror_scale"] = s.mirror_scale;  cfg["config.pregame_color"] = s.pregame_color;
   cfg["config.footer.date_font_size"] = s.date_font_size;
   cfg["config.footer.date_color"] = s.date_color;
   cfg["config.footer.time_font_size"] = s.time_font_size;
@@ -877,7 +877,7 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                 path == "config.log_level" ||
                 path == "config.pregame_countdown" ||
                path == "config.pregame_font_size" ||
-               path == "config.footer.date_font_size" ||
+               path == "config.mirror_scale" ||               path == "config.footer.date_font_size" ||
                path == "config.footer.time_font_size") {
       if (!json_strict_int(v, &number) || number < 0 || number > 100000)
         return error_json(422, path + " must be a whole number of seconds or pixels (0 or more)");
@@ -967,6 +967,8 @@ ApiResponse PiTimerApi::get_leagues() {
     o["pace_enabled"] = lp.pace_enabled;
     o["pace_minutes_per_end"] = lp.pace_minutes_per_end;
     o["countdown_minutes_before"] = lp.countdown_minutes_before;
+    o["format"] = lp.format;
+    o["team_size"] = lp.team_size;
   }
   return from_document(doc);
 }
@@ -992,7 +994,10 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
     yaml += "    header_text: " + std::string(ht ? ht : "") + "\n";
     yaml += "    pace_enabled: " + std::string(item["pace_enabled"].as<bool>() ? "true" : "false") + "\n";
     yaml += "    pace_minutes_per_end: " + std::to_string(item["pace_minutes_per_end"].as<int>()) + "\n";
-    yaml += "    countdown_minutes_before: " + std::to_string(item["countdown_minutes_before"].as<int>()) + "\n";
+    yaml += "    countdown_minutes_before: " + std::to_string(item["countdown_minutes_before"].as<int>()) + "\\n";
+    const char *fmt = item["format"].as<const char *>();
+    yaml += "    format: " + std::string(fmt ? fmt : "") + "\\n";
+    yaml += "    team_size: " + std::to_string(item["team_size"].as<int>()) + "\\n";
   }
 
   SettingsStore *store = engine_->get_store();
