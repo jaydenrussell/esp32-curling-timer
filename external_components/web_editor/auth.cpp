@@ -123,7 +123,7 @@ bool check_password(const std::string &password, const std::string &stored) {
   std::string salt;
   if (!from_hex(stored.substr(p2 + 1, p3 - p2 - 1), &salt))
     return false;
-  if (salt.empty() || salt.size() != 16)
+  if (salt.empty())
     return false;
   const std::string digest_hex = stored.substr(p3 + 1);
   if (digest_hex.size() != 64)
