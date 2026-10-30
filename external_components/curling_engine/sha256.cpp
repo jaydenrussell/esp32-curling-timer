@@ -1,4 +1,4 @@
-﻿#include "sha256.h"
+∩╗┐#include "sha256.h"
 
 #include <array>
 #include <cstring>
@@ -85,11 +85,9 @@ void process_block(Sha256Ctx *c, const uint8_t *p) {
 
 void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
   c->total_len += len;
-#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-  esp_task_wdt_add(NULL);
-#endif
   while (len > 0) {
- #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+    if (esp_task_wdt_status(NULL) != ESP_OK) esp_task_wdt_add(NULL);
     esp_task_wdt_reset();
 #endif
     size_t n = 64 - c->buf_len;
@@ -189,9 +187,6 @@ std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &s
   out.reserve(dk_len);
   uint32_t block_index = 1;
   size_t produced = 0;
-#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-  esp_task_wdt_add(NULL);
-#endif
   while (produced < dk_len) {
     uint8_t idx_be[4] = {uint8_t(block_index >> 24), uint8_t(block_index >> 16),
                          uint8_t(block_index >> 8), uint8_t(block_index)};
@@ -203,8 +198,10 @@ std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &s
     std::array<uint8_t, 32> t = u;
     for (int i = 1; i < iterations; i++) {
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-      if (i % 100 == 0)
+      if (i % 100 == 0) {
+        if (esp_task_wdt_status(NULL) != ESP_OK) esp_task_wdt_add(NULL);
         esp_task_wdt_reset();
+      }
 #endif
       hmac_sha256(reinterpret_cast<const uint8_t *>(password.data()), password.size(), u.data(),
                   32, u.data());
