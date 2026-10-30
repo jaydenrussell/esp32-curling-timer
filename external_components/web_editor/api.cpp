@@ -1074,12 +1074,12 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
       return get_settings();
     if (p == "/api/raw")
       return get_raw();
-    if (p == "/api/backups")
-      return get_backups();
-      if (p == "/api/config")
-        return get_config();
-      if (p == "/api/leagues")
-        return get_leagues();
+     if (p == "/api/backups")
+       return get_backups();
+     if (p == "/api/config")
+       return get_config();
+     if (p == "/api/leagues")
+       return get_leagues();
 
      if (p == "/api/ntp_status")
        return ntp_status();
