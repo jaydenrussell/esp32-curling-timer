@@ -76,7 +76,7 @@ class Lt8912b : public display::Display {
   StaticSemaphore_t io_lock_buffer_{};
   bool hdmi_ready_{false};
 
-  display::ColorBitness color_depth_{display::COLOR_BITNESS_888};
+  display::ColorBitness color_depth_{display::COLOR_BITNESS_565};
   uint8_t *buffer_{nullptr};
   uint16_t x_low_{1};
   uint16_t y_low_{1};
