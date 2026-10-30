@@ -133,7 +133,7 @@ void ctx_final(Sha256Ctx *c, uint8_t out[32]) {
   uint8_t pad = 0x80;
   ctx_update(c, &pad, 1);
   uint8_t zero = 0;
-  while (c->buf_len != 56)
+  while (c->buf_len % 64 != 56)
     ctx_update(c, &zero, 1);
   uint8_t len_be[8];
   for (int i = 0; i < 8; i++)
