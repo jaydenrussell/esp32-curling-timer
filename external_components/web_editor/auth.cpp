@@ -110,7 +110,8 @@ bool check_password(const std::string &password, const std::string &stored) {
   const std::string scheme = stored.substr(0, p1);
   if (scheme != "pbkdf2_sha256")
     return false;
-  long iterations = 0;\n  if (!parse_iterations(stored.substr(p1 + 1, p2 - p1 - 1), &iterations))
+  long iterations = 0;
+  if (!parse_iterations(stored.substr(p1 + 1, p2 - p1 - 1), &iterations))
     return false;
   std::string salt;
   if (!from_hex(stored.substr(p2 + 1, p3 - p2 - 1), &salt))
