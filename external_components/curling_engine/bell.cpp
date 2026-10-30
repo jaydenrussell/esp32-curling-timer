@@ -68,20 +68,20 @@ bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame>
   if (settings.ring_at_start.has_value() && !settings.ring_at_start->empty() && settings.relay_start_duration > 0 && since_start >= 0 &&
       since_start <= BUZZER_GRACE_SECONDS && fires("start")) {
     mask |= relays_mask(*settings.ring_at_start);
-    if (settings.relay_start_duration * 1000 > out->duration_ms) out->duration_ms = settings.relay_start_duration * 1000;
+    if (static_cast<uint32_t>(settings.relay_start_duration) * 1000U > out->duration_ms) out->duration_ms = settings.relay_start_duration * 1000;
   }
   // Countdown warning: seconds_until_buzzer descending into [target-grace, target].
   if (settings.countdown_minutes_before > 0 && !settings.countdown_relays.empty()) {
     const int target = settings.countdown_minutes_before * 60;
     if (settings.relay_countdown_duration > 0 && until <= target && until >= target - BUZZER_GRACE_SECONDS && fires("countdown")) {
       mask |= relays_mask(settings.countdown_relays);
-      if (settings.relay_countdown_duration * 1000 > out->duration_ms) out->duration_ms = settings.relay_countdown_duration * 1000;
+      if (static_cast<uint32_t>(settings.relay_countdown_duration) * 1000U > out->duration_ms) out->duration_ms = settings.relay_countdown_duration * 1000;
     }
   }
   // Buzzer (pitimer buzz_if_due).
   if (until >= -1 && until <= 0 && settings.relay_end_duration > 0 && fires("buzzer") && settings.relays.has_value()) {
     mask |= relays_mask(*settings.relays);
-    if (settings.relay_end_duration * 1000 > out->duration_ms) out->duration_ms = settings.relay_end_duration * 1000;
+    if (static_cast<uint32_t>(settings.relay_end_duration) * 1000U > out->duration_ms) out->duration_ms = settings.relay_end_duration * 1000;
   }
   if (mask == 0)
     return false;
