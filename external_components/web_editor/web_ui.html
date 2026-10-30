@@ -415,7 +415,8 @@ function renderStatus() {
    }
    const sm = state.status || {};
    function unswap(c) { if (!c || c.length < 7) return c; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
-   const scale = 0.85;
+   const scale = (state.configValues && state.configValues['config.mirror_scale'] != null)
+     ? Number(state.configValues['config.mirror_scale']) : 0.85;
    const fh = Math.round((sm.font_header || 96) * scale);
    const ft = Math.round((sm.font_timer || 450) * scale);
    const fp = Math.round((sm.font_pace || 85) * scale * 0.85);
@@ -768,6 +769,9 @@ const CONFIG_SECTIONS = [
     fields: [
       ['config.club_website_url', 'text', 'Club website URL'],
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
+  { group: 'Global options', title: 'Display mirror', hint: 'Scale applied to the web status display mirror (0.1 to 3.0).',
+    fields: [
+      ['config.mirror_scale', 'number', 'Display mirror scale', 0.1, 3.0]] },
   { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
@@ -881,6 +885,9 @@ function validateConfigDiff(diff) {
     if (path === 'config.pace_of_play.unit_duration') {
       if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0)
         return 'Minutes per unit must be a number greater than 0';
+    } else if (path === 'config.mirror_scale') {
+      if (typeof value !== 'number' || !Number.isFinite(value) || value < 0.1 || value > 3.0)
+        return 'Display mirror scale must be a number between 0.1 and 3.0';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
                path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
                path === 'config.buzzer.header_hold' ||
@@ -935,6 +942,11 @@ function configField(field) {
       onchange: (event) => set(event.target.value) },
       [el('option', { value: '', selected: value == null || value === '' }, 'not set')]
         .concat(colorOpts.map((opt) => el('option', { value: opt, selected: value === opt }, opt)))));
+  }
+  if (type === 'number') {
+    return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.05, inputmode: 'decimal',
+      value: value == null ? '' : String(value),
+      oninput: (event) => set(event.target.value === '' ? null : Number(event.target.value)) }));
   }
   if (type === 'minutes') {
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.5, inputmode: 'decimal',
