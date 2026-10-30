@@ -214,7 +214,7 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
                              display::ColorBitness bitness, bool big_endian, int x_offset, int y_offset, int x_pad) {
   if (w <= 0 || h <= 0)
     return;
-  if (this->is_failed() || this->panel_ == nullptr)
+  if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr)
     return;
   if (ptr == nullptr)
     return;
@@ -229,7 +229,7 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
 
 void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
                                 int x_pad) {
-  if (this->is_failed() || this->panel_ == nullptr || ptr == nullptr)
+  if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr || ptr == nullptr)
     return;
   esp_err_t err = ESP_OK;
   auto bytes_per_pixel = 3;
@@ -238,7 +238,7 @@ void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const ui
   // Wait for the previous transfer to finish (the callback gives the lock
   // when it completes) before handing the driver new pixels.
   if (this->io_lock_ != nullptr) {
-    if (xSemaphoreTake(this->io_lock_, pdMS_TO_TICKS(1000)) != pdTRUE) {
+    if (xSemaphoreTake(this->io_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
       ESP_LOGE(TAG, "io_lock_ timeout");
       return;
     }
