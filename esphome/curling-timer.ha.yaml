@@ -1,1019 +1,1018 @@
-# ===========================================  ==========================
-# ESP32 Curling  T imer
-# M5Stack Unit PoE-P4 (U213) + Add-On  D isplay Out LT8912B HDMI (U221)
-# + M5Stac k U nit 2Relay (HY2.0-4P, GPIO control) + ESP 32-C 6 (SuperMini)
-#   SDIO co-processor for  Wi-F i 6
+# =====================================================================
+# ESP32 Curling Timer
+# M5Stack Unit PoE-P4 (U213) + Add-On Display Out LT8912B HDMI (U221)
+# + M5Stack Unit 2Relay (HY2.0-4P, GPIO control) + ESP32-C6 (SuperMini)
+#   SDIO co-processor for Wi-Fi 6
 #
-# Port of the rpi-buzzer / piti mer fi rmware (v2.4.4) to ESPHome.
+# Port of the rpi-buzzer / pitimer firmware (v2.4.4) to ESPHome.
 #
-# Sche dule en gine + web editor + LT8912B HDMI disp lay + LV GL countdown
-# UI are enabled below  (externa l_components).
+# Schedule engine + web editor + LT8912B HDMI display + LVGL countdown
+# UI are enabled below (external_components).
 #
-# THIS IS THE PA STE-READY  VARIANT (git source) for the Home  Assistant
- # ESPHome Device Builder add-on.  Repo/CI buil ds use curling-timer.yaml.
-# == ============= =============================== ============== =========
+# THIS IS THE PASTE-READY VARIANT (git source) for the Home Assistant
+# ESPHome Device Builder add-on. Repo/CI builds use curling-timer.yaml.
+# =====================================================================
 
 substitutions:
-   # IANA timezon e, e.g. "America/New_York" � � see docs/BUILD .md
-  timezone: "America/To ronto"
+  # IANA timezone, e.g. "America/New_York" — see docs/BUILD.md
+  timezone: "America/Toronto"
 
 esphome:
   name: curling-timer
-   friendly_name: Cu rling Timer
-  name_add_ma c_suffix: false
+  friendly_name: Curling Timer
+  name_add_mac_suffix: false
 
- esp32:
-  variant: esp32p 4
-  # First bench b oot showed "Chip Revisio n: 103" (v1.3) on the  U213 —
-  # pre-rev3  silicon; required so  the build targets rev< 3.0
-  engineering_samp le: true
-  cpu_frequ ency: 360MHz
-  flash_si ze: 16MB
-  framewor k:
+esp32:
+  variant: esp32p4
+  # First bench boot showed "Chip Revision: 103" (v1.3) on the U213 —
+  # pre-rev3 silicon; required so the build targets rev<3.0
+  engineering_sample: true
+  cpu_frequency: 360MHz
+  flash_size: 16MB
+  framework:
     type: esp-idf
-     # The settings st ore keeps timestamped back ups in a "backups"  folder and
-    # lists th em for the web ed itor. ESP-IDF's VFS only pro vides opendir/
-     # readdir/mkdir when this  is on (otherwi se newlib's always-fail stubs  are
-    # lin ked and every save fails with " cannot create  backup directory").
+    # The settings store keeps timestamped backups in a "backups" folder and
+    # lists them for the web editor. ESP-IDF's VFS only provides opendir/
+    # readdir/mkdir when this is on (otherwise newlib's always-fail stubs are
+    # linked and every save fails with "cannot create backup directory").
     #
-     # Long file  names: ESPHome's generated sdkco nfig leaves  FATFS with
-    # LFN_NONE, so on ly 8.3 nam es can be created and
-    # "pitim er_settin gs.yml" fails with FR_INVALID_NAME.  LFN_HEAP  enables
-    # them (the LFN buffer  is ~300  bytes per open file).
-    sdkconfig_ option s:
+    # Long file names: ESPHome's generated sdkconfig leaves FATFS with
+    # LFN_NONE, so only 8.3 names can be created and
+    # "pitimer_settings.yml" fails with FR_INVALID_NAME. LFN_HEAP enables
+    # them (the LFN buffer is ~300 bytes per open file).
+    sdkconfig_options:
       CONFIG_VFS_SUPPORT_DIR: y
-       C ONFIG_FATFS_LFN_HEAP: y
-      CONFIG_ES P_TA SK_WDT_TIMEOUT_S: "300"
-      # Persist  cra sh diagnostics to flash for post-mortem an al ysis.
-      CONFIG_ESP_COREDUMP_ENABLE_TO_ F LASH: y
-      CONFIG_ESP_COREDUMP_DATA_FORM  AT_ELF: y
-      CONFIG_ESP_COREDUMP_CHECKSUM  _CRC32: y
+      CONFIG_FATFS_LFN_HEAP: y
+      CONFIG_ESP_TASK_WDT_TIMEOUT_S: "300"
+      # Persist crash diagnostics to flash for post-mortem analysis.
+      CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH: y
+      CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF: y
+      CONFIG_ESP_COREDUMP_CHECKSUM_CRC32: y
     advanced:
-      execute_from _ psram: false
+      execute_from_psram: false
 
 psram:
-  # ESP32-P4 only s up ports hex mode in ESPHome (2026.9.1)
-  sp eed : 200MHz
+  # ESP32-P4 only supports hex mode in ESPHome (2026.9.1)
+  speed: 200MHz
 
 safe_mode:
-  disabled: true 
+  disabled: true
 
-l ogger:
-  # USB Serial/JTAG on the U213  USB-C  port is the bench console.
-  hardware _uart:  USB_SERIAL_JTAG
+logger:
+  # USB Serial/JTAG on the U213 USB-C port is the bench console.
+  hardware_uart: USB_SERIAL_JTAG
   level: VERBOSE
-   task_lo g_buffer_size: 8192
+  task_log_buffer_size: 8192
 
 select:
-  - p latform:  logger
+  - platform: logger
     name: "Log Level"
-     id: log_l evel_select
+    id: log_level_select
 
 json:
 
-# --------- ---------- ---------------------------------- ----------- -----
-# Networking: PoE Ethernet  is the defa ult and only requirement.
-# Wi- Fi (via the C 6 SDIO co-processor) is an OPTI ONAL add-on pa ckage —
-# add it only when  the SuperMini C 6 is wired and flashed:
+# ---------------------------------------------------------------------
+# Networking: PoE Ethernet is the default and only requirement.
+# Wi-Fi (via the C6 SDIO co-processor) is an OPTIONAL add-on package —
+# add it only when the SuperMini C6 is wired and flashed:
 #
-#  packages:
-#    wifi_addon: !include wifi-c6 -failover.yaml
-#  -------------------------- ------------------ ------------------------- 
+# packages:
+#   wifi_addon: !include wifi-c6-failover.yaml
+# ---------------------------------------------------------------------
 network:
 
-ethern et:
-  # M5Stack Unit PoE -P4: PHY IP101GRI @  address 1 (per M5Stack U 213 pin map)
-  # RXD V=G28 RXD0=G29 RXD1=G30  TXD0=G34 TXD1=G35 TXE N=G49 RMII_CLK=G50
-   type: IP101
-  phy_addr : 1
-  mdc_pin: GPIO3 1
+ethernet:
+  # M5Stack Unit PoE-P4: PHY IP101GRI @ address 1 (per M5Stack U213 pin map)
+  # RXDV=G28 RXD0=G29 RXD1=G30 TXD0=G34 TXD1=G35 TXEN=G49 RMII_CLK=G50
+  type: IP101
+  phy_addr: 1
+  mdc_pin: GPIO31
   mdio_pin: GPIO52
-   power_pin: GPIO51
-   clk:
+  power_pin: GPIO51
+  clk:
     pin: GPIO50
-     mode: CLK_EXT_I N
+    mode: CLK_EXT_IN
 
 
-# ----------------- ------------------ --------------------------- -------
-# mDNS -  advertises the device as cu rling-timer.loca l on the local
-# network, so  Home Assistant  can discover it and the devic e can be
-# re ached by name (http://curling-t imer.local:80 80 for the web editor).
-# The h ostname foll ows the device name above.
-# --- ----------- ---------------------------------- ---------- -----------
+# ---------------------------------------------------------------------
+# mDNS - advertises the device as curling-timer.local on the local
+# network, so Home Assistant can discover it and the device can be
+# reached by name (http://curling-timer.local:8080 for the web editor).
+# The hostname follows the device name above.
+# ---------------------------------------------------------------------
 mdns:
-  id: mdns_adve rtiser
- 
-# --------------------------------- -------- ----------------------------
-# Link  diagnos tics — which network path is actuall y up. 
-# Ethernet is primary whenever its lin k is  connected; Wi-Fi (C6) is
-# failover; th e AP  hotspot is last-resort.
-# ------------- --- ------------------------------------------ -- ---------
+  id: mdns_advertiser
+
+# ---------------------------------------------------------------------
+# Link diagnostics — which network path is actually up.
+# Ethernet is primary whenever its link is connected; Wi-Fi (C6) is
+# failover; the AP hotspot is last-resort.
+# ---------------------------------------------------------------------
 binary_sensor:
-  - platform: te m plate
+  - platform: template
     name: "Ethernet Connected"
-    i  d: ethernet_up
-    device_class: connectivit  y
+    id: ethernet_up
+    device_class: connectivity
     entity_category: diagnostic
-    lamb d a: |-
-      return ethernet::global_eth_co mp onent->is_connected();
+    lambda: |-
+      return ethernet::global_eth_component->is_connected();
 
-# -------------- --- ----------------------------------------- ---- -------
+# ---------------------------------------------------------------------
 # Services
-# ----------------- ----- --------------------------------------- ------ --
-# Native API - encrypted. The key  is a 32 -byte base64 secret; without
-# it th e API sp eaks plaintext and anyone on the net work can  drive the
-# device. Generate with:  openssl r and -base64 32
+# ---------------------------------------------------------------------
+# Native API - encrypted. The key is a 32-byte base64 secret; without
+# it the API speaks plaintext and anyone on the network can drive the
+# device. Generate with: openssl rand -base64 32
 api:
-  encryption :
-    key:  !secret curling_timer__encryptio n_key
+  encryption:
+    key: !secret curling_timer__encryption_key
 
-# #  Over-the-air updates - encrypte d, so a firmw are image cannot be pushed
-# #  or installed  by anyone who only has network  access. The ke y also
-# # authenticates the  uploader, so no  separate password is used ( ESPHome
-# # refu ses password + encryption t ogether). ESPHome  requires the OTA key
-# #  to be the API key,  so both use the same secr et.
+# # Over-the-air updates - encrypted, so a firmware image cannot be pushed
+# # or installed by anyone who only has network access. The key also
+# # authenticates the uploader, so no separate password is used (ESPHome
+# # refuses password + encryption together). ESPHome requires the OTA key
+# # to be the API key, so both use the same secret.
 ota:
-  - platf orm: esphome
+  - platform: esphome
 
-web_serv er:
+web_server:
   port: 80
-  lo g: true
+  log: true
   auth:
-    #  digest avoids sending  the password in a rev ersible form
-    # (ES PHome deprecates basi c auth in 2027.1)
-    t ype: digest
-    use rname: admin
-    passwor d: !secret web_pass word
+    # digest avoids sending the password in a reversible form
+    # (ESPHome deprecates basic auth in 2027.1)
+    type: digest
+    username: admin
+    password: !secret web_password
 
 time:
-  - platfor m: sntp
-    id: s ntp_time
-    timezone: ${t imezone}
-    ser vers:
-      - time.cloudfla re.com
-      -  pool.ntp.org
-    on_time_syn c:
-      then: 
-        - logger.log: "Time  synchronized" 
+  - platform: sntp
+    id: sntp_time
+    timezone: ${timezone}
+    servers:
+      - time.cloudflare.com
+      - pool.ntp.org
+    on_time_sync:
+      then:
+        - logger.log: "Time synchronized"
 
-# -------------------------- ------------- ------------------------------
- # M5Stack Un it 2Relay — wired to Grove Port  B (HY2.0-4 P: G53, G54, 5V, GND)
-# Manual LE D-on = rel ay closed. Drives the 24VAC bell ci rcuit.
-#  Both channels are manual HA toggles ; the sc hedule engine drives them
-# from the  settin gs file (web editor Config tab, "Bell  / buzz er"):
-#   buzzer.relays            - r elays  that ring at the buzzer time
-#   buzze r.ri ng_at_start     - relays that ring when a  ga me starts
-#   buzzer.countdown         -  {m inutes_before: N, relays: [...]} warning
-#     buzzer.duration          - ring length in   seconds (all events)
-# Each event rings once   per game; empty relay lists turn an event o f f.
-# restore_mode ALWAYS_OFF matches pitim er 's reset_buzzer(): never leave
-# a relay  ene rgised across reboot.
-# ---------------- ---- ---------------------------------------- ----- ----
+# ---------------------------------------------------------------------
+# M5Stack Unit 2Relay — wired to Grove Port B (HY2.0-4P: G53, G54, 5V, GND)
+# Manual LED-on = relay closed. Drives the 24VAC bell circuit.
+# Both channels are manual HA toggles; the schedule engine drives them
+# from the settings file (web editor Config tab, "Bell / buzzer"):
+#   buzzer.relays            - relays that ring at the buzzer time
+#   buzzer.ring_at_start     - relays that ring when a game starts
+#   buzzer.countdown         - {minutes_before: N, relays: [...]} warning
+#   buzzer.duration          - ring length in seconds (all events)
+# Each event rings once per game; empty relay lists turn an event off.
+# restore_mode ALWAYS_OFF matches pitimer's reset_buzzer(): never leave
+# a relay energised across reboot.
+# ---------------------------------------------------------------------
 switch:
   - platform: gpio
-     name:  "Relay 1 (Bell)"
-    id: relay_bell_r ing
-     pin: GPIO53
-    restore_mode: ALWA YS_OFF
- 
-  - platform: gpio
-    name: "Rel ay 2 (Aux )"
-    id: relay_aux
-    pin: GPI O54
-    r estore_mode: ALWAYS_OFF
+    name: "Relay 1 (Bell)"
+    id: relay_bell_ring
+    pin: GPIO53
+    restore_mode: ALWAYS_OFF
 
-# ----- ----------- --------------------------------- ------------ --------
+  - platform: gpio
+    name: "Relay 2 (Aux)"
+    id: relay_aux
+    pin: GPIO54
+    restore_mode: ALWAYS_OFF
+
+# ---------------------------------------------------------------------
 # Diagnostics
-# ----- ------------- ------------------------------- -------------- ------
+# ---------------------------------------------------------------------
 text_sensor:
-  - plat form: version
-     name: "Firmware Version" 
+  - platform: version
+    name: "Firmware Version"
 
 sensor:
-  -  platform: uptime
-    name:  "Uptime"
+  - platform: uptime
+    name: "Uptime"
 
-# --- --------------------------- ------------------ ---------------------
-# S chedule engine + we b editor (external_compon ents).
-# PASTE-READ Y for Home Assistant "ES PHome Device Builder" : the source
-# is fetc hed from GitHub (anony mous, repo is public)  — no repo checkout
-#  or path mapping need ed. Copy this entire fil e into
-# /config/es phome/curling-timer.yaml  and click Install. 
-# (Repo/CI builds use cur ling-timer.yaml wi th the relative source.)
-#  ---------------- ---------------------------- ---------------- ---------
-external_component s:
-  - source: 
+# ---------------------------------------------------------------------
+# Schedule engine + web editor (external_components).
+# PASTE-READY for Home Assistant "ESPHome Device Builder": the source
+# is fetched from GitHub (anonymous, repo is public) — no repo checkout
+# or path mapping needed. Copy this entire file into
+# /config/esphome/curling-timer.yaml and click Install.
+# (Repo/CI builds use curling-timer.yaml with the relative source.)
+# ---------------------------------------------------------------------
+external_components:
+  - source:
       type: git
-      url:  https://github .com/jaydenrussell/esp32-curlin g-timer
-       ref: v2026.10.209
-      path:  external_co mponents   # required: ESPHome on ly auto-sca ns
-                                   # comp onents/ and esphome/components/
-     compone nts: [curling_engine, web_editor, lt 8912b]
-     # The ref is a release tag, so th e compo nents always match this
-    # file: a  cache d checkout of an older "main" can never  mism atch the
-    # YAML (which is what brok e th e add-on builds).
+      url: https://github.com/jaydenrussell/esp32-curling-timer
+      ref: v2026.10.209
+      path: external_components   # required: ESPHome only auto-scans
+                                  # components/ and esphome/components/
+    components: [curling_engine, web_editor, lt8912b]
+    # The ref is a release tag, so the components always match this
+    # file: a cached checkout of an older "main" can never mismatch the
+    # YAML (which is what broke the add-on builds).
     refresh: 0s
 
-cur lin g_engine:
+curling_engine:
   id: engine
-  store_path: /fl as h
+  store_path: /flash
 
 web_editor:
-  # The "Web Editor" diag n ostic entity (listening on port 8080 / the
-    # reason it is not) is created by the compo  nent itself, so this file
-  # never calls c o mponent APIs - a cached (older) clone of th e  external
-  # component can then never bre ak  the build.
+  # The "Web Editor" diagnostic entity (listening on port 8080 / the
+  # reason it is not) is created by the component itself, so this file
+  # never calls component APIs - a cached (older) clone of the external
+  # component can then never break the build.
   id: web_editor_comp
-  pass word : !secret web_password
+  password: !secret web_password
   port: 8080
 
- # --- --------------------------------------- ------ ---------------------
-# HDMI display:  M5Stac k Add-On Display Out LT8912B (U221),  1280x720 @60.
-# esp_ldo powers the MIPI-DSI  PHY (chan nel 3 @ 2.5V per M5GFX U221) —
-#  lt8912b d epends on it. The LVGL page below  drives the  pixels; without
-# an lvgl: block  this compon ent would show the ESPHome test  card instead. 
-# --------------------------- -------------- ----------------------------
- esp_ldo:
-  - c hannel: 3
-    voltage: 2.5V 
+# ---------------------------------------------------------------------
+# HDMI display: M5Stack Add-On Display Out LT8912B (U221), 1280x720@60.
+# esp_ldo powers the MIPI-DSI PHY (channel 3 @ 2.5V per M5GFX U221) —
+# lt8912b depends on it. The LVGL page below drives the pixels; without
+# an lvgl: block this component would show the ESPHome test card instead.
+# ---------------------------------------------------------------------
+esp_ldo:
+  - channel: 3
+    voltage: 2.5V
 
 lt8912b:
-  i d: hdmi
-  reset_pin: GPIO4 
-  enable_pin: GP IO33
+  id: hdmi
+  reset_pin: GPIO4
+  enable_pin: GPIO33
   sda_pin: GPIO0
-  s cl_pin: GPIO1
+  scl_pin: GPIO1
 
-#  ------------------------- ------------------- ------------------------- 
-# Fonts - Lato Bol d (static TTF from googl e/fonts, fetched once  per
-# build and cache d). Lato ships U+02F8,  the modifier letter r aised
-# colon pitimer  uses instead of ':'. 
+# ---------------------------------------------------------------------
+# Fonts - Lato Bold (static TTF from google/fonts, fetched once per
+# build and cached). Lato ships U+02F8, the modifier letter raised
+# colon pitimer uses instead of ':'.
 #
-# Sizes are measured  off the pitimer ref erence screen (1280x720):  the
-# header text  spans ~95% of the width,  the 5-digit timer  ~93%, the
-# pace line ~80%  and the footer d ate ~22%.
-#   header 96   t imer 5 digits 37 0   timer 4 digits 450
-#   p ace 85     foot er 52
-# The 4-digit timer is  larger than th e 5-digit one (as in pitimer:
- # 992 vs 816)  because it has fewer glyphs to  fit across t he width.
-# -------------------- ----------- ---------------------------------- ----
-font :
-  - file: "https://raw.githubuse rcontent. com/google/fonts/main/ofl/lato/Lato- Bold.ttf "
+# Sizes are measured off the pitimer reference screen (1280x720): the
+# header text spans ~95% of the width, the 5-digit timer ~93%, the
+# pace line ~80% and the footer date ~22%.
+#   header 96   timer 5 digits 370   timer 4 digits 450
+#   pace 85     footer 52
+# The 4-digit timer is larger than the 5-digit one (as in pitimer:
+# 992 vs 816) because it has fewer glyphs to fit across the width.
+# ---------------------------------------------------------------------
+font:
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_timer_4
-    size: 45 0
-     glyphs: ["0123456789", "\u02F8"]
-  -  file:  "https://raw.githubusercontent.com/goog le/fo nts/main/ofl/lato/Lato-Bold.ttf"
-    id : fo nt_timer_5
+    size: 450
+    glyphs: ["0123456789", "\u02F8"]
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
+    id: font_timer_5
     size: 370
-    glyphs: [" 012 3456789", "\u02F8"]
-  - file: "https://ra w. githubusercontent.com/google/fonts/main/ofl / lato/Lato-Bold.ttf"
+    glyphs: ["0123456789", "\u02F8"]
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_header
-      size: 96
-    glyphsets: [GF_Latin_Kernel]  
-  - file: "https://raw.githubusercontent.co m /google/fonts/main/ofl/lato/Lato-Bold.ttf" 
-     id: font_pace
+    size: 96
+    glyphsets: [GF_Latin_Kernel]
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
+    id: font_pace
     size: 85
-    glyphs ets : [GF_Latin_Kernel]
-  - file: "https://r aw.g ithubusercontent.com/google/fonts/main/o fl/la to/Lato-Bold.ttf"
-    id: font_footer 
-    s ize: 52
-    glyphsets: [GF_Latin_Kern el]
-     glyphs: ["\u02F8"]
+    glyphsets: [GF_Latin_Kernel]
+  - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
+    id: font_footer
+    size: 52
+    glyphsets: [GF_Latin_Kernel]
+    glyphs: ["\u02F8"]
 
-# Latest disp lay snap shot from CurlingEngineComponent::di splay_sna pshot()
-# (the pitimer draw_screen  data prep ), written once per second below. 
+# Latest display snapshot from CurlingEngineComponent::display_snapshot()
+# (the pitimer draw_screen data prep), written once per second below.
 globals:
-   - id: g_snap
-    type: esphome ::curling_en gine::DisplaySnapshot
-    resto re_value: no 
+  - id: g_snap
+    type: esphome::curling_engine::DisplaySnapshot
+    restore_value: no
 
-# -------------------------- -------------- ----------------------------- 
-# LVGL countdo wn page — pitimer display.p y layout at 1280 x720:
-#   header top-centre  (top margin = he ight/36 = 20), countdown ce ntre
-#   (raised  by height/24 = 30 to make  room for the pace l ine, but only
-#   while  the pace line is sho wn), pace line under the  timer
-#   (height/2  + timer_height/2 - hei ght/15 = -48), game na me
-#   bottom-centre,  date/time in the botto m corners (yellow), s tatus line
-#   centre ( errors / waiting for  clock). All labels start  empty; the
-#   1  Hz tick below fills them. 
-# --------------- --------------------------- ----------------- ----------
+# ---------------------------------------------------------------------
+# LVGL countdown page — pitimer display.py layout at 1280x720:
+#   header top-centre (top margin = height/36 = 20), countdown centre
+#   (raised by height/24 = 30 to make room for the pace line, but only
+#   while the pace line is shown), pace line under the timer
+#   (height/2 + timer_height/2 - height/15 = -48), game name
+#   bottom-centre, date/time in the bottom corners (yellow), status line
+#   centre (errors / waiting for clock). All labels start empty; the
+#   1 Hz tick below fills them.
+# ---------------------------------------------------------------------
 lvgl:
-  display s:
+  displays:
     - hdmi
-   color_depth: 16  # driver p anel is RGB565  (16-bit); LVGL renders 24-bit  and converts
-   update_interval: never
-  bg_ color: 0x0000 00
+  color_depth: 16
+  update_interval: never
+  bg_color: 0x000000
   full_refresh: false
-  buf fer_size: 20 %
+  buffer_size: 20%
   scrollbar_mode: "OFF"
-  wid gets:
-     - obj:
+  widgets:
+    - obj:
         id: tp_smpte_t0
-         ali gn: TOP_LEFT
+        align: TOP_LEFT
         x: 0
-         y: 0
-         width: 183
-        height: 48 0
-         bg_color: 12566463
-        border _width:  0
+        y: 0
+        width: 183
+        height: 480
+        bg_color: 12566463
+        border_width: 0
         pad_all: 0
-        hidden : true 
+        hidden: true
     - obj:
         id: tp_smpte_t1
-          align: TOP_LEFT
+        align: TOP_LEFT
         x: 183
-          y: 0
+        y: 0
         width: 183
-        height:  48 0
+        height: 480
         bg_color: 65535
-        border _w idth: 0
+        border_width: 0
         pad_all: 0
-        hidden :  true
+        hidden: true
     - obj:
         id: tp_smpte_t2
-          align: TOP_LEFT
+        align: TOP_LEFT
         x: 366
-          y: 0
+        y: 0
         width: 183
-        height :  480
+        height: 480
         bg_color: 16776960
-        b or der_width: 0
+        border_width: 0
         pad_all: 0
-         hid den: true
+        hidden: true
     - obj:
-        id: tp_smp te_t 3
+        id: tp_smpte_t3
         align: TOP_LEFT
-        x: 5 49
-         y: 0
+        x: 549
+        y: 0
         width: 183
-         heig ht: 480
+        height: 480
         bg_color: 65280
-         bor der_width: 0
+        border_width: 0
         pad_all: 0
-         hid den: true
+        hidden: true
     - obj:
-        id: t p_smpte_t 4
+        id: tp_smpte_t4
         align: TOP_LEFT
-         x: 732
-         y: 0
-        width: 183
-         heig ht: 480
-        bg_color: 167119 35
-         border_width: 0
-        pad_all : 0
-         hidden: true
-    - obj:
-         id: tp_smpt e_t5
-        align: TOP_LEFT 
-        x: 915 
+        x: 732
         y: 0
-        width : 183
-        h eight: 480
-        bg_color : 255
-        bo rder_width: 0
-        pad_ all: 0
-        hi dden: true
-    - obj:
-         id: tp_smpte_ t6
-        align: TOP_LE FT
-        x: 1098 
-        y: 0
-        w idth: 182
-        he ight: 480
-        bg_c olor: 16711680
-         border_width: 0
-         pad_all: 0
-         hidden: true
-    -  obj:
-        id: tp_sm pte_b0
-        alig n: TOP_LEFT
-        x: 0 
-        y: 480
-         width: 183
-         height: 240
-         bg_color: 16711680
-         border_width : 0
-        pad_all: 0
-         hidden: tru e
-    - obj:
-        id: tp _smpte_b1
-         align: TOP_LEFT
-        x : 183
-         y: 480
         width: 183
-         height:  240
-        bg_color: 0
-         border_wi dth: 0
-        pad_all: 0
-         hidden:  true
-    - obj:
-        id: tp_s mpte_b2
-         align: TOP_LEFT
-        x:  366
-         y: 480
-        width: 183
-         heig ht: 240
+        height: 480
         bg_color: 16711935
-          border_width: 0
+        border_width: 0
         pad_all: 0
-          hidden: true
+        hidden: true
     - obj:
-        id:  tp_s mpte_b3
+        id: tp_smpte_t5
         align: TOP_LEFT
-         x:  549
-        y: 480
-        width: 183 
-         height: 240
-        bg_color: 0
-          border_width: 0
+        x: 915
+        y: 0
+        width: 183
+        height: 480
+        bg_color: 255
+        border_width: 0
         pad_all: 0
-          hidden: true
+        hidden: true
     - obj:
-        id: t  p_smpte_b4
+        id: tp_smpte_t6
         align: TOP_LEFT
-          x: 732
+        x: 1098
+        y: 0
+        width: 182
+        height: 480
+        bg_color: 16711680
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b0
+        align: TOP_LEFT
+        x: 0
         y: 480
         width: 183
-          height: 240
+        height: 240
+        bg_color: 16711680
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b1
+        align: TOP_LEFT
+        x: 183
+        y: 480
+        width: 183
+        height: 240
         bg_color: 0
-          border_width: 0
+        border_width: 0
         pad_all: 0
-          hidden: true
+        hidden: true
     - obj:
-        id:  tp_ smpte_b5
+        id: tp_smpte_b2
         align: TOP_LEFT
-         x:  915
+        x: 366
         y: 480
-        width: 18 3
-         height: 240
-        bg_color: 0 
-         border_width: 0
-        pad_all: 0 
-         hidden: true
+        width: 183
+        height: 240
+        bg_color: 16711935
+        border_width: 0
+        pad_all: 0
+        hidden: true
     - obj:
-         id: tp_sm pte_b6
+        id: tp_smpte_b3
         align: TOP_LEFT
-         x: 1 098
+        x: 549
         y: 480
-        width : 182
-         height: 240
-        bg_color : 0
-         border_width: 0
-        pad_al l: 0
-         hidden: true
+        width: 183
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b4
+        align: TOP_LEFT
+        x: 732
+        y: 480
+        width: 183
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b5
+        align: TOP_LEFT
+        x: 915
+        y: 480
+        width: 183
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_smpte_b6
+        align: TOP_LEFT
+        x: 1098
+        y: 480
+        width: 182
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
     - label:
-         id: tp_s mpte_res
-        align: CENTE R
-        text : 1280x720
-        text_font : font_header
-         recolor: true
-         hidden: true
-     - obj:
-        id: tp_p luge_field
-         align: TOP_LEFT
-         x: 0
-        y: 0 
-        width: 1280
-         height: 480
-         bg_color: 1052688 
-        border_widt h: 0
-        pad_all:  0
-        hidden: tru e
+        id: tp_smpte_res
+        align: CENTER
+        text: 1280x720
+        text_font: font_header
+        recolor: true
+        hidden: true
     - obj:
-         id: tp_pluge_0
-         align: TOP_LEFT
-         x: 0
-        y: 4 80
-        width: 1 60
-        height: 240
-         bg_color: 0 
-        border_width: 0 
-        pad_all:  0
-        hidden: true
-     - obj:
-         id: tp_pluge_1
-        ali gn: TOP_LEFT
-         x: 160
-        y: 480 
-        width:  160
-        height: 240
-         bg_color:  131586
-        border_width:  0
-        pa d_all: 0
-        hidden: true
-     - obj:
-         id: tp_pluge_2
-        a lign: TOP_L EFT
-        x: 320
-        y: 48 0
-         width: 160
-        height: 240
-         bg _color: 263172
-        border_width : 0
-         pad_all: 0
-        hidden: true 
-    -  obj:
-        id: tp_pluge_3
-         align : TOP_LEFT
-        x: 480
-        y:  480
-         width: 160
-        height: 240 
-         bg_color: 394758
-        border_wid th:  0
+        id: tp_pluge_field
+        align: TOP_LEFT
+        x: 0
+        y: 0
+        width: 1280
+        height: 480
+        bg_color: 1052688
+        border_width: 0
         pad_all: 0
-        hidden: tr ue 
+        hidden: true
+    - obj:
+        id: tp_pluge_0
+        align: TOP_LEFT
+        x: 0
+        y: 480
+        width: 160
+        height: 240
+        bg_color: 0
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_pluge_1
+        align: TOP_LEFT
+        x: 160
+        y: 480
+        width: 160
+        height: 240
+        bg_color: 131586
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_pluge_2
+        align: TOP_LEFT
+        x: 320
+        y: 480
+        width: 160
+        height: 240
+        bg_color: 263172
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_pluge_3
+        align: TOP_LEFT
+        x: 480
+        y: 480
+        width: 160
+        height: 240
+        bg_color: 394758
+        border_width: 0
+        pad_all: 0
+        hidden: true
     - obj:
         id: tp_pluge_4
-          align: TOP_LEFT
+        align: TOP_LEFT
         x: 640
-        y  : 480
+        y: 480
         width: 160
-        height: 24  0
+        height: 240
         bg_color: 526344
-        border_ w idth: 0
+        border_width: 0
         pad_all: 0
-        hidden :  true
+        hidden: true
     - obj:
         id: tp_pluge_5
-          align: TOP_LEFT
-        x: 800
-          y: 480
-        width: 160
-        hei ght:  240
-        bg_color: 657930
-         border _width: 0
-        pad_all: 0
-         hidden : true
-    - obj:
-        id: tp_pl uge_6
-         align: TOP_LEFT
-        x: 9 60
-         y: 480
-        width: 160
-         height : 240
-        bg_color: 789516
-         bord er_width: 0
-        pad_all: 0
-         hidd en: true
-    - obj:
-        id : tp_pluge_7 
         align: TOP_LEFT
-         x: 1120
-         y: 480
-        width: 1 60
-        hei ght: 240
-        bg_color: 1 052688
-         border_width: 0
-        pad _all: 0
-         hidden: true
-    - obj:
-         id: tp_geom _border
-        align: TO P_LEFT
-        x:  10
-        y: 10
-         width: 1260
-         height: 700
-         bg_opa: 0
-        bo rder_width: 2
-         border_color: 8421504 
+        x: 800
+        y: 480
+        width: 160
+        height: 240
+        bg_color: 657930
+        border_width: 0
         pad_all: 0
-         hidden: true
-     - obj:
-        id:  tp_geom_v0
-        ali gn: TOP_LEFT
-         x: 0
-        y: 0
-         width: 2
-         height: 720
-        b g_color: 4210752
-         border_width: 0
-         pad_all: 0 
         hidden: true
-    -  obj:
-        i d: tp_geom_v1
-        align:  TOP_LEFT
-         x: 160
-        y: 0
-         width: 2
-         height: 720
-        bg _color: 42107 52
+    - obj:
+        id: tp_pluge_6
+        align: TOP_LEFT
+        x: 960
+        y: 480
+        width: 160
+        height: 240
+        bg_color: 789516
         border_width: 0
-         pad_all : 0
+        pad_all: 0
         hidden: true
-    -  obj:
-         id: tp_geom_v2
-        align:  TOP_LEFT
-         x: 320
+    - obj:
+        id: tp_pluge_7
+        align: TOP_LEFT
+        x: 1120
+        y: 480
+        width: 160
+        height: 240
+        bg_color: 1052688
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_border
+        align: TOP_LEFT
+        x: 10
+        y: 10
+        width: 1260
+        height: 700
+        bg_opa: 0
+        border_width: 2
+        border_color: 8421504
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v0
+        align: TOP_LEFT
+        x: 0
         y: 0
-         width:  2
+        width: 2
         height: 720
-        bg_ color: 4 210752
+        bg_color: 4210752
         border_width: 0
-         pad _all: 0
+        pad_all: 0
         hidden: true
-    - o bj:
-         id: tp_geom_v3
-        align: T OP_LE FT
+    - obj:
+        id: tp_geom_v1
+        align: TOP_LEFT
+        x: 160
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v2
+        align: TOP_LEFT
+        x: 320
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_v3
+        align: TOP_LEFT
         x: 480
         y: 0
-         wi dth: 2
+        width: 2
         height: 720
-        bg_c olo r: 4210752
+        bg_color: 4210752
         border_width: 0
-          pad_all: 0
+        pad_all: 0
         hidden: true
-    - ob j :
+    - obj:
         id: tp_geom_v4
-        align: TO  P_LEFT
+        align: TOP_LEFT
         x: 640
         y: 0
-          width: 2
+        width: 2
         height: 720
-        bg_c o lor: 4210752
+        bg_color: 4210752
         border_width: 0
-          pad_all: 0
+        pad_all: 0
         hidden: true
-    -  obj :
+    - obj:
         id: tp_geom_v5
-        align:  TOP _LEFT
+        align: TOP_LEFT
         x: 800
         y: 0
-          width: 2
+        width: 2
         height: 720
-         bg_col or: 4210752
+        bg_color: 4210752
         border_width: 0
-          pad_all: 0
+        pad_all: 0
         hidden: true
-     - obj: 
+    - obj:
         id: tp_geom_v6
-        al ign: TOP_ LEFT
+        align: TOP_LEFT
         x: 960
-        y: 0 
-        w idth: 2
+        y: 0
+        width: 2
         height: 720
-         bg_colo r: 4210752
-        border_width:  0
-         pad_all: 0
-        hidden: true 
-    - obj: 
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
         id: tp_geom_v7
-         align: TOP_L EFT
+        align: TOP_LEFT
         x: 1120
-         y: 0
-        w idth: 2
-        height: 720 
-        bg_colo r: 4210752
-        border_w idth: 0
-         pad_all: 0
-        hidden:  true
-    - obj: 
+        y: 0
+        width: 2
+        height: 720
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
         id: tp_geom_h0
-         align: TOP_L EFT
+        align: TOP_LEFT
         x: 0
-         y: 0
-        widt h: 1280
-        height:  2
-        bg_color:  4210752
-        borde r_width: 0
-        pa d_all: 0
-        hidd en: true
-    - obj:
-         id: tp_geom_h1 
-        align: TOP_LEF T
-        x: 0
-         y: 120
-        widt h: 1280
-        he ight: 2
-        bg_color:  4210752
-         border_width: 0
-        pa d_all: 0
-         hidden: true
-    - obj:
-         id: tp_ge om_h2
-        align: TOP_LEF T
-        x: 0 
-        y: 240
-        widt h: 1280
-         height: 2
-        bg_color:  4210752
-         border_width: 0
-        pa d_all: 0
-         hidden: true
-    - obj:
-         id:  tp_geom_h3
-        align: TOP_LEF T
-         x: 0
-        y: 360
-        widt h: 1280
-         height: 2
-        bg_color:  4210752 
-        border_width: 0
-        pa d_all:  0
-        hidden: true
-    - obj:
-          id: tp_geom_h4
-        align: TOP_LEF T
-         x: 0
-        y: 480
-        widt h: 1 280
+        y: 0
+        width: 1280
         height: 2
-        bg_color:  42 10752
+        bg_color: 4210752
         border_width: 0
-        pa d_ all: 0
+        pad_all: 0
         hidden: true
     - obj:
-          id: tp_geom_h5
-        align: TOP_LEF  T
+        id: tp_geom_h1
+        align: TOP_LEFT
+        x: 0
+        y: 120
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h2
+        align: TOP_LEFT
+        x: 0
+        y: 240
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h3
+        align: TOP_LEFT
+        x: 0
+        y: 360
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h4
+        align: TOP_LEFT
+        x: 0
+        y: 480
+        width: 1280
+        height: 2
+        bg_color: 4210752
+        border_width: 0
+        pad_all: 0
+        hidden: true
+    - obj:
+        id: tp_geom_h5
+        align: TOP_LEFT
         x: 0
         y: 600
-        widt  h: 1280
+        width: 1280
         height: 2
-        bg_color :  4210752
+        bg_color: 4210752
         border_width: 0
-         pa d_all: 0
+        pad_all: 0
         hidden: true
-    - obj: 
-         id: tp_geom_cv
-        align: TOP _LEF T
+    - obj:
+        id: tp_geom_cv
+        align: TOP_LEFT
         x: 638
         y: 0
-         widt h: 4
+        width: 4
         height: 720
-        bg_c olor:  16777215
+        bg_color: 16777215
         border_width: 0
-         pa d_all: 0
+        pad_all: 0
         hidden: true
-    -  obj:
-         id: tp_geom_ch
-        align : TOP_LEF T
+    - obj:
+        id: tp_geom_ch
+        align: TOP_LEFT
         x: 0
         y: 358
-         widt h: 1280
+        width: 1280
         height: 4
-         bg_color:  16777215
-        border_width:  0
-        p ad_all: 0
-        hidden: true 
-    - label: 
-        id: lbl_header
-         align: TOP_ MID
-        y: 20
-        te xt_font: font_h eader
-        long_mode: CLI P
-        recol or: true
-        text: ""
-     - label:
-         id: lbl_cnt4
-         align: CENTER
-         y: 0
-        text_fo nt: font_timer_4
-         recolor: true
-         text: ""
-    -  label:
-        id: lbl _cnt5
-        align:  CENTER
-        y: 0
-         text_font: fon t_timer_5
-        rec olor: true
-        tex t: ""
+        bg_color: 16777215
+        border_width: 0
+        pad_all: 0
+        hidden: true
     - label:
-         id: lbl_pace
-         align: CENTER 
-        y: 0
-        te xt_font: font_pace 
+        id: lbl_header
+        align: TOP_MID
+        y: 20
+        text_font: font_header
         long_mode: CLIP
-         recolor: t rue
+        recolor: true
         text: ""
-     - label:
-         id: lbl_status
-        ali gn: CENTER
-         y: 0
-        text_font:  font_header
-         long_mode: CLIP
-         recolor: true 
+    - label:
+        id: lbl_cnt4
+        align: CENTER
+        y: 0
+        text_font: font_timer_4
+        recolor: true
         text: ""
-    - label :
-        id : lbl_game
-        align: BOTTO M_MID
-         y: -4
-        text_font: font _footer
-         recolor: true
-        text:  ""
-    -  label:
-        id: lbl_date
-         align : BOTTOM_LEFT
-        x: 10
-         y: -4 
+    - label:
+        id: lbl_cnt5
+        align: CENTER
+        y: 0
+        text_font: font_timer_5
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_pace
+        align: CENTER
+        y: 0
+        text_font: font_pace
+        long_mode: CLIP
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_status
+        align: CENTER
+        y: 0
+        text_font: font_header
+        long_mode: CLIP
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_game
+        align: BOTTOM_MID
+        y: -4
         text_font: font_footer
-         rec olor: true
+        recolor: true
         text: ""
-    - la bel:
-         id: lbl_time
-        align: BO TTOM_ RIGHT
+    - label:
+        id: lbl_date
+        align: BOTTOM_LEFT
+        x: 10
+        y: -4
+        text_font: font_footer
+        recolor: true
+        text: ""
+    - label:
+        id: lbl_time
+        align: BOTTOM_RIGHT
         x: -10
         y: -4
-          text_font: font_footer
-        recolor : t rue
+        text_font: font_footer
+        recolor: true
         text: ""
 
-# Non-blocking re la y pulse used by the bell tick below (engine   runs in
-# the same 1 Hz display interval; s  cripts keep the delay off that path).
-script  :
+# Non-blocking relay pulse used by the bell tick below (engine runs in
+# the same 1 Hz display interval; scripts keep the delay off that path).
+script:
   - id: pulse_relay_bell
-    parameters:  
+    parameters:
       pulse_ms: int
     then:
-      - sw it ch.turn_on: relay_bell_ring
-      - delay : ! lambda "return pulse_ms;"
-      - switch .tur n_off: relay_bell_ring
-  - id: pulse_re lay_a ux
+      - switch.turn_on: relay_bell_ring
+      - delay: !lambda "return pulse_ms;"
+      - switch.turn_off: relay_bell_ring
+  - id: pulse_relay_aux
     parameters:
-      pulse_ms: in t
-     then:
-      - switch.turn_on: relay_ aux
-       - delay: !lambda "return pulse_ms ;"
-       - switch.turn_off: relay_aux
+      pulse_ms: int
+    then:
+      - switch.turn_on: relay_aux
+      - delay: !lambda "return pulse_ms;"
+      - switch.turn_off: relay_aux
 
-#  --------- ----------------------------------- ---------- ---------------
-# 1 Hz display ti ck — refr esh the snapshot, then push recol oured text
- # into every label (empty string  hides the la bel). Also runs the bell
-# che ck (pitimer bu zz_if_due) after the labels.
- # ------------- ----------------------------- ---------------- -----------
+# ---------------------------------------------------------------------
+# 1 Hz display tick — refresh the snapshot, then push recoloured text
+# into every label (empty string hides the label). Also runs the bell
+# check (pitimer buzz_if_due) after the labels.
+# ---------------------------------------------------------------------
 interval:
-  -  interval: 1s
-     then:
-      - lambda: |- 
-          auto *e ng = id(engine);
-           if (eng == nullpt r || !eng->ready())
-             return;
-           ::esphome::curlin g_engine::DisplaySnap shot snap;
-          e ng->display_snapshot(& snap);
-          id(g _snap) = snap;
-      -  lvgl.label.update:
-           id: lbl_header 
-          text: !l ambda |-
-            std ::string mode = id( engine)->get_display_test_ mode();
-             if (mode != "normal") re turn std::string( );
-            auto &s = id (g_snap);
-             return ::esphome::curl ing_engine::rec olor(s.header_color, s.header_ text);
-       - lvgl.label.update:
-           id: lbl_cnt4 
-          align: CENTER
-           y: !lam bda |-
-            // pitimer ra ises the ti mer by height/24 only while the pa ce line
-             // is shown; otherwise i t sits de ad centre.
-            return id(g_ snap).sh ow_pace ? -30 : 0;
-          text: ! lambda  |-
-            std::string mode = id( engine )->get_display_test_mode();
-             if  (mode != "normal") return std::string(); 
-             auto &s = id(g_snap);
-              if (!s.show_countdown || s.seconds_until_ bu zzer >= 3600)
-              return std::st r ing();
-            return ::esphome::curlin  g_engine::recolor(s.countdown_color, s.countd  own);
+  - interval: 1s
+    then:
+      - lambda: |-
+          auto *eng = id(engine);
+          if (eng == nullptr || !eng->ready())
+            return;
+          ::esphome::curling_engine::DisplaySnapshot snap;
+          eng->display_snapshot(&snap);
+          id(g_snap) = snap;
       - lvgl.label.update:
-            id: lbl_cnt5
-          align: CENTER
-            y: !lambda |-
-            return id(g _sn ap).show_pace ? -30 : 0;
-          text:  !la mbda |-
-            std::string mode =  id(en gine)->get_display_test_mode();
-              if (mode != "normal") return std::stri ng();
-             auto &s = id(g_snap);
-              if (!s.show_countdown || s.seconds _until_bu zzer < 3600)
-              return  std::strin g();
-            return ::esphome ::curling_e ngine::recolor(s.countdown_color,  s.countdown );
-      - lvgl.label.update:
-           id:  lbl_pace
-          align: CEN TER
-           y: !lambda |-
-            //  pitimer: the p ace line sits just below the  timer, overlappi ng
-            // its botto m padding. The ti mer's box height (LVGL line  height)
-             // gives the glyph hei ght the digits occu py, so the line follows
-             // which ever timer font is in us e.
-            auto  &s = id(g_snap);
-             const bool five  = s.show_countdown &&  s.seconds_until_buzzer  >= 3600;
-             lv_obj_t *timer = five  ? id(lbl_cnt5) : id (lbl_cnt4);
-             return 50 + (int) ( 0.3225f * lv_obj_get_heigh t(timer));
-           text: !lambda |-
-             std::strin g mode = id(engine)->get_dis play_test_mode() ;
-            if (mode != "n ormal") return  std::string();
-            au to &s = id(g_s nap);
-            if (!s.show_ pace)
-               return std::string();
-             r eturn ::esphome::curling_engine:: recolor(s.p ace_color, s.pace_text);
-      -  lvgl.label .update:
-          id: lbl_status 
-           text: !lambda |-
-            std: :string  mode = id(engine)->get_display_test_m ode(); 
-            if (mode != "normal") ret urn st d::string();
-            auto &s = id( g_sna p);
-            if (!s.show_status)
-                return std::string();
-             r eturn ::esphome::curling_engine::recolor(s .s tatus_color, s.status_text);
-      - lvgl. l abel.update:
-          id: lbl_game
-            text: !lambda |-
-            std::string   mode = id(engine)->get_display_test_mode();  
-            if (mode != "normal") return s td ::string();
-            auto &s = id(g_sn ap) ;
-            if (!s.show_game_name)
-                return std::string();
-             re turn ::esphome::curling_engine::recolor (
-                 s.footer_color, s.game_na me);
-       - lvgl.label.update:
-           id: lbl_ date
+          id: lbl_header
           text: !lambda |-
-              std::string mode = id(engine)->get _display_t est_mode();
-            if (mode  != "normal" ) return std::string();
-             auto &s  = id(g_snap);
-            if (! s.show_date_t ime)
-              return std: :string();
-             return ::esphome::cu rling_engine::r ecolor(
-                s.fo oter_color, s.da te_text);
-      - lvgl.labe l.update:
-           id: lbl_time
-           text: !lambda |- 
-            std::string m ode = id(engine)->g et_display_test_mode();
-             if (mode  != "normal") return std ::string();
-             auto &s = id(g_snap );
-            if (!s .show_date_time)
-               return std::s tring();
-             return ::esphome::curli ng_engine::recolor( 
-                s.footer _color, s.time_text );
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            return ::esphome::curling_engine::recolor(s.header_color, s.header_text);
+      - lvgl.label.update:
+          id: lbl_cnt4
+          align: CENTER
+          y: !lambda |-
+            // pitimer raises the timer by height/24 only while the pace line
+            // is shown; otherwise it sits dead centre.
+            return id(g_snap).show_pace ? -30 : 0;
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_countdown || s.seconds_until_buzzer >= 3600)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+      - lvgl.label.update:
+          id: lbl_cnt5
+          align: CENTER
+          y: !lambda |-
+            return id(g_snap).show_pace ? -30 : 0;
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_countdown || s.seconds_until_buzzer < 3600)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+      - lvgl.label.update:
+          id: lbl_pace
+          align: CENTER
+          y: !lambda |-
+            // pitimer: the pace line sits just below the timer, overlapping
+            // its bottom padding. The timer's box height (LVGL line height)
+            // gives the glyph height the digits occupy, so the line follows
+            // whichever timer font is in use.
+            auto &s = id(g_snap);
+            const bool five = s.show_countdown && s.seconds_until_buzzer >= 3600;
+            lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
+            return 50 + (int) (0.3225f * lv_obj_get_height(timer));
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_pace)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.pace_color, s.pace_text);
+      - lvgl.label.update:
+          id: lbl_status
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_status)
+              return std::string();
+            return ::esphome::curling_engine::recolor(s.status_color, s.status_text);
+      - lvgl.label.update:
+          id: lbl_game
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_game_name)
+              return std::string();
+            return ::esphome::curling_engine::recolor(
+                s.footer_color, s.game_name);
+      - lvgl.label.update:
+          id: lbl_date
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_date_time)
+              return std::string();
+            return ::esphome::curling_engine::recolor(
+                s.footer_color, s.date_text);
+      - lvgl.label.update:
+          id: lbl_time
+          text: !lambda |-
+            std::string mode = id(engine)->get_display_test_mode();
+            if (mode != "normal") return std::string();
+            auto &s = id(g_snap);
+            if (!s.show_date_time)
+              return std::string();
+            return ::esphome::curling_engine::recolor(
+                s.footer_color, s.time_text);
 
   - interval: 5s
-     then:
-      - l vgl.widget.update:
-           id:
-             - tp_smpte_t0
-             - tp_smpte_t1 
-            - tp_smpte_t2
-             - tp _smpte_t3
-            - tp_sm pte_t4
-             - tp_smpte_t5
-             - tp_smpte_ t6
-            - tp_smpte_b0
-             -  tp_smpte_b1
-            - tp_sm pte_b2
-             - tp_smpte_b3
-             - tp_smp te_b4
-            - tp_smpte_b5
-              - tp_smpte_b6
-            - tp_sm pte_res 
-          hidden: !lambda |-
-             r eturn !(id(engine)->get_display_test_m ode()  == "smpte" || id(engine)->get_display_t est_m ode() == "colorbars");
-      - lvgl.wid get. update:
-          id:
-            - tp_ plu ge_field
-            - tp_pluge_0
-              - tp_pluge_1
-            - tp_pluge_2 
-             - tp_pluge_3
-            - tp_p  luge_4
-            - tp_pluge_5
-              - tp_pluge_6
-            - tp_pluge_7
-            hidden: !lambda |-
-            retur n  !(id(engine)->get_display_test_mode() == " plu ge");
+    then:
       - lvgl.widget.update:
-            id:
+          id:
+            - tp_smpte_t0
+            - tp_smpte_t1
+            - tp_smpte_t2
+            - tp_smpte_t3
+            - tp_smpte_t4
+            - tp_smpte_t5
+            - tp_smpte_t6
+            - tp_smpte_b0
+            - tp_smpte_b1
+            - tp_smpte_b2
+            - tp_smpte_b3
+            - tp_smpte_b4
+            - tp_smpte_b5
+            - tp_smpte_b6
+            - tp_smpte_res
+          hidden: !lambda |-
+            return !(id(engine)->get_display_test_mode() == "smpte" || id(engine)->get_display_test_mode() == "colorbars");
+      - lvgl.widget.update:
+          id:
+            - tp_pluge_field
+            - tp_pluge_0
+            - tp_pluge_1
+            - tp_pluge_2
+            - tp_pluge_3
+            - tp_pluge_4
+            - tp_pluge_5
+            - tp_pluge_6
+            - tp_pluge_7
+          hidden: !lambda |-
+            return !(id(engine)->get_display_test_mode() == "pluge");
+      - lvgl.widget.update:
+          id:
             - tp_geom_border
-              - tp_geom_v0
-            - tp_geom_ v1
-             - tp_geom_v2
-            -  tp_geom _v3
+            - tp_geom_v0
+            - tp_geom_v1
+            - tp_geom_v2
+            - tp_geom_v3
             - tp_geom_v4
-             -  tp_geom_v5
-            - tp_geom_v6 
-             - tp_geom_v7
-            - tp _geom_h0
-             - tp_geom_h1
-             - tp_ge om_h2
+            - tp_geom_v5
+            - tp_geom_v6
+            - tp_geom_v7
+            - tp_geom_h0
+            - tp_geom_h1
+            - tp_geom_h2
             - tp_geom_h3
-              - tp_geom_h4
-            - tp_g eom_h5
-             - tp_geom_cv
-             - tp_geom_ch 
-          hidden: !lambda |- 
-            r eturn !(id(engine)->get_displ ay_test_mode() = = "geometry");
-      # Bell : engine bell_tic k — for the live game, pu lse the configured 
-      # relays at game s tart, at the countd own warning, and at the b uzzer
-      # time  (settings file, web edit or "Bell / buzzer" co nfig). RELAY1 ->
-       # relay 1, RELAY2 ->  relay 2; RELAY3/4 have  no hardware.
-      -  lambda: |-
-           auto *eng = id(engine); 
-          if (eng  == nullptr)
-             return;
-           ::esphome::curling_engine: :BellRing ring;
-           if (!eng->bell_tic k(&ring))
-             return;
-          con st int pulse_ms  = static_cast<int>(ring.durat ion_ms);
-           if (ring.mask & ::esphome::curling_engi ne::BELL_RELAY_1)
-             id(pulse_rela y_bell).execute(pulse_ms);
-           if (ri ng.mask & ::esphome::curling_engi ne::BELL_RE LAY_2)
-            id(pulse_relay _aux).exec ute(pulse_ms);
+            - tp_geom_h4
+            - tp_geom_h5
+            - tp_geom_cv
+            - tp_geom_ch
+          hidden: !lambda |-
+            return !(id(engine)->get_display_test_mode() == "geometry");
+      # Bell: engine bell_tick — for the live game, pulse the configured
+      # relays at game start, at the countdown warning, and at the buzzer
+      # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->
+      # relay 1, RELAY2 -> relay 2; RELAY3/4 have no hardware.
+      - lambda: |-
+          auto *eng = id(engine);
+          if (eng == nullptr)
+            return;
+          ::esphome::curling_engine::BellRing ring;
+          if (!eng->bell_tick(&ring))
+            return;
+          const int pulse_ms = static_cast<int>(ring.duration_ms);
+          if (ring.mask & ::esphome::curling_engine::BELL_RELAY_1)
+            id(pulse_relay_bell).execute(pulse_ms);
+          if (ring.mask & ::esphome::curling_engine::BELL_RELAY_2)
+            id(pulse_relay_aux).execute(pulse_ms);
 
 
 
-  
