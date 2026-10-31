@@ -2,11 +2,11 @@
 
 #include <array>
 #include <cstring>
-#include <cstddef>
- #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+
+#ifdef ESP_PLATFORM
 #include <esp_task_wdt.h>
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #endif
 
 namespace esphome {
@@ -132,7 +132,8 @@ void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
     if (c->buf_len == 64) {
       process_block(c, c->buf);
       c->buf_len = 0;
-#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
+#ifdef ESP_PLATFORM
+      esp_task_wdt_reset();
       vTaskDelay(1);
 #endif
     }
@@ -242,6 +243,11 @@ std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &s
                   32, u.data());
       for (int j = 0; j < 32; j++)
         t[j] ^= u[j];
+#ifdef ESP_PLATFORM
+      esp_task_wdt_reset();
+      if ((i & 0x3f) == 0)
+        vTaskDelay(1);
+#endif
     }
     size_t n = 32;
     if (n > dk_len - produced)
