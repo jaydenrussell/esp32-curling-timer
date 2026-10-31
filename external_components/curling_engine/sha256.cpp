@@ -41,7 +41,7 @@ static void wdt_ensure() {
   if (s_wdt_added)
     return;
   esp_err_t err = esp_task_wdt_add(NULL);
-  if (err == ESP_OK || err == ESP_ERR_INVALID_STATE)
+  if (err == ESP_OK || err == ESP_ERR_INVALID_STATE || err == ESP_ERR_INVALID_ARG)
     s_wdt_added = true;
 }
 #endif
@@ -108,7 +108,7 @@ inline void ensure_task_wdt() {
   if (task_wdt_added)
     return;
   esp_err_t r = esp_task_wdt_add(NULL);
-  if (r == ESP_OK || r == ESP_ERR_INVALID_STATE)
+  if (r == ESP_OK || r == ESP_ERR_INVALID_STATE || r == ESP_ERR_INVALID_ARG)
     task_wdt_added = true;
 }
 #endif
@@ -213,7 +213,7 @@ void hmac_sha256(const uint8_t *key, size_t key_len, const uint8_t *msg, size_t 
 std::string hmac_sha256_hex(const std::string &key, const std::string &msg) {
   uint8_t out[32];
   hmac_sha256(reinterpret_cast<const uint8_t *>(key.data()), key.size(),
-              reinterpret_cast<const uint8_t *>(msg.data()), msg.size(), out);
+              reinterpret_cast<const char *>(msg.data()), msg.size(), out);
   return to_hex(out, 32);
 }
 
