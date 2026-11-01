@@ -1017,7 +1017,11 @@ interval:
             id(pulse_relay_bell).execute(pulse_ms);
           if (ring.mask & ::esphome::curling_engine::BELL_RELAY_2)
             id(pulse_relay_aux).execute(pulse_ms);
+
   - interval: 5s
     then:
       - lambda: |-
           id(ethernet_up).publish_state(ethernet::global_eth_component->is_connected());
+
+
+
