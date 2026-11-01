@@ -45,3 +45,9 @@
 - **engineering_sample**: U213 is pre-rev3 silicon — `engineering_sample: true` is required in the YAML.
 - **Web editor password**: must be ≥ 6 characters or the editor fails to start.
 - **Web UI**: paste-ready `curling-timer.ha.yaml` is for Home Assistant ESPHome Device Builder — repo builds use `curling-timer.yaml`, not the `.ha` variant.
+
+
+## Subagent Delegation Guidelines
+- `@planner`: Default agent for breaking down features and system architecture.
+- `@reviewer`: Run before committing any custom C++ components or complex YAML changes.
+- `@release`: Call once changes are verified to build, commit, tag, and push.
