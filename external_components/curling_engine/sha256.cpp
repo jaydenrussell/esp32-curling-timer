@@ -105,7 +105,7 @@ void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
       process_block(c, c->buf);
       c->buf_len = 0;
 #ifdef ESP_PLATFORM
-      vTaskDelay(1);
+      taskYIELD();
 #endif
     }
   }
