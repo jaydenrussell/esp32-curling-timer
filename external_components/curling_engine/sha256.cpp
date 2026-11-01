@@ -38,23 +38,16 @@ struct Sha256Ctx {
 
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
 static std::atomic<bool> task_wdt_added{false};
-static std::atomic<TaskHandle_t> task_wdt_handle{nullptr};
 inline void ensure_task_wdt() {
   if (task_wdt_added.load(std::memory_order_acquire))
     return;
-  TaskHandle_t cur = xTaskGetCurrentTaskHandle();
-  esp_err_t r = esp_task_wdt_add(cur);
-  if (r == ESP_OK || r == ESP_ERR_INVALID_STATE || r == ESP_ERR_INVALID_ARG) {
+  esp_err_t r = esp_task_wdt_add(NULL);
+  if (r == ESP_OK || r == ESP_ERR_INVALID_STATE || r == ESP_ERR_INVALID_ARG)
     task_wdt_added.store(true, std::memory_order_release);
-    task_wdt_handle.store(cur, std::memory_order_release);
-  }
 }
 inline void safe_task_wdt_reset() {
-  if (task_wdt_added.load(std::memory_order_acquire)) {
-    TaskHandle_t cur = xTaskGetCurrentTaskHandle();
-    if (cur == task_wdt_handle.load(std::memory_order_acquire))
-      esp_task_wdt_reset();
-  }
+  if (task_wdt_added.load(std::memory_order_acquire))
+    esp_task_wdt_reset();
 }
 #endif
 
