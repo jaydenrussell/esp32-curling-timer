@@ -56,7 +56,11 @@ psram:
   speed: 200MHz
 
 safe_mode:
-  disabled: true
+  disabled: false
+  num_attempts: 20
+  reboot_timeout: 0s
+  boot_is_good_on_shutdown: true
+  boot_is_good_after: 1min
 
 logger:
   # USB Serial/JTAG on the U213 USB-C port is the bench console.
