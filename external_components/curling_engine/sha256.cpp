@@ -1,6 +1,7 @@
 ﻿#include "sha256.h"
 
 #include <array>
+#include <atomic>
 #include <cstring>
 
 #ifdef ESP_PLATFORM
@@ -36,13 +37,17 @@ struct Sha256Ctx {
 };
 
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-static bool s_wdt_added = false;
-static void wdt_ensure() {
-  if (s_wdt_added)
+static std::atomic<bool> task_wdt_added{false};
+inline void ensure_task_wdt() {
+  if (task_wdt_added.load(std::memory_order_acquire))
     return;
-  esp_err_t err = esp_task_wdt_add(NULL);
-  if (err == ESP_OK || err == ESP_ERR_INVALID_STATE || err == ESP_ERR_INVALID_ARG)
-    s_wdt_added = true;
+  esp_err_t r = esp_task_wdt_add(NULL);
+  if (r == ESP_OK || r == ESP_ERR_INVALID_STATE || r == ESP_ERR_INVALID_ARG)
+    task_wdt_added.store(true, std::memory_order_release);
+}
+inline void safe_task_wdt_reset() {
+  if (task_wdt_added.load(std::memory_order_acquire))
+    esp_task_wdt_reset();
 }
 #endif
 
@@ -88,7 +93,7 @@ void process_block(Sha256Ctx *c, const uint8_t *p) {
     a = t1 + t2;
     if ((i & 15) == 15) {
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-      esp_task_wdt_reset();
+      safe_task_wdt_reset();
 #endif
     }
   }
@@ -102,17 +107,6 @@ void process_block(Sha256Ctx *c, const uint8_t *p) {
   c->h[7] += h;
 }
 
-#if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-static bool task_wdt_added = false;
-inline void ensure_task_wdt() {
-  if (task_wdt_added)
-    return;
-  esp_err_t r = esp_task_wdt_add(NULL);
-  if (r == ESP_OK || r == ESP_ERR_INVALID_STATE || r == ESP_ERR_INVALID_ARG)
-    task_wdt_added = true;
-}
-#endif
-
 void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
   ensure_task_wdt();
@@ -120,7 +114,7 @@ void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
   c->total_len += len;
   while (len > 0) {
  #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-    esp_task_wdt_reset();
+    safe_task_wdt_reset();
 #endif
     size_t n = 64 - c->buf_len;
     if (n > len)
@@ -133,7 +127,7 @@ void ctx_update(Sha256Ctx *c, const uint8_t *data, size_t len) {
       process_block(c, c->buf);
       c->buf_len = 0;
 #ifdef ESP_PLATFORM
-      esp_task_wdt_reset();
+      safe_task_wdt_reset();
       vTaskDelay(1);
 #endif
     }
@@ -237,14 +231,14 @@ std::string pbkdf2_hmac_sha256(const std::string &password, const std::string &s
     std::array<uint8_t, 32> t = u;
     for (int i = 1; i < iterations; i++) {
 #if defined(ESP_PLATFORM) || defined(ESP32) || defined(CONFIG_IDF_TARGET_ESP32P4)
-      esp_task_wdt_reset();
+      safe_task_wdt_reset();
 #endif
       hmac_sha256(reinterpret_cast<const uint8_t *>(password.data()), password.size(), u.data(),
                   32, u.data());
       for (int j = 0; j < 32; j++)
         t[j] ^= u[j];
 #ifdef ESP_PLATFORM
-      esp_task_wdt_reset();
+      safe_task_wdt_reset();
       if ((i & 0x3f) == 0)
         vTaskDelay(1);
 #endif
