@@ -43,7 +43,6 @@ void Lt8912b::setup() {
   if (this->enable_pin_ != nullptr) {
     this->enable_pin_->setup();
     this->enable_pin_->digital_write(true);
-    delay(10);
   }
 
   i2c_master_bus_config_t i2c_bus_config{};

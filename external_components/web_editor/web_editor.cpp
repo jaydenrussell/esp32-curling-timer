@@ -57,7 +57,13 @@ void WebEditorComponent::set_status(const std::string &status) {
     this->status_sensor_->publish_state(status);
 }
 
+static bool s_web_editor_setup_done = false;
+
 void WebEditorComponent::setup() {
+  if (s_web_editor_setup_done)
+    return;
+  s_web_editor_setup_done = true;
+
   if (!this->load_auth_from_nvs()) {
     this->set_status("failed: NVS is not available");
     this->mark_failed();
@@ -91,7 +97,6 @@ void WebEditorComponent::setup() {
   ESP_LOGI(TAG, "auth ready (session cookie %s, port %u)", SESSION_COOKIE, this->port_);
   esp_netif_init();
   esp_event_loop_create_default();
-  delay(500);
   if (!start_web_httpd(this)) {
     this->set_status("failed: the HTTP server could not be started on port " +
                      std::to_string(this->port_));

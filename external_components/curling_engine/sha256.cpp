@@ -213,7 +213,7 @@ void hmac_sha256(const uint8_t *key, size_t key_len, const uint8_t *msg, size_t 
 std::string hmac_sha256_hex(const std::string &key, const std::string &msg) {
   uint8_t out[32];
   hmac_sha256(reinterpret_cast<const uint8_t *>(key.data()), key.size(),
-              reinterpret_cast<const char *>(msg.data()), msg.size(), out);
+              reinterpret_cast<const uint8_t *>(msg.data()), msg.size(), out);
   return to_hex(out, 32);
 }
 
