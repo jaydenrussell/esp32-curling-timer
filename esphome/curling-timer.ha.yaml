@@ -29,6 +29,11 @@ esp32:
   engineering_sample: true
   cpu_frequency: 360MHz
   flash_size: 16MB
+  # Un-cap the flash SPI: left unset, ESP-IDF/board default is DIO@40MHz.
+  # P4 FLASH SPI supports up to 120MHz SDR; this module's flash runs
+  # QIO@60MHz (4-bit mode -> ~240Mbps, faster than factory DIO@80).
+  flash_mode: qio
+  flash_frequency: 60MHz
   framework:
     type: esp-idf
     # The settings store keeps timestamped backups in a "backups" folder and
@@ -215,7 +220,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.13
+      ref: v2026.11.14
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
