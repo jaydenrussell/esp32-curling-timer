@@ -50,6 +50,10 @@ esp32:
       CONFIG_ESP_COREDUMP_CHECKSUM_CRC32: y
     advanced:
       execute_from_psram: false
+      # The 1 Hz display tick (display_snapshot + LVGL label updates + recolor)
+      # runs on the ESPHome loop task. A loopTask stack overflow crashed the
+      # device ~6 min into a run; max out the loop task stack (default 8192).
+      loop_task_stack_size: 32768
 
 psram:
   # ESP32-P4 only supports hex mode in ESPHome (2026.9.1)
@@ -65,7 +69,9 @@ safe_mode:
 logger:
   # USB Serial/JTAG on the U213 USB-C port is the bench console.
   hardware_uart: USB_SERIAL_JTAG
-  level: VERBOSE
+  # INFO for production; VERBOSE only while bench-debugging (select below can
+  # raise it at runtime without a reflash).
+  level: INFO
   task_log_buffer_size: 8192
 
 select:
@@ -209,7 +215,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.12
+      ref: v2026.11.13
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]

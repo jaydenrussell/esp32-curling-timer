@@ -87,9 +87,10 @@ void Lt8912b::setup() {
 
   esp_lcd_dpi_panel_config_t dpi_config = {
       .virtual_channel = 0,
-      // The ESP32-P4 MIPI-DSI host can only emit RGB888 on the wire, so the
-      // framebuffer stays RGB565 (LVGL is 16-bit) and DMA2D converts to RGB888
-      // for the LT8912B. Matches the validated M5GFX PoE-P4 HDMI config.
+      // The ESP32-P4 MIPI-DSI wire is RGB888-only. Keep the framebuffer RGB565
+      // (LVGL is 16-bit) as in_color_format and set out_color_format=RGB888 so
+      // the DSI bridge converts in hardware (mipi_dsi_brg set_input/output_color_format).
+      // Matches the validated M5GFX PoE-P4 HDMI config (in=out there; bridge handles it).
       .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_DEFAULT,
       .dpi_clock_freq_mhz = 80,
       .in_color_format = LCD_COLOR_FMT_RGB565,
@@ -151,7 +152,8 @@ void Lt8912b::setup() {
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
   // IDF >= 6.0 only converts in->out color format (RGB565 framebuffer to the
   // RGB888 DSI wire format) when DMA2D is explicitly enabled on the panel.
-  esp_lcd_dpi_panel_enable_dma2d(this->panel_);
+  esp_err_t dma2d_err = esp_lcd_dpi_panel_enable_dma2d(this->panel_);
+  ESP_LOGI(TAG, "esp_lcd_dpi_panel_enable_dma2d: %s", esp_err_to_name(dma2d_err));
 #endif
 
   ESP_LOGI(TAG, "free heap before the DSI lock: %u bytes (largest internal block %u)",
