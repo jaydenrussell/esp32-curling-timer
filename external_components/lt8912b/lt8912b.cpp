@@ -87,34 +87,35 @@ void Lt8912b::setup() {
 
   esp_lcd_dpi_panel_config_t dpi_config = {
       .virtual_channel = 0,
-      .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_PLL_F160M,
+      // The ESP32-P4 MIPI-DSI host can only emit RGB888 on the wire, so the
+      // framebuffer stays RGB565 (LVGL is 16-bit) and DMA2D converts to RGB888
+      // for the LT8912B. Matches the validated M5GFX PoE-P4 HDMI config.
+      .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_DEFAULT,
       .dpi_clock_freq_mhz = 80,
-      // RGB565: the display and LVGL both work in 16-bit colour, so the
-      // driver copies the pixels straight through (an RGB888 driver would
-      // need a 2.8 MB framebuffer and convert every pixel).
       .in_color_format = LCD_COLOR_FMT_RGB565,
+      .out_color_format = LCD_COLOR_FMT_RGB888,
       .num_fbs = 2,
       .video_timing =
           {
               .h_size = 1280,
               .v_size = 720,
-              .hsync_pulse_width = 32,
-              .hsync_back_porch = 80,
-              .hsync_front_porch = 408,
+              .hsync_pulse_width = 40,
+              .hsync_back_porch = 220,
+              .hsync_front_porch = 110,
               .vsync_pulse_width = 5,
-              .vsync_back_porch = 13,
-              .vsync_front_porch = 3,
+              .vsync_back_porch = 20,
+              .vsync_front_porch = 5,
           },
       .flags =
           {
-              .use_dma2d = false,
               .disable_lp = true,
           },
   };
 
   lt8912b_vendor_config_t vendor_config{};
-  vendor_config.video_timing = {408, 32, 80, 1280, 1800, 3, 5, 13, 720, 741, 1, 0, 0,
-                                LT8912B_ASPECT_RATION_16_9, 80};
+  // 1280x720@60 (CVT-RB, VIC=4) as used by the validated M5GFX PoE-P4 driver.
+  vendor_config.video_timing = {110, 40, 220, 1280, 1650, 5, 5, 20, 720, 750, 1, 1, 4,
+                                 LT8912B_ASPECT_RATION_16_9, 80};
   vendor_config.mipi_config.dsi_bus = this->dsi_bus_;
   vendor_config.mipi_config.dpi_config = &dpi_config;
   vendor_config.mipi_config.lane_num = 2;
@@ -122,7 +123,7 @@ void Lt8912b::setup() {
   esp_lcd_panel_dev_config_t panel_config{};
   panel_config.reset_gpio_num = this->reset_pin_ != nullptr ? this->reset_pin_->get_pin() : -1;
   panel_config.rgb_ele_order = LCD_RGB_ELEMENT_ORDER_RGB;
-  panel_config.bits_per_pixel = 16;
+  panel_config.bits_per_pixel = 24;  // DSI wire format is RGB888
   panel_config.flags.reset_active_high = false;
   panel_config.vendor_config = &vendor_config;
 
@@ -147,6 +148,11 @@ void Lt8912b::setup() {
     this->mark_failed_(LOG_STR("esp_lcd_panel_init failed"), err);
     return;
   }
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
+  // IDF >= 6.0 only converts in->out color format (RGB565 framebuffer to the
+  // RGB888 DSI wire format) when DMA2D is explicitly enabled on the panel.
+  esp_lcd_dpi_panel_enable_dma2d(this->panel_);
+#endif
 
   ESP_LOGI(TAG, "free heap before the DSI lock: %u bytes (largest internal block %u)",
            static_cast<unsigned>(esp_get_free_heap_size()),
@@ -167,6 +173,30 @@ void Lt8912b::setup() {
 
   this->hdmi_ready_ = esp_lcd_panel_lt8912b_is_ready(this->panel_);
   ESP_LOGCONFIG(TAG, "LT8912B setup complete, HDMI %s", this->hdmi_ready_ ? "ready" : "not detected");
+  this->log_hdmi_diagnostics();
+}
+
+void Lt8912b::log_hdmi_diagnostics() {
+  if (this->io_main_ == nullptr || this->panel_ == nullptr) {
+    ESP_LOGW(TAG, "HDMI diag: panel not initialized");
+    return;
+  }
+  // LT8912B status registers (see espressif/esp_lcd_lt8912b):
+  //   0xC1 bit7 = HDMI HPD (sink hot-plug)
+  //   0x9C..0x9F = detected MIPI hsync/vsync widths (DSI lock indicator)
+  uint8_t hpd = 0, hsync_l = 0, hsync_h = 0, vsync_l = 0, vsync_h = 0;
+  esp_err_t e_hpd = esp_lcd_panel_io_rx_param(this->io_main_, 0xC1, &hpd, 1);
+  esp_err_t e_hl = esp_lcd_panel_io_rx_param(this->io_main_, 0x9C, &hsync_l, 1);
+  esp_err_t e_hh = esp_lcd_panel_io_rx_param(this->io_main_, 0x9D, &hsync_h, 1);
+  esp_err_t e_vl = esp_lcd_panel_io_rx_param(this->io_main_, 0x9E, &vsync_l, 1);
+  esp_err_t e_vh = esp_lcd_panel_io_rx_param(this->io_main_, 0x9F, &vsync_h, 1);
+  bool sink = (e_hpd == ESP_OK) && (hpd & 0x80);
+  ESP_LOGI(TAG,
+           "HDMI diag: HPD[0xC1]=0x%02X sink=%s (%s) | MIPI hsync=0x%02X%02X vsync=0x%02X%02X "
+           "(rx %s/%s/%s/%s) | ready=%s buf=%p",
+           hpd, sink ? "CONNECTED" : "none", esp_err_to_name(e_hpd), hsync_h, hsync_l, vsync_h, vsync_l,
+           esp_err_to_name(e_hl), esp_err_to_name(e_hh), esp_err_to_name(e_vl), esp_err_to_name(e_vh),
+           this->hdmi_ready_ ? "yes" : "no", (void *) this->buffer_);
 }
 
 void Lt8912b::update() {
@@ -256,6 +286,9 @@ void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const ui
     ESP_LOGE(TAG, "lcd_panel_draw_bitmap failed: %s", esp_err_to_name(err));
     if (this->io_lock_ != nullptr)
       xSemaphoreGive(this->io_lock_);
+  } else if (!this->first_frame_logged_) {
+    this->first_frame_logged_ = true;
+    ESP_LOGI(TAG, "first framebuffer transferred to DSI (%dx%d) — HDMI stream active", w, h);
   }
 }
 
@@ -306,9 +339,10 @@ void Lt8912b::draw_pixel_at(int x, int y, Color color) {
   if (!this->check_buffer_())
     return;
   size_t pos = (y * this->width_) + x;
-  this->buffer_[pos * 3] = color.r;
-  this->buffer_[pos * 3 + 1] = color.g;
-  this->buffer_[pos * 3 + 2] = color.b;
+  // Buffer is RGB565 (2 bytes/px) — matches check_buffer_() and fill().
+  uint16_t rgb565 = ((color.r & 0xF8) << 8) | ((color.g & 0xFC) << 3) | (color.b >> 3);
+  this->buffer_[pos * 2] = (rgb565 >> 8) & 0xFF;
+  this->buffer_[pos * 2 + 1] = rgb565 & 0xFF;
   if (x < this->x_low_)
     this->x_low_ = x;
   if (y < this->y_low_)
@@ -366,15 +400,15 @@ int Lt8912b::get_height() {
 }
 
 void Lt8912b::dump_config() {
-  ESP_LOGCONFIG(TAG,
+ESP_LOGCONFIG(TAG,
                 "LT8912B MIPI-DSI to HDMI"
                 "\n  Width: %u"
                 "\n  Height: %u"
                 "\n  Rotation: %d degrees"
                 "\n  DSI Lanes: 2"
                 "\n  Lane Bit Rate: %.0fMbps"
-                 "\n  I2C Frequency: %luHz"
-                "\n  Buffer Color Depth: 16 bit",
+                "\n  I2C Frequency: %luHz"
+                "\n  Framebuffer: 16 bit RGB565 -> DSI out: 24 bit RGB888 (DMA2D)",
                 this->width_, this->height_, this->rotation_, this->lane_bit_rate_, this->i2c_frequency_);
   LOG_PIN("  Reset Pin ", this->reset_pin_);
   LOG_PIN("  Enable Pin ", this->enable_pin_);
