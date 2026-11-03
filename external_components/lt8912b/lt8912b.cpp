@@ -304,10 +304,10 @@ void Lt8912b::convert_565_to_888_and_write(int x_start, int y_start, int w, int 
     src_row += x_pad * bytes_per_pixel_src;
   }
 
-  this->x_low_ = x_start;
-  this->y_low_ = y_start;
-  this->x_high_ = x_start + w - 1;
-  this->y_high_ = y_start + h - 1;
+  if (x_start < this->x_low_) this->x_low_ = x_start;
+  if (y_start < this->y_low_) this->y_low_ = y_start;
+  if (x_start + w - 1 > this->x_high_) this->x_high_ = x_start + w - 1;
+  if (y_start + h - 1 > this->y_high_) this->y_high_ = y_start + h - 1;
 
   this->flush_pending_();
 }

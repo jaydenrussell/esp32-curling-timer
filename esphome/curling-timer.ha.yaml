@@ -316,9 +316,9 @@ lvgl:
   displays:
     - hdmi
   color_depth: 16
-  update_interval: never
+  update_interval: 1s
   bg_color: 0xFF0000
-  full_refresh: false
+  full_refresh: true
   buffer_size: 20%
   scrollbar_mode: "OFF"
   widgets:
