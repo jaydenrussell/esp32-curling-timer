@@ -820,14 +820,15 @@ ApiResponse PiTimerApi::get_config() {
         size_t vs = _t.find(':', pos) + 1;
         while (vs < _t.size() && (_t[vs] == ' ' || _t[vs] == '\t')) vs++;
         size_t ve = vs;
+        size_t start = vs;
         if (ve < _t.size() && _t[ve] == '\'') {
+          start = vs + 1;
           ve++;
           while (ve < _t.size() && _t[ve] != '\'') ve++;
-          if (ve < _t.size()) ve++;
         } else {
           while (ve < _t.size() && _t[ve] != '\n' && _t[ve] != ' ' && _t[ve] != '\t' && _t[ve] != '#') ve++;
         }
-        return _t.substr(vs, ve - vs);
+        return _t.substr(start, ve - start);
       };
       cfg["config.club_website_url"] = getval("club_website_url");
       cfg["config.league_page_url"] = getval("league_page_url");
