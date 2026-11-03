@@ -30,7 +30,7 @@ jobs:
           SECRETS_AP_PASSWORD: ${{ secrets.AP_PASSWORD }}
         run: |
           python3 - <<'PY'
-          import os, yaml
+          import os, yaml, base64
           example = 'esphome/secrets.yaml.example'
           with open(example, encoding='utf-8') as f:
               data = yaml.safe_load(f)
@@ -43,11 +43,21 @@ jobs:
           }
           real, dummy = [], []
           for key, env in envmap.items():
-              val = os.environ.get(env, '')
+              # secrets often carry a trailing newline; strip all whitespace
+              val = ''.join(os.environ.get(env, '').split())
               if not val:
                   dummy.append(key)
                   print(f'{key}: EMPTY -> keeping placeholder')
                   continue
+              if key == 'curling_timer__encryption_key':
+                  try:
+                      raw = base64.b64decode(val, validate=True)
+                      if len(raw) != 32:
+                          raise ValueError(f'decodes to {len(raw)} bytes, need 32')
+                  except Exception as e:
+                      dummy.append(key)
+                      print(f'{key}: invalid base64/32-byte key ({e}) -> keeping placeholder')
+                      continue
               real.append(key)
               data[key] = val  # yaml.dump quotes/escapes safely, unlike regex replace
           with open('esphome/secrets.yaml', 'w', encoding='utf-8') as f:
