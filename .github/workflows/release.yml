@@ -10,6 +10,17 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+      - name: Diagnose action secrets (names only, never values)
+        env:
+          SECRETS_ENCRYPTION_KEY: ${{ secrets.SECRETS_ENCRYPTION_KEY }}
+          SECRETS_WEB_PASSWORD: ${{ secrets.SECRETS_WEB_PASSWORD }}
+          SECRETS_WIFI_SSID: ${{ secrets.SECRETS_WIFI_SSID }}
+          SECRETS_WIFI_PASSWORD: ${{ secrets.SECRETS_WIFI_PASSWORD }}
+          SECRETS_AP_PASSWORD: ${{ secrets.SECRETS_AP_PASSWORD }}
+        run: |
+          for v in SECRETS_ENCRYPTION_KEY SECRETS_WEB_PASSWORD SECRETS_WIFI_SSID SECRETS_WIFI_PASSWORD SECRETS_AP_PASSWORD; do
+            if [ -n "${!v}" ]; then echo "$v: set (len ${#v})"; else echo "$v: EMPTY"; fi
+          done
       - name: Generate secrets.yaml from GitHub Actions secrets
         env:
           SECRETS_ENCRYPTION_KEY: ${{ secrets.SECRETS_ENCRYPTION_KEY }}
@@ -19,28 +30,34 @@ jobs:
           SECRETS_AP_PASSWORD: ${{ secrets.SECRETS_AP_PASSWORD }}
         run: |
           cp esphome/secrets.yaml.example esphome/secrets.yaml
-          export SHELL_VAR_LIST='$SECRETS_ENCRYPTION_KEY $SECRETS_WEB_PASSWORD $SECRETS_WIFI_SSID $SECRETS_WIFI_PASSWORD $SECRETS_AP_PASSWORD'
-          # Substitute each placeholder in secrets.yaml with the real secret.
           python3 - <<'PY'
           import os, re
           p = 'esphome/secrets.yaml'
           s = open(p).read()
-          mapping = {
+          # required: the image is unusable without these
+          required = {
               'curling_timer__encryption_key': os.environ['SECRETS_ENCRYPTION_KEY'],
               'web_password': os.environ['SECRETS_WEB_PASSWORD'],
-              'wifi_ssid': os.environ['SECRETS_WIFI_SSID'],
-              'wifi_password': os.environ['SECRETS_WIFI_PASSWORD'],
-              'ap_password': os.environ['SECRETS_AP_PASSWORD'],
           }
+          # optional: device still works over ethernet, keep dummy if unset
+          optional = {
+              'wifi_ssid': os.environ.get('SECRETS_WIFI_SSID', ''),
+              'wifi_password': os.environ.get('SECRETS_WIFI_PASSWORD', ''),
+              'ap_password': os.environ.get('SECRETS_AP_PASSWORD', ''),
+          }
+          mapping = {**required, **optional}
           for key, val in mapping.items():
+              if key in required and not val:
+                  raise SystemExit(f'missing required secret for {key}')
               if not val:
-                  raise SystemExit(f'missing secret for {key}')
-              # replace the quoted placeholder value for this key
-              s = re.sub(rf'({re.escape(key)}:\s*")[^"]*(")', rf'\g<1>{val}\g<2>', s)
+                  print(f'{key}: not set, keeping placeholder')
+                  continue
+              # lambda replacement so secret chars (\, \g, etc.) are literal
+              s = re.sub(rf'({re.escape(key)}:\s*")[^"]*(")',
+                         lambda m: m.group(1) + val + m.group(2), s)
           open(p, 'w').write(s)
           print('secrets.yaml written (values not printed)')
           PY
-          # never leave the secrets file around after the build
           rm -f esphome/secrets.yaml
       - name: Compile curling-timer.ha.yaml
         uses: esphome/build-action@v8.1.0
