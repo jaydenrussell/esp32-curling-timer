@@ -310,7 +310,7 @@ globals:
 lvgl:
   displays:
     - hdmi
-  color_depth: 24
+  color_depth: 16
   update_interval: never
   bg_color: 0x000000
   full_refresh: false
