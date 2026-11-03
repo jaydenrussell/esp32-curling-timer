@@ -24,7 +24,7 @@ jobs:
             if [ -z "${!v}" ]; then echo "$v: EMPTY"; else echo "$v: set (len ${#v})"; fi
           done
           python3 - <<'PY'
-          import os, sys, yaml, base64
+          import os, sys, yaml
           # YAML !secret key -> GitHub Actions secret name (uppercased key)
           keys = ['curling_timer__encryption_key', 'web_password', 'wifi_ssid',
                   'wifi_password', 'ap_password']
@@ -36,14 +36,9 @@ jobs:
               if not val:
                   missing.append(f'{key} (secret {env})')
                   continue
-              if key == 'curling_timer__encryption_key':
-                  try:
-                      raw = base64.b64decode(val, validate=True)
-                      if len(raw) != 32:
-                          raise ValueError(f'decodes to {len(raw)} bytes, need 32')
-                  except Exception as e:
-                      print(f'FATAL: secret {env} is not a valid 32-byte base64 key ({e})', file=sys.stderr)
-                      sys.exit(2)
+              # Do NOT re-validate here — ESPHome validates the key format itself
+              # at config load. CI only checks presence, so a key ESPHome accepts
+              # always passes.
               data[key] = val  # yaml.safe_dump quotes/escapes safely
           if missing:
               print('FATAL: missing required secrets: ' + ', '.join(missing), file=sys.stderr)
