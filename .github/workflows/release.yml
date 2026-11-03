@@ -12,59 +12,41 @@ jobs:
       - uses: actions/checkout@v5
       - name: Generate secrets.yaml from GitHub Actions secrets (hard requirement)
         env:
-          # The API/OTA encryption key may be stored under either name; the
-          # step picks whichever is valid 32-byte base64.
-          API_ENCRYPTION_KEY: ${{ secrets.API_ENCRYPTION_KEY }}
+          # action secret name == YAML !secret key uppercased (enforced by
+          # tools/check_secrets.py in build.yml, so the two never drift)
           CURLING_TIMER__ENCRYPTION_KEY: ${{ secrets.CURLING_TIMER__ENCRYPTION_KEY }}
           WEB_PASSWORD: ${{ secrets.WEB_PASSWORD }}
           WIFI_SSID: ${{ secrets.WIFI_SSID }}
           WIFI_PASSWORD: ${{ secrets.WIFI_PASSWORD }}
           AP_PASSWORD: ${{ secrets.AP_PASSWORD }}
         run: |
-          for v in API_ENCRYPTION_KEY CURLING_TIMER__ENCRYPTION_KEY WEB_PASSWORD WIFI_SSID WIFI_PASSWORD AP_PASSWORD; do
+          for v in CURLING_TIMER__ENCRYPTION_KEY WEB_PASSWORD WIFI_SSID WIFI_PASSWORD AP_PASSWORD; do
             if [ -z "${!v}" ]; then echo "$v: EMPTY"; else echo "$v: set (len ${#v})"; fi
           done
           python3 - <<'PY'
-          import os, sys, yaml, base64
-          # YAML !secret key -> list of candidate Actions secret names (first
-          # non-empty wins; for the encryption key the first VALID one wins).
-          keys = {
-              'curling_timer__encryption_key': ['API_ENCRYPTION_KEY', 'CURLING_TIMER__ENCRYPTION_KEY'],
-              'web_password': ['WEB_PASSWORD'],
-              'wifi_ssid': ['WIFI_SSID'],
-              'wifi_password': ['WIFI_PASSWORD'],
-              'ap_password': ['AP_PASSWORD'],
-          }
-          def clean(env):
-              return ''.join(os.environ.get(env, '').split())  # strip whitespace/newlines
+          import os, sys, yaml
+          # YAML !secret key -> GitHub Actions secret name (uppercased key).
+          # Values are plaintext strings; ESPHome encodes them at compile time,
+          # so CI only checks presence and passes them through verbatim.
+          keys = ['curling_timer__encryption_key', 'web_password', 'wifi_ssid',
+                  'wifi_password', 'ap_password']
           data = {}
           missing = []
-          for key, candidates in keys.items():
-              val = ''
-              for env in candidates:
-                  v = clean(env)
-                  if not v:
-                      continue
-                  if key == 'curling_timer__encryption_key':
-                      try:
-                          if len(base64.b64decode(v, validate=True)) == 32:
-                              val = v; break
-                      except Exception:
-                          continue
-                  else:
-                      val = v; break
+          for key in keys:
+              env = key.upper()
+              val = ''.join(os.environ.get(env, '').split())  # strip whitespace/newlines only
               if not val:
-                  missing.append(f'{key} (secrets: {", ".join(candidates)})')
+                  missing.append(f'{key} (secret {env})')
                   continue
               data[key] = val
           if missing:
-              print('FATAL: missing/invalid required secrets: ' + ', '.join(missing), file=sys.stderr)
-              print('For curling_timer__encryption_key use `openssl rand -base64 32` (44 chars, decodes to 32 bytes);', file=sys.stderr)
-              print('store it as repository secret API_ENCRYPTION_KEY or CURLING_TIMER__ENCRYPTION_KEY.', file=sys.stderr)
+              print('FATAL: missing required secrets: ' + ', '.join(missing), file=sys.stderr)
+              print('Set them as repository secrets (repo -> Settings -> Secrets and variables -> Actions),', file=sys.stderr)
+              print('named as the uppercased YAML key, e.g. WEB_PASSWORD for !secret web_password.', file=sys.stderr)
               sys.exit(3)
           with open('esphome/secrets.yaml', 'w', encoding='utf-8') as f:
               yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
-          print(f'secrets.yaml written with {len(data)} real secrets (values not printed)')
+          print(f'secrets.yaml written with {len(data)} secrets, passed through verbatim (values not printed)')
           PY
           # secrets.yaml stays until after the compile below; the runner
           # checkout is ephemeral so it is never committed or uploaded
