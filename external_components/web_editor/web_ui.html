@@ -154,7 +154,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['leagues', '🏆', 'Leagues'], ['history', '📈', 'Report'], ['config', '⚙', 'Config'], ['diagnostics', '🩺', 'Diagnostics']];
+const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['leagues', '🏆', 'Leagues'], ['history', '📈', 'Report'], ['config', '⚙', 'Settings'], ['diagnostics', '🩺', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
@@ -260,7 +260,7 @@ async function selectTab(id) {
   renderTabs();
   clearMessage();
   for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== id);
-  if (id === 'status') loadStatus();
+  if (id === 'status') { if (state.status) renderStatus(); loadStatus(); }
   if (id === 'quickstart') { loadStatus(); renderQuickstart(); }
   if ((id === 'schedule' || id === 'exceptions') && !state.model) await loadSettings();
   else if (id === 'schedule') renderSchedule();
@@ -304,11 +304,12 @@ function buildQuickForm() {
   const minutes = el('input', { type: 'number', min: 0, max: 179, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Minutes' });
   const seconds = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Seconds' });
   const name = el('input', { type: 'text', maxlength: 60, placeholder: 'QUICK START' });
+  const pregame = el('input', { type: 'checkbox' });
   const pace = el('input', { type: 'checkbox' });
   const replace = el('input', { type: 'checkbox' });
   const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start now');
   const hint = el('span', { class: 'muted small' });
-  const options = () => ({ pace_of_play: pace.checked, replace_conflicts: replace.checked });
+  const options = () => ({ pregame: pregame.checked, pace_of_play: pace.checked, replace_conflicts: replace.checked });
   const presets = QUICK_PRESETS.map((preset) => el('button', { class: 'btn preset', type: 'button',
     title: `${preset.title || preset.name}, ${durationText(preset.seconds)}`,
     onclick: () => launchQuick({ seconds: preset.seconds, name: preset.name, title: preset.title,
@@ -328,8 +329,8 @@ function buildQuickForm() {
         el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's'))),
       el('label', {}, 'Name on display (optional)', name)),
     el('div', { class: 'row-actions' },
+      el('label', { class: 'check' }, pregame, 'Pre-game countdown (from Settings)'),
       el('label', { class: 'check' }, pace, 'Show pace of play'),
-      el('label', { class: 'check' }, el('input', { type: 'checkbox' }), 'Pre-game countdown'),
       el('label', { class: 'check' }, replace, 'Replace conflicting games today')),
     el('div', { class: 'row-actions' }, button, hint));
   form.update = (enabled, clockOk = true) => {
@@ -763,15 +764,16 @@ const CONFIG_SECTIONS = [
     fields: [
       ['config.pregame_countdown', 'int', 'Countdown (seconds)', 0, 60],
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
-      ['config.mirror_scale', 'int', 'Manual scale (%)', 25, 200],      ['config.pregame_color', 'color', 'Colour'],
+      ['config.pregame_color', 'color', 'Colour'],
       ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
   { group: 'Global options', title: 'Curling Club Manager', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
     fields: [
+      ['config.curling_club_manager_url', 'text', 'Curling Club Manager URL'],
       ['config.club_website_url', 'text', 'Club website URL'],
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
   { group: 'Global options', title: 'Display mirror', hint: 'Scale applied to the web status display mirror (0.1 to 3.0).',
     fields: [
-      ['config.mirror_scale', 'number', 'Display mirror scale', 0.1, 3.0]] },
+      ['config.mirror_scale', 'slider', 'Display mirror scale', 0.1, 3.0, 0.05]] },
   { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
@@ -947,6 +949,17 @@ function configField(field) {
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.05, inputmode: 'decimal',
       value: value == null ? '' : String(value),
       oninput: (event) => set(event.target.value === '' ? null : Number(event.target.value)) }));
+  }
+  if (type === 'slider') {
+    const [,, , min, max, step = 0.05] = field;
+    const val = value == null ? (min + max) / 2 : Number(value);
+    const out = el('output', { class: 'muted small', style: 'margin-left:8px' }, String(val));
+    return el('label', {}, label,
+      el('div', { class: 'row-actions', style: 'gap:8px' },
+        el('input', { type: 'range', min, max, step, style: 'flex:1',
+          value: val,
+          oninput: (event) => { const v = Number(event.target.value); out.textContent = String(v); set(v); } }),
+        out));
   }
   if (type === 'minutes') {
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.5, inputmode: 'decimal',
