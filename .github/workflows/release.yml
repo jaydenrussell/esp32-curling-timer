@@ -10,8 +10,38 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
-      - name: Generate dummy secrets for compile check
-        run: cp esphome/secrets.yaml.example esphome/secrets.yaml
+      - name: Generate secrets.yaml from GitHub Actions secrets
+        env:
+          SECRETS_ENCRYPTION_KEY: ${{ secrets.SECRETS_ENCRYPTION_KEY }}
+          SECRETS_WEB_PASSWORD: ${{ secrets.SECRETS_WEB_PASSWORD }}
+          SECRETS_WIFI_SSID: ${{ secrets.SECRETS_WIFI_SSID }}
+          SECRETS_WIFI_PASSWORD: ${{ secrets.SECRETS_WIFI_PASSWORD }}
+          SECRETS_AP_PASSWORD: ${{ secrets.SECRETS_AP_PASSWORD }}
+        run: |
+          cp esphome/secrets.yaml.example esphome/secrets.yaml
+          export SHELL_VAR_LIST='$SECRETS_ENCRYPTION_KEY $SECRETS_WEB_PASSWORD $SECRETS_WIFI_SSID $SECRETS_WIFI_PASSWORD $SECRETS_AP_PASSWORD'
+          # Substitute each placeholder in secrets.yaml with the real secret.
+          python3 - <<'PY'
+          import os, re
+          p = 'esphome/secrets.yaml'
+          s = open(p).read()
+          mapping = {
+              'curling_timer__encryption_key': os.environ['SECRETS_ENCRYPTION_KEY'],
+              'web_password': os.environ['SECRETS_WEB_PASSWORD'],
+              'wifi_ssid': os.environ['SECRETS_WIFI_SSID'],
+              'wifi_password': os.environ['SECRETS_WIFI_PASSWORD'],
+              'ap_password': os.environ['SECRETS_AP_PASSWORD'],
+          }
+          for key, val in mapping.items():
+              if not val:
+                  raise SystemExit(f'missing secret for {key}')
+              # replace the quoted placeholder value for this key
+              s = re.sub(rf'({re.escape(key)}:\s*")[^"]*(")', rf'\g<1>{val}\g<2>', s)
+          open(p, 'w').write(s)
+          print('secrets.yaml written (values not printed)')
+          PY
+          # never leave the secrets file around after the build
+          rm -f esphome/secrets.yaml
       - name: Compile curling-timer.ha.yaml
         uses: esphome/build-action@v8.1.0
         with:
