@@ -830,6 +830,7 @@ ApiResponse PiTimerApi::get_config() {
         return _t.substr(vs, ve - vs);
       };
       cfg["config.club_website_url"] = getval("config.club_website_url");
+      cfg["config.curling_club_manager_url"] = getval("config.curling_club_manager_url");
       cfg["config.league_page_url"] = getval("config.league_page_url");
       const std::string mirror_scale = getval("config.mirror_scale");
       if (!mirror_scale.empty()) cfg["config.mirror_scale"] = std::stod(mirror_scale);
