@@ -1,6 +1,9 @@
 esphome:
   name: hdmi-test
   friendly_name: HDMI Test
+  on_boot:
+    then:
+      - script.execute: hdmi_diag
 
 esp32:
   board: esp32-p4
@@ -65,10 +68,4 @@ script:
       - lambda: |-
           id(hdmi).log_hdmi_diagnostics();
       - delay: 1s
-      - script.execute: hdmi_diag
-
-automation:
-  - trigger:
-      platform: boot
-    then:
       - script.execute: hdmi_diag
