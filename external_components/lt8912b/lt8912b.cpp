@@ -250,50 +250,63 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
     return;
   if (ptr == nullptr)
     return;
-  if (bitness != this->color_depth_) {
-    display::Display::draw_pixels_at(x_start, y_start, w, h, ptr, order, bitness, big_endian, x_offset, y_offset,
-                                     x_pad);
-    this->flush_pending_();
-    return;
-  }
 
+  // Handle RGB565 (LVGL) -> RGB888 (LT8912B) conversion directly
   if (bitness == display::COLOR_BITNESS_565 && this->color_depth_ == display::COLOR_BITNESS_888) {
-    this->convert_565_to_888_and_write(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad);
+    this->convert_565_to_888_and_write(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad, order, big_endian);
     return;
   }
 
-  this->write_to_display_(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad);
+  // Same format: write directly
+  if (bitness == this->color_depth_) {
+    this->write_to_display_(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad);
+    return;
+  }
+
+  // Fallback to base class
+  display::Display::draw_pixels_at(x_start, y_start, w, h, ptr, order, bitness, big_endian, x_offset, y_offset, x_pad);
+  this->flush_pending_();
 }
 
-void Lt8912b::convert_565_to_888_and_write(int x_start, int y_start, int w, int h, const uint8_t *src_ptr, int x_offset, int y_offset, int x_pad) {
+void Lt8912b::convert_565_to_888_and_write(int x_start, int y_start, int w, int h, const uint8_t *src_ptr, int x_offset, int y_offset, int x_pad, display::ColorOrder order, bool big_endian) {
   if (!this->check_buffer_())
     return;
 
-  auto bytes_per_pixel_src = 2;
-  auto bytes_per_pixel_dst = 3;
-  auto stride_src = (x_offset + w + x_pad) * bytes_per_pixel_src;
+  const int bytes_per_pixel_src = 2;
+  const int bytes_per_pixel_dst = 3;
+  const int stride_src = (x_offset + w + x_pad) * bytes_per_pixel_src;
 
-  const uint8_t *src_ptr_current = src_ptr + y_offset * stride_src + x_offset * bytes_per_pixel_src;
+  const uint8_t *src_row = src_ptr + y_offset * stride_src + x_offset * bytes_per_pixel_src;
 
   for (int y = 0; y < h; y++) {
-    uint8_t *dst_row_start = this->buffer_ + ((y + y_start) * this->width_ + x_start) * bytes_per_pixel_dst;
-
     for (int x = 0; x < w; x++) {
-      // Read 2 bytes of RGB565 data (little-endian or big-endian handled by ColorOrder)
-      uint16_t src_val = src_ptr_current[0] | (src_ptr_current[1] << 8);
-      src_ptr_current += bytes_per_pixel_src;
+      uint16_t src_val;
+      if (big_endian) {
+        src_val = (src_row[0] << 8) | src_row[1];
+      } else {
+        src_val = src_row[0] | (src_row[1] << 8);
+      }
+      src_row += bytes_per_pixel_src;
 
-      // Extract RGB565 components and expand to 888
-      // RGB565: R(5 bits at bits 11-15), G(6 bits at bits 5-10), B(5 bits at bits 0-4)
-      uint8_t r = (uint8_t)(((src_val >> 11) & 0x1F) << 3);  // R: 5 bits -> 8 bits
-      uint8_t g = (uint8_t)(((src_val >> 5) & 0x3F) << 2);   // G: 6 bits -> 8 bits
-      uint8_t b = (uint8_t)((src_val & 0x1F) << 3);          // B: 5 bits -> 8 bits
+      uint8_t r, g, b;
+      if (order == display::COLOR_ORDER_RGB) {
+        r = (uint8_t)(((src_val >> 11) & 0x1F) << 3);
+        g = (uint8_t)(((src_val >> 5) & 0x3F) << 2);
+        b = (uint8_t)((src_val & 0x1F) << 3);
+      } else {
+        b = (uint8_t)(((src_val >> 11) & 0x1F) << 3);
+        g = (uint8_t)(((src_val >> 5) & 0x3F) << 2);
+        r = (uint8_t)((src_val & 0x1F) << 3);
+      }
 
-      size_t dst_pos = (y_start + y) * this->width_ * bytes_per_pixel_dst + (x_start + x) * bytes_per_pixel_dst;
+      int dst_x = x_start + x;
+      int dst_y = y_start + y;
+      size_t dst_pos = (dst_y * this->width_ + dst_x) * bytes_per_pixel_dst;
       this->buffer_[dst_pos] = r;
       this->buffer_[dst_pos + 1] = g;
       this->buffer_[dst_pos + 2] = b;
     }
+    src_row += x_pad * bytes_per_pixel_src;
   }
 
   this->x_low_ = x_start;

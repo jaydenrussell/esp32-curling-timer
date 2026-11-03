@@ -58,7 +58,7 @@ class Lt8912b : public display::Display {
  protected:
   void write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
                           int x_pad);
-  void convert_565_to_888_and_write(int x_start, int y_start, int w, int h, const uint8_t *src_ptr, int x_offset, int y_offset, int x_pad);
+  void convert_565_to_888_and_write(int x_start, int y_start, int w, int h, const uint8_t *src_ptr, int x_offset, int y_offset, int x_pad, display::ColorOrder order, bool big_endian);
   bool check_buffer_();
   void flush_pending_();
   void mark_failed_(const LogString *message, esp_err_t err);
