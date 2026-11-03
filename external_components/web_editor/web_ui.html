@@ -770,9 +770,9 @@ const CONFIG_SECTIONS = [
     fields: [
       ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)'],
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
-  { group: 'Global options', title: 'Display mirror', hint: 'Scale applied to the web status display mirror (0.1 to 3.0).',
+  { group: 'Global options', title: 'On the Display Now', hint: 'Text scaling for the on-display mirror card.',
     fields: [
-      ['config.mirror_scale', 'slider', 'On the Display Now (%)', 10, 100, 5]] },
+      ['config.mirror_scale', 'slider', '', 10, 100, 5]] },
   { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],

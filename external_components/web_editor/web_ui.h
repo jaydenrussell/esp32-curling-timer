@@ -763,12 +763,15 @@ const CONFIG_SECTIONS = [
     fields: [
       ['config.pregame_countdown', 'int', 'Countdown (seconds)', 0, 60],
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
-      ['config.mirror_scale', 'int', 'On the Display Now (%)', 10, 100],      ['config.pregame_color', 'color', 'Colour'],
+      ['config.pregame_color', 'color', 'Colour'],
       ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
   { group: 'Global options', title: 'Curling Club Manager', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
     fields: [
       ['config.club_website_url', 'text', 'Club website URL'],
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
+  { group: 'Global options', title: 'On the Display Now', hint: 'Text scaling for the on-display mirror card.',
+    fields: [
+      ['config.mirror_scale', 'slider', '', 10, 100, 5]] },
   { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],

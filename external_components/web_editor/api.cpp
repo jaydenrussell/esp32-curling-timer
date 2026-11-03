@@ -818,21 +818,19 @@ ApiResponse PiTimerApi::get_config() {
         size_t pos = _t.find(needle);
         if (pos == std::string::npos) return std::string();
         size_t vs = _t.find(':', pos) + 1;
-        while (vs < _t.size() && (_t[vs] == ' ' || _t[vs] == '	')) vs++;
+        while (vs < _t.size() && (_t[vs] == ' ' || _t[vs] == '\t')) vs++;
         size_t ve = vs;
         if (ve < _t.size() && _t[ve] == '\'') {
           ve++;
           while (ve < _t.size() && _t[ve] != '\'') ve++;
           if (ve < _t.size()) ve++;
         } else {
-          while (ve < _t.size() && _t[ve] != '\n' && _t[ve] != ' ' && _t[ve] != '	' && _t[ve] != '#') ve++;
+          while (ve < _t.size() && _t[ve] != '\n' && _t[ve] != ' ' && _t[ve] != '\t' && _t[ve] != '#') ve++;
         }
         return _t.substr(vs, ve - vs);
       };
-      cfg["config.club_website_url"] = getval("config.club_website_url");
-      cfg["config.league_page_url"] = getval("config.league_page_url");
-      const std::string mirror_scale = getval("config.mirror_scale");
-      if (!mirror_scale.empty()) cfg["config.mirror_scale"] = std::stod(mirror_scale);
+      cfg["config.club_website_url"] = getval("club_website_url");
+      cfg["config.league_page_url"] = getval("league_page_url");
     }
   }
   cfg["config.pregame_header_text"] = s.pregame_header_text;
@@ -879,7 +877,7 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                 path == "config.log_level" ||
                 path == "config.pregame_countdown" ||
                path == "config.pregame_font_size" ||
-               path == "config.mirror_scale" ||               path == "config.footer.date_font_size" ||
+               path == "config.footer.date_font_size" ||
                path == "config.footer.time_font_size") {
       if (!json_strict_int(v, &number) || number < 0 || number > 100000)
         return error_json(422, path + " must be a whole number of seconds or pixels (0 or more)");
