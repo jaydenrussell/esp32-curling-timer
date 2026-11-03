@@ -24,29 +24,37 @@ jobs:
             if [ -z "${!v}" ]; then echo "$v: EMPTY"; else echo "$v: set (len ${#v})"; fi
           done
           python3 - <<'PY'
-          import os, sys, yaml
+          import os, sys, json, hashlib, base64
           # YAML !secret key -> GitHub Actions secret name (uppercased key).
           # Values are plaintext strings; ESPHome encodes them at compile time,
           # so CI only checks presence and passes them through verbatim.
           keys = ['curling_timer__encryption_key', 'web_password', 'wifi_ssid',
                   'wifi_password', 'ap_password']
-          data = {}
-          missing = []
+          lines, missing = [], []
           for key in keys:
               env = key.upper()
               val = ''.join(os.environ.get(env, '').split())  # strip whitespace/newlines only
               if not val:
                   missing.append(f'{key} (secret {env})')
                   continue
-              data[key] = val
+              # write each value as a JSON double-quoted scalar, which is valid
+              # YAML and immune to plain-scalar edge cases
+              lines.append(f'{key}: {json.dumps(val)}')
+              h = hashlib.sha256(val.encode()).hexdigest()[:12]
+              extra = ''
+              if key == 'curling_timer__encryption_key':
+                  try:
+                      n = len(base64.b64decode(val, validate=True))
+                      extra = f' base64_ok={n == 32}'
+                  except ValueError:
+                      extra = ' base64_ok=False'
+              print(f'{key}: len={len(val)} sha256={h}{extra} (value not printed)')
           if missing:
               print('FATAL: missing required secrets: ' + ', '.join(missing), file=sys.stderr)
-              print('Set them as repository secrets (repo -> Settings -> Secrets and variables -> Actions),', file=sys.stderr)
-              print('named as the uppercased YAML key, e.g. WEB_PASSWORD for !secret web_password.', file=sys.stderr)
               sys.exit(3)
           with open('esphome/secrets.yaml', 'w', encoding='utf-8') as f:
-              yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
-          print(f'secrets.yaml written with {len(data)} secrets, passed through verbatim (values not printed)')
+              f.write('\n'.join(lines) + '\n')
+          print(f'secrets.yaml written with {len(lines)} secrets, verbatim (values not printed)')
           PY
           # secrets.yaml stays until after the compile below; the runner
           # checkout is ephemeral so it is never committed or uploaded
