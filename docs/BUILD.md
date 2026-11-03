@@ -8,8 +8,32 @@ at `esphome/curling-timer.ha.yaml`:
     https://raw.githubusercontent.com/jaydenrussell/esp32-curling-timer/main/esphome/curling-timer.ha.yaml
 
 1. Copy the whole file into `/config/esphome/curling-timer.yaml`.
-2. Add the secrets below to `/config/secrets.yaml` in the same folder.
+2. Add the secrets below to `/config/esphome/secrets.yaml` in the same folder.
 3. Install / update the add-on, then flash.
+
+### Secrets: Device Builder and GitHub Actions share one contract
+
+The YAML only ever references secrets by name (`!secret <key>`); the *value*
+comes from whichever environment builds the firmware:
+
+- **Home Assistant Device Builder** reads `/config/esphome/secrets.yaml`
+  (copy `esphome/secrets.yaml.example` and fill it in).
+- **GitHub Actions** (release workflow on `v*` tags) reads **repository
+  secrets** named as the uppercased YAML key.
+
+| YAML `!secret` key | Device Builder file key | GitHub Actions secret |
+| --- | --- | --- |
+| `curling_timer__encryption_key` | `curling_timer__encryption_key` (32-byte base64, `openssl rand -base64 32`) | `CURLING_TIMER__ENCRYPTION_KEY` |
+| `web_password` | `web_password` | `WEB_PASSWORD` |
+| `wifi_ssid` | `wifi_ssid` | `WIFI_SSID` |
+| `wifi_password` | `wifi_password` | `WIFI_PASSWORD` |
+| `ap_password` | `ap_password` | `AP_PASSWORD` |
+
+`tools/check_secrets.py` (run in CI on every push/PR) fails the build if a
+`!secret` key used in the YAML is missing from `secrets.yaml.example`, so the
+two environments can never drift apart. Run it locally with
+`python3 tools/check_secrets.py`.
+
 
 The external components are fetched from GitHub as a `type: git` source, pinned
 to the release tag in `esphome/component_ref.txt` (currently `v1.0.0`). The
