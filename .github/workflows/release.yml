@@ -29,30 +29,29 @@ jobs:
           SECRETS_WIFI_PASSWORD: ${{ secrets.WIFI_PASSWORD }}
           SECRETS_AP_PASSWORD: ${{ secrets.AP_PASSWORD }}
         run: |
-          cp esphome/secrets.yaml.example esphome/secrets.yaml
           python3 - <<'PY'
-          import os, re
-          p = 'esphome/secrets.yaml'
-          s = open(p).read()
-          mapping = {
-              'curling_timer__encryption_key': os.environ.get('SECRETS_ENCRYPTION_KEY', ''),
-              'web_password': os.environ.get('SECRETS_WEB_PASSWORD', ''),
-              'wifi_ssid': os.environ.get('SECRETS_WIFI_SSID', ''),
-              'wifi_password': os.environ.get('SECRETS_WIFI_PASSWORD', ''),
-              'ap_password': os.environ.get('SECRETS_AP_PASSWORD', ''),
+          import os, yaml
+          example = 'esphome/secrets.yaml.example'
+          with open(example, encoding='utf-8') as f:
+              data = yaml.safe_load(f)
+          envmap = {
+              'curling_timer__encryption_key': 'SECRETS_ENCRYPTION_KEY',
+              'web_password': 'SECRETS_WEB_PASSWORD',
+              'wifi_ssid': 'SECRETS_WIFI_SSID',
+              'wifi_password': 'SECRETS_WIFI_PASSWORD',
+              'ap_password': 'SECRETS_AP_PASSWORD',
           }
           real, dummy = [], []
-          for key, val in mapping.items():
+          for key, env in envmap.items():
+              val = os.environ.get(env, '')
               if not val:
                   dummy.append(key)
                   print(f'{key}: EMPTY -> keeping placeholder')
                   continue
               real.append(key)
-              # lambda replacement so secret chars (\, \g, etc.) are literal
-              s = re.sub(rf'({re.escape(key)}:\s*")[^"]*(")',
-                         lambda m: m.group(1) + val + m.group(2), s)
-          open(p, 'w').write(s)
-          # write a flag the release step reads to label the artifacts
+              data[key] = val  # yaml.dump quotes/escapes safely, unlike regex replace
+          with open('esphome/secrets.yaml', 'w', encoding='utf-8') as f:
+              yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
           with open('secrets_status.txt', 'w') as f:
               f.write('REAL\n' if not dummy else 'DUMMY: ' + ','.join(dummy) + '\n')
           print('secrets.yaml written; real=', real, 'dummy=', dummy, '(values not printed)')
