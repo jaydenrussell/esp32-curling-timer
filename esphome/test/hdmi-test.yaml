@@ -1,0 +1,80 @@
+esphome:
+  name: hdmi-test
+  friendly_name: HDMI Test
+
+esp32:
+  board: esp32-p4
+  framework:
+    type: esp-idf
+    advanced:
+      enable_idf_experimental_features: true
+  flash_size: 16MB
+  # Un-cap flash SPI (default DIO@40MHz): QIO@60MHz on this module.
+  flash_mode: qio
+  flash_frequency: 60MHz
+  framework:
+    type: esp-idf
+    advanced:
+      enable_idf_experimental_features: true
+    sdkconfig_options:
+      # Runtime flash SPI speed (bootloader prints "SPI Speed"). flash_frequency
+      # only sets the esptoolpy flashing speed; this is what caps runtime.
+      CONFIG_FLASH_SPEED_60M: y
+
+psram:
+  speed: 200MHz
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/jaydenrussell/esp32-curling-timer
+      ref: v2026.11.15
+      path: external_components
+    components: [lt8912b]
+    refresh: 0s   # always re-fetch the pinned tag; default 1d served stale code before
+
+logger:
+  level: DEBUG
+  # NOTE: the LT8912B component logs at DEBUG, so the logger must be DEBUG
+  # or the HDMI diagnostics (HPD / MIPI sync / first-frame / dma2d result)
+  # never appear in the serial monitor.
+
+ethernet:
+  type: IP101
+  phy_addr: 1
+  mdc_pin: GPIO31
+  mdio_pin: GPIO52
+  power_pin: GPIO51
+  clk:
+    pin: GPIO50
+    mode: CLK_EXT_IN
+
+mdns:
+  id: mdns_advertiser
+
+esp_ldo:
+  - channel: 3
+    voltage: 2.5V
+
+lt8912b:
+  id: hdmi
+  reset_pin: GPIO4
+  enable_pin: GPIO33
+  sda_pin: GPIO0
+  scl_pin: GPIO1
+  show_test_card: true
+  update_interval: 1s
+
+script:
+  - id: hdmi_diag
+    then:
+      - lambda: |-
+          id(hdmi).log_hdmi_diagnostics();
+      - delay: 1s
+      - script.execute: hdmi_diag
+
+automation:
+  - trigger:
+      platform: boot
+    then:
+      - script.execute: hdmi_diag
