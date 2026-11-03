@@ -257,7 +257,7 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
     return;
   }
 
-  if (bitness == display::COLOR_BITNESS_16 && this->color_depth_ == display::COLOR_BITNESS_888) {
+  if (bitness == display::COLOR_BITNESS_565 && this->color_depth_ == display::COLOR_BITNESS_888) {
     this->convert_565_to_888_and_write(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad);
     return;
   }
