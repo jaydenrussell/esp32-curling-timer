@@ -49,6 +49,9 @@ esp32:
       CONFIG_VFS_SUPPORT_DIR: y
       CONFIG_FATFS_LFN_HEAP: y
       CONFIG_ESP_TASK_WDT_TIMEOUT_S: "60"
+      # Runtime flash SPI speed (this is what the bootloader prints as
+      # "SPI Speed"). flash_frequency only sets the esptoolpy flashing speed.
+      CONFIG_FLASH_SPEED_60M: y
       # Persist crash diagnostics to flash for post-mortem analysis.
       CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH: y
       CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF: y
@@ -220,7 +223,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.14
+      ref: v2026.11.15
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
