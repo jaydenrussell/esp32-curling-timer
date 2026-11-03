@@ -288,16 +288,11 @@ void Lt8912b::convert_565_to_888_and_write(int x_start, int y_start, int w, int 
       }
       src_row += bytes_per_pixel_src;
 
-      uint8_t r, g, b;
-      if (order == display::COLOR_ORDER_RGB) {
-        r = (uint8_t)(((src_val >> 11) & 0x1F) << 3);
-        g = (uint8_t)(((src_val >> 5) & 0x3F) << 2);
-        b = (uint8_t)((src_val & 0x1F) << 3);
-      } else {
-        b = (uint8_t)(((src_val >> 11) & 0x1F) << 3);
-        g = (uint8_t)(((src_val >> 5) & 0x3F) << 2);
-        r = (uint8_t)((src_val & 0x1F) << 3);
-      }
+      // LVGL RGB565 is always standard order (R in high bits); decode
+      // accordingly regardless of the reported ColorOrder to avoid R/B swap.
+      uint8_t r = (uint8_t)(((src_val >> 11) & 0x1F) << 3);
+      uint8_t g = (uint8_t)(((src_val >> 5) & 0x3F) << 2);
+      uint8_t b = (uint8_t)((src_val & 0x1F) << 3);
 
       int dst_x = x_start + x;
       int dst_y = y_start + y;
