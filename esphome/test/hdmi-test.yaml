@@ -11,15 +11,9 @@ esp32:
   flash_size: 16MB
   # Un-cap flash SPI (default DIO@40MHz): QIO@60MHz on this module.
   flash_mode: qio
-  flash_frequency: 60MHz
-  framework:
-    type: esp-idf
-    advanced:
-      enable_idf_experimental_features: true
-    sdkconfig_options:
-      # Runtime flash SPI speed (bootloader prints "SPI Speed"). flash_frequency
-      # only sets the esptoolpy flashing speed; this is what caps runtime.
-      CONFIG_FLASH_SPEED_60M: y
+  flash_frequency: 60MHz   # sets CONFIG_ESPTOOLPY_FLASHFREQ_60M -> written into the
+                           # image header at flash time; bootloader runs flash at this speed.
+                           # (full USB reflash needed; OTA does not rewrite the bootloader)
 
 psram:
   speed: 200MHz
@@ -28,7 +22,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.15
+      ref: v2026.11.16
       path: external_components
     components: [lt8912b]
     refresh: 0s   # always re-fetch the pinned tag; default 1d served stale code before
