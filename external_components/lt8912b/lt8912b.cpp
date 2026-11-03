@@ -87,13 +87,13 @@ void Lt8912b::setup() {
 
   esp_lcd_dpi_panel_config_t dpi_config = {
       .virtual_channel = 0,
-      // The ESP32-P4 MIPI-DSI wire is RGB888-only. Keep the framebuffer RGB565
-      // (LVGL is 16-bit) as in_color_format and set out_color_format=RGB888 so
-      // the DSI bridge converts in hardware (mipi_dsi_brg set_input/output_color_format).
-      // Matches the validated M5GFX PoE-P4 HDMI config (in=out there; bridge handles it).
+      // Match the proven M5GFX PoE-P4 HDMI config: RGB888 framebuffer in and
+      // out. The P4 DSI host only emits RGB888 on the wire; RGB565-in relied on
+      // the bridge doing 565->888 conversion, which left the LT8912B unlocked
+      // (blue screen) on rev1.3 silicon.
       .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_DEFAULT,
       .dpi_clock_freq_mhz = 80,
-      .in_color_format = LCD_COLOR_FMT_RGB565,
+      .in_color_format = LCD_COLOR_FMT_RGB888,
       .out_color_format = LCD_COLOR_FMT_RGB888,
       .num_fbs = 2,
       .video_timing =
@@ -150,8 +150,9 @@ void Lt8912b::setup() {
     return;
   }
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(6, 0, 0)
-  // IDF >= 6.0 only converts in->out color format (RGB565 framebuffer to the
-  // RGB888 DSI wire format) when DMA2D is explicitly enabled on the panel.
+  // IDF >= 6.0 requires DMA2D to be explicitly enabled on the DPI panel for
+  // the hardware-accelerated framebuffer copy path (the use_dma2d flag was
+  // removed from the config struct in 6.0).
   esp_err_t dma2d_err = esp_lcd_dpi_panel_enable_dma2d(this->panel_);
   ESP_LOGI(TAG, "esp_lcd_dpi_panel_enable_dma2d: %s", esp_err_to_name(dma2d_err));
 #endif
@@ -263,7 +264,7 @@ void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const ui
   if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr || ptr == nullptr)
     return;
   esp_err_t err = ESP_OK;
-  auto bytes_per_pixel = 2;
+  auto bytes_per_pixel = 3;  // RGB888 framebuffer
   auto stride = (x_offset + w + x_pad) * bytes_per_pixel;
   ptr += y_offset * stride + x_offset * bytes_per_pixel;
   // Wait for the previous transfer to finish (the callback gives the lock
@@ -299,8 +300,8 @@ bool Lt8912b::check_buffer_() {
     return false;
   if (this->buffer_ != nullptr)
     return true;
-  auto bytes_per_pixel = 2;
-  // A full screen is 1.8 MB at 1280x720 - far too much for the internal
+  auto bytes_per_pixel = 3;  // RGB888
+  // A full screen is 2.8 MB at 1280x720 - far too much for the internal
   // heap, so ask for external (PSRAM) memory.
   RAMAllocator<uint8_t> allocator(true);
   this->buffer_ = allocator.allocate(this->height_ * this->width_ * bytes_per_pixel);
@@ -341,10 +342,9 @@ void Lt8912b::draw_pixel_at(int x, int y, Color color) {
   if (!this->check_buffer_())
     return;
   size_t pos = (y * this->width_) + x;
-  // Buffer is RGB565 (2 bytes/px) — matches check_buffer_() and fill().
-  uint16_t rgb565 = ((color.r & 0xF8) << 8) | ((color.g & 0xFC) << 3) | (color.b >> 3);
-  this->buffer_[pos * 2] = (rgb565 >> 8) & 0xFF;
-  this->buffer_[pos * 2 + 1] = rgb565 & 0xFF;
+  this->buffer_[pos * 3] = color.r;
+  this->buffer_[pos * 3 + 1] = color.g;
+  this->buffer_[pos * 3 + 2] = color.b;
   if (x < this->x_low_)
     this->x_low_ = x;
   if (y < this->y_low_)
@@ -366,10 +366,11 @@ void Lt8912b::fill(Color color) {
     return;
   }
 
-  uint16_t rgb565 = ((color.r & 0xF8) << 8) | ((color.g & 0xFC) << 3) | (color.b >> 3);
-  for (size_t i = 0; i != this->width_ * this->height_; i++) {
-    this->buffer_[i * 2] = (rgb565 >> 8) & 0xFF;
-    this->buffer_[i * 2 + 1] = rgb565 & 0xFF;
+  uint32_t total = this->width_ * this->height_;
+  for (uint32_t i = 0; i != total; i++) {
+    this->buffer_[i * 3] = color.r;
+    this->buffer_[i * 3 + 1] = color.g;
+    this->buffer_[i * 3 + 2] = color.b;
   }
   this->x_low_ = 0;
   this->y_low_ = 0;
@@ -410,7 +411,7 @@ ESP_LOGCONFIG(TAG,
                 "\n  DSI Lanes: 2"
                 "\n  Lane Bit Rate: %.0fMbps"
                 "\n  I2C Frequency: %luHz"
-                "\n  Framebuffer: 16 bit RGB565 -> DSI out: 24 bit RGB888 (DMA2D)",
+                "\n  Framebuffer: 24 bit RGB888 -> DSI out: 24 bit RGB888",
                 this->width_, this->height_, this->rotation_, this->lane_bit_rate_, this->i2c_frequency_);
   LOG_PIN("  Reset Pin ", this->reset_pin_);
   LOG_PIN("  Enable Pin ", this->enable_pin_);

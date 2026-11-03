@@ -82,7 +82,7 @@ class Lt8912b : public display::Display {
   bool hdmi_ready_{false};
   bool first_frame_logged_{false};
 
-  display::ColorBitness color_depth_{display::COLOR_BITNESS_565};
+  display::ColorBitness color_depth_{display::COLOR_BITNESS_888};
   uint8_t *buffer_{nullptr};
   uint16_t x_low_{1};
   uint16_t y_low_{1};
