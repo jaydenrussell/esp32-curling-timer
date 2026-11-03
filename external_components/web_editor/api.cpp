@@ -830,7 +830,6 @@ ApiResponse PiTimerApi::get_config() {
         return _t.substr(vs, ve - vs);
       };
       cfg["config.club_website_url"] = getval("config.club_website_url");
-      cfg["config.curling_club_manager_url"] = getval("config.curling_club_manager_url");
       cfg["config.league_page_url"] = getval("config.league_page_url");
       const std::string mirror_scale = getval("config.mirror_scale");
       if (!mirror_scale.empty()) cfg["config.mirror_scale"] = std::stod(mirror_scale);
@@ -923,8 +922,7 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.footer.date_color" || path == "config.footer.time_color" ||
                path == "config.footer.color" ||
                path == "config.background_color" ||
-               path == "config.club_website_url" || path == "config.league_page_url" ||
-               path == "config.curling_club_manager_url") {
+               path == "config.club_website_url" || path == "config.league_page_url") {
       if (!v.is<const char *>())
         return error_json(422, path + " must be a string");
       yaml = curling_engine::yaml_quote(v.as<const char *>());

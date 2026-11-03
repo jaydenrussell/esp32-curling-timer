@@ -223,7 +223,6 @@ static bool insertable_config_path(const std::string &path) {
          path == "config.background_color" ||
          path == "config.club_website_url" ||
          path == "config.league_page_url" ||
-         path == "config.curling_club_manager_url";
 }
 
 // The countdown section needs both keys (minutes_before and relays), so a
