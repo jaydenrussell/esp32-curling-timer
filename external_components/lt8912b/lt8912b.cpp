@@ -243,7 +243,7 @@ void Lt8912b::flush_pending_() {
 }
 
 void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8_t *ptr, display::ColorOrder order,
-                             display::ColorBitness bitness, bool big_endian, int x_offset, int y_offset, int x_pad) {
+                              display::ColorBitness bitness, bool big_endian, int x_offset, int y_offset, int x_pad) {
   if (w <= 0 || h <= 0)
     return;
   if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr)
@@ -256,11 +256,56 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
     this->flush_pending_();
     return;
   }
+
+  if (bitness == display::COLOR_BITNESS_16 && this->color_depth_ == display::COLOR_BITNESS_888) {
+    this->convert_565_to_888_and_write(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad);
+    return;
+  }
+
   this->write_to_display_(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad);
 }
 
+void Lt8912b::convert_565_to_888_and_write(int x_start, int y_start, int w, int h, const uint8_t *src_ptr, int x_offset, int y_offset, int x_pad) {
+  if (!this->check_buffer_())
+    return;
+
+  auto bytes_per_pixel_src = 2;
+  auto bytes_per_pixel_dst = 3;
+  auto stride_src = (x_offset + w + x_pad) * bytes_per_pixel_src;
+
+  const uint8_t *src_ptr_current = src_ptr + y_offset * stride_src + x_offset * bytes_per_pixel_src;
+
+  for (int y = 0; y < h; y++) {
+    uint8_t *dst_row_start = this->buffer_ + ((y + y_start) * this->width_ + x_start) * bytes_per_pixel_dst;
+
+    for (int x = 0; x < w; x++) {
+      // Read 2 bytes of RGB565 data (little-endian or big-endian handled by ColorOrder)
+      uint16_t src_val = src_ptr_current[0] | (src_ptr_current[1] << 8);
+      src_ptr_current += bytes_per_pixel_src;
+
+      // Extract RGB565 components and expand to 888
+      // RGB565: R(5 bits at bits 11-15), G(6 bits at bits 5-10), B(5 bits at bits 0-4)
+      uint8_t r = (uint8_t)(((src_val >> 11) & 0x1F) << 3);  // R: 5 bits -> 8 bits
+      uint8_t g = (uint8_t)(((src_val >> 5) & 0x3F) << 2);   // G: 6 bits -> 8 bits
+      uint8_t b = (uint8_t)((src_val & 0x1F) << 3);          // B: 5 bits -> 8 bits
+
+      size_t dst_pos = (y_start + y) * this->width_ * bytes_per_pixel_dst + (x_start + x) * bytes_per_pixel_dst;
+      this->buffer_[dst_pos] = r;
+      this->buffer_[dst_pos + 1] = g;
+      this->buffer_[dst_pos + 2] = b;
+    }
+  }
+
+  this->x_low_ = x_start;
+  this->y_low_ = y_start;
+  this->x_high_ = x_start + w - 1;
+  this->y_high_ = y_start + h - 1;
+
+  this->flush_pending_();
+}
+
 void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
-                                int x_pad) {
+                                 int x_pad) {
   if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr || ptr == nullptr)
     return;
   esp_err_t err = ESP_OK;
