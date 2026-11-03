@@ -773,7 +773,7 @@ const CONFIG_SECTIONS = [
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
   { group: 'Global options', title: 'Display mirror', hint: 'Scale applied to the web status display mirror (0.1 to 3.0).',
     fields: [
-      ['config.mirror_scale', 'slider', 'Display mirror scale (%)', 10, 300, 5]] },
+      ['config.mirror_scale', 'slider', 'On the Display Now (%)', 10, 100, 5]] },
   { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
@@ -891,7 +891,7 @@ function validateConfigDiff(diff) {
       if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0)
         return 'Minutes per unit must be a number greater than 0';
     } else if (path === 'config.mirror_scale') {
-      if (typeof value !== 'number' || !Number.isInteger(value) || value < 10 || value > 300)
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < 10 || value > 100)
         return 'Display mirror scale must be an integer between 10 and 300 (percentage)';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
                path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
@@ -956,12 +956,12 @@ function configField(field) {
   if (type === 'slider') {
     const [,, , min, max, step = 0.05] = field;
     const val = value == null ? (min + max) / 2 : Number(value);
-    const out = el('output', { class: 'muted small', style: 'margin-left:8px' }, String(val));
+    const out = el('output', { class: 'muted small', style: 'margin-left:8px' }, String(val) + '%');
     return el('label', {}, label,
       el('div', { class: 'row-actions', style: 'gap:8px' },
         el('input', { type: 'range', min, max, step, style: 'flex:1',
           value: val,
-          oninput: (event) => { const v = Number(event.target.value); out.textContent = String(v); set(v); } }),
+          oninput: (event) => { const v = Number(event.target.value); out.textContent = String(v) + '%'; set(v); } }),
         out));
   }
   if (type === 'minutes') {

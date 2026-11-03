@@ -928,12 +928,12 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
         return error_json(422, path + " must be a string");
       yaml = curling_engine::yaml_quote(v.as<const char *>());
     } else if (path == "config.mirror_scale") {
-      if (!v.is<double>() && !v.is<float>() && !v.is<int>())
+      if (!v.is<int>() && !v.is<double>() && !v.is<float>())
         return error_json(422, path + " must be a number");
       const double scale = v.as<double>();
-      if (scale < 0.1 || scale > 3.0)
-        return error_json(422, path + " must be between 0.1 and 3.0");
-      yaml = std::to_string(scale);
+      if (scale < 10 || scale > 100)
+        return error_json(422, path + " must be between 10 and 100");
+      yaml = std::to_string((int)scale);
     } else {
       return error_json(422, "unknown config setting '" + path + "'");
     }
