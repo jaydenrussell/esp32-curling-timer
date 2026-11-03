@@ -57,11 +57,15 @@ jobs:
               f.write('REAL\n' if not dummy else 'DUMMY: ' + ','.join(dummy) + '\n')
           print('secrets.yaml written; real=', real, 'dummy=', dummy, '(values not printed)')
           PY
-          rm -f esphome/secrets.yaml
+          # secrets.yaml stays until after the compile below; the runner
+          # checkout is ephemeral so it is never committed or uploaded
       - name: Compile curling-timer.ha.yaml
         uses: esphome/build-action@v8.1.0
         with:
           yaml-file: esphome/curling-timer.ha.yaml
+      - name: Remove secrets.yaml from the runner (never uploaded)
+        if: always()
+        run: rm -f esphome/secrets.yaml
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
