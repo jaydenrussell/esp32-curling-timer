@@ -34,7 +34,7 @@ esp32:
   # P4 FLASH SPI supports up to 120MHz SDR; this module's flash runs
   # QIO@60MHz (4-bit mode -> ~240Mbps, faster than factory DIO@80).
   flash_mode: qio
-  flash_frequency: 60MHz
+  flash_frequency: 80MHz
   framework:
     type: esp-idf
     # The settings store keeps timestamped backups in a "backups" folder and
