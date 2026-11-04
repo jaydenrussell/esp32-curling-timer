@@ -228,8 +228,11 @@ void Lt8912b::update() {
 }
 
 void Lt8912b::flush_pending_() {
-  if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr || this->x_low_ > this->x_high_ || this->y_low_ > this->y_high_)
+  if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr || this->x_low_ > this->x_high_ || this->y_low_ > this->y_high_) {
+    ESP_LOGV(TAG, 'flush_pending_: nothing to flush');
     return;
+  }
+  ESP_LOGI(TAG, 'flush_pending_: %d,%d to %d,%d', this->x_low_, this->y_low_, this->x_high_, this->y_high_);
   ESP_LOGV(TAG, "x_low %d, y_low %d, x_high %d, y_high %d", this->x_low_, this->y_low_, this->x_high_,
            this->y_high_);
   int w = this->x_high_ - this->x_low_ + 1;
@@ -271,6 +274,7 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
 void Lt8912b::convert_565_to_888_and_write(int x_start, int y_start, int w, int h, const uint8_t *src_ptr, int x_offset, int y_offset, int x_pad, display::ColorOrder order, bool big_endian) {
   if (!this->check_buffer_())
     return;
+  ESP_LOGI(TAG, 'convert_565_to_888_and_write: %dx%d at (%d,%d)', w, h, x_start, y_start);
 
   const int bytes_per_pixel_src = 2;
   const int bytes_per_pixel_dst = 3;
@@ -394,6 +398,7 @@ void Lt8912b::draw_pixel_at(int x, int y, Color color) {
   }
   if (!this->check_buffer_())
     return;
+  ESP_LOGI(TAG, 'convert_565_to_888_and_write: %dx%d at (%d,%d)', w, h, x_start, y_start);
   size_t pos = (y * this->width_) + x;
   this->buffer_[pos * 3] = color.r;
   this->buffer_[pos * 3 + 1] = color.g;
@@ -413,6 +418,7 @@ void Lt8912b::fill(Color color) {
     return;
   if (!this->check_buffer_())
     return;
+  ESP_LOGI(TAG, 'convert_565_to_888_and_write: %dx%d at (%d,%d)', w, h, x_start, y_start);
 
   if (this->get_clipping().is_set()) {
     Display::fill(color);
