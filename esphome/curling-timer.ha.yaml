@@ -320,7 +320,7 @@ lvgl:
   update_interval: 1s
   bg_color: 0xFF0000
   full_refresh: true
-  buffer_size: 10%
+  buffer_size: 5%
   scrollbar_mode: "OFF"
   widgets:
     - obj:
