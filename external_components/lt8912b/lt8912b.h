@@ -13,7 +13,6 @@
 #include <esp_lcd_mipi_dsi.h>
 #include <esp_lcd_io_i2c.h>
 #include <esp_lcd_lt8912b.h>
-#include <esp_idf_version.h>
 #include <driver/i2c_master.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
@@ -40,10 +39,6 @@ class Lt8912b : public display::Display {
   void set_scl_pin(GPIOPin *pin) { this->scl_pin_ = static_cast<InternalGPIOPin *>(pin); }
   void set_i2c_frequency(uint32_t frequency) { this->i2c_frequency_ = frequency; }
   void set_lane_bit_rate(float lane_bit_rate) { this->lane_bit_rate_ = lane_bit_rate; }
-  bool is_hdmi_ready() const { return this->hdmi_ready_; }
-  /// Read the LT8912B HPD / MIPI-sync status registers and log them. Intended
-  /// for diagnostics; safe to call from a YAML lambda/script.
-  void log_hdmi_diagnostics();
 
   int get_width_internal() override { return this->width_; }
   int get_height_internal() override { return this->height_; }
@@ -57,8 +52,7 @@ class Lt8912b : public display::Display {
 
  protected:
   void write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
-                          int x_pad);
-  void convert_565_to_888_and_write(int x_start, int y_start, int w, int h, const uint8_t *src_ptr, int x_offset, int y_offset, int x_pad, display::ColorOrder order, bool big_endian);
+                         int x_pad);
   bool check_buffer_();
   void flush_pending_();
   void mark_failed_(const LogString *message, esp_err_t err);
@@ -81,7 +75,6 @@ class Lt8912b : public display::Display {
   SemaphoreHandle_t io_lock_{};
   StaticSemaphore_t io_lock_buffer_{};
   bool hdmi_ready_{false};
-  bool first_frame_logged_{false};
 
   display::ColorBitness color_depth_{display::COLOR_BITNESS_888};
   uint8_t *buffer_{nullptr};
