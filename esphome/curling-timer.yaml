@@ -21,6 +21,7 @@ esphome:
 
 esp32:
   variant: esp32p4
+  watchdog_timeout: 60s
   # First bench boot showed "Chip Revision: 103" (v1.3) on the U213 —
   # pre-rev3 silicon; required so the build targets rev<3.0
   engineering_sample: true
