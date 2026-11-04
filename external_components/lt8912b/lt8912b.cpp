@@ -229,10 +229,8 @@ void Lt8912b::update() {
 
 void Lt8912b::flush_pending_() {
   if (this->is_failed() || this->panel_ == nullptr || this->buffer_ == nullptr || this->x_low_ > this->x_high_ || this->y_low_ > this->y_high_) {
-    ESP_LOGV(TAG, 'flush_pending_: nothing to flush');
     return;
   }
-  ESP_LOGI(TAG, 'flush_pending_: %d,%d to %d,%d', this->x_low_, this->y_low_, this->x_high_, this->y_high_);
   ESP_LOGV(TAG, "x_low %d, y_low %d, x_high %d, y_high %d", this->x_low_, this->y_low_, this->x_high_,
            this->y_high_);
   int w = this->x_high_ - this->x_low_ + 1;
