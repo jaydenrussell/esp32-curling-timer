@@ -222,7 +222,7 @@ external_components:
     # The ref is a release tag, so the components always match this
     # file: a cached checkout of an older "main" can never mismatch the
     # YAML (which is what broke the add-on builds).
-    refresh: 0s
+    refresh: 1s
 
 curling_engine:
   id: engine
