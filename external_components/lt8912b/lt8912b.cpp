@@ -323,7 +323,7 @@ void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const ui
   // Wait for the previous transfer to finish (the callback gives the lock
   // when it completes) before handing the driver new pixels.
   if (this->io_lock_ != nullptr) {
-    if (xSemaphoreTake(this->io_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
+    if (xSemaphoreTake(this->io_lock_, pdMS_TO_TICKS(1000)) != pdTRUE) {
       ESP_LOGE(TAG, "io_lock_ timeout");
       return;
     }
