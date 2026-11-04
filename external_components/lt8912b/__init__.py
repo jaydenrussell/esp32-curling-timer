@@ -61,7 +61,7 @@ CONFIG_SCHEMA = cv.All(
             cv.Optional(CONF_SDA_PIN, default="GPIO0"): pins.internal_gpio_input_pin_schema,
             cv.Optional(CONF_SCL_PIN, default="GPIO1"): pins.internal_gpio_input_pin_schema,
             cv.Optional(CONF_I2C_FREQUENCY, default="100kHz"): cv.frequency,
-            cv.Optional(CONF_LANE_BIT_RATE, default="1000Mbps"): cv.All(
+            cv.Optional(CONF_LANE_BIT_RATE, default="960Mbps"): cv.All(
                 cv.bps, cv.Range(min=100e6, max=3200e6)
             ),
             cv.Optional(CONF_DRAW_ROUNDING, default=2): cv.positive_int,

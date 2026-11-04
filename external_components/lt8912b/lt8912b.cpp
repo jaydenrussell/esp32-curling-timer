@@ -10,9 +10,13 @@ namespace lt8912b {
 
 static bool notify_refresh_ready(esp_lcd_panel_handle_t panel, esp_lcd_dpi_panel_event_data_t *edata, void *user_ctx) {
   SemaphoreHandle_t sem = static_cast<SemaphoreHandle_t>(user_ctx);
-  BaseType_t need_yield = pdFALSE;
-  xSemaphoreGiveFromISR(sem, &need_yield);
-  return (need_yield == pdTRUE);
+  if (xPortInIsrContext()) {
+    BaseType_t need_yield = pdFALSE;
+    xSemaphoreGiveFromISR(sem, &need_yield);
+    return (need_yield == pdTRUE);
+  }
+  xSemaphoreGive(sem);
+  return pdFALSE;
 }
 
 static esp_lcd_panel_io_i2c_config_t make_io_config(uint32_t address, uint32_t frequency) {
@@ -88,7 +92,7 @@ void Lt8912b::setup() {
       // RGB565: the display and LVGL both work in 16-bit colour, so the
       // driver copies the pixels straight through (an RGB888 driver would
       // need a 2.8 MB framebuffer and convert every pixel).
-      .in_color_format = LCD_COLOR_FMT_RGB565,
+      .in_color_format = LCD_COLOR_FMT_RGB888,
       .num_fbs = 2,
       .video_timing =
           {
