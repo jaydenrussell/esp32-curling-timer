@@ -55,7 +55,7 @@ esp32:
       CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF: y
       CONFIG_ESP_COREDUMP_CHECKSUM_CRC32: y
     advanced:
-      execute_from_psram: false
+      execute_from_psram: true
       # The 1 Hz display tick (display_snapshot + LVGL label updates + recolor)
       # runs on the ESPHome loop task. A loopTask stack overflow crashed the
       # device ~6 min into a run; max out the loop task stack (default 8192).
