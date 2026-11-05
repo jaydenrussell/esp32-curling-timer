@@ -246,7 +246,6 @@ esp_ldo:
 
 lt8912b:
   id: hdmi
-  update_interval: 1s
   reset_pin: GPIO4
   enable_pin: GPIO33
   sda_pin: GPIO0
@@ -308,11 +307,6 @@ globals:
 lvgl:
   displays:
     - hdmi
-  color_depth: 16
-  update_interval: 1s
-  bg_color: 0xFF0000
-  full_refresh: true
-  buffer_size: 5%
   scrollbar_mode: "OFF"
   widgets:
     - obj:
