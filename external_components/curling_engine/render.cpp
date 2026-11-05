@@ -200,6 +200,7 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
                                 const std::string &date_iso) {
   DisplaySnapshot out;
   out.valid = settings.valid;
+  out.background_color = settings.background_color;
   out.clock_known = clock_known;
   if (!settings.valid)
     return out;

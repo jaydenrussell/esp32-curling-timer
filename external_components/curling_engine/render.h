@@ -68,6 +68,7 @@ struct DisplaySnapshot {
   // Error line / "waiting for time" line (centre, FOOTER_COLOR unless set).
   bool show_status{false};
   std::string status_text;
+  std::string background_color{"black"};
   std::string status_color{FOOTER_COLOR_HEX};
 
   std::string footer_color{FOOTER_COLOR_HEX};  // footer game name/date/time colour

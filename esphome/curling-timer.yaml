@@ -307,6 +307,7 @@ globals:
 lvgl:
   displays:
     - hdmi
+  bg_color: 0x000000
   scrollbar_mode: "OFF"
   widgets:
     - obj:
@@ -852,6 +853,22 @@ interval:
           ::esphome::curling_engine::DisplaySnapshot snap;
           eng->display_snapshot(&snap);
           id(g_snap) = snap;
+      - lambda: |-
+          auto &s = id(g_snap);
+          if (!s.valid) return;
+          std::string hex = s.background_color;
+          if (hex.empty()) hex = "black";
+          if (hex == "black") hex = "#000000";
+          else if (hex == "white") hex = "#FFFFFF";
+          else if (hex == "red") hex = "#FF0000";
+          else if (hex == "green") hex = "#00FF00";
+          else if (hex == "blue") hex = "#0000FF";
+          if (hex.size() == 7 && hex[0] == '#') {
+            uint32_t c = std::stoul(hex.substr(1), nullptr, 16);
+            lv_color_t color = lv_color_hex(c);
+            lv_obj_set_style_bg_color(lv_screen_active(), color, 0);
+            lv_obj_set_style_bg_opa(lv_screen_active(), LV_OPA_COVER, 0);
+          }
       - lvgl.label.update:
           id: lbl_header
           text: !lambda |-
