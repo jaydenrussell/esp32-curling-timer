@@ -34,7 +34,7 @@ esp32:
   # P4 FLASH SPI supports up to 120MHz SDR; this module's flash runs
   # QIO@60MHz (4-bit mode -> ~240Mbps, faster than factory DIO@80).
   flash_mode: qio
-  flash_frequency: 80MHz
+  flash_frequency: 60MHz
   framework:
     type: esp-idf
     # The settings store keeps timestamped backups in a "backups" folder and
@@ -66,11 +66,7 @@ psram:
   speed: 200MHz
 
 safe_mode:
-  disabled: false
-  num_attempts: 20
-  reboot_timeout: 0s
-  boot_is_good_on_shutdown: true
-  boot_is_good_after: 1min
+  disabled: true
 
 logger:
   # USB Serial/JTAG on the U213 USB-C port is the bench console.
