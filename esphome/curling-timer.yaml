@@ -131,6 +131,7 @@ binary_sensor:
 # it the API speaks plaintext and anyone on the network can drive the
 # device. Generate with: openssl rand -base64 32
 api:
+  reboot_timeout: 0s
   encryption:
     key: !secret curling_timer__encryption_key
 
@@ -915,6 +916,7 @@ interval:
             auto &s = id(g_snap);
             const bool five = s.show_countdown && s.seconds_until_buzzer >= 3600;
             lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
+            if (timer == nullptr) return 50;
             return 50 + (int) (0.3225f * lv_obj_get_height(timer));
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
