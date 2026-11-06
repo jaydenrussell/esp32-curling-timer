@@ -189,17 +189,10 @@ StoreStatus SettingsStore::save_locked(const std::string &text,
     return st;
   if (!backup_locked(err))
     return StoreStatus::IO;
-  if (!fs_->write_bytes(tmp_path_, text)) {
-    fs_->remove(tmp_path_);
-    if (err)
-      *err = "cannot write " + tmp_path_;
-    return StoreStatus::IO;
-  }
   fs_->remove(path_);
-  if (!fs_->rename(tmp_path_, path_)) {
-    fs_->remove(tmp_path_);
+  if (!fs_->write_bytes(path_, text)) {
     if (err)
-      *err = "cannot replace " + path_;
+      *err = "cannot write " + path_;
     return StoreStatus::IO;
   }
   *new_version = file_version(text);
