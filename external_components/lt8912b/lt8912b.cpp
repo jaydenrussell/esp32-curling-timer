@@ -10,13 +10,9 @@ namespace lt8912b {
 
 static bool notify_refresh_ready(esp_lcd_panel_handle_t panel, esp_lcd_dpi_panel_event_data_t *edata, void *user_ctx) {
   SemaphoreHandle_t sem = static_cast<SemaphoreHandle_t>(user_ctx);
-  if (xPortInIsrContext()) {
-    BaseType_t need_yield = pdFALSE;
-    xSemaphoreGiveFromISR(sem, &need_yield);
-    return (need_yield == pdTRUE);
-  }
-  xSemaphoreGive(sem);
-  return pdFALSE;
+  BaseType_t need_yield = pdFALSE;
+  xSemaphoreGiveFromISR(sem, &need_yield);
+  return (need_yield == pdTRUE);
 }
 
 static esp_lcd_panel_io_i2c_config_t make_io_config(uint32_t address, uint32_t frequency) {
@@ -224,14 +220,18 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
 
 void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
                                 int x_pad) {
+  if (this->panel_ == nullptr)
+    return;
   esp_err_t err = ESP_OK;
   auto bytes_per_pixel = 3 - this->color_depth_;
   auto stride = (x_offset + w + x_pad) * bytes_per_pixel;
   ptr += y_offset * stride + x_offset * bytes_per_pixel;
   // Wait for the previous transfer to finish (the callback gives the lock
   // when it completes) before handing the driver new pixels.
-  if (this->io_lock_ != nullptr)
-    xSemaphoreTake(this->io_lock_, portMAX_DELAY);
+  if (this->io_lock_ != nullptr && xSemaphoreTake(this->io_lock_, pdMS_TO_TICKS(1000)) != pdTRUE) {
+    ESP_LOGW(TAG, "DSI transfer timed out; dropping frame");
+    return;
+  }
   if (x_offset == 0 && x_pad == 0) {
     err = esp_lcd_panel_draw_bitmap(this->panel_, x_start, y_start, x_start + w, y_start + h, ptr);
   } else {
@@ -341,7 +341,7 @@ int Lt8912b::get_height() {
   switch (this->rotation_) {
     case display::DISPLAY_ROTATION_0_DEGREES:
     case display::DISPLAY_ROTATION_180_DEGREES:
-      return this->get_width_internal();
+      return this->get_height_internal();
     case display::DISPLAY_ROTATION_90_DEGREES:
     case display::DISPLAY_ROTATION_270_DEGREES:
     default:

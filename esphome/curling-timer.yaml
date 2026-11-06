@@ -60,7 +60,7 @@ esp32:
 
 psram:
   # ESP32-P4 only supports hex mode in ESPHome (2026.9.1)
-  speed: 200MHz
+  speed: 100MHz
 
 safe_mode:
   disabled: true
@@ -141,6 +141,7 @@ api:
 # # to be the API key, so both use the same secret.
 ota:
   - platform: esphome
+    password: !secret web_password
 
 web_server:
   port: 80
@@ -156,6 +157,7 @@ time:
   - platform: sntp
     id: sntp_time
     timezone: ${timezone}
+    update_interval: 5min
     servers:
       - time.cloudflare.com
       - pool.ntp.org
@@ -219,7 +221,7 @@ external_components:
     # The ref is a release tag, so the components always match this
     # file: a cached checkout of an older "main" can never mismatch the
     # YAML (which is what broke the add-on builds).
-    refresh: 0s
+    refresh: 1h
 
 curling_engine:
   id: engine

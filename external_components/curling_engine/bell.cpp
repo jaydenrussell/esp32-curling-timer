@@ -39,9 +39,10 @@ int bell_check(const PiTimerSettings &settings, const std::optional<PiTimerGame>
   const int until = *game->seconds_until_buzzer;
   // pitimer game_key = (date, start): one buzz per game per day.
   const std::string key = date_iso + "/" + std::to_string(game->start);
-  if (key == *last_key || until < -BUZZER_GRACE_SECONDS || until > 0)
+  if ((last_key != nullptr && key == *last_key) || until < -BUZZER_GRACE_SECONDS || until > 0)
     return 0;
-  *last_key = key;
+  if (last_key != nullptr)
+    *last_key = key;
   int mask = 0;
   if (settings.relays.has_value())
     mask = relays_mask(*settings.relays);

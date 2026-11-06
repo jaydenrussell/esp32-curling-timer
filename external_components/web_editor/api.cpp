@@ -994,10 +994,10 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
     yaml += "    header_text: " + std::string(ht ? ht : "") + "\n";
     yaml += "    pace_enabled: " + std::string(item["pace_enabled"].as<bool>() ? "true" : "false") + "\n";
     yaml += "    pace_minutes_per_end: " + std::to_string(item["pace_minutes_per_end"].as<int>()) + "\n";
-    yaml += "    countdown_minutes_before: " + std::to_string(item["countdown_minutes_before"].as<int>()) + "\\n";
+    yaml += "    countdown_minutes_before: " + std::to_string(item["countdown_minutes_before"].as<int>()) + "\n";
     const char *fmt = item["format"].as<const char *>();
-    yaml += "    format: " + std::string(fmt ? fmt : "") + "\\n";
-    yaml += "    team_size: " + std::to_string(item["team_size"].as<int>()) + "\\n";
+    yaml += "    format: " + std::string(fmt ? fmt : "") + "\n";
+    yaml += "    team_size: " + std::to_string(item["team_size"].as<int>()) + "\n";
   }
 
   SettingsStore *store = engine_->get_store();

@@ -1329,7 +1329,12 @@ static bool read_file(const std::string &path, std::string *out) {
   FILE *f = fopen(path.c_str(), "rb");
   if (f == nullptr)
     return false;
+  if (fseek(f, 0, SEEK_END) != 0) { fclose(f); return false; }
+  long sz = ftell(f);
+  if (sz < 0 || sz > 1024 * 1024) { fclose(f); return false; }
+  rewind(f);
   out->clear();
+  out->reserve(static_cast<size_t>(sz));
   char buf[4096];
   size_t n;
   while ((n = fread(buf, 1, sizeof(buf), f)) > 0)
