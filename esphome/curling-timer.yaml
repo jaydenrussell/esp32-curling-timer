@@ -14,7 +14,7 @@ substitutions:
   # IANA timezone, e.g. "America/New_York" — see docs/BUILD.md
   timezone: "America/Toronto"
   # Firmware version string shown in logs and web UI header.
-  firmware_version: "v2026.11.67"
+  firmware_version: "v2026.11.68"
 
 esphome:
   name: curling-timer
