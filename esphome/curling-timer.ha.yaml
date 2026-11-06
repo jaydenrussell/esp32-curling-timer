@@ -146,17 +146,10 @@ api:
 # # to be the API key, so both use the same secret.
 ota:
   - platform: esphome
-    password: !secret webui_password
 
 web_server:
   port: 80
   log: true
-  auth:
-    # digest avoids sending the password in a reversible form
-    # (ESPHome deprecates basic auth in 2027.1)
-    type: digest
-    username: admin
-    password: !secret webui_password
 
 time:
   - platform: sntp
@@ -238,7 +231,7 @@ web_editor:
   # never calls component APIs - a cached (older) clone of the external
   # component can then never break the build.
   id: web_editor_comp
-  password: !secret webui_password
+  password: "web-login-password"
   port: 8080
 
 # ---------------------------------------------------------------------
