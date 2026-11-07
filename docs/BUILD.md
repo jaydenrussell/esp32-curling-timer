@@ -3,9 +3,9 @@
 ## Device Builder (Home Assistant add-on)
 
 The paste-ready YAML is generated from `esphome/curling-timer.yaml` and lives
-at `esphome/curling-timer.ha.yaml`:
+at `esphome/curling-timer.yaml`:
 
-    https://raw.githubusercontent.com/jaydenrussell/esp32-curling-timer/main/esphome/curling-timer.ha.yaml
+    https://raw.githubusercontent.com/jaydenrussell/esp32-curling-timer/main/esphome/curling-timer.yaml
 
 1. Copy the whole file into `/config/esphome/curling-timer.yaml`.
 2. Add the secrets below to `/config/esphome/secrets.yaml` in the same folder.
@@ -24,7 +24,7 @@ comes from whichever environment builds the firmware:
 | YAML `!secret` key | Device Builder file key | GitHub Actions secret |
 | --- | --- | --- |
 | `curling_timer__encryption_key` | `curling_timer__encryption_key` (32-byte base64, `openssl rand -base64 32`) | `CURLING_TIMER__ENCRYPTION_KEY` |
-| `web_password` | `web_password` | `WEB_PASSWORD` |
+| `webui_password` | `webui_password` | `WEB_PASSWORD` |
 | `wifi_ssid` | `wifi_ssid` | `WIFI_SSID` |
 | `wifi_password` | `wifi_password` | `WIFI_PASSWORD` |
 | `ap_password` | `ap_password` | `AP_PASSWORD` |
@@ -46,7 +46,7 @@ To ship new component code:
 
 1. Make the component changes and bump the tag in `esphome/component_ref.txt`
    (e.g. `v1.0.1`).
-2. `python tools/make_ha_yaml.py` - the paste variant now points at the new
+2. Bump the tag in `esphome/component_ref.txt`.
    tag. Commit the components, the YAML, the ref file and the regenerated
    paste variant **together** (CI checks that the paste variant matches the
    generator, so a half-done state fails the build).
@@ -65,7 +65,7 @@ fails the build with a clear error.
 | Secret | Used for | How to make it |
 | --- | --- | --- |
 | `curling_timer__encryption_key` | Native API encryption (Home Assistant) and OTA encryption + OTA client authentication | `openssl rand -base64 32` |
-| `web_password` | Web server (port 80) and web editor (port 8080) login | at least 6 characters |
+| `webui_password` | Web server (port 80) and web editor (port 8080) login | at least 6 characters |
 | `wifi_ssid` / `wifi_password` | Wi-Fi failover via the C6 co-processor | from the router |
 | `ap_password` | Setup-mode hotspot | any password |
 
@@ -73,7 +73,7 @@ The two encryption keys are 32 random bytes in base64. The API key has to be
 the same value in Home Assistant (the "encryption key" field of the ESPHome
 integration) or the connection is refused.
 
-`web_password` is used twice: as the digest login for the ESPHome web server
+`webui_password` is used twice: as the digest login for the ESPHome web server
 on port 80 and as the web editor password on port 8080. The editor refuses to
 start with a password shorter than 6 characters (same rule as pitimer); the
 "Web Editor" diagnostic entity then reports
@@ -92,7 +92,7 @@ time).
     python -m esphome config curling-timer.yaml
     python -m esphome compile curling-timer.yaml
 
-`tools/make_ha_yaml.py` regenerates `curling-timer.ha.yaml` from
+`curling-timer.yaml` is the single build target for both standalone and HA Device Builder.
 `curling-timer.yaml`; CI runs it with `--check` so the paste variant can never
 drift from the source.
 

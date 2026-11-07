@@ -11,7 +11,6 @@
 ## Entrypoints
 
 - Main build config: `esphome/curling-timer.yaml` — the repository/CI build target
-- Paste-ready Home Assistant variant: `esphome/curling-timer.ha.yaml` — fetched from GitHub by `type: git` external_components source; do not hand-edit, it is regenerated from `curling-timer.yaml`
 - Wi-Fi C6 failover package: `esphome/wifi-c6-failover.yaml` — include only after C6 is wired and flashed (`packages: { wifi_addon: !include wifi-c6-failover.yaml }`)
 - Secrets: `esphome/secrets.yaml` (gitignored; copy from `secrets.yaml.example`)
 - External components live in `external_components/` — `lt8912b` (HDMI), `curling_engine` (schedule + bells), `web_editor` (on-device UI), `calendar_import`
@@ -44,7 +43,7 @@
 - **Task priorities**: ESP-IDF tasks need explicit priorities; avoid blocking `delay()` in lambdas.
 - **engineering_sample**: U213 is pre-rev3 silicon — `engineering_sample: true` is required in the YAML.
 - **Web editor password**: must be ≥ 6 characters or the editor fails to start.
-- **Web UI**: paste-ready `curling-timer.ha.yaml` is for Home Assistant ESPHome Device Builder — repo builds use `curling-timer.yaml`, not the `.ha` variant.
+- **Web UI**: repo builds use `curling-timer.yaml` for both standalone and HA Device Builder.
 
 
 ## Subagent Delegation Guidelines

@@ -16,7 +16,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-YAML_GLOB = ["esphome/curling-timer.ha.yaml", "esphome/wifi-c6-failover.yaml",
+YAML_GLOB = ["esphome/curling-timer.yaml", "esphome/wifi-c6-failover.yaml",
              "esphome/test/hdmi-test.yaml"]
 EXAMPLE = ROOT / "esphome/secrets.yaml.example"
 
