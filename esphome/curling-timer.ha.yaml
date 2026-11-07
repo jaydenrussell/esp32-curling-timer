@@ -212,14 +212,14 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: main
+      ref: v2026.11.71
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
     # The ref is a release tag, so the components always match this
     # file: a cached checkout of an older "main" can never mismatch the
     # YAML (which is what broke the add-on builds).
-    refresh: 1h
+    refresh: 0s
 
 curling_engine:
   id: engine
