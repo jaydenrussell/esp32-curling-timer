@@ -1019,6 +1019,9 @@ interval:
             - tp_geom_ch
           hidden: !lambda |-
             return !(id(engine)->get_display_test_mode() == "geometry");
+
+  - interval: 100ms
+    then:
       # Bell: engine bell_tick — for the live game, pulse the configured
       # relays at game start, at the countdown warning, and at the buzzer
       # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->
