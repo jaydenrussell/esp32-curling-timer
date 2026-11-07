@@ -34,6 +34,7 @@ void Lt8912b::mark_failed_(const LogString *message, esp_err_t err) {
 
 void Lt8912b::setup() {
   ESP_LOGCONFIG(TAG, "Running Setup");
+  ESP_LOGD(TAG, "init step: enable pin");
 
   if (this->enable_pin_ != nullptr) {
     this->enable_pin_->setup();
@@ -193,6 +194,8 @@ void Lt8912b::update() {
 void Lt8912b::flush_pending_() {
   if (this->buffer_ == nullptr || this->x_low_ > this->x_high_ || this->y_low_ > this->y_high_)
     return;
+  ESP_LOGD(TAG, "flush buffer x_low %d y_low %d x_high %d y_high %d", this->x_low_, this->y_low_, this->x_high_,
+           this->y_high_);
   ESP_LOGV(TAG, "x_low %d, y_low %d, x_high %d, y_high %d", this->x_low_, this->y_low_, this->x_high_,
            this->y_high_);
   int w = this->x_high_ - this->x_low_ + 1;
@@ -232,6 +235,7 @@ void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const ui
     ESP_LOGW(TAG, "DSI transfer timed out; dropping frame");
     return;
   }
+  ESP_LOGD(TAG, "DSI transfer %d,%d %dx%d", x_start, y_start, w, h);
   if (x_offset == 0 && x_pad == 0) {
     err = esp_lcd_panel_draw_bitmap(this->panel_, x_start, y_start, x_start + w, y_start + h, ptr);
   } else {

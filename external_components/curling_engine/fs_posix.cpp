@@ -10,17 +10,21 @@
 #include <string>
 #include <vector>
 
+#include "esp_log.h"
 #include "store.h"
 
 namespace esphome {
 namespace curling_engine {
 
+static const char *const TAG = "fs_posix";
+
 namespace {
 
 class PosixStoreFs : public StoreFs {
  public:
-  bool read_bytes(const std::string &path, std::string *out) override {
-    int fd = ::open(path.c_str(), O_RDONLY);
+   bool read_bytes(const std::string &path, std::string *out) override {
+     ESP_LOGD(TAG, "open read %s", path.c_str());
+     int fd = ::open(path.c_str(), O_RDONLY);
     if (fd < 0)
       return false;
     out->clear();
@@ -35,8 +39,9 @@ class PosixStoreFs : public StoreFs {
     return ok;
   }
 
-  bool write_bytes(const std::string &path, const std::string &data) override {
-    int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+   bool write_bytes(const std::string &path, const std::string &data) override {
+     ESP_LOGD(TAG, "open write %s (%u bytes)", path.c_str(), (unsigned)data.size());
+     int fd = ::open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0)
       return false;
     size_t off = 0;
@@ -60,13 +65,15 @@ class PosixStoreFs : public StoreFs {
     return ::stat(path.c_str(), &st) == 0;
   }
 
-  bool remove(const std::string &path) override {
-    return ::unlink(path.c_str()) == 0 || errno == ENOENT;
-  }
+   bool remove(const std::string &path) override {
+     ESP_LOGD(TAG, "remove %s", path.c_str());
+     return ::unlink(path.c_str()) == 0 || errno == ENOENT;
+   }
 
-  bool rename(const std::string &from, const std::string &to) override {
-    return ::rename(from.c_str(), to.c_str()) == 0;
-  }
+   bool rename(const std::string &from, const std::string &to) override {
+     ESP_LOGD(TAG, "rename %s -> %s", from.c_str(), to.c_str());
+     return ::rename(from.c_str(), to.c_str()) == 0;
+   }
 
   bool copy(const std::string &from, const std::string &to) override {
     std::string data;
@@ -75,8 +82,9 @@ class PosixStoreFs : public StoreFs {
     return write_bytes(to, data);
   }
 
-  bool mkdir_p(const std::string &path) override {
-    if (path.empty())
+   bool mkdir_p(const std::string &path) override {
+     ESP_LOGD(TAG, "mkdir_p %s", path.c_str());
+     if (path.empty())
       return false;
     std::string prefix;
     size_t i = 0;

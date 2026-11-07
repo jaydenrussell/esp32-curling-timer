@@ -8,8 +8,17 @@
 #include "settings.h"
 #include "sha256.h"
 
+#if __has_include("esp_log.h")
+#include "esp_log.h"
+#endif
+#ifndef ESP_LOGD
+#define ESP_LOGD(...) ((void)0)
+#endif
+
 namespace esphome {
 namespace curling_engine {
+
+static const char *const TAG = "curling_store";
 
 namespace {
 
@@ -114,6 +123,7 @@ SettingsStore::SettingsStore(StoreFs *fs, const std::string &settings_fn, int ba
 
 StoreStatus SettingsStore::read_unlocked(std::string *text, std::string *version,
                                          std::string *err) {
+  ESP_LOGD(TAG, "read %s", path_.c_str());
   std::string data;
   if (!fs_->read_bytes(path_, &data)) {
     if (err)
@@ -161,8 +171,10 @@ bool SettingsStore::backup_locked(std::string *err) {
   }
   std::vector<BackupInfo> list;
   if (list_backups(&list, nullptr) == StoreStatus::OK) {
-    for (size_t i = static_cast<size_t>(backups_kept_); i < list.size(); i++)
+    for (size_t i = static_cast<size_t>(backups_kept_); i < list.size(); i++) {
+      ESP_LOGD(TAG, "remove backup %s", (backup_dir_ + "/" + list[i].name).c_str());
       fs_->remove(backup_dir_ + "/" + list[i].name);
+    }
   }
   return true;
 }
@@ -189,7 +201,9 @@ StoreStatus SettingsStore::save_locked(const std::string &text,
     return st;
   if (!backup_locked(err))
     return StoreStatus::IO;
+  ESP_LOGD(TAG, "remove %s", path_.c_str());
   fs_->remove(path_);
+  ESP_LOGD(TAG, "write %s (%u bytes)", path_.c_str(), (unsigned)text.size());
   if (!fs_->write_bytes(path_, text)) {
     if (err)
       *err = "cannot write " + path_;
