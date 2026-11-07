@@ -844,6 +844,20 @@ script:
 # check (pitimer buzz_if_due) after the labels.
 # ---------------------------------------------------------------------
 interval:
+  - interval: 250ms
+    then:
+      - lambda: |-
+          auto *eng = id(engine);
+          if (eng == nullptr)
+            return;
+          ::esphome::curling_engine::BellRing ring;
+          if (!eng->bell_tick(&ring))
+            return;
+          const int pulse_ms = static_cast<int>(ring.duration_ms);
+          if (ring.mask & ::esphome::curling_engine::BELL_RELAY_1)
+            id(pulse_relay_bell).execute(pulse_ms);
+          if (ring.mask & ::esphome::curling_engine::BELL_RELAY_2)
+            id(pulse_relay_aux).execute(pulse_ms);
   - interval: 1s
     then:
       - lambda: |-
@@ -1000,22 +1014,7 @@ interval:
             - tp_geom_ch
           hidden: !lambda |-
             return !(id(engine)->get_display_test_mode() == "geometry");
-      # Bell: engine bell_tick — for the live game, pulse the configured
-      # relays at game start, at the countdown warning, and at the buzzer
-      # time (settings file, web editor "Bell / buzzer" config). RELAY1 ->
-      # relay 1, RELAY2 -> relay 2; RELAY3/4 have no hardware.
-      - lambda: |-
-          auto *eng = id(engine);
-          if (eng == nullptr)
-            return;
-          ::esphome::curling_engine::BellRing ring;
-          if (!eng->bell_tick(&ring))
-            return;
-          const int pulse_ms = static_cast<int>(ring.duration_ms);
-          if (ring.mask & ::esphome::curling_engine::BELL_RELAY_1)
-            id(pulse_relay_bell).execute(pulse_ms);
-          if (ring.mask & ::esphome::curling_engine::BELL_RELAY_2)
-            id(pulse_relay_aux).execute(pulse_ms);
+# (bell tick moved to separate 250ms interval below)
 
   - interval: 5s
     then:
