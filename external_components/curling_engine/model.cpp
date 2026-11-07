@@ -280,7 +280,7 @@ bool entries_from_yaml(const YamlValue *raw, const std::string &where, std::vect
       *err = entry_where + " is not a {start: ..., buzzer: ...} entry";
       return false;
     }
-    static const char *kKnown[] = {"start",       "buzzer",            "name",
+    static const char *kKnown[] = {"start",       "buzzer",            "name", "during_buzzer",
                                    "game_completed", "header_hold",      "pace_of_play",
                                    "pace_unit_duration"};
     std::set<std::string> unknown;
