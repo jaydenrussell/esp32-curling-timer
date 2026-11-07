@@ -844,7 +844,7 @@ script:
 # check (pitimer buzz_if_due) after the labels.
 # ---------------------------------------------------------------------
 interval:
-  - interval: 250ms
+  - interval: 100ms
     then:
       - lambda: |-
           auto *eng = id(engine);
