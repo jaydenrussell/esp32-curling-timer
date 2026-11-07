@@ -75,7 +75,7 @@ struct PiTimerGame {
   int start{0};
   int buzzer{0};
   std::optional<std::string> message;                // name
-  std::optional<std::string> during_buzzer_override; // during_buzzer
+  std::optional<std::string> game_completed_override; // game_completed
   std::optional<int> header_hold_override;
   std::optional<bool> pace_of_play_override;
   std::optional<int> pace_unit_override;

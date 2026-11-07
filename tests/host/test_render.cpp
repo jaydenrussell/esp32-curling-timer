@@ -93,9 +93,9 @@ TEST_CASE("header_event gating") {
   g.seconds_until_buzzer = 42;
   CHECK(header_event(s, g) == "counting_down");
   g.seconds_until_buzzer = 0;
-  CHECK(header_event(s, g) == "during_buzzer");
+  CHECK(header_event(s, g) == "game_completed");
   g.seconds_until_buzzer = -100;  // inside header hold
-  CHECK(header_event(s, g) == "during_buzzer");
+  CHECK(header_event(s, g) == "game_completed");
 }
 
 TEST_CASE("recolor wraps text for LVGL") {
@@ -125,7 +125,7 @@ TEST_CASE("render_snapshot: counting down with pace and footer") {
   CHECK(snap.header_text == "COUNTING");
   CHECK(snap.header_color == "#00FFFF");
   REQUIRE(snap.show_countdown);
-  CHECK_FALSE(snap.during_buzzer);
+  CHECK_FALSE(snap.game_completed);
   CHECK(snap.seconds_until_buzzer == 2700);
   CHECK(snap.countdown == std::string("45") + COLON + "00");
   CHECK(snap.countdown_color == "#008000");
@@ -151,17 +151,17 @@ TEST_CASE("render_snapshot: during buzzer red + header override window") {
   auto s = parse_base();
   auto snap = render_snapshot(s, true, 0, 39600, "2026-09-28");  // buzzer second
   REQUIRE(snap.show_countdown);
-  CHECK(snap.during_buzzer);
+  CHECK(snap.game_completed);
   CHECK(snap.seconds_until_buzzer == 0);
   CHECK(snap.countdown == std::string("00") + COLON + "00");
   CHECK(snap.countdown_color == "#0000FF");
   CHECK(snap.header_text == "LAST END");
   CHECK(snap.header_color == "#00FFFF");
 
-  // Inside header hold (39600 + 300): still during_buzzer, negative remaining.
+  // Inside header hold (39600 + 300): still game_completed, negative remaining.
   auto hold = render_snapshot(s, true, 0, 39750, "2026-09-28");
   REQUIRE(hold.show_countdown);
-  CHECK(hold.during_buzzer);
+  CHECK(hold.game_completed);
   CHECK(hold.seconds_until_buzzer == -150);
 }
 
@@ -213,22 +213,22 @@ TEST_CASE("render_snapshot: footer switches off via settings flags") {
   CHECK(snap.show_pace);  // pace flag untouched by footer switches
 }
 
-TEST_CASE("render_snapshot: during_buzzer_override replaces header text") {
+TEST_CASE("render_snapshot: game_completed_override replaces header text") {
   PiTimerSettings s;
   s.valid = true;
   s.enabled = true;
   s.headers["text"]["when_idle"] = "IDLE";
   s.headers["text"]["counting_down"] = "COUNTING";
-  s.headers["text"]["during_buzzer"] = "LAST END";
+  s.headers["text"]["game_completed"] = "LAST END";
   s.headers["color"]["when_idle"] = "white";
   s.headers["color"]["counting_down"] = "yellow";
-  s.headers["color"]["during_buzzer"] = "yellow";
+  s.headers["color"]["game_completed"] = "yellow";
   s.countdown_colors["counting_down"] = "green";
-  s.countdown_colors["during_buzzer"] = "red";
+  s.countdown_colors["game_completed"] = "red";
   PiTimerGame g;
   g.start = 36000;
   g.buzzer = 39600;
-  g.during_buzzer_override = "PLAYOFF FLASH";
+  g.game_completed_override = "PLAYOFF FLASH";
   s.schedules["Monday"] = {g};
   auto snap = render_snapshot(s, true, 0, 39600, "2026-09-28");
   CHECK(snap.header_text == "PLAYOFF FLASH");

@@ -141,7 +141,7 @@ TEST_CASE("changes keep everything else") {
   friday.start = 19 * 3600;
   friday.buzzer = 20 * 3600 + 1800;
   friday.name = "O'BRIEN CUP";
-  friday.during_buzzer = "LAST";
+  friday.game_completed = "LAST";
   friday.header_hold = 30;
   friday.pace_unit_duration = 720;
   model.model.schedule["Friday"] = {friday};
@@ -154,7 +154,7 @@ TEST_CASE("changes keep everything else") {
   CHECK(r.out.compare(0, prefix.size(), prefix) == 0);
   CHECK(r.out.find("\n# exceptions - specific dates\nexceptions:\n") != std::string::npos);
   CHECK(r.out.find("        - {start: 19:00:00, buzzer: 20:30:00, name: 'O''BRIEN CUP', "
-                   "during_buzzer: 'LAST', header_hold: 30, pace_unit_duration: 720}\n") !=
+                   "game_completed: 'LAST', header_hold: 30, pace_unit_duration: 720}\n") !=
         std::string::npos);
   CHECK(r.out.find("    2026-10-05: # Renamed\n") != std::string::npos);
   CHECK(r.out.find("    2026-12-25: [] # Closed\n") != std::string::npos);

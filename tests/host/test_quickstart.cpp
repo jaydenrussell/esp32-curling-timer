@@ -183,29 +183,29 @@ TEST_CASE("header overrides on the new timer") {
   REQUIRE(m.ok);
   auto opts = mon(15, 0, 0, 5 * 60);
   opts.name = "PRACTICE";
-  opts.during_buzzer = "--- PRACTICE DONE ---";
+  opts.game_completed = "--- PRACTICE DONE ---";
   opts.header_hold = 60;
   Entry entry;
   std::string err;
   REQUIRE(quick_start(&m.model, opts, &entry, &err));
   CHECK(entry.name == "PRACTICE");
-  CHECK(entry.during_buzzer == "--- PRACTICE DONE ---");
+  CHECK(entry.game_completed == "--- PRACTICE DONE ---");
   CHECK(entry.header_hold == 60);
   std::string out;
   REQUIRE(splice(TEXT_SETTINGS_TEXT, m.model, &out, &err));
-  CHECK(out.find("name: 'PRACTICE', during_buzzer: '--- PRACTICE DONE ---', header_hold: 60, "
+  CHECK(out.find("name: 'PRACTICE', game_completed: '--- PRACTICE DONE ---', header_hold: 60, "
                  "pace_of_play: False}  # quick start") != std::string::npos);
 }
 
-TEST_CASE("multi line during_buzzer rejected") {
+TEST_CASE("multi line game_completed rejected") {
   auto m = load(TEXT_SETTINGS_TEXT);
   REQUIRE(m.ok);
   auto opts = mon(15, 0, 0, 5 * 60);
-  opts.during_buzzer = "OVER\nNOW";
+  opts.game_completed = "OVER\nNOW";
   Entry entry;
   std::string err;
   CHECK_FALSE(quick_start(&m.model, opts, &entry, &err));
-  CHECK(err.find("during_buzzer") != std::string::npos);
+  CHECK(err.find("game_completed") != std::string::npos);
 }
 
 TEST_CASE("shorter hold leaves room for a longer timer") {

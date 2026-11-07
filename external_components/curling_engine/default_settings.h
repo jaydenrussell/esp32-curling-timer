@@ -27,14 +27,14 @@ config:
             when_disabled: '**** TIMER DISABLED ****'
             when_idle: 'YOUR CLUB NAME'
             counting_down: 'TIME UNTIL BELL/BUZZER'
-            during_buzzer: 'GAME OVER'
+            game_completed: 'GAME OVER'
         # color - Color of message displayed at top of screen depending on status
         #         Names which can be used listed here: https://www.pygame.org/docs/ref/color_list.html
         color:
             when_disabled: red
             when_idle: white
             counting_down: yellow
-            during_buzzer: yellow
+            game_completed: yellow
     # countdown - Subsection for controlling countdown timer displayed in middle of screen
     countdown:
         # font_size_4_digits - Timer font size when it's below an hour remaining
@@ -47,7 +47,7 @@ config:
         #         Names which can be used listed here: https://www.pygame.org/docs/ref/color_list.html
         color:
             counting_down: green
-            during_buzzer: red
+            game_completed: red
     # pace_of_play - Subsection for controlling optional pace of play banner shown between countdown and footer
     pace_of_play:
         # enabled - Display pace of play 'unit_name' banner based on 'unit_duration' seconds (True=ON or False=OFF)
@@ -112,7 +112,7 @@ config:
         start_duration: 0
         # countdown_duration - Ring duration for countdown warning (0 = use duration)
         countdown_duration: 0
-        # header_hold - How long to hold the 'during_buzzer' header message in integer seconds
+        # header_hold - How long to hold the 'game_completed' header message in integer seconds
         header_hold: 299
 
 # schedule - Normal weekly defined schedule
@@ -125,8 +125,8 @@ config:
 #            GOTCHA: Times in the midnight hour (00:00:00 to 00:59:59) must be written be written in seconds since midnight (YAML parser limitation)
 #            Optional local entry override variables available are:
 #            - name: text string to display in center of footer during countdown and during/after bell/buzzer (default is nothing)
-#            - during_buzzer: text string to display in header during and after bell/buzzer (default is config.header.text.during_countdown setting)
-#            - header_hold: How long to hold the 'during_buzzer' header message in integer seconds (0 or more, default is config.buzzer.header_hold setting)
+#            - game_completed: text string to display in header during and after bell/buzzer (default is config.header.text.during_countdown setting)
+#            - header_hold: How long to hold the 'game_completed' header message in integer seconds (0 or more, default is config.buzzer.header_hold setting)
 #            - pace_of_play: Display pace of play banner (True=ON or False=OFF) (default is config.pace_of_play.enabled setting)
 #            - pace_unit_duration: Number of integer seconds each pace of play unit should take (default is config.pace_of_play.unit_duration setting)
 schedule:
@@ -141,7 +141,7 @@ schedule:
         - {start: 19:00:00, buzzer: 20:50:00, name: 'EVENING LEAGUE'}
     Friday: []
     Saturday:
-        - {start:  9:00:00, buzzer:  9:25:00, name: 'PRACTICE ICE', during_buzzer: '--- PRACTICE ENDING ---', header_hold: 60, pace_of_play: False}
+        - {start:  9:00:00, buzzer:  9:25:00, name: 'PRACTICE ICE', game_completed: '--- PRACTICE ENDING ---', header_hold: 60, pace_of_play: False}
         - {start: 10:00:00, buzzer: 11:50:00, name: 'SATURDAY MIXED'}
     Sunday: []
 

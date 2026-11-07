@@ -106,10 +106,10 @@ static void entry_into(JsonObject obj, const Entry &entry) {
     obj["name"] = *entry.name;
   else
     obj["name"] = nullptr;
-  if (entry.during_buzzer.has_value())
-    obj["during_buzzer"] = *entry.during_buzzer;
+  if (entry.game_completed.has_value())
+    obj["game_completed"] = *entry.game_completed;
   else
-    obj["during_buzzer"] = nullptr;
+    obj["game_completed"] = nullptr;
   if (entry.header_hold.has_value())
     obj["header_hold"] = *entry.header_hold;
   else
@@ -151,11 +151,11 @@ static bool entry_from_json(JsonObjectConst data, const std::string &where, Entr
     return false;
   if (entry->name->empty())
     entry->name.reset();
-  if (!text_value(data["during_buzzer"], where + " during_buzzer", &entry->during_buzzer.emplace(),
+  if (!text_value(data["game_completed"], where + " game_completed", &entry->game_completed.emplace(),
                   err))
     return false;
-  if (entry->during_buzzer->empty())
-    entry->during_buzzer.reset();
+  if (entry->game_completed->empty())
+    entry->game_completed.reset();
   JsonVariantConst hold = data["header_hold"];
   if (!hold.isNull()) {
     if (!json_is_int(hold) || hold.as<long long>() < 0) {

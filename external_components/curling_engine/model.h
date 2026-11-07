@@ -26,7 +26,7 @@ struct Entry {
   int start{0};
   int buzzer{0};
   std::optional<std::string> name;
-  std::optional<std::string> during_buzzer;
+  std::optional<std::string> game_completed;
   std::optional<int> header_hold;
   std::optional<bool> pace_of_play;
   std::optional<int> pace_unit_duration;
@@ -80,7 +80,7 @@ std::string render_entry(const Entry &entry);
 // PiTimerSettings::find_current_game), -1 when unparsable.
 int weekday_mon0_from_iso(const std::string &date_iso);
 
-// How long entry holds its 'during_buzzer' header: its own override, else the
+// How long entry holds its 'game_completed' header: its own override, else the
 // file wide hold (editor.py _hold_for).
 int entry_hold(const Entry &entry, int default_hold);
 

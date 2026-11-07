@@ -34,7 +34,7 @@ std::string format_countdown(int seconds_until_buzzer);
 std::string pace_position(int seconds_since_start, int unit_duration, int *unit_number);
 
 // pitimer display.py header_event: when_disabled | when_idle | counting_down |
-// during_buzzer.
+// game_completed.
 std::string header_event(const PiTimerSettings &settings,
                          const std::optional<PiTimerGame> &game);
 
@@ -49,7 +49,7 @@ struct DisplaySnapshot {
   std::string header_color;  // "#RRGGBB"
 
   bool show_countdown{false};
-  bool during_buzzer{false};  // live state for callers (bell work later)
+  bool game_completed{false};  // live state for callers (bell work later)
   int seconds_until_buzzer{0};
   std::string countdown;  // "MM:SS" with raised colons
   std::string countdown_color;

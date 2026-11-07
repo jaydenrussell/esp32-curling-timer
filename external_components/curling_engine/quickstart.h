@@ -19,7 +19,7 @@ struct QuickStartOptions {
   std::optional<std::string> name;
   bool pace_of_play{false};
   bool replace_conflicts{false};
-  std::optional<std::string> during_buzzer;
+  std::optional<std::string> game_completed;
   std::optional<int> header_hold;
   int hold{0};  // file wide config.buzzer.header_hold
   int pregame_countdown{0};

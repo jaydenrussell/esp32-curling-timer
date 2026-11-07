@@ -186,7 +186,7 @@ std::string header_event(const PiTimerSettings &settings,
     return "when_idle";
   if (game->seconds_until_buzzer.has_value() && *game->seconds_until_buzzer > 0)
     return "counting_down";
-  return "during_buzzer";
+  return "game_completed";
 }
 
 std::string recolor(const std::string &hex, const std::string &text) {
@@ -209,11 +209,11 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
   if (clock_known)
     game = settings.find_current_game(weekday_mon0, seconds_of_day, date_iso);
 
-  // draw_header(): event text/colour, with the game's during_buzzer override.
+  // draw_header(): event text/colour, with the game's game_completed override.
   const std::string event = header_event(settings, game);
   out.header_text = headers_get(settings, "text", event, "");
-  if (event == "during_buzzer" && game.has_value() && game->during_buzzer_override.has_value())
-    out.header_text = *game->during_buzzer_override;
+  if (event == "game_completed" && game.has_value() && game->game_completed_override.has_value())
+    out.header_text = *game->game_completed_override;
   out.header_color = color_to_hex(headers_get(settings, "color", event, "white"));
   out.footer_color = color_to_hex(settings.footer_color, FOOTER_COLOR_HEX);
 
@@ -233,13 +233,13 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
     const bool pregame = since_start < 0 && settings.pregame_countdown > 0;
     const int seconds_left = pregame ? (-since_start) : g.seconds_until_buzzer.value_or(0);
     out.show_countdown = true;
-    out.during_buzzer = !pregame && seconds_left <= 0;
+    out.game_completed = !pregame && seconds_left <= 0;
     out.seconds_until_buzzer = pregame ? (g.seconds_until_buzzer.value_or(0) + settings.pregame_countdown) : seconds_left;
     out.countdown = pregame ? std::to_string(seconds_left) : format_countdown(seconds_left);
     out.countdown_color = color_to_hex(pregame ? settings.pregame_color : [&settings](const char *key) {
           auto it = settings.countdown_colors.find(key);
           return it != settings.countdown_colors.end() ? it->second : std::string("white");
-        }(out.during_buzzer ? "during_buzzer" : "counting_down"));
+        }(out.game_completed ? "game_completed" : "counting_down"));
     if (pregame && !settings.pregame_header_text.empty())
       out.header_text = settings.pregame_header_text;
 

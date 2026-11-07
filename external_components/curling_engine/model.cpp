@@ -221,15 +221,15 @@ bool entry_from_map(const YamlValue &data, const std::string &where, Entry *out,
     if (!v->s.empty())
       out->name = v->s;
   }
-  v = data.find("during_buzzer");
-  out->during_buzzer = std::nullopt;
+  v = data.find("game_completed");
+  out->game_completed = std::nullopt;
   if (v != nullptr && v->type != YType::Null) {
     if (v->type != YType::Str || v->s.find_first_of("\r\n\t") != std::string::npos) {
-      *err = where + " during_buzzer must be a single line of text";
+      *err = where + " game_completed must be a single line of text";
       return false;
     }
     if (!v->s.empty())
-      out->during_buzzer = v->s;
+      out->game_completed = v->s;
   }
   v = data.find("header_hold");
   out->header_hold = std::nullopt;
@@ -281,7 +281,7 @@ bool entries_from_yaml(const YamlValue *raw, const std::string &where, std::vect
       return false;
     }
     static const char *kKnown[] = {"start",       "buzzer",            "name",
-                                   "during_buzzer", "header_hold",      "pace_of_play",
+                                   "game_completed", "header_hold",      "pace_of_play",
                                    "pace_unit_duration"};
     std::set<std::string> unknown;
     for (const auto &kv : item->map) {
@@ -556,8 +556,8 @@ std::string render_entry(const Entry &entry) {
                      format_time(entry.buzzer);
   if (entry.name.has_value())
     line += ", name: " + quote(*entry.name);
-  if (entry.during_buzzer.has_value())
-    line += ", during_buzzer: " + quote(*entry.during_buzzer);
+  if (entry.game_completed.has_value())
+    line += ", game_completed: " + quote(*entry.game_completed);
   if (entry.header_hold.has_value())
     line += ", header_hold: " + std::to_string(*entry.header_hold);
   if (entry.pace_of_play.has_value())

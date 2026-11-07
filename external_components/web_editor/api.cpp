@@ -509,7 +509,7 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
   long long seconds;
   if (!json_strict_int(data["seconds"], &seconds))
     return error_json(400, "'seconds' must be a whole number");
-  std::optional<std::string> name, during_buzzer;
+  std::optional<std::string> name, game_completed;
   if (!data["name"].isNull()) {
     if (!data["name"].is<const char *>())
       return error_json(400, "'name' must be text");
@@ -517,12 +517,12 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
     if (!value.empty())
       name = value;
   }
-  if (!data["during_buzzer"].isNull()) {
-    if (!data["during_buzzer"].is<const char *>())
-      return error_json(400, "'during_buzzer' must be text");
-    const std::string value = trim_spaces(data["during_buzzer"].as<const char *>());
+  if (!data["game_completed"].isNull()) {
+    if (!data["game_completed"].is<const char *>())
+      return error_json(400, "'game_completed' must be text");
+    const std::string value = trim_spaces(data["game_completed"].as<const char *>());
     if (!value.empty())
-      during_buzzer = value;
+      game_completed = value;
   }
   std::optional<int> header_hold;
   if (!data["header_hold"].isNull()) {
@@ -545,7 +545,7 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
   opts.name = name;
   opts.pace_of_play = data["pace_of_play"].is<bool>() && data["pace_of_play"].as<bool>();
   opts.replace_conflicts = data["replace_conflicts"].is<bool>() && data["replace_conflicts"].as<bool>();
-  opts.during_buzzer = during_buzzer;
+  opts.game_completed = game_completed;
   opts.header_hold = header_hold;
   opts.hold = live.settings.relay_msg_time;
   // the quick-start form's "Pre-game countdown" checkbox: when ticked the
@@ -725,7 +725,7 @@ ApiResponse PiTimerApi::get_config() {
   JsonObject cfg = doc["config"].to<JsonObject>();
   cfg["config.enabled"] = s.enabled;
   cfg["config.header.font_size"] = s.font_sizes.count("header") != 0 ? s.font_sizes.at("header") : 0;
-  for (const char *event : {"when_disabled", "when_idle", "counting_down", "during_buzzer"}) {
+  for (const char *event : {"when_disabled", "when_idle", "counting_down", "game_completed"}) {
     for (const char *attribute : {"text", "color"}) {
       std::string key = std::string("config.header.") + attribute + "." + event;
       auto group = s.headers.find(attribute);
@@ -754,7 +754,7 @@ ApiResponse PiTimerApi::get_config() {
       cfg[key] = nullptr;
   };
   countdown_color("counting_down");
-  countdown_color("during_buzzer");
+  countdown_color("game_completed");
   cfg["config.pace_of_play.enabled"] = s.pace_of_play;
   cfg["config.pace_of_play.font_size"] =
       s.font_sizes.count("pace_of_play") != 0 ? s.font_sizes.at("pace_of_play") : 0;

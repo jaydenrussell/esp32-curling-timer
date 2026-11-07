@@ -35,7 +35,7 @@ TEST_CASE ("apply_config_values edits scalars and keeps the file valid") {
       {"config.header.text.when_idle", yaml_quote("O'MALLEY'S")},
       {"config.header.color.counting_down", yaml_quote("blue")},
       {"config.countdown.font_size_4_digits", yaml_int(1408)},
-      {"config.countdown.color.during_buzzer", yaml_quote("red")},
+      {"config.countdown.color.game_completed", yaml_quote("red")},
       {"config.pace_of_play.enabled", yaml_bool(false)},
       {"config.pace_of_play.unit_duration", yaml_int(720)},
       {"config.footer.datetime", yaml_bool(false)},
@@ -58,7 +58,7 @@ TEST_CASE ("apply_config_values edits scalars and keeps the file valid") {
   CHECK(s.headers["text"]["when_idle"] == "O'MALLEY'S");
   CHECK(s.headers["color"]["counting_down"] == "blue");
   CHECK(s.font_sizes["timer_4_digits"] == 1408);
-  CHECK(s.countdown_colors["during_buzzer"] == "red");
+  CHECK(s.countdown_colors["game_completed"] == "red");
   CHECK_FALSE(s.pace_of_play);
   CHECK(s.pace_unit_duration == 720);
   CHECK_FALSE(s.date_and_time);

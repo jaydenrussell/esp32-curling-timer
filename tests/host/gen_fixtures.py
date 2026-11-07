@@ -72,7 +72,7 @@ def main() -> None:
         return dump(modified(["schedule"], "Sunday", entries))
 
     cases["SUN_OPTIONAL"] = sunday([
-        {"start": 36000, "buzzer": 39600, "name": "X", "during_buzzer": "DONE",
+        {"start": 36000, "buzzer": 39600, "name": "X", "game_completed": "DONE",
          "header_hold": 30, "pace_of_play": False, "pace_unit_duration": 720}])
     cases["SUN_DEFAULT_HOLD"] = sunday([{"start": 36000, "buzzer": 39600}])
     cases["SUN_HOLD_ZERO"] = sunday([{"start": 36000, "buzzer": 39600, "header_hold": 0}])

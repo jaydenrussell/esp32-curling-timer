@@ -42,7 +42,7 @@ TEST_CASE("base settings parse") {
   REQUIRE(r.s.relays.has_value());
   CHECK(*r.s.relays == std::vector<std::string>{"RELAY1"});
   CHECK(r.s.font_sizes.at("timer_5_digits") == 816);
-  CHECK(r.s.headers.at("text").at("during_buzzer") == "LAST END");
+  CHECK(r.s.headers.at("text").at("game_completed") == "LAST END");
   REQUIRE(r.s.schedules.count("Monday") == 1);
   CHECK(r.s.schedules.at("Monday").size() == 1);
   CHECK(r.s.exceptions.count("2026-10-05") == 1);
@@ -141,8 +141,8 @@ TEST_CASE("optional fields parsed") {
   const PiTimerGame &game = r.s.schedules.at("Sunday").at(0);
   REQUIRE(game.message.has_value());
   CHECK(*game.message == "X");
-  REQUIRE(game.during_buzzer_override.has_value());
-  CHECK(*game.during_buzzer_override == "DONE");
+  REQUIRE(game.game_completed_override.has_value());
+  CHECK(*game.game_completed_override == "DONE");
   REQUIRE(game.pace_of_play_override.has_value());
   CHECK(*game.pace_of_play_override == false);
   REQUIRE(game.pace_unit_override.has_value());

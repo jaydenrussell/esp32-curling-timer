@@ -294,10 +294,10 @@ async function loadStatus() {
 let quickForm = null;
 // one tap quick start timers: button label, name shown on the display, duration in seconds,
 // an optional title (wording for the tooltip and confirmation when it differs from the name on the display)
-// and the optional during_buzzer/header_hold overrides for the header shown after the buzzer
+// and the optional game_completed/header_hold overrides for the header shown after the buzzer
 const QUICK_PRESETS = [
   { label: 'Practice (7m)', name: 'PRACTICE', title: 'Practice', seconds: 7 * 60,
-    during_buzzer: '--- PRACTICE DONE ---', header_hold: 60 },
+    game_completed: '--- PRACTICE DONE ---', header_hold: 60 },
   { label: 'Game (6 ends)', name: 'Game (6 ends)', seconds: 75 * 60 },
   { label: 'Game (8 ends)', name: 'Game (8 ends)', seconds: 105 * 60 },
   { label: 'Doubles (8 ends)', name: 'Doubles (8 ends)', seconds: 105 * 60 },
@@ -315,7 +315,7 @@ function buildQuickForm() {
   const presets = QUICK_PRESETS.map((preset) => el('button', { class: 'btn preset', type: 'button',
     title: `${preset.title || preset.name}, ${durationText(preset.seconds)}`,
     onclick: () => launchQuick({ seconds: preset.seconds, name: preset.name, title: preset.title,
-                                 during_buzzer: preset.during_buzzer, header_hold: preset.header_hold },
+                                 game_completed: preset.game_completed, header_hold: preset.header_hold },
                                options()) }, preset.label));
   const form = el('form', { class: 'card', onsubmit: (event) => {
       event.preventDefault();
@@ -510,16 +510,16 @@ function readQuickForm(minutesInput, secondsInput, nameInput) {
   return { seconds, name: nameInput.value.trim() || null };
 }
 
-// confirm, then start a quick start timer { seconds, name, title, during_buzzer, header_hold }
+// confirm, then start a quick start timer { seconds, name, title, game_completed, header_hold }
 // from the form or a preset button
-async function launchQuick({ seconds, name, title, during_buzzer, header_hold }, options) {
+async function launchQuick({ seconds, name, title, game_completed, header_hold }, options) {
   const ends = new Date(Date.now() + seconds * 1000);
   // title is only how the timer is worded here; name is what goes on the display
   const called = title || name;
   const what = called ? `"${called}" (${durationText(seconds)})` : `a ${durationText(seconds)} timer`;
   if (!confirm(`Start ${what} now? Bell/buzzer at about ${pad(ends.getHours())}:${pad(ends.getMinutes())}:${pad(ends.getSeconds())}.`)) return;
   if (!state.configVersion) await loadConfig();
-  const result = await api('/api/quickstart', { seconds, name, during_buzzer, header_hold, version: state.configVersion, ...options });
+  const result = await api('/api/quickstart', { seconds, name, game_completed, header_hold, version: state.configVersion, ...options });
   if (!result.ok) return showMessage(result.data.error);
   showMessage(`Quick start timer running, bell/buzzer at ${result.data.buzzer_time}`, 'ok');
   quickForm.reset();
@@ -568,7 +568,7 @@ function newEntry(previous) {
   // whole minutes, since the time inputs don't show seconds
   const start = previous ? Math.ceil((previous.buzzer + 25 * 60) / 60) * 60 : 9 * 3600;
   return { start: Math.min(start, 86340), buzzer: Math.min(start + 105 * 60, 86340), name: null,
-           during_buzzer: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false };
+           game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false };
 }
 
 function entryEditor(entries, index, rerender) {
@@ -592,9 +592,9 @@ function entryEditor(entries, index, rerender) {
     value: entry.header_hold != null ? entry.header_hold : '',
     onchange: (event) => { const v = Number(event.target.value);
                            entry.header_hold = event.target.value !== '' && v >= 0 ? Math.round(v) : null; changed(); } });
-  const hasMore = entry.during_buzzer || entry.header_hold != null || entry.pace_of_play !== null || entry.pace_unit_duration;
+  const hasMore = entry.game_completed || entry.header_hold != null || entry.pace_of_play !== null || entry.pace_unit_duration;
   const more = el('div', { class: `more ${hasMore ? '' : 'hidden'}` },
-    el('label', {}, 'Header during buzzer', text('during_buzzer', 'default')),
+    el('label', {}, 'Header when game completed', text('game_completed', 'default')),
     el('label', {}, 'Header hold seconds', hold),
     el('label', {}, 'Pace of play', pace),
     el('label', {}, 'Minutes per end', unit));
@@ -789,17 +789,17 @@ const CONFIG_SECTIONS = [
       ['config.header.text.when_disabled', 'text', 'Text when disabled'],
       ['config.header.text.when_idle', 'text', 'Text when idle'],
       ['config.header.text.counting_down', 'text', 'Text while counting down'],
-      ['config.header.text.during_buzzer', 'text', 'Text while the buzzer rings'],
+      ['config.header.text.game_completed', 'text', 'Text while the buzzer rings'],
       ['config.header.color.when_disabled', 'color', 'Colour when disabled'],
       ['config.header.color.when_idle', 'color', 'Colour when idle'],
       ['config.header.color.counting_down', 'color', 'Colour while counting down'],
-      ['config.header.color.during_buzzer', 'color', 'Colour while the buzzer rings']] },
+      ['config.header.color.game_completed', 'color', 'Colour while the buzzer rings']] },
   { group: 'Display (HDMI output)', title: 'Countdown clock',
     fields: [
       ['config.countdown.font_size_4_digits', 'int', 'Timer font size under an hour', 0, 100000],
       ['config.countdown.font_size_5_digits', 'int', 'Timer font size an hour or more', 0, 100000],
       ['config.countdown.color.counting_down', 'color', 'Colour while counting down'],
-      ['config.countdown.color.during_buzzer', 'color', 'Colour while the buzzer rings']] },
+      ['config.countdown.color.game_completed', 'color', 'Colour while the buzzer rings']] },
   { group: 'Display (HDMI output)', title: 'Pace of play',
     fields: [
       ['config.pace_of_play.enabled', 'bool', 'Show pace of play'],

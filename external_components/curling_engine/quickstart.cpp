@@ -87,7 +87,7 @@ bool quick_entry(const QuickStartOptions &opts, Entry *out, std::string *err) {
   if (!text_value(opts.name, "name", &name, err))
     return false;
   entry.name = name.has_value() ? name : std::optional<std::string>(QUICK_DEFAULT_NAME);
-  if (!text_value(opts.during_buzzer, "during_buzzer", &entry.during_buzzer, err))
+  if (!text_value(opts.game_completed, "game_completed", &entry.game_completed, err))
     return false;
   entry.header_hold = opts.header_hold;
   entry.pace_of_play = opts.pace_of_play;

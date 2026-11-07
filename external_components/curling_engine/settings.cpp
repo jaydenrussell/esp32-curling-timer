@@ -1248,11 +1248,11 @@ static bool parse_schedules_into(const YamlValue &src,
           return false;
         g.message = v->s;
       }
-      if (entry_v.has("during_buzzer")) {
-        const YamlValue *v = require_(&entry_v, "during_buzzer", YType::Str, where.c_str(), err);
+      if (entry_v.has("game_completed")) {
+        const YamlValue *v = require_(&entry_v, "game_completed", YType::Str, where.c_str(), err);
         if (v == nullptr)
           return false;
-        g.during_buzzer_override = v->s;
+        g.game_completed_override = v->s;
       }
       if (entry_v.has("header_hold")) {
         const YamlValue *v = require_(&entry_v, "header_hold", YType::Int, where.c_str(), err);
@@ -1367,11 +1367,11 @@ void PiTimerSettings::reset() {
   headers.clear();
   for (const char *attr : {"text", "color"}) {
     std::map<std::string, std::string> evs;
-    for (const char *ev : {"when_disabled", "when_idle", "counting_down", "during_buzzer"})
+    for (const char *ev : {"when_disabled", "when_idle", "counting_down", "game_completed"})
       evs[ev] = "";
     headers[attr] = evs;
   }
-  countdown_colors = {{"counting_down", ""}, {"during_buzzer", ""}};
+  countdown_colors = {{"counting_down", ""}, {"game_completed", ""}};
   pace_of_play = false;
   pace_color.clear();
   pace_unit_name.clear();
@@ -1465,7 +1465,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
       return false;
     std::string where = std::string("config header ") + attribute;
     for (const char *event :
-         {"when_disabled", "when_idle", "counting_down", "during_buzzer"}) {
+         {"when_disabled", "when_idle", "counting_down", "game_completed"}) {
       const YamlValue *val = require_(values, event, YType::Str, where.c_str(), err);
       if (val == nullptr)
         return false;
@@ -1487,7 +1487,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   const YamlValue *cd_color = require_(countdown, "color", YType::Map, where, err);
   if (cd_color == nullptr)
     return false;
-  for (const char *event : {"counting_down", "during_buzzer"}) {
+  for (const char *event : {"counting_down", "game_completed"}) {
     const YamlValue *val = require_(cd_color, event, YType::Str, "config countdown color", err);
     if (val == nullptr)
       return false;

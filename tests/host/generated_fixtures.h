@@ -10,18 +10,18 @@ static const char CASE_BASE[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -63,18 +63,18 @@ static const char CASE_ERR_LONGER_HOLD[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -121,18 +121,18 @@ static const char CASE_ERR_SHORTER_HOLD[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -179,18 +179,18 @@ static const char CASE_E_BUZZER_BEFORE[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -234,18 +234,18 @@ static const char CASE_E_HOLD_FRAC[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -290,18 +290,18 @@ static const char CASE_E_HOLD_NEG[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -346,18 +346,18 @@ static const char CASE_E_MISSING_BUZZER[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -400,18 +400,18 @@ static const char CASE_E_OVER_3H[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -455,18 +455,18 @@ static const char CASE_E_PACE_ZERO[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -511,18 +511,18 @@ static const char CASE_E_STRING_TIME[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -566,18 +566,18 @@ static const char CASE_INVALID_ENABLED_YES[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -619,18 +619,18 @@ static const char CASE_INVALID_FONT_SIZE_BOOL[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -672,18 +672,18 @@ static const char CASE_INVALID_FONT_SIZE_STR[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -725,18 +725,18 @@ static const char CASE_INVALID_PACE_UNIT_ZERO[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -778,18 +778,18 @@ static const char CASE_INVALID_RELAY5[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -831,18 +831,18 @@ static const char CASE_INVALID_RELAYS_STR[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -883,18 +883,18 @@ static const char CASE_INVALID_SUNDAY_NULL[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -936,18 +936,18 @@ static const char CASE_MISSING_BUZZER_HEADER_HOLD[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1006,12 +1006,12 @@ static const char CASE_MISSING_COUNTDOWN_COLOR[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
@@ -1055,18 +1055,18 @@ static const char CASE_MISSING_ENABLED[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1108,18 +1108,18 @@ static const char CASE_MISSING_EXCEPTIONS[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1156,18 +1156,18 @@ static const char CASE_MISSING_FOOTER_ENTRY_NAME[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1208,18 +1208,18 @@ static const char CASE_MISSING_PACE_ENABLED[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     font_size: 224
     color: white
@@ -1260,18 +1260,18 @@ static const char CASE_MISSING_PACE_UNIT_DURATION[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1312,18 +1312,18 @@ static const char CASE_MISSING_SCHEDULE[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1354,18 +1354,18 @@ static const char CASE_MISSING_SUNDAY[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1405,18 +1405,18 @@ static const char CASE_MISSING_TEXT_WHEN_IDLE[] = R"FIX(config:
     text:
       when_disabled: DISABLED
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1458,18 +1458,18 @@ static const char CASE_OK_BACK_TO_BACK[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1515,18 +1515,18 @@ static const char CASE_OK_LONGER_HOLD[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1573,18 +1573,18 @@ static const char CASE_OK_SHORTER_HOLD[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1631,18 +1631,18 @@ static const char CASE_OV_ENCLOSES[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1688,18 +1688,18 @@ static const char CASE_OV_ENDS_DURING[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1745,18 +1745,18 @@ static const char CASE_OV_INSIDE[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1802,18 +1802,18 @@ static const char CASE_OV_STARTS_DURING[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1859,18 +1859,18 @@ static const char CASE_OV_STARTS_HOLD[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1916,18 +1916,18 @@ static const char CASE_SHORT_HOLD_MONDAY[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -1970,18 +1970,18 @@ static const char CASE_SUN_DEFAULT_HOLD[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -2025,18 +2025,18 @@ static const char CASE_SUN_HOLD_ZERO[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -2081,18 +2081,18 @@ static const char CASE_SUN_OPTIONAL[] = R"FIX(config:
       when_disabled: DISABLED
       when_idle: IDLE
       counting_down: COUNTING
-      during_buzzer: LAST END
+      game_completed: LAST END
     color:
       when_disabled: red
       when_idle: white
       counting_down: yellow
-      during_buzzer: yellow
+      game_completed: yellow
   countdown:
     font_size_4_digits: 992
     font_size_5_digits: 816
     color:
       counting_down: green
-      during_buzzer: red
+      game_completed: red
   pace_of_play:
     enabled: true
     font_size: 224
@@ -2122,7 +2122,7 @@ schedule:
   - start: 36000
     buzzer: 39600
     name: X
-    during_buzzer: DONE
+    game_completed: DONE
     header_hold: 30
     pace_of_play: false
     pace_unit_duration: 720
@@ -2146,18 +2146,18 @@ static const char TEXT_CONFIG[] = R"FIX(config:
         when_disabled: DISABLED
         when_idle: IDLE
         counting_down: COUNTING
-        during_buzzer: LAST END
+        game_completed: LAST END
       color:
         when_disabled: red
         when_idle: white
         counting_down: yellow
-        during_buzzer: yellow
+        game_completed: yellow
     countdown:
       font_size_4_digits: 992
       font_size_5_digits: 816
       color:
         counting_down: green
-        during_buzzer: red
+        game_completed: red
     pace_of_play:
       enabled: true
       font_size: 224
@@ -2186,18 +2186,18 @@ config:
         when_disabled: DISABLED
         when_idle: IDLE
         counting_down: COUNTING
-        during_buzzer: LAST END
+        game_completed: LAST END
       color:
         when_disabled: red
         when_idle: white
         counting_down: yellow
-        during_buzzer: yellow
+        game_completed: yellow
     countdown:
       font_size_4_digits: 992
       font_size_5_digits: 816
       color:
         counting_down: green
-        during_buzzer: red
+        game_completed: red
     pace_of_play:
       enabled: true
       font_size: 224
@@ -2254,14 +2254,14 @@ config:
             when_disabled: '**** TIMER DISABLED ****'
             when_idle: 'YOUR CLUB NAME'
             counting_down: 'TIME UNTIL BELL/BUZZER'
-            during_buzzer: '--------  LAST END  --------'
+            game_completed: '--------  LAST END  --------'
         # color - Color of message displayed at top of screen depending on status
         #         Names which can be used listed here: https://www.pygame.org/docs/ref/color_list.html
         color:
             when_disabled: red
             when_idle: white
             counting_down: yellow
-            during_buzzer: yellow
+            game_completed: yellow
     # countdown - Subsection for controlling countdown timer displayed in middle of screen
     countdown:
         # font_size_4_digits - Timer font size when it's below an hour remaining
@@ -2274,7 +2274,7 @@ config:
         #         Names which can be used listed here: https://www.pygame.org/docs/ref/color_list.html
         color:
             counting_down: green
-            during_buzzer: red
+            game_completed: red
     # pace_of_play - Subsection for controlling optional pace of play banner shown between countdown and footer
     pace_of_play:
         # enabled - Display pace of play 'unit_name' banner based on 'unit_duration' seconds (True=ON or False=OFF)
@@ -2306,7 +2306,7 @@ config:
         relays: ['RELAY1']
         # duration - How long to keep relays on (i.e. operating) in integer seconds
         duration: 2
-        # header_hold - How long to hold the 'during_buzzer' header message in integer seconds
+        # header_hold - How long to hold the 'game_completed' header message in integer seconds
         header_hold: 299
 
 # schedule - Normal weekly defined schedule
@@ -2319,8 +2319,8 @@ config:
 #            GOTCHA: Times in the midnight hour (00:00:00 to 00:59:59) must be written be written in seconds since midnight (YAML parser limitation)
 #            Optional local entry override variables available are:
 #            - name: text string to display in center of footer during countdown and during/after bell/buzzer (default is nothing)
-#            - during_buzzer: text string to display in header during and after bell/buzzer (default is config.header.text.during_countdown setting)
-#            - header_hold: How long to hold the 'during_buzzer' header message in integer seconds (0 or more, default is config.buzzer.header_hold setting)
+#            - game_completed: text string to display in header during and after bell/buzzer (default is config.header.text.during_countdown setting)
+#            - header_hold: How long to hold the 'game_completed' header message in integer seconds (0 or more, default is config.buzzer.header_hold setting)
 #            - pace_of_play: Display pace of play banner (True=ON or False=OFF) (default is config.pace_of_play.enabled setting)
 #            - pace_unit_duration: Number of integer seconds each pace of play unit should take (default is config.pace_of_play.unit_duration setting)
 schedule:
@@ -2335,7 +2335,7 @@ schedule:
         - {start: 19:00:00, buzzer: 20:50:00, name: 'EVENING LEAGUE'}
     Friday: []
     Saturday:
-        - {start:  9:00:00, buzzer:  9:25:00, name: 'PRACTICE ICE', during_buzzer: '--- PRACTICE ENDING ---', header_hold: 60, pace_of_play: False}
+        - {start:  9:00:00, buzzer:  9:25:00, name: 'PRACTICE ICE', game_completed: '--- PRACTICE ENDING ---', header_hold: 60, pace_of_play: False}
         - {start: 10:00:00, buzzer: 11:50:00, name: 'SATURDAY MIXED'}
     Sunday: []
 
