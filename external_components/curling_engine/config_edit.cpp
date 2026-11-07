@@ -202,6 +202,9 @@ static size_t insert_child_value(std::vector<std::string> *lines, size_t parent,
 // Anything else that is absent keeps failing with "no config setting" so
 // typos and removed keys are rejected instead of silently appended.
 static bool insertable_config_path(const std::string &path) {
+  if (path.rfind("config.header.text.", 0) == 0 || path.rfind("config.header.color.", 0) == 0 ||
+      path.rfind("config.countdown.color.", 0) == 0)
+    return true;
   return path == "config.buzzer.ring_at_start" || path == "config.buzzer.countdown.minutes_before" ||
          path == "config.buzzer.countdown.relays" ||
           path == "config.relays_enabled" || path == "config.relay_count" ||

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name: Release
 on:
   push:
@@ -79,3 +80,85 @@ jobs:
           files: |
             esphome/.esphome/build/**/*.bin
             
+=======
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - name: Generate secrets.yaml from GitHub Actions secrets (hard requirement)
+        env:
+          # action secret name == YAML !secret key uppercased (enforced by
+          # tools/check_secrets.py in build.yml, so the two never drift)
+          CURLING_TIMER__ENCRYPTION_KEY: ${{ secrets.CURLING_TIMER__ENCRYPTION_KEY }}
+          WEB_PASSWORD: ${{ secrets.WEB_PASSWORD }}
+          WIFI_SSID: ${{ secrets.WIFI_SSID }}
+          WIFI_PASSWORD: ${{ secrets.WIFI_PASSWORD }}
+          AP_PASSWORD: ${{ secrets.AP_PASSWORD }}
+        run: |
+          for v in CURLING_TIMER__ENCRYPTION_KEY WEB_PASSWORD WIFI_SSID WIFI_PASSWORD AP_PASSWORD; do
+            if [ -z "${!v}" ]; then echo "$v: EMPTY"; else echo "$v: set (len ${#v})"; fi
+          done
+          python3 - <<'PY'
+          import os, sys, json, hashlib, base64
+          # YAML !secret key -> GitHub Actions secret name (uppercased key).
+          # Values are plaintext strings; ESPHome encodes them at compile time,
+          # so CI only checks presence and passes them through verbatim.
+          keys = ['curling_timer__encryption_key', 'web_password', 'wifi_ssid',
+                  'wifi_password', 'ap_password']
+          lines, missing = [], []
+          for key in keys:
+              env = key.upper()
+              val = ''.join(os.environ.get(env, '').split())  # strip whitespace/newlines only
+              if not val:
+                  missing.append(f'{key} (secret {env})')
+                  continue
+              # write each value as a JSON double-quoted scalar, which is valid
+              # YAML and immune to plain-scalar edge cases
+              lines.append(f'{key}: {json.dumps(val)}')
+              h = hashlib.sha256(val.encode()).hexdigest()[:12]
+              extra = ''
+              if key == 'curling_timer__encryption_key':
+                  try:
+                      n = len(base64.b64decode(val, validate=True))
+                      extra = f' base64_ok={n == 32}'
+                  except ValueError:
+                      extra = ' base64_ok=False'
+              print(f'{key}: len={len(val)} sha256={h}{extra} (value not printed)')
+          if missing:
+              print('FATAL: missing required secrets: ' + ', '.join(missing), file=sys.stderr)
+              sys.exit(3)
+          with open('esphome/secrets.yaml', 'w', encoding='utf-8') as f:
+              f.write('\n'.join(lines) + '\n')
+          print(f'secrets.yaml written with {len(lines)} secrets, verbatim (values not printed)')
+          PY
+          # secrets.yaml stays until after the compile below; the runner
+          # checkout is ephemeral so it is never committed or uploaded
+      - name: Compile curling-timer.ha.yaml
+        uses: esphome/build-action@v8.1.0
+        with:
+          yaml-file: esphome/curling-timer.ha.yaml
+      - name: Remove secrets.yaml from the runner (never uploaded)
+        if: always()
+        run: rm -f esphome/secrets.yaml
+      - name: Show firmware outputs
+        run: |
+          echo "=== .bin/.elf under esphome/.esphome/build ==="
+          find esphome/.esphome/build -type f \( -name "*.bin" -o -name "*.elf" \) 2>/dev/null
+          echo "=== top-level build tree ==="
+          find esphome/.esphome/build -maxdepth 3 -type d 2>/dev/null
+      - name: Create Release
+        uses: softprops/action-gh-release@v3
+        with:
+          name: ${{ github.ref_name }}
+          body: Release ${{ github.ref_name }} (built with production secrets)
+          files: |
+            esphome/.esphome/build/**/*.bin
+>>>>>>> 32f62cb (fix: allow inserting game_completed header/color keys into legacy settings)
