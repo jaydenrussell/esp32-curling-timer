@@ -12,7 +12,7 @@ namespace esphome {
 namespace web_editor {
 
 // pitimer/web.py constants
-inline constexpr int PASSWORD_ITERATIONS = 60000;
+inline constexpr int PASSWORD_ITERATIONS = 10000;
 inline constexpr size_t MIN_PASSWORD_LENGTH = 6;
 inline constexpr int LOGIN_FAILURES_ALLOWED = 5;
 inline constexpr float LOGIN_WINDOW_SECONDS = 300;
