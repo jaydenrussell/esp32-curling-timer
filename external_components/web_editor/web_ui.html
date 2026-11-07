@@ -414,7 +414,7 @@ function renderStatus() {
    // Display mirror (mimics HDMI output)
    let mirror = document.getElementById('display-mirror');
    if (!mirror) {
-     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:16px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:8px;position:relative' });
+     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:8px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:8px;position:relative' });
      $('status-now').append(mirror);
    }
    const sm = state.status || {};
@@ -427,13 +427,13 @@ const scale = (state.configValues && state.configValues['config.mirror_scale'] !
    const ff = Math.round((sm.font_footer || 52) * scale);
    mirror.style.background = '#000';
    mirror.replaceChildren();
-   if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center` }, sm.header_text));
+   if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center;margin-top:0` }, sm.header_text));
      const pregame = !!(sm.countdown && !String(sm.countdown).includes('\u02F8'));
    const cft = pregame ? Math.round(ft * 0.55) : ft;
-   if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:25px` }, sm.countdown || ''));
-   if (sm.show_status && sm.status_text) {
-     mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center` }, sm.status_text));
-   }
+   if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:8px` }, sm.countdown || ''));
+if (sm.show_status && sm.status_text) {
+      mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center;margin:8px 0` }, sm.status_text));
+    }
    if (sm.show_pace && sm.pace_text) {
      mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-bottom:8px` }, sm.pace_text));
    }
