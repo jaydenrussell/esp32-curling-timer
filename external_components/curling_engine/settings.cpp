@@ -1466,9 +1466,28 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
     std::string where = std::string("config header ") + attribute;
     for (const char *event :
          {"when_disabled", "when_idle", "counting_down", "game_completed"}) {
-      const YamlValue *val = require_(values, event, YType::Str, where.c_str(), err);
-      if (val == nullptr)
+      const YamlValue *val = values->find(event);
+      if (val == nullptr) {
+        // Back-compat: older settings files lack game_completed; default to
+        // the counting_down value (or "GAME OVER" for text).
+        if (std::string(event) == "game_completed") {
+          headers[attribute][event] =
+              (attribute == std::string("text"))
+                  ? (headers[attribute].count("counting_down")
+                         ? headers[attribute]["counting_down"]
+                         : std::string("GAME OVER"))
+                  : (headers[attribute].count("counting_down")
+                         ? headers[attribute]["counting_down"]
+                         : std::string("yellow"));
+          continue;
+        }
+        *err = std::string("missing '") + event + "' in " + where;
         return false;
+      }
+      if (val->type != YType::Str) {
+        *err = std::string("'") + event + "' in " + where + " is not a valid string";
+        return false;
+      }
       headers[attribute][event] = val->s;
     }
   }
@@ -1488,9 +1507,21 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if (cd_color == nullptr)
     return false;
   for (const char *event : {"counting_down", "game_completed"}) {
-    const YamlValue *val = require_(cd_color, event, YType::Str, "config countdown color", err);
-    if (val == nullptr)
+    const YamlValue *val = cd_color->find(event);
+    if (val == nullptr) {
+      if (std::string(event) == "game_completed") {
+        countdown_colors[event] = countdown_colors.count("counting_down")
+                                     ? countdown_colors["counting_down"]
+                                     : std::string("red");
+        continue;
+      }
+      *err = std::string("missing '") + event + "' in config countdown color";
       return false;
+    }
+    if (val->type != YType::Str) {
+      *err = std::string("'") + event + "' in config countdown color is not a valid string";
+      return false;
+    }
     countdown_colors[event] = val->s;
   }
 
