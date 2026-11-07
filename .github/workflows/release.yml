@@ -77,5 +77,5 @@ jobs:
           name: ${{ github.ref_name }}
           body: Release ${{ github.ref_name }} (built with production secrets)
           files: |
-            esphome/.esphome/build/**/firmware.factory.bin
-            esphome/.esphome/build/**/firmware.ota.bin
+            esphome/.esphome/build/**/*.bin
+            
