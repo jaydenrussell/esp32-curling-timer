@@ -13,17 +13,11 @@
 substitutions:
   # IANA timezone, e.g. "America/New_York" — see docs/BUILD.md
   timezone: "America/Toronto"
-  # Firmware version string shown in logs and web UI header.
-  firmware_version: "v2026.11.67"
 
 esphome:
   name: curling-timer
   friendly_name: Curling Timer
   name_add_mac_suffix: false
-  on_boot:
-    priority: -100
-    then:
-      - lambda: 'ESP_LOGI("firmware", "FIRMWARE VERSION: ${firmware_version}");'
 
 esp32:
   variant: esp32p4
@@ -201,9 +195,8 @@ switch:
 # Diagnostics
 # ---------------------------------------------------------------------
 text_sensor:
-  - platform: template
+  - platform: version
     name: "Firmware Version"
-    lambda: 'return std::string("${firmware_version}");'
 
 sensor:
   - platform: uptime
@@ -221,7 +214,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.73
+      ref: main
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
