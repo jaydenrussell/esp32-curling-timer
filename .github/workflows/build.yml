@@ -27,6 +27,9 @@ jobs:
           sed -i "s/^  firmware_version:.*/  firmware_version: \"$VERSION\"/" esphome/curling-timer.ha.yaml
           if [ -f esphome/component_ref.txt ]; then echo "$VERSION" > esphome/component_ref.txt; fi
 
+      - name: Create secrets
+        run: cp esphome/secrets.yaml.example esphome/secrets.yaml
+
       - name: Install esphome
         run: pip install esphome
 
