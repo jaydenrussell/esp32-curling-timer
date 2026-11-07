@@ -761,7 +761,7 @@ lvgl:
     - label:
         id: lbl_header
         align: TOP_MID
-        y: 20
+        y: 4
         text_font: font_header
         long_mode: CLIP
         recolor: true
