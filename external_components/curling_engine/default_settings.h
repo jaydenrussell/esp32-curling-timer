@@ -27,7 +27,7 @@ config:
             when_disabled: '**** TIMER DISABLED ****'
             when_idle: 'YOUR CLUB NAME'
             counting_down: 'TIME UNTIL BELL/BUZZER'
-            during_buzzer: '--------  LAST END  --------'
+            during_buzzer: 'GAME OVER'
         # color - Color of message displayed at top of screen depending on status
         #         Names which can be used listed here: https://www.pygame.org/docs/ref/color_list.html
         color:
