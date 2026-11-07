@@ -58,10 +58,10 @@ jobs:
           PY
           # secrets.yaml stays until after the compile below; the runner
           # checkout is ephemeral so it is never committed or uploaded
-      - name: Compile curling-timer.ha.yaml
+      - name: Compile curling-timer.yaml
         uses: esphome/build-action@v8.1.0
         with:
-          yaml-file: esphome/curling-timer.ha.yaml
+          yaml-file: esphome/curling-timer.yaml
       - name: Remove secrets.yaml from the runner (never uploaded)
         if: always()
         run: rm -f esphome/secrets.yaml
