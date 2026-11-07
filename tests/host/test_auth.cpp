@@ -38,7 +38,7 @@ TEST_CASE ("check_password rejects malformed stored strings") {
 
 TEST_CASE ("hash_password round-trips through check_password") {
   const std::string stored = hash_password("correct-horse");
-  CHECK(stored.rfind("pbkdf2_sha256$10000$", 0) == 0);
+  CHECK(stored.rfind("pbkdf2_sha256$60000$", 0) == 0);
   CHECK(check_password("correct-horse", stored));
   CHECK_FALSE(check_password("correct-hors", stored));
   // two hashes of the same password differ (fresh random salt)

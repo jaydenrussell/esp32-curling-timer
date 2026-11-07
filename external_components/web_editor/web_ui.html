@@ -237,6 +237,8 @@ $('login-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const btn = $('login-form').querySelector('button[type=submit]');
   btn.disabled = true; btn.textContent = 'Logging in...';
+  // Force a repaint so the user sees feedback immediately
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const result = await api('/api/login', { password: $('password').value });
   btn.disabled = false; btn.textContent = 'Log in';
   if (!result.ok) {
