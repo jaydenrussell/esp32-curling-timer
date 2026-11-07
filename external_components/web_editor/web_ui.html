@@ -235,7 +235,10 @@ async function api(path, body) {
 function showLogin() { $('login').classList.add('show'); $('password').focus(); }
 $('login-form').addEventListener('submit', async (event) => {
   event.preventDefault();
+  const btn = $('login-form').querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Logging in...';
   const result = await api('/api/login', { password: $('password').value });
+  btn.disabled = false; btn.textContent = 'Log in';
   if (!result.ok) {
     $('login-error').textContent = result.data.error;
     $('login-error').classList.remove('hidden');
