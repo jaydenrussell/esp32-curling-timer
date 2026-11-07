@@ -216,7 +216,8 @@ static bool insertable_config_path(const std::string &path) {
           path == "config.pregame_countdown" || path == "config.pregame_font_size" ||
           path == "config.mirror_scale" ||
          path == "config.allow_midnight_wrap" ||
-         path == "config.pregame_color" || path == "config.pregame_header_text" ||
+         path == "config.pregame_color" || path == "config.pregame_header_color" ||
+         path == "config.pregame_countdown_color" || path == "config.pregame_header_text" ||
          path == "config.buzzer.start_duration" ||
          path == "config.buzzer.countdown_duration" ||
          path == "config.buzzer.end_duration" ||

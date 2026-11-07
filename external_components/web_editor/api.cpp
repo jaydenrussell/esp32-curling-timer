@@ -725,7 +725,7 @@ ApiResponse PiTimerApi::get_config() {
   JsonObject cfg = doc["config"].to<JsonObject>();
   cfg["config.enabled"] = s.enabled;
   cfg["config.header.font_size"] = s.font_sizes.count("header") != 0 ? s.font_sizes.at("header") : 0;
-  for (const char *event : {"when_disabled", "when_idle", "counting_down", "game_completed"}) {
+  for (const char *event : {"when_disabled", "when_idle", "counting_down", "game_completed", "game_ended"}) {
     for (const char *attribute : {"text", "color"}) {
       std::string key = std::string("config.header.") + attribute + "." + event;
       auto group = s.headers.find(attribute);
@@ -755,6 +755,7 @@ ApiResponse PiTimerApi::get_config() {
   };
   countdown_color("counting_down");
   countdown_color("game_completed");
+  countdown_color("game_ended");
   cfg["config.pace_of_play.enabled"] = s.pace_of_play;
   cfg["config.pace_of_play.font_size"] =
       s.font_sizes.count("pace_of_play") != 0 ? s.font_sizes.at("pace_of_play") : 0;
@@ -803,7 +804,8 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.pregame_countdown"] = s.pregame_countdown;
   cfg["config.allow_midnight_wrap"] = s.allow_midnight_wrap;
   cfg["config.pregame_font_size"] = s.pregame_font_size;
-  cfg["config.mirror_scale"] = s.mirror_scale;  cfg["config.pregame_color"] = s.pregame_color;
+  cfg["config.mirror_scale"] = s.mirror_scale;  cfg["config.pregame_header_color"] = s.pregame_header_color;
+  cfg["config.pregame_countdown_color"] = s.pregame_countdown_color;
   cfg["config.footer.date_font_size"] = s.date_font_size;
   cfg["config.footer.date_color"] = s.date_color;
   cfg["config.footer.time_font_size"] = s.time_font_size;
@@ -917,7 +919,8 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
       yaml = curling_engine::yaml_quote(text);
     } else if (path == "config.relay1_function" || path == "config.relay2_function" ||
                path == "config.relay3_function" || path == "config.relay4_function" ||
-               path == "config.pregame_color" || path == "config.pregame_header_text" ||
+               path == "config.pregame_header_color" || path == "config.pregame_countdown_color" ||
+               path == "config.pregame_header_text" ||
                path == "config.footer.date_color" || path == "config.footer.time_color" ||
                path == "config.footer.color" ||
                path == "config.background_color" ||

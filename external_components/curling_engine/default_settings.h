@@ -28,6 +28,7 @@ config:
             when_idle: 'YOUR CLUB NAME'
             counting_down: 'TIME UNTIL BELL/BUZZER'
             game_completed: 'GAME OVER'
+            game_ended: 'GAME ENDED'
         # color - Color of message displayed at top of screen depending on status
         #         Names which can be used listed here: https://www.pygame.org/docs/ref/color_list.html
         color:
@@ -35,6 +36,7 @@ config:
             when_idle: white
             counting_down: yellow
             game_completed: yellow
+            game_ended: yellow
     # countdown - Subsection for controlling countdown timer displayed in middle of screen
     countdown:
         # font_size_4_digits - Timer font size when it's below an hour remaining
@@ -48,6 +50,7 @@ config:
         color:
             counting_down: green
             game_completed: red
+            game_ended: red
     # pace_of_play - Subsection for controlling optional pace of play banner shown between countdown and footer
     pace_of_play:
         # enabled - Display pace of play 'unit_name' banner based on 'unit_duration' seconds (True=ON or False=OFF)
@@ -81,7 +84,8 @@ config:
     # pregame display options
     pregame_font_size: 0
     mirror_scale: 100
-    pregame_color: ''
+    pregame_header_color: ''
+    pregame_countdown_color: ''
     pregame_header_text: 'Get ready'
     relay1_function: 'None'
     relay2_function: 'None'

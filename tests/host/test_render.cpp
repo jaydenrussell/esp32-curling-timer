@@ -94,8 +94,10 @@ TEST_CASE("header_event gating") {
   CHECK(header_event(s, g) == "counting_down");
   g.seconds_until_buzzer = 0;
   CHECK(header_event(s, g) == "game_completed");
-  g.seconds_until_buzzer = -100;  // inside header hold
+  g.seconds_until_buzzer = -1;  // buzzer still ringing (within relay_duration=2)
   CHECK(header_event(s, g) == "game_completed");
+  g.seconds_until_buzzer = -100;  // inside header hold, past buzzer
+  CHECK(header_event(s, g) == "game_ended");
 }
 
 TEST_CASE("recolor wraps text for LVGL") {

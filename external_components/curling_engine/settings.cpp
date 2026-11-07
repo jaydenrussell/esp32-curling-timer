@@ -1400,7 +1400,9 @@ void PiTimerSettings::reset() {
   pregame_countdown = 0;
   allow_midnight_wrap = false;
   pregame_font_size = 0;
-  mirror_scale = 100;  pregame_color = "";
+  mirror_scale = 100;
+  pregame_header_color = "";
+  pregame_countdown_color = "";
   date_font_size = 52;
   date_color = "";
   time_font_size = 52;
@@ -1465,12 +1467,10 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
       return false;
     std::string where = std::string("config header ") + attribute;
     for (const char *event :
-         {"when_disabled", "when_idle", "counting_down", "game_completed"}) {
+         {"when_disabled", "when_idle", "counting_down", "game_completed", "game_ended"}) {
       const YamlValue *val = values->find(event);
       if (val == nullptr) {
-        // Back-compat: older settings files lack game_completed; default to
-        // the counting_down value (or "GAME OVER" for text).
-        if (std::string(event) == "game_completed") {
+        if (std::string(event) == "game_completed" || std::string(event) == "game_ended") {
           headers[attribute][event] =
               (attribute == std::string("text"))
                   ? (headers[attribute].count("counting_down")
@@ -1506,10 +1506,10 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   const YamlValue *cd_color = require_(countdown, "color", YType::Map, where, err);
   if (cd_color == nullptr)
     return false;
-  for (const char *event : {"counting_down", "game_completed"}) {
+  for (const char *event : {"counting_down", "game_completed", "game_ended"}) {
     const YamlValue *val = cd_color->find(event);
     if (val == nullptr) {
-      if (std::string(event) == "game_completed") {
+      if (std::string(event) == "game_completed" || std::string(event) == "game_ended") {
         countdown_colors[event] = countdown_colors.count("counting_down")
                                      ? countdown_colors["counting_down"]
                                      : std::string("red");
@@ -1577,7 +1577,11 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = cfg->find("allow_midnight_wrap")) != nullptr && v->type == YType::Bool) allow_midnight_wrap = v->b;
   if ((v = cfg->find("pregame_font_size")) != nullptr && v->type == YType::Int) pregame_font_size = static_cast<int>(v->i);
   if ((v = cfg->find("mirror_scale")) != nullptr && v->type == YType::Int) mirror_scale = static_cast<int>(v->i);
-  if ((v = cfg->find("pregame_color")) != nullptr && v->type == YType::Str) pregame_color = v->s;
+  if ((v = cfg->find("pregame_color")) != nullptr && v->type == YType::Str) pregame_header_color = v->s;
+  if ((v = cfg->find("pregame_header_color")) != nullptr && v->type == YType::Str) pregame_header_color = v->s;
+  if ((v = cfg->find("pregame_countdown_color")) != nullptr && v->type == YType::Str) pregame_countdown_color = v->s;
+  if (pregame_countdown_color.empty()) pregame_countdown_color = pregame_header_color;
+  if ((v = cfg->find("pregame_header_text")) != nullptr && v->type == YType::Str) pregame_header_text = v->s;
 
   if ((v = cfg->find("background_color")) != nullptr && v->type == YType::Str) background_color = v->s;
   if ((v = cfg->find("pregame_header_text")) != nullptr && v->type == YType::Str) pregame_header_text = v->s;

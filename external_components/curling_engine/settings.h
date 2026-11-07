@@ -114,7 +114,9 @@ class PiTimerSettings {
   int pregame_countdown{0};
   bool allow_midnight_wrap{false};
   int pregame_font_size{0};
-  int mirror_scale{100};  std::string pregame_color{};
+  int mirror_scale{100};
+  std::string pregame_header_color{};
+  std::string pregame_countdown_color{};
   int date_font_size{52};
   std::string date_color{};
   int time_font_size{52};
