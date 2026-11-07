@@ -361,7 +361,7 @@ function renderStatus() {
   if (quickForm) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
   const now = el('div', { class: 'card' });
   const cur = s.current;
-  const head = el('h2', {}, 'On the display now', el('span', { class: 'spacer' }),
+  const head = el('h2', {}, 'On the Display Now', el('span', { class: 'spacer' }),
     el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Timer enabled' : 'Timer disabled'));
   const triggered = (cur && cur.seconds_until_buzzer != null && cur.seconds_until_buzzer <= 0) ? 'Buzzer' : null;
   now.append(head);
@@ -431,11 +431,11 @@ const scale = (state.configValues && state.configValues['config.mirror_scale'] !
      const pregame = !!(sm.countdown && !String(sm.countdown).includes('\u02F8'));
    const cft = pregame ? Math.round(ft * 0.55) : ft;
    if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:25px` }, sm.countdown || ''));
-   if (sm.show_pace && sm.pace_text) {
-     mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-top:-10px` }, sm.pace_text));
-   }
    if (sm.show_status && sm.status_text) {
      mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center` }, sm.status_text));
+   }
+   if (sm.show_pace && sm.pace_text) {
+     mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-bottom:8px` }, sm.pace_text));
    }
    const footerRow = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-top:auto;width:100%' });
    if (sm.show_date_time && sm.date_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px` }, sm.date_text));
