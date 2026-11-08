@@ -1360,9 +1360,10 @@ async function checkVersion() {
     }
   } catch(e) {}
 }
-function start() {
+async function start() {
   renderTabs();
   selectTab(state.tab);
+  await loadConfig();
   loadStatus();
   if (started) return;
   started = true;
