@@ -1335,9 +1335,14 @@ async function renderLeagues() {
      showMessage('Importing leagues...', 'info');
      let names = [];
      try {
-       const res = await fetch(endpoint, { mode: 'cors' });
-       if (!res.ok) throw new Error('HTTP ' + res.status);
-       const html = await res.text();
+       const tryFetch = async (u) => {
+         const res = await fetch(u, { mode: 'cors' });
+         if (!res.ok) throw new Error('HTTP ' + res.status);
+         return await res.text();
+       };
+       let html;
+       try { html = await tryFetch(endpoint); }
+       catch (e) { html = await tryFetch('https://corsproxy.io/?' + encodeURIComponent(endpoint)); }
        const doc = new DOMParser().parseFromString(html, 'text/html');
        const seen = new Set();
        doc.querySelectorAll('h1,h2,h3,h4,strong,b').forEach((el) => {
