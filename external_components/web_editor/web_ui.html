@@ -1328,11 +1328,43 @@ async function renderLeagues() {
   };
   const cfg = state.model && state.model.config ? state.model.config : {};
   const base = (cfg.league_page_url || cfg.club_website_url || '').trim();
-  const importBtn = el('button', { class: 'btn', onclick: async () => {
-    const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
-    const endpoint = url && url.trim() ? url.trim() : (base || null);
-    showMessage('Import not yet implemented server-side; paste league names manually.', 'warn');
-  } }, 'Import from Club Manager');
+   const importBtn = el('button', { class: 'btn', onclick: async () => {
+     const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
+     const endpoint = url && url.trim() ? url.trim() : (base || null);
+     if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
+     showMessage('Importing leagues...', 'info');
+     let names = [];
+     try {
+       const res = await fetch(endpoint, { mode: 'cors' });
+       if (!res.ok) throw new Error('HTTP ' + res.status);
+       const html = await res.text();
+       const doc = new DOMParser().parseFromString(html, 'text/html');
+       const seen = new Set();
+       doc.querySelectorAll('h1,h2,h3,h4,strong,b').forEach((el) => {
+         const t = (el.textContent || '').trim().replace(/\s+/g, ' ');
+         if (!t || t.length < 3 || t.length > 80) return;
+         if (/^(leagues|home|menu|login|copyright|simcoe)/i.test(t)) return;
+         if (seen.has(t)) return;
+         seen.add(t);
+         names.push(t);
+       });
+     } catch (e) {
+       const pasted = prompt('Could not fetch URL (CORS?). Paste league names, one per line:', '');
+       if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
+     }
+     if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
+     const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
+     let added = 0;
+     names.forEach(n => {
+       if (existing.has(n.toLowerCase())) return;
+       leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0 });
+       existing.add(n.toLowerCase());
+       added++;
+     });
+     await saveLeagues(leagues);
+     renderLeagues();
+     showMessage('Imported ' + added + ' new league(s).', 'ok');
+   } }, 'Import from Club Manager');
   const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
     (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
   root.replaceChildren(el('div', { class: 'row-actions', style: 'margin: 0 0 16px' }, importBtn),
