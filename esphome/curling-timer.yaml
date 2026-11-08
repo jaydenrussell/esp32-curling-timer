@@ -151,7 +151,7 @@ web_server:
     # (ESPHome deprecates basic auth in 2027.1)
     type: digest
     username: admin
-    password: !secret webui_password
+    password: !secret web_password
 
 time:
   - platform: sntp
@@ -233,7 +233,7 @@ web_editor:
   # never calls component APIs - a cached (older) clone of the external
   # component can then never break the build.
   id: web_editor_comp
-  password: !secret webui_password
+  password: !secret web_password
   port: 8080
 
 # ---------------------------------------------------------------------
