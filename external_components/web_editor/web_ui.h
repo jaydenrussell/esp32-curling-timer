@@ -1299,7 +1299,7 @@ async function renderLeagues() {
     await api('/api/leagues', { leagues: arr });
   };
    const cfg = state.model && state.model.config ? state.model.config : {};
-   const base = (cfg.league_page_url || cfg.club_website_url || '').trim();
+   const base = ((cfg.config && (cfg.config.league_page_url || cfg.config.club_website_url)) || cfg.league_page_url || cfg.club_website_url || '').trim();
    const importBtn = el('button', { class: 'btn', onclick: async () => {
      const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
      const endpoint = url && url.trim() ? url.trim() : (base || null);
