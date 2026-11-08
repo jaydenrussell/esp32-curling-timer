@@ -15,12 +15,12 @@ jobs:
           # action secret name == YAML !secret key uppercased (enforced by
           # tools/check_secrets.py in build.yml, so the two never drift)
           CURLING_TIMER__ENCRYPTION_KEY: ${{ secrets.CURLING_TIMER__ENCRYPTION_KEY }}
-          WEB_PASSWORD: ${{ secrets.WEB_PASSWORD }}
+          WEBUI_PASSWORD: ${{ secrets.WEB_PASSWORD }}
           WIFI_SSID: ${{ secrets.WIFI_SSID }}
           WIFI_PASSWORD: ${{ secrets.WIFI_PASSWORD }}
           AP_PASSWORD: ${{ secrets.AP_PASSWORD }}
         run: |
-          for v in CURLING_TIMER__ENCRYPTION_KEY WEB_PASSWORD WIFI_SSID WIFI_PASSWORD AP_PASSWORD; do
+          for v in CURLING_TIMER__ENCRYPTION_KEY WEBUI_PASSWORD WIFI_SSID WIFI_PASSWORD AP_PASSWORD; do
             if [ -z "${!v}" ]; then echo "$v: EMPTY"; else echo "$v: set (len ${#v})"; fi
           done
           python3 - <<'PY'
@@ -28,7 +28,7 @@ jobs:
           # YAML !secret key -> GitHub Actions secret name (uppercased key).
           # Values are plaintext strings; ESPHome encodes them at compile time,
           # so CI only checks presence and passes them through verbatim.
-          keys = ['curling_timer__encryption_key', 'web_password', 'wifi_ssid',
+          keys = ['curling_timer__encryption_key', 'webui_password', 'wifi_ssid',
                   'wifi_password', 'ap_password']
           lines, missing = [], []
           for key in keys:
