@@ -987,9 +987,13 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
   else
     return error_json(400, "'leagues' is required");
 
-  // build yaml
-  std::string yaml = "\nleagues:\n";
-  for (JsonVariantConst item : arr) {
+  // build yaml (only when there are leagues; an empty list is stored by
+  // omitting the leagues section entirely — "leagues:" with no entries is
+  // rejected by the settings validator)
+  std::string yaml;
+  if (arr.size() > 0) {
+    yaml = "\nleagues:\n";
+    for (JsonVariantConst item : arr) {
     if (!item.is<JsonObjectConst>())
       return error_json(400, "league must be an object");
     const char *name = item["name"].as<const char *>();
@@ -1004,6 +1008,7 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
     const char *fmt = item["format"].as<const char *>();
     yaml += "    format: " + std::string(fmt ? fmt : "") + "\n";
     yaml += "    team_size: " + std::to_string(item["team_size"].as<int>()) + "\n";
+    }
   }
 
   SettingsStore *store = engine_->get_store();

@@ -1399,9 +1399,9 @@ async function renderLeagues() {
        existing.add(n.toLowerCase());
        added++;
      });
-     await saveLeagues(leagues);
-     renderLeagues();
-     showMessage('Imported ' + added + ' new league(s).', 'ok');
+      if (!(await saveLeagues(leagues))) return;
+      renderLeagues();
+      showMessage('Imported ' + added + ' new league(s).', 'ok');
    } }, 'Import from Club Manager');
   const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
     (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
