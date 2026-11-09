@@ -1372,38 +1372,24 @@ async function renderLeagues() {
   window.saveLeagues = async (arr) => {
     await api('/api/leagues', { leagues: arr });
   };
-  const cfg = state.model && state.model.config ? state.model.config : {};
-   const base = (cfg['config.league_page_url'] || cfg['config.club_website_url'] || '').trim();
-   const importBtn = el('button', { class: 'btn', onclick: async () => {
-     const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
-     const endpoint = url && url.trim() ? url.trim() : (base || null);
-     if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
-     showMessage('Importing leagues...', 'info');
-     let names = [];
-     try {
-       const tryFetch = async (u) => {
-         const res = await fetch(u, { mode: 'cors' });
-         if (!res.ok) throw new Error('HTTP ' + res.status);
-         return await res.text();
-       };
-       let html;
-       try { html = await tryFetch(endpoint); }
-       catch (e) { html = await tryFetch('https://corsproxy.io/?' + encodeURIComponent(endpoint)); }
-       const doc = new DOMParser().parseFromString(html, 'text/html');
-       const seen = new Set();
-       doc.querySelectorAll('h1,h2,h3,h4,strong,b').forEach((el) => {
-         const t = (el.textContent || '').trim().replace(/\s+/g, ' ');
-         if (!t || t.length < 3 || t.length > 80) return;
-         if (/^(leagues|home|menu|login|copyright|simcoe)/i.test(t)) return;
-         if (seen.has(t)) return;
-         seen.add(t);
-         names.push(t);
-       });
-     } catch (e) {
-       const pasted = prompt('Could not fetch URL (CORS?). Paste league names, one per line:', '');
-       if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
-     }
-     if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
+   const DEFAULT_LEAGUE_URL = 'https://simcoecurlingclub.ca/curling/leagues';
+   const cfg = state.model && state.model.config ? state.model.config : {};
+    const base = (cfg['config.league_page_url'] || cfg['config.club_website_url'] || '').trim();
+     const importBtn = el('button', { class: 'btn', onclick: async () => {
+       const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
+       const endpoint = url && url.trim() ? url.trim() : (base || DEFAULT_LEAGUE_URL);
+       if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
+       showMessage('Importing leagues...', 'info');
+       let names = [];
+       try {
+         const result = await api('/api/fetch_leagues', { url: endpoint });
+         if (!result.ok) { showMessage(result.data.error || 'import failed', 'warn'); return; }
+         names = Array.isArray(result.data) ? result.data : [];
+       } catch (e) {
+         const pasted = prompt('Could not fetch URL. Paste league names, one per line:', '');
+         if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
+       }
+       if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
      const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
      let added = 0;
      names.forEach(n => {

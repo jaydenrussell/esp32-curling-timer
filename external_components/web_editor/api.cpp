@@ -1,6 +1,7 @@
 #include "api.h"
 
 #include <cstdio>
+#include <cctype>
 #include <cstring>
 #include <ctime>
 
@@ -8,6 +9,7 @@
 #include "esphome/components/curling_engine/model.h"
 #include "esphome/components/curling_engine/render.h"
 #include "esphome/components/curling_engine/quickstart.h"
+#include "esp_http_client.h"
 #include "json_model.h"
 
 namespace esphome {
@@ -1021,6 +1023,146 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
   return from_document(doc);
 }
 
+// -- server-side league import (no CORS, runs on the device) ---------------
+
+namespace {
+
+struct HttpFetch {
+  std::string buf;
+  bool done{false};
+  esp_err_t err{ESP_OK};
+};
+
+static esp_err_t http_event_handler(void *ctx, esp_http_client_event_t *evt) {
+  auto *fetch = static_cast<HttpFetch *>(ctx);
+  switch (evt->event_id) {
+    case HTTP_EVENT_ERROR:
+      fetch->err = ESP_FAIL;
+      break;
+    case HTTP_EVENT_ON_DATA:
+      if (fetch->buf.size() < 200000)
+        fetch->buf.append(static_cast<const char *>(evt->data), evt->data_len);
+      break;
+    case HTTP_EVENT_DONE:
+    case HTTP_EVENT_FINISH:
+      fetch->done = true;
+      break;
+    default:
+      break;
+  }
+  return ESP_OK;
+}
+
+// Fetch a URL server-side and return the response body (capped ~200 KB).
+static std::optional<std::string> server_fetch(const std::string &url) {
+  HttpFetch fetch;
+  esp_http_client_config_t cfg = {};
+  cfg.url = url.c_str();
+  cfg.event_handler = http_event_handler;
+  cfg.user_data = &fetch;
+  cfg.timeout_ms = 15000;
+  cfg.buffer_size = 4096;
+  cfg.buffer_size_tx = 1024;
+  esp_http_client_handle_t client = esp_http_client_init(&cfg);
+  if (client == nullptr) return std::nullopt;
+  esp_err_t err = esp_http_client_perform(client);
+  int status = esp_http_client_get_status_code(client);
+  esp_http_client_cleanup(client);
+  if (err != ESP_OK || status < 200 || status >= 300) return std::nullopt;
+  return fetch.buf;
+}
+
+static bool is_skip_word(const std::string &t) {
+  static const char *const skip[] = {"leagues", "home", "menu", "login",
+                                     "copyright", "simcoe"};
+  for (const char *s : skip)
+    if (strcasecmp(t.c_str(), s) == 0) return true;
+  return false;
+}
+
+// Minimal HTML text extractor for h1-h4 / strong / b (mirrors tools/import_leagues.py).
+static std::vector<std::string> extract_league_names(const std::string &html) {
+  std::vector<std::string> out;
+  std::vector<std::string> seen;
+  size_t i = 0;
+  while (i < html.size()) {
+    if (html[i] != '<') {
+      i++;
+      continue;
+    }
+    size_t j = html.find('>', i);
+    if (j == std::string::npos) break;
+    std::string tag = html.substr(i + 1, j - i - 1);
+    bool closing = !tag.empty() && tag[0] == '/';
+    if (!closing) {
+      size_t sp = tag.find_first_of(" \t/>");
+      std::string name = tag.substr(0, sp == std::string::npos ? tag.size() : sp);
+      for (auto &c : name)
+        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+      if (name == "h1" || name == "h2" || name == "h3" || name == "h4" ||
+          name == "strong" || name == "b") {
+        std::string close = "</" + name + ">";
+        size_t k = html.find(close, j + 1);
+        if (k != std::string::npos) {
+          std::string inner = html.substr(j + 1, k - (j + 1));
+          std::string text;
+          bool in_tag = false;
+          for (char c : inner) {
+            if (c == '<')
+              in_tag = true;
+            else if (c == '>')
+              in_tag = false;
+            else if (!in_tag)
+              text.push_back(c);
+          }
+          std::string collapsed;
+          bool prev_space = true;
+          for (char c : text) {
+            if (std::isspace(static_cast<unsigned char>(c))) {
+              prev_space = true;
+              continue;
+            }
+            if (prev_space && !collapsed.empty()) collapsed.push_back(' ');
+            collapsed.push_back(c);
+            prev_space = false;
+          }
+          if (!collapsed.empty() && collapsed.back() == ' ') collapsed.pop_back();
+          if (collapsed.size() >= 3 && collapsed.size() <= 80 &&
+              !is_skip_word(collapsed)) {
+            bool dup = false;
+            for (const auto &s : seen)
+              if (s == collapsed) { dup = true; break; }
+            if (!dup) {
+              seen.push_back(collapsed);
+              out.push_back(collapsed);
+            }
+          }
+        }
+      }
+    }
+    i = j + 1;
+  }
+  return out;
+}
+
+}  // namespace
+
+ApiResponse PiTimerApi::fetch_leagues(JsonObjectConst data) {
+  JsonVariantConst url_v = data["url"];
+  if (!url_v.is<const char *>())
+    return error_json(400, "'url' is required");
+  std::string url = trim_spaces(url_v.as<const char *>());
+  if (url.empty()) return error_json(400, "'url' must not be empty");
+  auto html = server_fetch(url);
+  if (!html.has_value())
+    return error_json(502, "could not fetch league page");
+  auto names = extract_league_names(*html);
+  JsonDocument doc;
+  JsonArray arr = doc.to<JsonArray>();
+  for (const auto &n : names) arr.add(n);
+  return from_document(doc);
+}
+
 // -- auth ---------------------------------------------------------------------
 
 ApiResponse PiTimerApi::login(const ApiRequest &req, JsonObjectConst data) {
@@ -1134,6 +1276,8 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
       return post_config(data);
     if (p == "/api/leagues")
       return post_leagues(data);
+    if (p == "/api/fetch_leagues")
+      return fetch_leagues(data);
     if (p == "/api/log_level")
       return set_log_level(data);
 

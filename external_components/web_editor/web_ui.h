@@ -5,51 +5,76 @@ static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Countdown Timer</title>
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1d24" />
+<meta name="color-scheme" content="light dark" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
 <style>
 :root {
-  color-scheme: light;
-  --bg: #f4f5f7; --card: #ffffff; --text: #1d2330; --muted: #5d6677; --line: #d9dde5;
-  --accent: #1f6feb; --accent-text: #ffffff; --ok: #1a7f37; --warn: #9a6700; --bad: #cf222e;
-  --ok-bg: #dafbe1; --warn-bg: #fff8c5; --bad-bg: #ffebe9; --quick: #8250df;
-  --preset-bg: #ddf4ff; --preset-text: #0550ae; --preset-border: #218bff;
+  color-scheme: dark;
+  --bg-dark: #1a1d24; --bg: #1e2229; --bg-light: #262b35; --card: #262b35;
+  --text: #e8eaed; --text-muted: #9aa0ad; --border: #3a3f4b; --highlight: #4a5060;
+  --primary: #6b8cff; --secondary: #5cc4b8; --tertiary: #d4b55a;
+  --success: #4ade80; --warning: #f0b429; --danger: #f87171;
+  --ok: #4ade80; --warn: #f0b429; --bad: #f87171;
+  --ok-bg: #1a2e22; --warn-bg: #2e2a1a; --bad-bg: #2e1a1a; --quick: #a78bfa;
+  --preset-bg: #1e2d4a; --preset-text: #93c5fd; --preset-border: #3b82f6;
+  --line: #3a3f4b; --accent: #6b8cff; --accent-text: #0f1117; --muted: #9aa0ad;
 }
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: light) {
   :root {
-    /* so the browser draws its own widgets dark too: the time picker and its popup, scrollbars */
-    color-scheme: dark;
-    --bg: #0f1218; --card: #181c24; --text: #e6e9ef; --muted: #9aa3b2; --line: #2c3340;
-    --accent: #4c8dff; --accent-text: #0b0e13; --ok: #3fb950; --warn: #d29922; --bad: #f85149;
-    --ok-bg: #12261a; --warn-bg: #2a2310; --bad-bg: #2d1416; --quick: #a371f7;
-    --preset-bg: #12305a; --preset-text: #a5d6ff; --preset-border: #388bfd;
+    color-scheme: light;
+    --bg-dark: #e8e9ec; --bg: #f1f2f5; --bg-light: #ffffff; --card: #ffffff;
+    --text: #1a1d24; --text-muted: #5a6070; --border: #d0d3da; --highlight: #ffffff;
+    --primary: #4f6ef7; --secondary: #3ba89c; --tertiary: #b89a3e;
+    --success: #22c55e; --warning: #d97706; --danger: #ef4444;
+    --ok: #22c55e; --warn: #d97706; --bad: #ef4444;
+    --ok-bg: #dcfce7; --warn-bg: #fef3c7; --bad-bg: #fee2e2; --quick: #8b5cf6;
+    --preset-bg: #dbeafe; --preset-text: #1d4ed8; --preset-border: #3b82f6;
+    --line: #d0d3da; --accent: #4f6ef7; --accent-text: #ffffff; --muted: #5a6070;
   }
 }
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-header { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; }
-header h1 { font-size: 18px; margin: 0; }
-.version { font-size: 13px; font-weight: 400; color: var(--muted); }
-.version a { color: var(--accent); text-decoration: none; }
-.version a:hover { text-decoration: underline; }
-nav { display: flex; gap: 2px; padding: 4px 8px; overflow-x: auto; background: var(--card); border-bottom: 1px solid var(--line); }
-nav button { background: none; border: 0; padding: 4px 6px; border-radius: 6px; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; white-space: nowrap; }
-nav button.active { background: var(--accent); color: var(--accent-text); }
+body { margin: 0; background: var(--bg-dark); color: var(--text); font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, a, [role="button"] { touch-action: manipulation; }
+button, [role="button"], .tab, .chip { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+button.btn:active { transform: scale(0.97); }
+nav button:active { background: var(--bg); color: var(--text); }
+header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--bg-light); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(8px); }
+header h1 { font-size: 17px; margin: 0; line-height: 1.1; }
+.header-brand { display: flex; flex-direction: column; gap: 2px; }
+.header-version { display: block; font-size: 11px; font-weight: 400; color: var(--muted); line-height: 1; }
+.header-actions { display: flex; gap: 6px; margin-left: auto; }
+.header-actions .btn { padding: 6px 10px; font-size: 13px; min-height: 32px; }
+nav { display: flex; gap: 4px; padding: 8px 12px; overflow-x: auto; background: var(--bg-light); border-bottom: 1px solid var(--border); }
+nav button { background: none; border: 0; padding: 6px 12px; border-radius: 10px; color: var(--muted); font-size: 14px; line-height: 1; cursor: pointer; white-space: nowrap; transition: all 0.15s ease; }
+nav button.active { background: var(--primary); color: var(--accent-text); }
+@media (hover: hover) and (pointer: fine) {
+  nav button:hover { background: var(--bg); color: var(--text); }
+  button.btn.primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+}
+@media (max-width: 480px) {
+  header { padding: 6px 12px; gap: 8px; }
+  header h1 { font-size: 16px; }
+  .header-version { font-size: 10px; }
+  .header-actions .btn { padding: 5px 8px; font-size: 12px; min-height: 30px; }
+}
 main { max-width: 960px; margin: 0 auto; padding: 16px 16px 96px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-.card h2 { font-size: 17px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 24px rgba(0,0,0,0.24); display: flex; flex-direction: column; }
+.card h2 { font-size: 17px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; order: -1; }
 .card h2 .spacer { flex: 1; }
 .muted { color: var(--muted); }
 .small { font-size: 14px; }
-button.btn { cursor: pointer; font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 8px; padding: 8px 14px; cursor: pointer; min-height: 40px; }
-button.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
-button.btn.danger { color: var(--bad); }
-/* quick start presets: tinted, so the solid primary 'Start now' stays the main action */
-button.btn.preset { background: var(--preset-bg); color: var(--preset-text); border-color: var(--preset-border); font-weight: 600; }
-button.btn.icon { padding: 4px 10px; min-height: 36px; }
-button.btn:disabled { opacity: .5; cursor: default; }
-input, select, textarea { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; min-height: 40px; min-width: 0; }
+button.btn { cursor: pointer; font: inherit; border: 1px solid var(--border); background: var(--bg-light); color: var(--text); border-radius: 12px; padding: 8px 16px; cursor: pointer; min-height: 40px; transition: all 0.18s ease; }
+button.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--accent-text); }
+button.btn.primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+button.btn.danger { color: var(--danger); border-color: var(--danger); }
+button.btn:disabled { opacity: .4; cursor: default; }
+input, select, textarea { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; min-height: 40px; min-width: 0; transition: border-color 0.18s ease, box-shadow 0.18s ease; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(107,140,255,0.15); }
 textarea { width: 100%; min-height: 60vh; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
 label.check { display: inline-flex; align-items: center; gap: 6px; }
 label.check input { min-height: 0; width: 18px; height: 18px; }
@@ -106,6 +131,13 @@ details.fold .fold-body { padding: 0 16px 16px; }
 .savebar span { color: var(--warn); }
 /* on a narrow phone the message takes its own line, with both buttons centred under it */
 @media (max-width: 480px) { .savebar span { flex-basis: 100%; text-align: center; } }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+.modal.show { display: flex; }
+.modal-backdrop { position: absolute; inset: 0; }
+.modal-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; max-width: 92vw; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+.modal-card h2 { margin: 0 0 12px; }
+.modal-card ul { margin: 8px 0 16px; padding-left: 20px; color: var(--text-muted); }
+.modal-card li { margin: 6px 0; }
 .backups { list-style: none; padding: 0; margin: 0; }
 .backups li { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .backups li span { flex: 1; min-width: 180px; font-variant-numeric: tabular-nums; }
@@ -129,14 +161,34 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">main</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.11.75</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">main</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
+<div id="help-modal" class="modal hidden">
+  <div class="modal-backdrop" onclick="document.getElementById('help-modal').classList.remove('show');"></div>
+  <div class="modal-card card">
+    <h2>Help</h2>
+    <p>ESP32-P4 Curling Timer - countdown, schedule, and relay control for curling games.</p>
+    <ul>
+      <li><strong>Status:</strong> live game countdown and bell state.</li>
+      <li><strong>Quick Start:</strong> start a one-off game immediately.</li>
+      <li><strong>Schedule:</strong> weekly game schedule with date exceptions.</li>
+      <li><strong>Settings:</strong> relay durations, buzzer hold, web UI options.</li>
+      <li><strong>Diagnostics:</strong> device info, network, logs.</li>
+    </ul>
+    <button class="btn" onclick="document.getElementById('help-modal').classList.remove('show');">Close</button>
+  </div>
+</div>
+
+<header>
+  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.75</span></div>
+  <span id="header-msg" class="banner hidden"></span>
+  <div class="header-actions"><button class="btn icon" id="help" title="Help">Help</button><button class="btn icon" id="logout" title="Log out">Log out</button></div>
+</header>
 <nav id="tabs"></nav>
 <main>
   <section id="tab-status"></section>
@@ -157,7 +209,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['leagues', '🏆', 'Leagues'], ['history', '📈', 'Report'], ['config', '⚙', 'Config'], ['diagnostics', '🩺', 'Diagnostics']];
+const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['leagues', '🏆', 'Leagues'], ['history', '📈', 'Report'], ['config', '⚙', 'Settings'], ['diagnostics', '🩺', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false };
 
@@ -238,7 +290,12 @@ async function api(path, body) {
 function showLogin() { $('login').classList.add('show'); $('password').focus(); }
 $('login-form').addEventListener('submit', async (event) => {
   event.preventDefault();
+  const btn = $('login-form').querySelector('button[type=submit]');
+  btn.disabled = true; btn.textContent = 'Logging in...';
+  // Force a repaint so the user sees feedback immediately
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const result = await api('/api/login', { password: $('password').value });
+  btn.disabled = false; btn.textContent = 'Log in';
   if (!result.ok) {
     $('login-error').textContent = result.data.error;
     $('login-error').classList.remove('hidden');
@@ -250,6 +307,7 @@ $('login-form').addEventListener('submit', async (event) => {
   start();
 });
 $('logout').addEventListener('click', async () => { await api('/api/logout', {}); location.reload(); });
+$('help').addEventListener('click', () => { document.getElementById('help-modal').classList.add('show'); });
 
 // ---- tabs -----------------------------------------------------------------
 function renderTabs() {
@@ -263,7 +321,7 @@ async function selectTab(id) {
   renderTabs();
   clearMessage();
   for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== id);
-  if (id === 'status') loadStatus();
+  if (id === 'status') { if (state.status) renderStatus(); loadStatus(); }
   if (id === 'quickstart') { loadStatus(); renderQuickstart(); }
   if ((id === 'schedule' || id === 'exceptions') && !state.model) await loadSettings();
   else if (id === 'schedule') renderSchedule();
@@ -307,11 +365,12 @@ function buildQuickForm() {
   const minutes = el('input', { type: 'number', min: 0, max: 179, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Minutes' });
   const seconds = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Seconds' });
   const name = el('input', { type: 'text', maxlength: 60, placeholder: 'QUICK START' });
+  const pregame = el('input', { type: 'checkbox' });
   const pace = el('input', { type: 'checkbox' });
   const replace = el('input', { type: 'checkbox' });
   const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start now');
   const hint = el('span', { class: 'muted small' });
-  const options = () => ({ pace_of_play: pace.checked, replace_conflicts: replace.checked });
+  const options = () => ({ pregame: pregame.checked, pace_of_play: pace.checked, replace_conflicts: replace.checked });
   const presets = QUICK_PRESETS.map((preset) => el('button', { class: 'btn preset', type: 'button',
     title: `${preset.title || preset.name}, ${durationText(preset.seconds)}`,
     onclick: () => launchQuick({ seconds: preset.seconds, name: preset.name, title: preset.title,
@@ -331,8 +390,8 @@ function buildQuickForm() {
         el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's'))),
       el('label', {}, 'Name on display (optional)', name)),
     el('div', { class: 'row-actions' },
+      el('label', { class: 'check' }, pregame, 'Pre-game countdown (from Settings)'),
       el('label', { class: 'check' }, pace, 'Show pace of play'),
-      el('label', { class: 'check' }, el('input', { type: 'checkbox' }), 'Pre-game countdown'),
       el('label', { class: 'check' }, replace, 'Replace conflicting games today')),
     el('div', { class: 'row-actions' }, button, hint));
   form.update = (enabled, clockOk = true) => {
@@ -360,7 +419,7 @@ function renderStatus() {
   if (quickForm) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
   const now = el('div', { class: 'card' });
   const cur = s.current;
-  const head = el('h2', {}, 'On the display now', el('span', { class: 'spacer' }),
+  const head = el('h2', {}, 'On the Display Now', el('span', { class: 'spacer' }),
     el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Timer enabled' : 'Timer disabled'));
   const triggered = (cur && cur.seconds_until_buzzer != null && cur.seconds_until_buzzer <= 0) ? 'Buzzer' : null;
   now.append(head);
@@ -395,7 +454,7 @@ function renderStatus() {
   }
   const today = el('div', { class: 'card' },
     el('h2', {}, `Today (${s.weekday})`, el('span', { class: 'spacer' }),
-       s.today.source === 'exception' ? el('span', { class: 'pill warn' }, `Exception${s.today.note ? ': ' + s.today.note : ''}`)
+       s.today.source === 'exception' ? el('span', { class: 'pill warn', style: 'max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle', title: s.today.note ? s.today.note : '' }, `Exception${s.today.note ? ': ' + s.today.note : ''}`)
                                       : el('span', { class: 'pill' }, 'Weekly schedule')));
   const nowSecs = secondsNow();
   if (!s.today.entries.length) today.append(el('p', { class: 'muted' }, 'No buzzers today.'));
@@ -407,33 +466,34 @@ function renderStatus() {
       class: cur && cur.start === e.start ? 'now' : (e.buzzer + (e.header_hold != null ? e.header_hold : s.header_hold) < nowSecs ? 'past' : '') },
     el('span', {}, shortTime(e.start)),
     el('span', {}, shortTime(e.buzzer)),
-    el('span', { class: 'name' }, e.name || '',
+    el('span', { class: 'name' }, e.name ? e.name : '',
        e.quick ? el('span', { class: 'pill quick' }, 'quick') : null)))));
   $('status-today').replaceChildren(today);
    // Display mirror (mimics HDMI output)
    let mirror = document.getElementById('display-mirror');
    if (!mirror) {
-     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:16px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:8px;position:relative' });
+     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:4px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:12px;position:relative' });
      $('status-now').append(mirror);
    }
    const sm = state.status || {};
-   function unswap(c) { if (!c || c.length < 7) return c; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
-   const scale = 0.85;
-   const fh = Math.round((sm.font_header || 96) * scale);
-   const ft = Math.round((sm.font_timer || 450) * scale);
-   const fp = Math.round((sm.font_pace || 85) * scale * 0.85);
-   const ff = Math.round((sm.font_footer || 52) * scale);
+   function unswap(c) { if (!c || typeof c !== 'string' || c.length < 7) return c || ''; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
+const scale = (state.configValues && state.configValues['config.mirror_scale'] != null)
+      ? Number(state.configValues['config.mirror_scale']) / 100 : 0.85;
+   const fh = Math.min(Math.round((sm.font_header || 96) * scale), 200);
+   const ft = Math.min(Math.round((sm.font_timer || 450) * scale), 400);
+   const fp = Math.min(Math.round((sm.font_pace || 85) * scale * 0.85), 120);
+   const ff = Math.min(Math.round((sm.font_footer || 52) * scale), 80);
    mirror.style.background = '#000';
    mirror.replaceChildren();
-   if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center` }, sm.header_text));
-     const pregame = !!(sm.countdown && !String(sm.countdown).includes('\u02F8'));
+   if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center;margin-top:0;overflow-wrap:anywhere;max-height:${fh*2.5}px;overflow:hidden` }, sm.header_text));
+     const pregame = !!(sm.countdown && !String(sm.countdown ?? '').includes('\u02F8'));
    const cft = pregame ? Math.round(ft * 0.55) : ft;
-   if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:25px` }, sm.countdown || ''));
+   if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:12px` }, sm.countdown || ''));
+if (sm.show_status && sm.status_text) {
+      mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center;margin:8px 0` }, sm.status_text));
+    }
    if (sm.show_pace && sm.pace_text) {
-     mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-top:-10px` }, sm.pace_text));
-   }
-   if (sm.show_status && sm.status_text) {
-     mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center` }, sm.status_text));
+     mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-bottom:8px` }, sm.pace_text));
    }
    const footerRow = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-top:auto;width:100%' });
    if (sm.show_date_time && sm.date_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px` }, sm.date_text));
@@ -642,8 +702,8 @@ function renderSchedule() {
   const cards = [el('div', { class: 'row-actions', style: 'margin: 0 0 16px' },
     el('span', { class: 'spacer' }), foldButtons(state.openDays, () => DAYS, renderSchedule))];
   if (m.inner_comments) cards.unshift(commentWarning(m.inner_comments));
-  // 'today' only when today's games really come from the weekly schedule (no date exception)
   const todayWeekday = m.exceptions.some((d) => d.date === todayIso()) ? null : weekdayOf(todayIso());
+  cards.push(el('h2', { style: 'margin-top: 8px' }, 'Schedule'));
   for (const day of DAYS) {
     const entries = m.schedule[day];
     const copyTo = el('select', { onchange: (event) => {
@@ -674,11 +734,13 @@ function renderSchedule() {
     el('div', { id: 'imported-events', class: 'muted small' }, 'No imported events yet.'));
   cards.unshift(calCard);
   const excContainer = el('div', { style: 'margin-top:16px' });
-  excContainer.append(el('h2', { style: 'margin-top:0' }, 'Schedule Exceptions'));
+  excContainer.append(el('h2', { style: 'margin-top:0' }, 'Exceptions'));
   state.exceptionsRoot = excContainer;
   renderExceptions();
   state.exceptionsRoot = null;
   cards.push(excContainer);
+  cards.push(el('div', { class: 'card' }, el('h2', {}, 'Schedule Summary'),
+    el('p', { class: 'muted small' }, `${DAYS.length} weekday(s), ${m.exceptions.length} exception(s).`)));
   $('tab-schedule').replaceChildren(...cards);
 }
 
@@ -759,15 +821,9 @@ const CONFIG_SECTIONS = [
     fields: [
       ['config.enabled', 'bool', 'Timer enabled (master on/off)'],
       ['config.allow_midnight_wrap', 'bool', 'Allow timers past midnight']] },
-  { group: 'Global options', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
-    fields: [
-      ['config.pregame_countdown', 'int', 'Countdown (seconds)', 0, 60],
-      ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
-      ['config.pregame_color', 'color', 'Colour'],
-      ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
   { group: 'Global options', title: 'Curling Club Manager', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
     fields: [
-      ['config.club_website_url', 'text', 'Club website URL'],
+      ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)'],
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
   { group: 'Global options', title: 'On the Display Now', hint: 'Text scaling for the on-display mirror card.',
     fields: [
@@ -783,23 +839,33 @@ const CONFIG_SECTIONS = [
       ['config.relay3_function', 'select', 'RELAY3 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
       ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
       ['config.relay4_function', 'select', 'RELAY4 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom']] },
+  { group: 'Display (HDMI output)', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
+    fields: [
+      ['config.pregame_countdown', 'int', 'Countdown (seconds)', 0, 60],
+      ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
+      ['config.pregame_header_color', 'color', 'Header colour'],
+      ['config.pregame_countdown_color', 'color', 'Countdown colour'],
+      ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
   { group: 'Display (HDMI output)', title: 'Header text',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.header.text.when_disabled', 'text', 'Text when disabled'],
       ['config.header.text.when_idle', 'text', 'Text when idle'],
-      ['config.header.text.counting_down', 'text', 'Text while counting down'],
-      ['config.header.text.game_completed', 'text', 'Text while the buzzer rings'],
+      ['config.header.text.counting_down', 'text', 'Text when Countdown'],
+      ['config.header.text.game_completed', 'text', 'Text when Warning Countdown Ends/Output'],
+      ['config.header.text.game_ended', 'text', 'Text when Game Ends'],
       ['config.header.color.when_disabled', 'color', 'Colour when disabled'],
       ['config.header.color.when_idle', 'color', 'Colour when idle'],
       ['config.header.color.counting_down', 'color', 'Colour while counting down'],
-      ['config.header.color.game_completed', 'color', 'Colour while the buzzer rings']] },
+      ['config.header.color.game_completed', 'color', 'Colour while the buzzer rings'],
+      ['config.header.color.game_ended', 'color', 'Colour when game ends']] },
   { group: 'Display (HDMI output)', title: 'Countdown clock',
     fields: [
       ['config.countdown.font_size_4_digits', 'int', 'Timer font size under an hour', 0, 100000],
       ['config.countdown.font_size_5_digits', 'int', 'Timer font size an hour or more', 0, 100000],
       ['config.countdown.color.counting_down', 'color', 'Colour while counting down'],
-      ['config.countdown.color.game_completed', 'color', 'Colour while the buzzer rings']] },
+      ['config.countdown.color.game_completed', 'color', 'Colour while the buzzer rings'],
+      ['config.countdown.color.game_ended', 'color', 'Colour when game ends']] },
   { group: 'Display (HDMI output)', title: 'Pace of play',
     fields: [
       ['config.pace_of_play.enabled', 'bool', 'Show pace of play'],
@@ -888,6 +954,9 @@ function validateConfigDiff(diff) {
     if (path === 'config.pace_of_play.unit_duration') {
       if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0)
         return 'Minutes per unit must be a number greater than 0';
+    } else if (path === 'config.mirror_scale') {
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < 10 || value > 100)
+        return 'Display mirror scale must be an integer between 10 and 300 (percentage)';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
                path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
                path === 'config.buzzer.header_hold' ||
@@ -942,6 +1011,22 @@ function configField(field) {
       onchange: (event) => set(event.target.value) },
       [el('option', { value: '', selected: value == null || value === '' }, 'not set')]
         .concat(colorOpts.map((opt) => el('option', { value: opt, selected: value === opt }, opt)))));
+  }
+  if (type === 'number') {
+    return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.05, inputmode: 'decimal',
+      value: value == null ? '' : String(value),
+      oninput: (event) => set(event.target.value === '' ? null : Number(event.target.value)) }));
+  }
+  if (type === 'slider') {
+    const [,, , min, max, step = 0.05] = field;
+    const val = value == null ? (min + max) / 2 : Number(value);
+    const out = el('output', { class: 'muted small', style: 'margin-left:8px' }, String(val) + '%');
+    return el('label', {}, label,
+      el('div', { class: 'row-actions', style: 'gap:8px' },
+        el('input', { type: 'range', min, max, step, style: 'flex:1',
+          value: val,
+          oninput: (event) => { const v = Number(event.target.value); out.textContent = String(v) + '%'; set(v); } }),
+        out));
   }
   if (type === 'minutes') {
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 0.5, inputmode: 'decimal',
@@ -1165,7 +1250,6 @@ async function renderDiagnostics() {
     el('option', { value: 'normal' }, 'normal'),
     el('option', { value: 'smpte' }, 'smpte'),
     el('option', { value: 'pluge' }, 'pluge'),
-    el('option', { value: 'grayscale' }, 'grayscale'),
     el('option', { value: 'geometry' }, 'geometry'),
     el('option', { value: 'colorbars' }, 'colorbars'));
   mode.value = (state.status && state.status.display_test_mode) || 'normal';
@@ -1257,8 +1341,6 @@ async function renderLeagues() {
       pace_enabled: $('lg-pace').checked,
       pace_minutes_per_end: parseInt($('lg-pace-min').value || '0', 10),
       countdown_minutes_before: parseInt($('lg-cmb').value || '0', 10),
-      format: $('lg-format').value,
-      team_size: parseInt($('lg-team-size').value || '0', 10),
     };
     const ei = $('lg-editidx').value;
     if (ei !== '') leagues[parseInt(ei, 10)] = entry; else leagues.push(entry);
@@ -1278,9 +1360,6 @@ async function renderLeagues() {
       el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-pace' }), 'Pace of play'),
       el('label', {}, 'Pace minutes/end', el('input', { type: 'number', id: 'lg-pace-min', min: 0 }))),
     el('label', {}, 'Countdown warning minutes before', el('input', { type: 'number', id: 'lg-cmb', min: 0 })),
-    el('div', { class: 'grid2' },
-      el('label', {}, 'Format', el('input', { type: 'text', id: 'lg-format' })),
-      el('label', {}, 'Team size', el('input', { type: 'number', id: 'lg-team-size', min: 0 }))),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Save League')));
   window.editLeague = (idx) => {
     const lp = leagues[idx];
@@ -1292,44 +1371,28 @@ async function renderLeagues() {
     $('lg-pace').checked = !!lp.pace_enabled;
     $('lg-pace-min').value = lp.pace_minutes_per_end || '';
     $('lg-cmb').value = lp.countdown_minutes_before || '';
-    $('lg-format').value = lp.format || '';
-    $('lg-team-size').value = lp.team_size || '';
   };
   window.saveLeagues = async (arr) => {
     await api('/api/leagues', { leagues: arr });
   };
+   const DEFAULT_LEAGUE_URL = 'https://simcoecurlingclub.ca/curling/leagues';
    const cfg = state.model && state.model.config ? state.model.config : {};
-   const base = (cfg['config.league_page_url'] || cfg['config.club_website_url'] || '').trim();
-   const importBtn = el('button', { class: 'btn', onclick: async () => {
-     const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
-     const endpoint = url && url.trim() ? url.trim() : (base || null);
-     if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
-     showMessage('Importing leagues...', 'info');
-     let names = [];
-     try {
-       const tryFetch = async (u) => {
-         const res = await fetch(u, { mode: 'cors' });
-         if (!res.ok) throw new Error('HTTP ' + res.status);
-         return await res.text();
-       };
-       let html;
-       try { html = await tryFetch(endpoint); }
-       catch (e) { html = await tryFetch('https://corsproxy.io/?' + encodeURIComponent(endpoint)); }
-       const doc = new DOMParser().parseFromString(html, 'text/html');
-       const seen = new Set();
-       doc.querySelectorAll('h1,h2,h3,h4,strong,b').forEach((el) => {
-         const t = (el.textContent || '').trim().replace(/\\s+/g, ' ');
-         if (!t || t.length < 3 || t.length > 80) return;
-         if (/^(leagues|home|menu|login|copyright|simcoe)/i.test(t)) return;
-         if (seen.has(t)) return;
-         seen.add(t);
-         names.push(t);
-       });
-     } catch (e) {
-       const pasted = prompt('Could not fetch URL (CORS?). Paste league names, one per line:', '');
-       if (pasted) names = pasted.split(/\\n/).map(s => s.trim()).filter(Boolean);
-     }
-     if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
+    const base = (cfg['config.league_page_url'] || cfg['config.club_website_url'] || '').trim();
+     const importBtn = el('button', { class: 'btn', onclick: async () => {
+       const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
+       const endpoint = url && url.trim() ? url.trim() : (base || DEFAULT_LEAGUE_URL);
+       if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
+       showMessage('Importing leagues...', 'info');
+       let names = [];
+       try {
+         const result = await api('/api/fetch_leagues', { url: endpoint });
+         if (!result.ok) { showMessage(result.data.error || 'import failed', 'warn'); return; }
+         names = Array.isArray(result.data) ? result.data : [];
+       } catch (e) {
+         const pasted = prompt('Could not fetch URL. Paste league names, one per line:', '');
+         if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
+       }
+       if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
      const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
      let added = 0;
      names.forEach(n => {
@@ -1342,7 +1405,12 @@ async function renderLeagues() {
      renderLeagues();
      showMessage('Imported ' + added + ' new league(s).', 'ok');
    } }, 'Import from Club Manager');
-  root.replaceChildren(form, el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list, el('div', { class: 'row-actions' }, importBtn)));
+  const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
+    (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
+  root.replaceChildren(el('div', { class: 'row-actions', style: 'margin: 0 0 16px' }, importBtn),
+    form,
+    el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list),
+    summary);
 }
 
 // ---- start up -------------------------------------------------------------
@@ -1353,7 +1421,7 @@ async function checkVersion() {
     if (!res.ok) return;
     const data = await res.json();
     const latest = (data.tag_name || '').replace(/^v/, '');
-    const current = 'main'.replace(/^v/, '');
+    const v = document.querySelector('.version'); if (v && latest) v.textContent = 'v' + latest;
     if (latest && latest !== current) {
       const dot = document.createElement('span');
       dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-left:6px;vertical-align:middle;cursor:pointer;';
@@ -1364,9 +1432,10 @@ async function checkVersion() {
     }
   } catch(e) {}
 }
-function start() {
+async function start() {
   renderTabs();
   selectTab(state.tab);
+  await loadConfig();
   loadStatus();
   if (started) return;
   started = true;
