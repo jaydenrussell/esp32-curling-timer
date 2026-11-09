@@ -18,6 +18,10 @@ esphome:
   name: curling-timer
   friendly_name: Curling Timer
   name_add_mac_suffix: false
+  firmware_version: "0.0.0"
+  # firmware_version is set by the CI build (VERSION tag) via sed, or when
+  # used as an external_component via git, determined dynamically from
+  # `git describe` in web_editor/__init__.py (component_version()).
 
 esp32:
   variant: esp32p4

@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
@@ -48,8 +49,26 @@ WEB_UI_DELIMITER = "esphome_web_ui"
 
 
 def component_version() -> str:
-    """Build stamp of the component (VERSION file, bumped on every change)."""
-    return (Path(__file__).parent / "VERSION").read_text(encoding="utf-8").strip()
+    """Build stamp of the component.
+
+    When fetched as a git external_component, prefers `git describe
+    --tags --always` so the version reflects the actual compiled commit
+    (and updates automatically on `ref: main` pulls). Falls back to the
+    VERSION file (bumped on releases) when git isn't available.
+    """
+    here = Path(__file__).parent
+    try:
+        desc = subprocess.check_output(
+            ["git", "describe", "--tags", "--always"],
+            cwd=here,
+            stderr=subprocess.DEVNULL,
+            timeout=5,
+        ).decode().strip()
+        if desc:
+            return desc
+    except (subprocess.SubprocessError, OSError, FileNotFoundError):
+        pass
+    return (here / "VERSION").read_text(encoding="utf-8").strip()
 
 
 def emit_web_ui_header() -> None:
