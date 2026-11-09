@@ -1086,63 +1086,83 @@ static bool is_skip_word(const std::string &t) {
   return false;
 }
 
-// Minimal HTML text extractor for h1-h4 / strong / b (mirrors tools/import_leagues.py).
+// Returns true if the tag string contains class="league-title-text"
+// or class='league-title-text' (possibly among several classes).
+static bool has_league_title_class(const std::string &tag) {
+  // search for class= then read the quoted value
+  size_t pos = 0;
+  while ((pos = tag.find("class", pos)) != std::string::npos) {
+    // must be a whole attribute name (preceded by space or start)
+    if (pos > 0 && tag[pos - 1] != ' ' && tag[pos - 1] != '\t' && tag[pos - 1] != '/')
+      { pos += 5; continue; }
+    size_t eq = tag.find('=', pos + 5);
+    if (eq == std::string::npos) { pos += 5; continue; }
+    eq++;
+    while (eq < tag.size() && (tag[eq] == ' ' || tag[eq] == '\t')) eq++;
+    if (eq >= tag.size()) break;
+    char quote = tag[eq];
+    if (quote != '"' && quote != '\'') { pos += 5; continue; }
+    eq++;
+    size_t end = tag.find(quote, eq);
+    if (end == std::string::npos) break;
+    std::string classes = tag.substr(eq, end - eq);
+    // split on whitespace and check each token
+    size_t c = 0;
+    while (c <= classes.size()) {
+      size_t nxt = classes.find_first_of(" \t", c);
+      if (nxt == std::string::npos) nxt = classes.size();
+      std::string tok = classes.substr(c, nxt - c);
+      if (tok == "league-title-text") return true;
+      c = nxt + 1;
+    }
+    pos += 5;
+  }
+  return false;
+}
+
+// Extract league names from elements with class="league-title-text".
 static std::vector<std::string> extract_league_names(const std::string &html) {
   std::vector<std::string> out;
   std::vector<std::string> seen;
   size_t i = 0;
   while (i < html.size()) {
-    if (html[i] != '<') {
-      i++;
-      continue;
-    }
+    if (html[i] != '<') { i++; continue; }
     size_t j = html.find('>', i);
     if (j == std::string::npos) break;
     std::string tag = html.substr(i + 1, j - i - 1);
     bool closing = !tag.empty() && tag[0] == '/';
-    if (!closing) {
+    if (!closing && has_league_title_class(tag)) {
+      // determine tag name for the closing search
       size_t sp = tag.find_first_of(" \t/>");
       std::string name = tag.substr(0, sp == std::string::npos ? tag.size() : sp);
-      for (auto &c : name)
-        c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
-      if (name == "h1" || name == "h2" || name == "h3" || name == "h4" ||
-          name == "strong" || name == "b") {
-        std::string close = "</" + name + ">";
-        size_t k = html.find(close, j + 1);
-        if (k != std::string::npos) {
-          std::string inner = html.substr(j + 1, k - (j + 1));
-          std::string text;
-          bool in_tag = false;
-          for (char c : inner) {
-            if (c == '<')
-              in_tag = true;
-            else if (c == '>')
-              in_tag = false;
-            else if (!in_tag)
-              text.push_back(c);
+      std::string close = "</" + name + ">";
+      size_t k = html.find(close, j + 1);
+      if (k != std::string::npos) {
+        std::string inner = html.substr(j + 1, k - (j + 1));
+        std::string text;
+        bool in_tag = false;
+        for (char c : inner) {
+          if (c == '<') in_tag = true;
+          else if (c == '>') in_tag = false;
+          else if (!in_tag) text.push_back(c);
+        }
+        std::string collapsed;
+        bool prev_space = true;
+        for (char c : text) {
+          if (std::isspace(static_cast<unsigned char>(c))) {
+            prev_space = true; continue;
           }
-          std::string collapsed;
-          bool prev_space = true;
-          for (char c : text) {
-            if (std::isspace(static_cast<unsigned char>(c))) {
-              prev_space = true;
-              continue;
-            }
-            if (prev_space && !collapsed.empty()) collapsed.push_back(' ');
-            collapsed.push_back(c);
-            prev_space = false;
-          }
-          if (!collapsed.empty() && collapsed.back() == ' ') collapsed.pop_back();
-          if (collapsed.size() >= 3 && collapsed.size() <= 80 &&
-              !is_skip_word(collapsed)) {
-            bool dup = false;
-            for (const auto &s : seen)
-              if (s == collapsed) { dup = true; break; }
-            if (!dup) {
-              seen.push_back(collapsed);
-              out.push_back(collapsed);
-            }
-          }
+          if (prev_space && !collapsed.empty()) collapsed.push_back(' ');
+          collapsed.push_back(c);
+          prev_space = false;
+        }
+        if (!collapsed.empty() && collapsed.back() == ' ') collapsed.pop_back();
+        if (collapsed.size() >= 3 && collapsed.size() <= 80 &&
+            !is_skip_word(collapsed)) {
+          bool dup = false;
+          for (const auto &s : seen)
+            if (s == collapsed) { dup = true; break; }
+          if (!dup) { seen.push_back(collapsed); out.push_back(collapsed); }
         }
       }
     }
