@@ -1062,6 +1062,11 @@ static std::optional<std::string> server_fetch(const std::string &url) {
   cfg.timeout_ms = 15000;
   cfg.buffer_size = 4096;
   cfg.buffer_size_tx = 1024;
+  // Zero-init overrides esp_http_client's documented default of true for
+  // use_global_ca_store, which causes "No server verification option set."
+  // Explicitly enable it so HTTPS works with the platform's CA store.
+  cfg.use_global_ca_store = true;
+  cfg.skip_cert_common_name_check = true;
   esp_http_client_handle_t client = esp_http_client_init(&cfg);
   if (client == nullptr) return std::nullopt;
   esp_err_t err = esp_http_client_perform(client);

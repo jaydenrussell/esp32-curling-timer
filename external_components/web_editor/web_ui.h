@@ -1324,8 +1324,7 @@ async function renderLeagues() {
       el('button', { class: 'btn icon', onclick: () => editLeague(idx) }, 'Edit'),
       el('button', { class: 'btn icon danger', onclick: async () => {
         leagues.splice(idx, 1);
-        await saveLeagues(leagues);
-        renderLeagues();
+        if (await saveLeagues(leagues)) renderLeagues();
       } }, 'Delete')));
   });
   if (!leagues.length) list.append(el('li', { class: 'muted' }, 'No leagues configured.'));
@@ -1344,7 +1343,7 @@ async function renderLeagues() {
     };
     const ei = $('lg-editidx').value;
     if (ei !== '') leagues[parseInt(ei, 10)] = entry; else leagues.push(entry);
-    await saveLeagues(leagues);
+    if (!(await saveLeagues(leagues))) return;
     showMessage('League saved', 'ok');
     renderLeagues();
   } },
@@ -1373,7 +1372,9 @@ async function renderLeagues() {
     $('lg-cmb').value = lp.countdown_minutes_before || '';
   };
   window.saveLeagues = async (arr) => {
-    await api('/api/leagues', { leagues: arr });
+    const result = await api('/api/leagues', { leagues: arr });
+    if (!result.ok) { showMessage('Save failed: ' + (result.data.error || 'unknown'), 'bad'); return false; }
+    return true;
   };
    const DEFAULT_LEAGUE_URL = 'https://simcoecurlingclub.ca/curling/leagues';
    const cfg = state.model && state.model.config ? state.model.config : {};
