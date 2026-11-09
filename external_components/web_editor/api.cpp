@@ -1087,35 +1087,43 @@ static bool is_skip_word(const std::string &t) {
 }
 
 // Returns true if the tag string contains class="league-title-text"
-// or class='league-title-text' (possibly among several classes).
+// or class='league-title-text' or class=league-title-text (possibly among
+// several classes). Handles quoted and unquoted attribute values.
 static bool has_league_title_class(const std::string &tag) {
-  // search for class= then read the quoted value
   size_t pos = 0;
-  while ((pos = tag.find("class", pos)) != std::string::npos) {
-    // must be a whole attribute name (preceded by space or start)
-    if (pos > 0 && tag[pos - 1] != ' ' && tag[pos - 1] != '\t' && tag[pos - 1] != '/')
-      { pos += 5; continue; }
-    size_t eq = tag.find('=', pos + 5);
-    if (eq == std::string::npos) { pos += 5; continue; }
-    eq++;
-    while (eq < tag.size() && (tag[eq] == ' ' || tag[eq] == '\t')) eq++;
-    if (eq >= tag.size()) break;
-    char quote = tag[eq];
-    if (quote != '"' && quote != '\'') { pos += 5; continue; }
-    eq++;
-    size_t end = tag.find(quote, eq);
-    if (end == std::string::npos) break;
-    std::string classes = tag.substr(eq, end - eq);
-    // split on whitespace and check each token
+  while ((pos = tag.find("class=", pos)) != std::string::npos) {
+    // must be a whole attribute name
+    if (pos > 0 && tag[pos - 1] != ' ' && tag[pos - 1] != '\t' &&
+        tag[pos - 1] != '/' && tag[pos - 1] != '<') {
+      pos += 6;
+      continue;
+    }
+    size_t v = pos + 6;  // after "class="
+    while (v < tag.size() && (tag[v] == ' ' || tag[v] == '\t')) v++;
+    if (v >= tag.size()) break;
+
+    std::string value;
+    if (tag[v] == '"' || tag[v] == '\'') {
+      char q = tag[v];
+      size_t end = tag.find(q, v + 1);
+      if (end == std::string::npos) break;
+      value = tag.substr(v + 1, end - v - 1);
+    } else {
+      // unquoted: value ends at whitespace, >, or />
+      size_t end = tag.find_first_of(" \t/>", v);
+      if (end == std::string::npos) end = tag.size();
+      value = tag.substr(v, end - v);
+    }
+
+    // check if "league-title-text" is one of the space-separated classes
     size_t c = 0;
-    while (c <= classes.size()) {
-      size_t nxt = classes.find_first_of(" \t", c);
-      if (nxt == std::string::npos) nxt = classes.size();
-      std::string tok = classes.substr(c, nxt - c);
-      if (tok == "league-title-text") return true;
+    while (c <= value.size()) {
+      size_t nxt = value.find_first_of(" \t", c);
+      if (nxt == std::string::npos) nxt = value.size();
+      if (value.substr(c, nxt - c) == "league-title-text") return true;
       c = nxt + 1;
     }
-    pos += 5;
+    pos += 6;
   }
   return false;
 }
