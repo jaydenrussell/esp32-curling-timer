@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Countdown Timer</title>
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1d24" />
+<meta name="color-scheme" content="light dark" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
 <style>
 :root {
@@ -30,17 +33,32 @@
     --line: #d0d3da; --accent: #4f6ef7; --accent-text: #ffffff; --muted: #5a6070;
   }
 }
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg-dark); color: var(--text); font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-header { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--bg-light); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(8px); }
-header h1 { font-size: 18px; margin: 0; }
-.version { font-size: 13px; font-weight: 400; color: var(--muted); }
-.version a { color: var(--accent); text-decoration: none; }
-.version a:hover { text-decoration: underline; }
+button, a, [role="button"] { touch-action: manipulation; }
+button, [role="button"], .tab, .chip { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+button.btn:active { transform: scale(0.97); }
+nav button:active { background: var(--bg); color: var(--text); }
+header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--bg-light); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(8px); }
+header h1 { font-size: 17px; margin: 0; line-height: 1.1; }
+.header-brand { display: flex; flex-direction: column; gap: 2px; }
+.header-version { display: block; font-size: 11px; font-weight: 400; color: var(--muted); line-height: 1; }
+.header-actions { display: flex; gap: 6px; margin-left: auto; }
+.header-actions .btn { padding: 6px 10px; font-size: 13px; min-height: 32px; }
 nav { display: flex; gap: 4px; padding: 8px 12px; overflow-x: auto; background: var(--bg-light); border-bottom: 1px solid var(--border); }
 nav button { background: none; border: 0; padding: 6px 12px; border-radius: 10px; color: var(--muted); font-size: 14px; line-height: 1; cursor: pointer; white-space: nowrap; transition: all 0.15s ease; }
-nav button:hover { background: var(--bg); color: var(--text); }
 nav button.active { background: var(--primary); color: var(--accent-text); }
+@media (hover: hover) and (pointer: fine) {
+  nav button:hover { background: var(--bg); color: var(--text); }
+  button.btn.primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+}
+@media (max-width: 480px) {
+  header { padding: 6px 12px; gap: 8px; }
+  header h1 { font-size: 16px; }
+  .header-version { font-size: 10px; }
+  .header-actions .btn { padding: 5px 8px; font-size: 12px; min-height: 30px; }
+}
 main { max-width: 960px; margin: 0 auto; padding: 16px 16px 96px; }
 .card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 24px rgba(0,0,0,0.24); display: flex; flex-direction: column; }
 .card h2 { font-size: 17px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; order: -1; }
@@ -110,6 +128,13 @@ details.fold .fold-body { padding: 0 16px 16px; }
 .savebar span { color: var(--warn); }
 /* on a narrow phone the message takes its own line, with both buttons centred under it */
 @media (max-width: 480px) { .savebar span { flex-basis: 100%; text-align: center; } }
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+.modal.show { display: flex; }
+.modal-backdrop { position: absolute; inset: 0; }
+.modal-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; max-width: 92vw; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+.modal-card h2 { margin: 0 0 12px; }
+.modal-card ul { margin: 8px 0 16px; padding-left: 20px; color: var(--text-muted); }
+.modal-card li { margin: 6px 0; }
 .backups { list-style: none; padding: 0; margin: 0; }
 .backups li { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .backups li span { flex: 1; min-width: 180px; font-variant-numeric: tabular-nums; }
@@ -140,7 +165,27 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
   <button class="btn primary" type="submit">Log in</button>
 </form></div>
 
-<header><h1>🎯 Countdown Timer <span class="version">{{version}}</span> &middot; <a href="https://github.com/jaydenrussell/esp32-curling-timer#readme" title="Help">Help</a></span></h1><span id="header-msg" class="banner hidden" style="margin-left:12px;"></span><button class="btn icon" id="logout" style="margin-left:auto;" title="Log out">Log out</button></header>
+<div id="help-modal" class="modal hidden">
+  <div class="modal-backdrop" onclick="document.getElementById('help-modal').classList.remove('show');"></div>
+  <div class="modal-card card">
+    <h2>Help</h2>
+    <p>ESP32-P4 Curling Timer - countdown, schedule, and relay control for curling games.</p>
+    <ul>
+      <li><strong>Status:</strong> live game countdown and bell state.</li>
+      <li><strong>Quick Start:</strong> start a one-off game immediately.</li>
+      <li><strong>Schedule:</strong> weekly game schedule with date exceptions.</li>
+      <li><strong>Settings:</strong> relay durations, buzzer hold, web UI options.</li>
+      <li><strong>Diagnostics:</strong> device info, network, logs.</li>
+    </ul>
+    <button class="btn" onclick="document.getElementById('help-modal').classList.remove('show');">Close</button>
+  </div>
+</div>
+
+<header>
+  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">{{version}}</span></div>
+  <span id="header-msg" class="banner hidden"></span>
+  <div class="header-actions"><button class="btn icon" id="help" title="Help">Help</button><button class="btn icon" id="logout" title="Log out">Log out</button></div>
+</header>
 <nav id="tabs"></nav>
 <main>
   <section id="tab-status"></section>
@@ -259,6 +304,7 @@ $('login-form').addEventListener('submit', async (event) => {
   start();
 });
 $('logout').addEventListener('click', async () => { await api('/api/logout', {}); location.reload(); });
+$('help').addEventListener('click', () => { document.getElementById('help-modal').classList.add('show'); });
 
 // ---- tabs -----------------------------------------------------------------
 function renderTabs() {
