@@ -161,7 +161,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.11.85</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.11.87</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
@@ -185,7 +185,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </div>
 
 <header>
-  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.85</span></div>
+  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.87</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn icon" id="help" title="Help">Help</button><button class="btn icon" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -211,7 +211,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['leagues', '🏆', 'Leagues'], ['history', '📈', 'Report'], ['config', '⚙', 'Settings'], ['diagnostics', '🩺', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
-                configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null };
+                configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
 
 // ---- small helpers --------------------------------------------------------
 function el(tag, props, ...children) {
@@ -603,8 +603,9 @@ async function loadSettings() {
   if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
   state.model = result.data;
   setDirty(false);
+  const lr = await api('/api/leagues');
+  state.leagues = (lr.ok && Array.isArray(lr.data)) ? lr.data : [];
   if (state.tab === 'schedule') renderSchedule();
-
 }
 
 function updateSavebars() {
@@ -628,10 +629,10 @@ function newEntry(previous) {
   // whole minutes, since the time inputs don't show seconds
   const start = previous ? Math.ceil((previous.buzzer + 25 * 60) / 60) * 60 : 9 * 3600;
   return { start: Math.min(start, 86340), buzzer: Math.min(start + 105 * 60, 86340), name: null,
-           game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false };
+           game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false, league: null };
 }
 
-function entryEditor(entries, index, rerender) {
+function entryEditor(entries, index, leagues, rerender) {
   const entry = entries[index];
   const changed = () => setDirty(true);
   // hours and minutes only; a stored time keeps its seconds (e.g. a quick start) until it is edited,
@@ -652,10 +653,25 @@ function entryEditor(entries, index, rerender) {
     value: entry.header_hold != null ? entry.header_hold : '',
     onchange: (event) => { const v = Number(event.target.value);
                            entry.header_hold = event.target.value !== '' && v >= 0 ? Math.round(v) : null; changed(); } });
+  const leagueSelect = el('select', { onchange: (event) => {
+    const league = (leagues || []).find((l) => l.name === event.target.value);
+    if (!league) { entry.league = null; entry.name = null; changed(); rerender(); return; }
+    entry.league = league.name;
+    entry.name = league.name;
+    entry.buzzer = Math.min(entry.start + (league.game_duration_minutes || 0) * 60, 86340);
+    entry.game_completed = league.header_text || null;
+    entry.header_hold = league.pregame_countdown_seconds || null;
+    entry.pace_of_play = league.pace_enabled ? true : false;
+    entry.pace_unit_duration = (league.pace_minutes_per_end || 0) * 60 || null;
+    changed(); rerender();
+  } },
+    el('option', { value: '', selected: !entry.league }, '(none)'),
+    ...(leagues || []).map((l) => el('option', { value: l.name, selected: entry.league === l.name }, l.name)));
   return el('div', { class: 'entry' },
+    el('div', { class: 'league' }, el('label', {}, 'League', leagueSelect)),
     el('div', { class: 'times' }, el('label', {}, 'Start', timeInput('start'))),
     el('div', { class: 'times' }, el('label', {}, 'Buzzer', timeInput('buzzer'))),
-    el('div', { class: 'name' }, text('name', 'Name on display'),
+    el('div', { class: 'name' }, text('name', 'League name'),
       entry.quick ? el('span', { class: 'pill quick', style: 'align-self: center' }, 'quick') : null,
       el('button', { class: 'btn icon danger', type: 'button', title: 'Delete game', onclick: () => { entries.splice(index, 1); changed(); rerender(); } }, '✕')),
     el('div', { class: 'more' },
@@ -665,10 +681,10 @@ function entryEditor(entries, index, rerender) {
       el('label', {}, 'Minutes per end', unit)));
 }
 
-function entryList(entries, rerender) {
+function entryList(entries, leagues, rerender) {
   const box = el('div', {});
   if (!entries.length) box.append(el('p', { class: 'muted small' }, 'No buzzers this day.'));
-  entries.forEach((_, index) => box.append(entryEditor(entries, index, rerender)));
+  entries.forEach((_, index) => box.append(entryEditor(entries, index, leagues, rerender)));
   return box;
 }
 
@@ -712,7 +728,7 @@ function renderSchedule() {
     } }, el('option', { value: '' }, 'Copy to…'), DAYS.filter((d) => d !== day).map((d) => el('option', { value: d }, d)));
     cards.push(foldCard({ openSet: state.openDays, key: day, title: day, count: entries.length,
       badge: day === todayWeekday ? el('span', { class: 'pill ok' }, 'today') : null,
-      body: [entryList(entries, renderSchedule),
+      body: [entryList(entries, state.leagues, renderSchedule),
         el('div', { class: 'row-actions' },
           el('button', { class: 'btn', onclick: () => {
             entries.push(newEntry(entries[entries.length - 1])); setDirty(true); renderSchedule(); } }, '+ Add game'),
@@ -795,7 +811,7 @@ function renderExceptions() {
       body: [
         el('input', { type: 'text', value: day.note, placeholder: 'Note', maxlength: 80, style: 'width: 100%; margin-bottom: 4px',
           oninput: (event) => { day.note = event.target.value.trim(); noteText.textContent = day.note; setDirty(true); } }),
-        entryList(day.entries, renderExceptions),
+        entryList(day.entries, state.leagues, renderExceptions),
         el('div', { class: 'row-actions' },
           el('button', { class: 'btn', onclick: () => {
             day.entries.push(newEntry(day.entries[day.entries.length - 1])); setDirty(true); renderExceptions(); } }, '+ Add game'),
