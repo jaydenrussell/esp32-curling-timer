@@ -161,7 +161,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.11.75</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.11.84</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
@@ -185,7 +185,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </div>
 
 <header>
-  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.75</span></div>
+  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.84</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn icon" id="help" title="Help">Help</button><button class="btn icon" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -1402,9 +1402,9 @@ async function renderLeagues() {
        existing.add(n.toLowerCase());
        added++;
      });
-     await saveLeagues(leagues);
-     renderLeagues();
-     showMessage('Imported ' + added + ' new league(s).', 'ok');
+      if (!(await saveLeagues(leagues))) return;
+      renderLeagues();
+      showMessage('Imported ' + added + ' new league(s).', 'ok');
    } }, 'Import from Club Manager');
   const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
     (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
