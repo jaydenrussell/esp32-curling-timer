@@ -1033,8 +1033,8 @@ struct HttpFetch {
   esp_err_t err{ESP_OK};
 };
 
-static esp_err_t http_event_handler(void *ctx, esp_http_client_event_t *evt) {
-  auto *fetch = static_cast<HttpFetch *>(ctx);
+static esp_err_t http_event_handler(esp_http_client_event_t *evt) {
+  auto *fetch = static_cast<HttpFetch *>(evt->user_data);
   switch (evt->event_id) {
     case HTTP_EVENT_ERROR:
       fetch->err = ESP_FAIL;
@@ -1043,8 +1043,7 @@ static esp_err_t http_event_handler(void *ctx, esp_http_client_event_t *evt) {
       if (fetch->buf.size() < 200000)
         fetch->buf.append(static_cast<const char *>(evt->data), evt->data_len);
       break;
-    case HTTP_EVENT_DONE:
-    case HTTP_EVENT_FINISH:
+    case HTTP_EVENT_ON_FINISH:
       fetch->done = true;
       break;
     default:
