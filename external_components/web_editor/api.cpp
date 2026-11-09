@@ -10,6 +10,7 @@
 #include "esphome/components/curling_engine/render.h"
 #include "esphome/components/curling_engine/quickstart.h"
 #include "esp_http_client.h"
+#include "esp_crt_bundle.h"
 #include "json_model.h"
 
 namespace esphome {
@@ -1062,13 +1063,13 @@ static std::optional<std::string> server_fetch(const std::string &url) {
   cfg.timeout_ms = 15000;
   cfg.buffer_size = 4096;
   cfg.buffer_size_tx = 1024;
-  // Zero-init overrides esp_http_client's documented default of true for
-  // use_global_ca_store, which causes "No server verification option set."
-  // Explicitly enable it so HTTPS works with the platform's CA store.
-  cfg.use_global_ca_store = true;
-  cfg.skip_cert_common_name_check = true;
+  // Zero-init leaves use_global_ca_store false; instead of relying on the
+  // global CA store (which needs esp_http_client_set_global_ca_store and
+  // reports "global_cacert is NULL" when empty), attach the ESP x.509
+  // root CA bundle to the client so HTTPS verification works out of the box.
   esp_http_client_handle_t client = esp_http_client_init(&cfg);
   if (client == nullptr) return std::nullopt;
+  esp_crt_bundle_attach(client);
   esp_err_t err = esp_http_client_perform(client);
   int status = esp_http_client_get_status_code(client);
   esp_http_client_cleanup(client);
