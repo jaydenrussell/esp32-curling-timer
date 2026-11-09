@@ -3,7 +3,8 @@
 
 Fetches a Curling Club Manager league page URL (server-side, so no CORS),
 parses out league names using the same selector logic as the web UI
-(h1-h4, strong, b), and prints them one per line or as JSON.
+(elements with class="league-title-text"), and prints them one per line
+or as JSON.
 
 Usage:
     python tools/import_leagues.py [URL]
@@ -27,26 +28,32 @@ except Exception:  # pragma: no cover - fallback to stdlib
 
 
 class LeagueExtractor(HTMLParser):
-    """Mirror of the web UI DOMParser logic: h1-h4, strong, b text."""
+    """Mirror of the web UI DOMParser logic: elements with class="league-title-text"."""
 
-    TAGS = {"h1", "h2", "h3", "h4", "strong", "b"}
     SKIP_RE = re.compile(r"^(leagues|home|menu|login|copyright|simcoe)$", re.I)
     WS_RE = re.compile(r"\s+")
 
     def __init__(self):
         super().__init__()
         self._stack = []  # list of (tag, active)
+        self._buf = []    # parallel list of char buffers
         self.names = []
         self.seen = set()
-        self._buf = []
+
+    def _has_league_title_class(self, attrs):
+        for key, val in attrs:
+            if key == "class" and val:
+                if "league-title-text" in val.split():
+                    return True
+        return False
 
     def handle_starttag(self, tag, attrs):
-        if tag in self.TAGS:
+        if self._has_league_title_class(attrs):
             self._stack.append(tag)
             self._buf.append([])
 
     def handle_endtag(self, tag):
-        if tag in self.TAGS and self._stack and self._stack[-1] == tag:
+        if self._stack and self._stack[-1] == tag:
             self._stack.pop()
             text = self.WS_RE.sub(" ", "".join(self._buf.pop())).strip()
             self._emit(text)

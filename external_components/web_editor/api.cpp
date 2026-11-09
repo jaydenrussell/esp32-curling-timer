@@ -1120,7 +1120,8 @@ static bool has_league_title_class(const std::string &tag) {
   return false;
 }
 
-// Extract league names from elements with class="league-title-text".
+// Extract league names from elements with class="league-title-text"
+// (mirrors tools/import_leagues.py).
 static std::vector<std::string> extract_league_names(const std::string &html) {
   std::vector<std::string> out;
   std::vector<std::string> seen;
