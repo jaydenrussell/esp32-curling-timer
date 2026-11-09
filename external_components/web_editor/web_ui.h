@@ -161,7 +161,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.11.84</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.11.85</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
@@ -185,7 +185,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </div>
 
 <header>
-  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.84</span></div>
+  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.85</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn icon" id="help" title="Help">Help</button><button class="btn icon" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -1455,26 +1455,6 @@ async function renderLeagues() {
     (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
   root.replaceChildren(el('div', { class: 'row-actions', style: 'margin: 0 0 16px' }, importBtn),
     addForm,
-    el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list),
-    summary);
-}
-       if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
-     const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
-     let added = 0;
-     names.forEach(n => {
-       if (existing.has(n.toLowerCase())) return;
-       leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0 });
-       existing.add(n.toLowerCase());
-       added++;
-     });
-      if (!(await saveLeagues(leagues))) return;
-      renderLeagues();
-      showMessage('Imported ' + added + ' new league(s).', 'ok');
-   } }, 'Import from Club Manager');
-  const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
-    (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
-  root.replaceChildren(el('div', { class: 'row-actions', style: 'margin: 0 0 16px' }, importBtn),
-    form,
     el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list),
     summary);
 }
