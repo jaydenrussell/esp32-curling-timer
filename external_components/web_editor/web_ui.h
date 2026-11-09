@@ -211,7 +211,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['leagues', '🏆', 'Leagues'], ['history', '📈', 'Report'], ['config', '⚙', 'Settings'], ['diagnostics', '🩺', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
-                configOriginal: null, configValues: null, configVersion: null, configDirty: false };
+                configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null };
 
 // ---- small helpers --------------------------------------------------------
 function el(tag, props, ...children) {
@@ -652,21 +652,17 @@ function entryEditor(entries, index, rerender) {
     value: entry.header_hold != null ? entry.header_hold : '',
     onchange: (event) => { const v = Number(event.target.value);
                            entry.header_hold = event.target.value !== '' && v >= 0 ? Math.round(v) : null; changed(); } });
-  const hasMore = entry.game_completed || entry.header_hold != null || entry.pace_of_play !== null || entry.pace_unit_duration;
-  const more = el('div', { class: `more ${hasMore ? '' : 'hidden'}` },
-    el('label', {}, 'Header when game completed', text('game_completed', 'default')),
-    el('label', {}, 'Header hold seconds', hold),
-    el('label', {}, 'Pace of play', pace),
-    el('label', {}, 'Minutes per end', unit));
   return el('div', { class: 'entry' },
     el('div', { class: 'times' }, el('label', {}, 'Start', timeInput('start'))),
     el('div', { class: 'times' }, el('label', {}, 'Buzzer', timeInput('buzzer'))),
     el('div', { class: 'name' }, text('name', 'Name on display'),
       entry.quick ? el('span', { class: 'pill quick', style: 'align-self: center' }, 'quick') : null,
-      el('button', { class: 'btn icon', type: 'button', title: 'More options', onclick: () => more.classList.toggle('hidden') }, '⋯'),
-      el('button', { class: 'btn icon danger', type: 'button', title: 'Delete game',
-                     onclick: () => { entries.splice(index, 1); changed(); rerender(); } }, '✕')),
-    more);
+      el('button', { class: 'btn icon danger', type: 'button', title: 'Delete game', onclick: () => { entries.splice(index, 1); changed(); rerender(); } }, '✕')),
+    el('div', { class: 'more' },
+      el('label', {}, 'Header when game completed', text('game_completed', 'default')),
+      el('label', {}, 'Header hold seconds', hold),
+      el('label', {}, 'Pace of play', pace),
+      el('label', {}, 'Minutes per end', unit)));
 }
 
 function entryList(entries, rerender) {
@@ -1317,82 +1313,151 @@ async function renderLeagues() {
   const root = $('tab-leagues');
   const r = await api('/api/leagues');
   const leagues = (r.ok && Array.isArray(r.data)) ? r.data : [];
-  const list = el('ul', { class: 'backups' });
-  leagues.forEach((lp, idx) => {
-    list.append(el('li', {},
-      el('span', {}, lp.name || '(unnamed)'),
-      el('button', { class: 'btn icon', onclick: () => editLeague(idx) }, 'Edit'),
-      el('button', { class: 'btn icon danger', onclick: async () => {
-        leagues.splice(idx, 1);
-        if (await saveLeagues(leagues)) renderLeagues();
-      } }, 'Delete')));
-  });
-  if (!leagues.length) list.append(el('li', { class: 'muted' }, 'No leagues configured.'));
-  const form = el('form', { class: 'card', onsubmit: async (e) => {
-    e.preventDefault();
-    const name = $('lg-name').value.trim();
-    if (!name) { showMessage('Name required', 'bad'); return; }
-    const entry = {
-      name,
-      game_duration_minutes: parseInt($('lg-dur').value || '0', 10),
-      pregame_countdown_seconds: parseInt($('lg-pregame').value || '0', 10),
-      header_text: $('lg-header').value,
-      pace_enabled: $('lg-pace').checked,
-      pace_minutes_per_end: parseInt($('lg-pace-min').value || '0', 10),
-      countdown_minutes_before: parseInt($('lg-cmb').value || '0', 10),
-    };
-    const ei = $('lg-editidx').value;
-    if (ei !== '') leagues[parseInt(ei, 10)] = entry; else leagues.push(entry);
-    if (!(await saveLeagues(leagues))) return;
-    showMessage('League saved', 'ok');
-    renderLeagues();
-  } },
-    el('h2', {}, 'Add / Edit League'),
-    el('input', { type: 'hidden', id: 'lg-editidx', value: '' }),
-    el('div', { class: 'grid2' },
-      el('label', {}, 'Name', el('input', { type: 'text', id: 'lg-name', placeholder: 'League name' })),
-      el('label', {}, 'Game duration (min)', el('input', { type: 'number', id: 'lg-dur', min: 0 }))),
-    el('div', { class: 'grid2' },
-      el('label', {}, 'Pre-game countdown (s)', el('input', { type: 'number', id: 'lg-pregame', min: 0 })),
-      el('label', {}, 'Header text', el('input', { type: 'text', id: 'lg-header' }))),
-    el('div', { class: 'grid2' },
-      el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-pace' }), 'Pace of play'),
-      el('label', {}, 'Pace minutes/end', el('input', { type: 'number', id: 'lg-pace-min', min: 0 }))),
-    el('label', {}, 'Countdown warning minutes before', el('input', { type: 'number', id: 'lg-cmb', min: 0 })),
-    el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Save League')));
-  window.editLeague = (idx) => {
-    const lp = leagues[idx];
-    $('lg-editidx').value = idx;
-    $('lg-name').value = lp.name || '';
-    $('lg-dur').value = lp.game_duration_minutes || '';
-    $('lg-pregame').value = lp.pregame_countdown_seconds || '';
-    $('lg-header').value = lp.header_text || '';
-    $('lg-pace').checked = !!lp.pace_enabled;
-    $('lg-pace-min').value = lp.pace_minutes_per_end || '';
-    $('lg-cmb').value = lp.countdown_minutes_before || '';
-  };
-  window.saveLeagues = async (arr) => {
+
+  const saveLeagues = async (arr) => {
     const result = await api('/api/leagues', { leagues: arr });
     if (!result.ok) { showMessage('Save failed: ' + (result.data.error || 'unknown'), 'bad'); return false; }
     return true;
   };
+
+  // ---- Add League form (separate from edit) ----
+  const addForm = el('form', { class: 'card', onsubmit: async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('lg-add-name').value.trim();
+    if (!name) { showMessage('Name required', 'bad'); return; }
+    const entry = {
+      name,
+      game_duration_minutes: parseInt(document.getElementById('lg-add-dur').value || '0', 10),
+      pregame_countdown_seconds: parseInt(document.getElementById('lg-add-pregame').value || '0', 10),
+      header_text: document.getElementById('lg-add-header').value,
+      pace_enabled: document.getElementById('lg-add-pace').checked,
+      pace_minutes_per_end: parseInt(document.getElementById('lg-add-pace-min').value || '0', 10),
+      countdown_minutes_before: parseInt(document.getElementById('lg-add-cmb').value || '0', 10),
+    };
+    leagues.push(entry);
+    if (!(await saveLeagues(leagues))) return;
+    showMessage('League added', 'ok');
+    renderLeagues();
+  } },
+    el('h2', {}, 'Add League'),
+    el('div', { class: 'grid2' },
+      el('label', {}, 'Name', el('input', { type: 'text', id: 'lg-add-name', placeholder: 'League name' })),
+      el('label', {}, 'Game duration (min)', el('input', { type: 'number', id: 'lg-add-dur', min: 0 }))),
+    el('div', { class: 'grid2' },
+      el('label', {}, 'Pre-game countdown (s)', el('input', { type: 'number', id: 'lg-add-pregame', min: 0 })),
+      el('label', {}, 'Header text', el('input', { type: 'text', id: 'lg-add-header' }))),
+    el('div', { class: 'grid2' },
+      el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-pace' }), 'Pace of play'),
+      el('label', {}, 'Pace minutes/end', el('input', { type: 'number', id: 'lg-add-pace-min', min: 0 }))),
+    el('label', {}, 'Countdown warning minutes before', el('input', { type: 'number', id: 'lg-add-cmb', min: 0 })),
+    el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
+
+  // ---- League list with inline row editing ----
+  const list = el('ul', { class: 'backups' });
+  if (!leagues.length) {
+    list.append(el('li', { class: 'muted' }, 'No leagues configured.'));
+  } else {
+    leagues.forEach((lp, idx) => {
+      const editing = state.editingLeagueIdx === idx;
+      const row = el('li', {});
+      if (editing) {
+        const nameInput = el('input', { type: 'text', value: lp.name || '', maxlength: 80,
+          oninput: (ev) => { lp.name = ev.target.value.trim(); } });
+        const durInput = el('input', { type: 'number', value: lp.game_duration_minutes || '', min: 0,
+          oninput: (ev) => { lp.game_duration_minutes = parseInt(ev.target.value || '0', 10); } });
+        const pregameInput = el('input', { type: 'number', value: lp.pregame_countdown_seconds || '', min: 0,
+          oninput: (ev) => { lp.pregame_countdown_seconds = parseInt(ev.target.value || '0', 10); } });
+        const headerInput = el('input', { type: 'text', value: lp.header_text || '', maxlength: 80,
+          oninput: (ev) => { lp.header_text = ev.target.value.trim(); } });
+        const paceCheck = el('input', { type: 'checkbox', checked: !!lp.pace_enabled,
+          onchange: (ev) => { lp.pace_enabled = ev.target.checked; } });
+        const paceMinInput = el('input', { type: 'number', value: lp.pace_minutes_per_end || '', min: 0,
+          oninput: (ev) => { lp.pace_minutes_per_end = parseInt(ev.target.value || '0', 10); } });
+        const cmbInput = el('input', { type: 'number', value: lp.countdown_minutes_before || '', min: 0,
+          oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
+        row.append(
+          el('div', { class: 'grid2' },
+            el('label', {}, 'Name', nameInput),
+            el('label', {}, 'Duration (min)', durInput)),
+          el('div', { class: 'grid2' },
+            el('label', {}, 'Pre-game countdown (s)', pregameInput),
+            el('label', {}, 'Header text', headerInput)),
+          el('div', { class: 'grid2' },
+            el('label', { class: 'check' }, paceCheck, 'Pace of play'),
+            el('label', {}, 'Pace minutes/end', paceMinInput)),
+          el('label', {}, 'Countdown warning minutes before', cmbInput),
+          el('div', { class: 'row-actions' },
+            el('button', { class: 'btn primary', onclick: async () => {
+              if (!(await saveLeagues(leagues))) return;
+              state.editingLeagueIdx = null;
+              renderLeagues();
+            } }, 'Save'),
+            el('button', { class: 'btn', onclick: () => {
+              state.editingLeagueIdx = null;
+              renderLeagues();
+            } }, 'Cancel'),
+            el('button', { class: 'btn icon danger', onclick: async () => {
+              if (!confirm(`Delete league "${lp.name || ''}"?`)) return;
+              leagues.splice(idx, 1);
+              state.editingLeagueIdx = null;
+              if (!(await saveLeagues(leagues))) return;
+              renderLeagues();
+            } }, '✕')));
+      } else {
+        row.append(
+          el('span', {}, lp.name || '(unnamed)'),
+          lp.game_duration_minutes ? el('span', { class: 'muted small' }, ` · ${lp.game_duration_minutes} min`) : null,
+          el('button', { class: 'btn icon', onclick: () => { state.editingLeagueIdx = idx; renderLeagues(); } }, 'Edit'),
+          el('button', { class: 'btn icon danger', onclick: async () => {
+            if (!confirm(`Delete league "${lp.name || ''}"?`)) return;
+            leagues.splice(idx, 1);
+            if (!(await saveLeagues(leagues))) return;
+            renderLeagues();
+          } }, '✕'));
+      }
+      list.append(row);
+    });
+  }
+
+  // ---- Import from Club Manager ----
    const DEFAULT_LEAGUE_URL = 'https://simcoecurlingclub.ca/curling/leagues';
    const cfg = state.model && state.model.config ? state.model.config : {};
     const base = (cfg['config.league_page_url'] || cfg['config.club_website_url'] || '').trim();
      const importBtn = el('button', { class: 'btn', onclick: async () => {
-       const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
-       const endpoint = url && url.trim() ? url.trim() : (base || DEFAULT_LEAGUE_URL);
-       if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
-       showMessage('Importing leagues...', 'info');
-       let names = [];
-       try {
-         const result = await api('/api/fetch_leagues', { url: endpoint });
-         if (!result.ok) { showMessage(result.data.error || 'import failed', 'warn'); return; }
-         names = Array.isArray(result.data) ? result.data : [];
-       } catch (e) {
-         const pasted = prompt('Could not fetch URL. Paste league names, one per line:', '');
-         if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
-       }
+        const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
+        const endpoint = url && url.trim() ? url.trim() : (base || DEFAULT_LEAGUE_URL);
+        if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
+        showMessage('Importing leagues...', 'info');
+        let names = [];
+        try {
+          const result = await api('/api/fetch_leagues', { url: endpoint });
+          if (!result.ok) { showMessage(result.data.error || 'import failed', 'warn'); return; }
+          names = Array.isArray(result.data) ? result.data : [];
+        } catch (e) {
+          const pasted = prompt('Could not fetch URL. Paste league names, one per line:', '');
+          if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
+        }
+        if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
+      const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
+      let added = 0;
+      names.forEach(n => {
+        if (existing.has(n.toLowerCase())) return;
+        leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0 });
+        existing.add(n.toLowerCase());
+        added++;
+      });
+       if (!(await saveLeagues(leagues))) return;
+       renderLeagues();
+       showMessage('Imported ' + added + ' new league(s).', 'ok');
+    } }, 'Import from Club Manager');
+
+  const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
+    (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
+  root.replaceChildren(el('div', { class: 'row-actions', style: 'margin: 0 0 16px' }, importBtn),
+    addForm,
+    el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list),
+    summary);
+}
        if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
      const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
      let added = 0;
