@@ -88,6 +88,7 @@ async def to_code(config):
     # not in DEFAULT_EXCLUDED_IDF_COMPONENTS' allowlist — re-enable them
     esp32.include_builtin_idf_component("esp_http_server")
     esp32.include_builtin_idf_component("esp_http_client")
+    esp32.include_builtin_idf_component("esp_tls")
     # Diagnostic entity: "listening on port 8080" or the reason the web
     # editor is not reachable. Created here so the YAML stays free of
     # component internals.
