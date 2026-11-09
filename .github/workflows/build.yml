@@ -32,7 +32,7 @@ jobs:
       - name: Patch ESPHome ranged download (GitHub CDN 504 workaround)
         run: |
           FH=$(python -c "import esphome.framework_helpers as fh; print(fh.__file__)")
-          sed -i 's/if offset else {}/}/' "$FH"
+          sed -i 's/ if offset else {}//' "$FH"
           grep -n 'headers = {"Range"' "$FH"
 
       - name: Validate config
