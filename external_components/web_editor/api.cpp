@@ -997,16 +997,16 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
     if (!item.is<JsonObjectConst>())
       return error_json(400, "league must be an object");
     const char *name = item["name"].as<const char *>();
-    yaml += "  - name: " + std::string(name ? name : "") + "\n";
+    yaml += "  - name: " + curling_engine::yaml_quote(name ? name : "") + "\n";
     yaml += "    game_duration_minutes: " + std::to_string(item["game_duration_minutes"].as<int>()) + "\n";
     yaml += "    pregame_countdown_seconds: " + std::to_string(item["pregame_countdown_seconds"].as<int>()) + "\n";
     const char *ht = item["header_text"].as<const char *>();
-    yaml += "    header_text: " + std::string(ht ? ht : "") + "\n";
+    yaml += "    header_text: " + curling_engine::yaml_quote(ht ? ht : "") + "\n";
     yaml += "    pace_enabled: " + std::string(item["pace_enabled"].as<bool>() ? "true" : "false") + "\n";
     yaml += "    pace_minutes_per_end: " + std::to_string(item["pace_minutes_per_end"].as<int>()) + "\n";
     yaml += "    countdown_minutes_before: " + std::to_string(item["countdown_minutes_before"].as<int>()) + "\n";
     const char *fmt = item["format"].as<const char *>();
-    yaml += "    format: " + std::string(fmt ? fmt : "") + "\n";
+    yaml += "    format: " + curling_engine::yaml_quote(fmt ? fmt : "") + "\n";
     yaml += "    team_size: " + std::to_string(item["team_size"].as<int>()) + "\n";
     }
   }
