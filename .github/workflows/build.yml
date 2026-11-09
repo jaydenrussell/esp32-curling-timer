@@ -23,17 +23,28 @@ jobs:
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Update firmware_version
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          sed -i "s/^  firmware_version:.*/  firmware_version: \"$VERSION\"/" esphome/curling-timer.yaml
-          if [ -f esphome/component_ref.txt ]; then echo "$VERSION" > esphome/component_ref.txt; fi
-
       - name: Create secrets
         run: cp esphome/secrets.yaml.example esphome/secrets.yaml
 
       - name: Install esphome
         run: pip install esphome
+
+      - name: Patch ESPHome ranged download (GitHub CDN 504 workaround)
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = None
+          import site, esphome.framework_helpers as fh
+          p = Path(fh.__file__)
+          s = p.read_text()
+          old = 'headers = {"Range": f"bytes={offset}-"} if offset else {}'
+          new = 'headers = {"Range": f"bytes={offset}-"}'
+          if old in s:
+              p.write_text(s.replace(old, new))
+              print("Patched " + str(p))
+          else:
+              print("Patch already applied or pattern not found in " + str(p))
+          PY
 
       - name: Validate config
         run: esphome config esphome/curling-timer.yaml
