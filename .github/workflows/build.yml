@@ -31,20 +31,9 @@ jobs:
 
       - name: Patch ESPHome ranged download (GitHub CDN 504 workaround)
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = None
-          import site, esphome.framework_helpers as fh
-          p = Path(fh.__file__)
-          s = p.read_text()
-          old = 'headers = {"Range": f"bytes={offset}-"} if offset else {}'
-          new = 'headers = {"Range": f"bytes={offset}-"}'
-          if old in s:
-              p.write_text(s.replace(old, new))
-              print("Patched " + str(p))
-          else:
-              print("Patch already applied or pattern not found in " + str(p))
-          PY
+          FH=$(python -c "import esphome.framework_helpers as fh; print(fh.__file__)")
+          sed -i 's/if offset else {}/}/' "$FH"
+          grep -n 'headers = {"Range"' "$FH"
 
       - name: Validate config
         run: esphome config esphome/curling-timer.yaml
