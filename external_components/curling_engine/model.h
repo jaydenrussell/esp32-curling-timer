@@ -32,6 +32,9 @@ struct Entry {
   std::optional<int> pace_unit_duration;
   // entry added by a quick start (marked with a trailing comment in the file)
   bool quick{false};
+  // manual push-button trigger required for this game (start >= 17:00 by
+  // default preset, overridable per league or per entry)
+  bool manual_trigger{false};
 
   bool operator==(const Entry &) const = default;
 };

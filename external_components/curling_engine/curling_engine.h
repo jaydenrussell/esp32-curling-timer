@@ -86,9 +86,15 @@ class CurlingEngineComponent : public Component {
   int32_t ntp_drift_ms() const { return ntp_drift_ms_; }
   std::string ntp_server() const { return ntp_server_.empty() ? std::string("unknown") : ntp_server_; }
   void set_ntp_server(const std::string &s) { ntp_server_ = s; }  bool test_relay_pending() const { return test_relay_pending_; }
-  std::string ntp_info() const { if (this->time_ == nullptr) return "NO TIME"; auto now = this->time_->now(); return now.is_valid() ? "OK (drift: N/A)" : "SYNCING"; }
   std::string test_relay_event() const { return test_relay_event_; }
   void clear_test_relay() { test_relay_pending_ = false; test_relay_event_.clear(); }
+
+  // Manual push-button trigger: a GPIO press asks for the next scheduled
+  // game with manual_trigger == true to be started. Call from the YAML
+  // binary_sensor on_press lambda.
+  void request_manual_trigger() { manual_trigger_pending_ = true; }
+  bool manual_trigger_pending() const { return manual_trigger_pending_; }
+  void clear_manual_trigger() { manual_trigger_pending_ = false; }
 
  protected:
   std::string store_path_{"/flash"};
@@ -105,6 +111,7 @@ class CurlingEngineComponent : public Component {
   std::string test_relay_event_;
   bool test_relay_pending_{false};  // bell events already rung this game
                                       // ("date/start/buzzer|start|countdown")
+  bool manual_trigger_pending_{false};  // GPIO button asked for next manual-trigger game
   std::string display_test_mode_{"normal"};
   bool ntp_sync_requested_{false};
   int64_t ntp_last_sync_{0};

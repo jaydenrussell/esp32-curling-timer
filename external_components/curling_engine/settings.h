@@ -69,6 +69,8 @@ struct LeagueProfile {
   int countdown_minutes_before{0};
   std::string format;
   int team_size{0};
+  // manual push-button trigger required for games in this league
+  bool manual_trigger{false};
 };
 
 struct PiTimerGame {
@@ -82,6 +84,9 @@ struct PiTimerGame {
   // live state, set on the copy returned by find_current_game
   std::optional<int> seconds_until_buzzer;
   std::optional<int> seconds_since_start;
+  // manual push-button trigger required for this game (default rule:
+  // start >= 17:00, overridable per league or per entry)
+  bool manual_trigger{false};
 };
 
 class PiTimerSettings {

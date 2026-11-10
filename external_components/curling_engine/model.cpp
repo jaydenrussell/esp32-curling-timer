@@ -260,6 +260,8 @@ bool entry_from_map(const YamlValue &data, const std::string &where, Entry *out,
   }
   v = data.find("quick");
   out->quick = v != nullptr && v->type == YType::Bool && v->b;
+  v = data.find("manual_trigger");
+  out->manual_trigger = v != nullptr && v->type == YType::Bool && v->b;
   return true;
 }
 
@@ -282,7 +284,7 @@ bool entries_from_yaml(const YamlValue *raw, const std::string &where, std::vect
     }
     static const char *kKnown[] = {"start",       "buzzer",            "name", "during_buzzer",
                                    "game_completed", "header_hold",      "pace_of_play",
-                                   "pace_unit_duration"};
+                                   "pace_unit_duration", "manual_trigger"};
     std::set<std::string> unknown;
     for (const auto &kv : item->map) {
       bool known = false;
@@ -564,6 +566,8 @@ std::string render_entry(const Entry &entry) {
     line += std::string(", pace_of_play: ") + (*entry.pace_of_play ? "True" : "False");
   if (entry.pace_unit_duration.has_value())
     line += ", pace_unit_duration: " + std::to_string(*entry.pace_unit_duration);
+  if (entry.manual_trigger)
+    line += ", manual_trigger: True";
   line += "}";
   if (entry.quick)
     line += std::string("  ") + QUICK_COMMENT;

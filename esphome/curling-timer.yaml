@@ -127,6 +127,19 @@ binary_sensor:
     lambda: |-
       return ethernet::global_eth_component->is_connected();
 
+  # Manual push-button trigger for scheduled games that overrun. Wired to
+  # GPIO45 (KEY_USER per the U213 wiring doc). A press asks the engine to
+  # ring the start relays for the next scheduled game with manual_trigger
+  # == true (default: games starting 17:00 or later).
+  - platform: gpio
+    pin:
+      number: GPIO45
+      mode: INPUT_PULLUP
+    name: "Manual Trigger Button"
+    id: manual_trigger_btn
+    on_press:
+      - lambda: id(engine).request_manual_trigger();
+
 # ---------------------------------------------------------------------
 # Services
 # ---------------------------------------------------------------------

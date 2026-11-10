@@ -975,6 +975,7 @@ ApiResponse PiTimerApi::get_leagues() {
     o["countdown_minutes_before"] = lp.countdown_minutes_before;
     o["format"] = lp.format;
     o["team_size"] = lp.team_size;
+    o["manual_trigger"] = lp.manual_trigger;
   }
   return from_document(doc);
 }
@@ -1008,6 +1009,7 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
     const char *fmt = item["format"].as<const char *>();
     yaml += "    format: " + curling_engine::yaml_quote(fmt ? fmt : "") + "\n";
     yaml += "    team_size: " + std::to_string(item["team_size"].as<int>()) + "\n";
+    yaml += "    manual_trigger: " + std::string(item["manual_trigger"].as<bool>() ? "true" : "false") + "\n";
     }
   }
 

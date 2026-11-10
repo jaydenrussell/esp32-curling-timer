@@ -207,8 +207,46 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
     }
     return false;
   }
-  auto game = settings.find_current_game(weekday_mon0, seconds_of_day, date_iso);
+  // Manual push-button trigger: the GPIO button asked for the next scheduled
+  // game with manual_trigger == true to be started. Find the first game today
+  // whose start is in the future and which needs manual input, ring its start
+  // relays once, and remember it so it won't ring again.
+  if (this->manual_trigger_pending()) {
+    this->clear_manual_trigger();
+    int weekday_mon0 = 0, seconds_of_day = 0;
+    std::string date_iso;
+    if (this->local_now(&weekday_mon0, &seconds_of_day, &date_iso)) {
+      const std::vector<PiTimerGame> *list = nullptr;
+      auto it = settings.schedules.find(DAY_NAMES[weekday_mon0]);
+      if (it != settings.schedules.end())
+        list = &it->second;
+      if (list != nullptr) {
+        for (const PiTimerGame &g : *list) {
+          if (!g.manual_trigger) continue;
+          if (g.start <= seconds_of_day) continue;
+          const std::string key = date_iso + "/" + std::to_string(g.start) + "/manual";
+          if (this->fired_keys_.count(key)) continue;
+          this->fired_keys_.insert(key);
+          int mask = 0;
+          if (settings.ring_at_start.has_value()) {
+            for (const auto &r : *settings.ring_at_start) {
+              if (r == "RELAY1") mask |= BELL_RELAY_1;
+              else if (r == "RELAY2") mask |= BELL_RELAY_2;
+            }
+          }
+          if (mask != 0 && settings.relay_start_duration > 0) {
+            out->mask = mask;
+            out->duration_ms = static_cast<uint32_t>(settings.relay_start_duration) * 1000;
+            ESP_LOGI(TAG, "manual trigger: game %s start %d, mask %d", g.message.value_or("None").c_str(), g.start, out->mask);
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  }
   // Qualified: the member bell_tick() would otherwise hide the free function.
+  auto game = settings.find_current_game(weekday_mon0, seconds_of_day, date_iso);
   if (!::esphome::curling_engine::bell_tick(settings, game, date_iso, &this->fired_keys_, out))
     return false;
   ESP_LOGI(TAG, "bell: relays mask %d, %u ms", out->mask, static_cast<unsigned>(out->duration_ms));

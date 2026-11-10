@@ -1,7 +1,7 @@
 // AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
 #pragma once
 
-static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
+static const char WEB_UI_HTML[] = R"WEB_UI_DELIMITER(<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -161,7 +161,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.11.87</span></h2>
+  <h2>🎯 Countdown Timer <span class="version">v2026.11.88</span></h2>
   <label for="password" class="muted small">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
@@ -185,7 +185,7 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </div>
 
 <header>
-  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.87</span></div>
+  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.88</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn icon" id="help" title="Help">Help</button><button class="btn icon" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -1349,6 +1349,7 @@ async function renderLeagues() {
       pace_enabled: document.getElementById('lg-add-pace').checked,
       pace_minutes_per_end: parseInt(document.getElementById('lg-add-pace-min').value || '0', 10),
       countdown_minutes_before: parseInt(document.getElementById('lg-add-cmb').value || '0', 10),
+      manual_trigger: document.getElementById('lg-add-manual').checked,
     };
     leagues.push(entry);
     if (!(await saveLeagues(leagues))) return;
@@ -1366,6 +1367,7 @@ async function renderLeagues() {
       el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-pace' }), 'Pace of play'),
       el('label', {}, 'Pace minutes/end', el('input', { type: 'number', id: 'lg-add-pace-min', min: 0 }))),
     el('label', {}, 'Countdown warning minutes before', el('input', { type: 'number', id: 'lg-add-cmb', min: 0 })),
+    el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-manual' }), 'Manual push-button trigger'),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
 
   // ---- League list with inline row editing ----
@@ -1391,6 +1393,8 @@ async function renderLeagues() {
           oninput: (ev) => { lp.pace_minutes_per_end = parseInt(ev.target.value || '0', 10); } });
         const cmbInput = el('input', { type: 'number', value: lp.countdown_minutes_before || '', min: 0,
           oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
+        const manualCheck = el('input', { type: 'checkbox', checked: !!lp.manual_trigger,
+          onchange: (ev) => { lp.manual_trigger = ev.target.checked; } });
         row.append(
           el('div', { class: 'grid2' },
             el('label', {}, 'Name', nameInput),
@@ -1402,7 +1406,8 @@ async function renderLeagues() {
             el('label', { class: 'check' }, paceCheck, 'Pace of play'),
             el('label', {}, 'Pace minutes/end', paceMinInput)),
           el('label', {}, 'Countdown warning minutes before', cmbInput),
-          el('div', { class: 'row-actions' },
+          el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'),
+          el('div', { class: 'row-actions'},
             el('button', { class: 'btn primary', onclick: async () => {
               if (!(await saveLeagues(leagues))) return;
               state.editingLeagueIdx = null;
@@ -1423,6 +1428,7 @@ async function renderLeagues() {
         row.append(
           el('span', {}, lp.name || '(unnamed)'),
           lp.game_duration_minutes ? el('span', { class: 'muted small' }, ` · ${lp.game_duration_minutes} min`) : null,
+          lp.manual_trigger ? el('span', { class: 'pill warn', style: 'font-size: 11px; padding: 1px 6px' }, 'manual trigger') : null,
           el('button', { class: 'btn icon', onclick: () => { state.editingLeagueIdx = idx; renderLeagues(); } }, 'Edit'),
           el('button', { class: 'btn icon danger', onclick: async () => {
             if (!confirm(`Delete league "${lp.name || ''}"?`)) return;
@@ -1458,7 +1464,7 @@ async function renderLeagues() {
       let added = 0;
       names.forEach(n => {
         if (existing.has(n.toLowerCase())) return;
-        leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0 });
+        leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0, manual_trigger: false });
         existing.add(n.toLowerCase());
         added++;
       });
@@ -1468,7 +1474,7 @@ async function renderLeagues() {
     } }, 'Import from Club Manager');
 
   const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
-    (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
+    (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}${lp.manual_trigger ? ' · manual trigger' : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
   root.replaceChildren(el('div', { class: 'row-actions', style: 'margin: 0 0 16px' }, importBtn),
     addForm,
     el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list),
@@ -1514,4 +1520,4 @@ start();
 </body>
 </html>
 
-)esphome_web_ui";
+)WEB_UI_DELIMITER";

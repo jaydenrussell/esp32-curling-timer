@@ -1281,6 +1281,17 @@ static bool parse_schedules_into(const YamlValue &src,
           return false;
         }
       }
+      // manual_trigger: explicit bool wins; otherwise the default preset:
+      // games starting at 17:00 or later need manual input, earlier games
+      // follow the schedule automatically.
+      if (entry_v.has("manual_trigger")) {
+        const YamlValue *v = require_(&entry_v, "manual_trigger", YType::Bool, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.manual_trigger = v->b;
+      } else {
+        g.manual_trigger = g.start >= 17 * 3600;
+      }
 
       // Apply per-league pace_of_play override when the game name matches a league
       // profile (fuzzy) and the entry did not explicitly set pace.
@@ -1693,9 +1704,11 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
        if (const YamlValue *cm = lv.find("countdown_minutes_before"); cm && cm->type == YType::Int)
          lp.countdown_minutes_before = static_cast<int>(cm->i);
        if (const YamlValue *f = lv.find("format"); f && f->type == YType::Str) lp.format = f->s;
-       if (const YamlValue *ts = lv.find("team_size"); ts && ts->type == YType::Int)
-         lp.team_size = static_cast<int>(ts->i);
-       if (const YamlValue *rl = lv.find("relays"); rl) {
+        if (const YamlValue *ts = lv.find("team_size"); ts && ts->type == YType::Int)
+          lp.team_size = static_cast<int>(ts->i);
+        if (const YamlValue *mt = lv.find("manual_trigger"); mt && mt->type == YType::Bool)
+          lp.manual_trigger = mt->b;
+        if (const YamlValue *rl = lv.find("relays"); rl) {
          if (rl->type != YType::Seq) {
            *err = std::string("'relays' in league is not a valid list (" + yaml_repr(*rl) + ")");
            return false;
@@ -1717,17 +1730,35 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
              if (lp.pace_minutes_per_end > 0) g.pace_unit_override = lp.pace_minutes_per_end * 60;
              break;
            }
-   for (auto &day_kv : exceptions)
-     for (auto &g : day_kv.second)
-       if (g.message.has_value() && !g.pace_of_play_override.has_value())
-         for (const auto &lp : leagues)
-           if (league_name_match(lp.name, *g.message)) {
-             g.pace_of_play_override = lp.pace_enabled;
-             if (lp.pace_minutes_per_end > 0) g.pace_unit_override = lp.pace_minutes_per_end * 60;
-             break;
-           }
+    for (auto &day_kv : exceptions)
+      for (auto &g : day_kv.second)
+        if (g.message.has_value() && !g.pace_of_play_override.has_value())
+          for (const auto &lp : leagues)
+            if (league_name_match(lp.name, *g.message)) {
+              g.pace_of_play_override = lp.pace_enabled;
+              if (lp.pace_minutes_per_end > 0) g.pace_unit_override = lp.pace_minutes_per_end * 60;
+              break;
+            }
 
-   valid = true;
+    // Apply per-league manual_trigger override to scheduled games (fuzzy name match).
+    for (auto &day_kv : schedules)
+      for (auto &g : day_kv.second)
+        if (g.message.has_value())
+          for (const auto &lp : leagues)
+            if (league_name_match(lp.name, *g.message)) {
+              g.manual_trigger = lp.manual_trigger;
+              break;
+            }
+    for (auto &day_kv : exceptions)
+      for (auto &g : day_kv.second)
+        if (g.message.has_value())
+          for (const auto &lp : leagues)
+            if (league_name_match(lp.name, *g.message)) {
+              g.manual_trigger = lp.manual_trigger;
+              break;
+            }
+
+    valid = true;
   return true;
 }
 

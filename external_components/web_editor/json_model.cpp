@@ -123,6 +123,7 @@ static void entry_into(JsonObject obj, const Entry &entry) {
   else
     obj["pace_unit_duration"] = nullptr;
   obj["quick"] = entry.quick;
+  obj["manual_trigger"] = entry.manual_trigger;
 }
 
 void entry_into_json(JsonObject obj, const Entry &entry) { entry_into(obj, entry); }
@@ -181,6 +182,9 @@ static bool entry_from_json(JsonObjectConst data, const std::string &where, Entr
     entry->pace_unit_duration = static_cast<int>(unit.as<long long>());
   }
   entry->quick = data["quick"].as<bool>();
+  JsonVariantConst manual = data["manual_trigger"];
+  if (!manual.isNull())
+    entry->manual_trigger = manual.as<bool>();
   return true;
 }
 
