@@ -8,6 +8,17 @@
 #
 # Schedule engine + web editor + LT8912B HDMI display + LVGL countdown
 # UI are enabled below (external_components).
+#
+# Optional hardware add-ons live in esphome/addons/ and are wired in via
+# `packages:` — e.g.:
+#
+#   packages:
+#     i2c_hub: !include addons/i2c_hub_pahub.yaml   # PaHub v2.1 on Grove Port B
+#     rtc_addon: !include addons/rtc_addon.yaml     # M5Stack RTC Unit (HYM8563), SKU U126
+#     wifi_addon: !include wifi-c6-failover.yaml    # ESP32-C6 SDIO Wi-Fi
+#
+# Uncomment only the hardware you have wired. Each add-on is self-contained;
+# leaving it out keeps the build lean. Verify pins against docs/wiring-U213.md.
 # =====================================================================
 
 substitutions:
@@ -173,13 +184,48 @@ time:
   - platform: sntp
     id: sntp_time
     timezone: ${timezone}
-    update_interval: 5min
+    # NOTE: daily sync trades lower network traffic for larger clock drift
+    # between syncs. For minimal drift use a shorter interval (e.g. 5min).
+    update_interval: 24h
     servers:
       - time.cloudflare.com
       - pool.ntp.org
     on_time_sync:
       then:
         - logger.log: "Time synchronized"
+  - platform: pcf8563
+    id: rtc_time
+    i2c_id: rtc_i2c_bus
+    address: 0x51
+    update_interval: 60s
+
+# ---------------------------------------------------------------------
+# Add-on RTC (HYM8563 / PCF8563-compatible, M5Stack Unit RTC SKU U126).
+# Always compiled in so the firmware can fall back to it at runtime when
+# SNTP has no valid time and config.addons.rtc is true in the settings
+# file (toggled live from the web UI Config tab).
+#
+# Wired to GPIO5/GPIO6 here — verify against docs/wiring-U213.md before
+# flashing. If no RTC is present, pcf8563 reads simply fail silently and
+# local_now() keeps returning "no clock" until SNTP syncs.
+# ---------------------------------------------------------------------
+i2c:
+  - id: rtc_i2c_bus
+    sda: GPIO5
+    scl: GPIO6
+    frequency: 100kHz
+
+# ---------------------------------------------------------------------
+# Add-on UART0 on the Hat2-Bus — GPIO37 TX / GPIO38 RX (pins 5 / 4).
+# Compiled in so the engine can stream a one-line status to a serial
+# device when config.addons.uart is true (toggled live from the web UI).
+# Wires under 5cm, grounds common — see docs/wiring-U213.md.
+# ---------------------------------------------------------------------
+uart:
+  - id: uart_addon
+    tx_pin: GPIO37
+    rx_pin: GPIO38
+    baud_rate: 115200
 
 # ---------------------------------------------------------------------
 # M5Stack Unit 2Relay — wired to Grove Port B (HY2.0-4P: G53, G54, 5V, GND)
@@ -230,7 +276,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.90
+      ref: v2026.11.92
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -242,6 +288,8 @@ external_components:
 curling_engine:
   id: engine
   store_path: /flash
+  rtc_id: rtc_time
+  uart_id: uart_addon
 
 web_editor:
   # The "Web Editor" diagnostic entity (listening on port 8080 / the

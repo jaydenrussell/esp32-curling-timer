@@ -76,6 +76,17 @@ config:
         entry_name: True
     # allow_midnight_wrap - Allow quick-start timers to end after midnight
     allow_midnight_wrap: False
+    # addons - Optional add-on hardware enable flags. All addon drivers are
+    #          compiled into the firmware and gated at runtime by these flags,
+    #          so a pre-built firmware works with any subset of addon hardware.
+    #          Toggled live from the web UI Config tab and persisted here.
+    addons:
+        rtc: False        # M5Stack RTC Unit (HYM8563, SKU U126) — SNTP fallback time source
+        relays: True      # Unit 2Relay outputs (buzzer/game bells)
+        pushbutton: True  # GPIO manual trigger button
+        pahub: False      # PaHub v2.1 I2C hub (multiplexes I2C children)
+        wifi: False       # ESP32-C6 SDIO Wi-Fi failover
+        uart: False       # Hat2-Bus UART0 serial port (GPIO37 TX / GPIO38 RX)
     # relays - Relay configuration (count, enable, function mapping)
     relays_enabled: True
     relay_count: 4

@@ -145,6 +145,20 @@ class PiTimerSettings {
   int log_level{3};
   bool valid{false};
 
+  // Add-on hardware enable flags — web UI configurable, persisted in the
+  // settings file under config.addons.*. Compiled-in drivers are gated at
+  // runtime by these flags so a pre-built firmware works with any subset
+  // of addon hardware.
+  struct AddonConfig {
+    bool rtc{false};        // M5Stack RTC Unit (HYM8563, SKU U126)
+    bool relays{true};      // Unit 2Relay outputs
+    bool pushbutton{true};  // GPIO manual trigger button
+    bool pahub{false};      // PaHub v2.1 I2C hub
+    bool wifi{false};       // ESP32-C6 SDIO Wi-Fi failover
+    bool uart{false};       // Hat2-Bus UART0 serial port
+  };
+  AddonConfig addons;
+
   // Restore the pre-parse defaults (also called by the constructor so two
   // instances never share state).
   void reset();

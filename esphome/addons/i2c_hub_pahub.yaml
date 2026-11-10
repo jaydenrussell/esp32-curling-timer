@@ -1,0 +1,75 @@
+# =====================================================================
+# OPTIONAL I2C hub add-on — M5Stack Unit PaHub v2.1 (PCA9548A)
+#
+# Replaces the end-of-life pbhub. The PaHub is an 8-channel I2C
+# multiplexer: one I2C bus feeds the hub, and up to eight child I2C
+# buses branch out — one per channel — so multiple I2C devices can
+# share a single Grove port (e.g. via a 3-way splitter).
+#
+# Wire the PaHub to Grove Port B on the U213 (HY2.0-4P: G53, G54, 5V, GND).
+# Default I2C pins below match Grove Port B.
+#
+# Enable in curling-timer.yaml after the PaHub is wired:
+#
+# packages:
+#   i2c_hub: !include addons/i2c_hub_pahub.yaml
+#
+# Then reference a channel's bus from another component, e.g.:
+#
+#   i2c_id: pa_hub_ch0
+#
+# =====================================================================
+
+# Parent I2C bus — GPIO matrixed on the ESP32-P4, so these pins can move
+# if Grove Port B is needed for something else (e.g. the relay addon).
+i2c:
+  - id: pa_hub_bus
+    sda: GPIO53
+    scl: GPIO54
+    frequency: 400kHz
+
+# The PaHub v2.1 is PCA9548A-compatible, default address 0x70.
+pca9548a:
+  - id: pa_hub
+    i2c_id: pa_hub_bus
+    address: 0x70
+
+# Eight child I2C buses — one per PaHub channel. Enable only the channels
+# you actually populate; each enabled channel reserves an I2C controller.
+i2c:
+  - id: pa_hub_ch0
+    pca9548a_id: pa_hub
+    channel: 0
+  - id: pa_hub_ch1
+    pca9548a_id: pa_hub
+    channel: 1
+  - id: pa_hub_ch2
+    pca9548a_id: pa_hub
+    channel: 2
+  - id: pa_hub_ch3
+    pca9548a_id: pa_hub
+    channel: 3
+  - id: pa_hub_ch4
+    pca9548a_id: pa_hub
+    channel: 4
+  - id: pa_hub_ch5
+    pca9548a_id: pa_hub
+    channel: 5
+  - id: pa_hub_ch6
+    pca9548a_id: pa_hub
+    channel: 6
+  - id: pa_hub_ch7
+    pca9548a_id: pa_hub
+    channel: 7
+
+# =====================================================================
+# Hardware notes
+# - PaHub v2.1 defaults to I2C address 0x70 (PCA9548A base). If you stack
+#   multiple hubs, change `address` per the PaHub's address pins.
+# - GPIO53/GPIO54 are Grove Port B. The relay addon (addons/relay_outputs.yaml)
+#   also uses G53/G54 — do not enable both on the same port. Move one to a
+#  different GPIO pair via the ESP32-P4 GPIO matrix if both are needed.
+# - The U213's LT8912B display already claims GPIO0/GPIO1 for its own I2C;
+#   do not remap the PaHub to those pins.
+# - Verify all pins against docs/wiring-U213.md before flashing.
+# =====================================================================

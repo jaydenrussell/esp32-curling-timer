@@ -80,6 +80,12 @@ button.btn.danger:hover { background: color-mix(in srgb, var(--stone-red) 8%, tr
 button.btn:disabled { opacity: 0.45; cursor: default; }
 button.btn.icon { padding: 6px 10px; min-height: 36px; width: 36px; display: inline-flex; align-items: center; justify-content: center; }
 input, select, textarea { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; min-height: 38px; min-width: 0; transition: border-color 0.15s ease; font-size: 13px; }
+/* §4 mobile-native: iOS zooms into inputs under 16px and never zooms back out.
+   Coarse (touch) pointers get 16px so focus never triggers page zoom; fine
+   pointers keep the compact desktop density. */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: 16px; }
+}
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--rink); }
 textarea { width: 100%; min-height: 40vh; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
 label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 4px; font-weight: 600; letter-spacing: 0.04em; }
@@ -935,6 +941,15 @@ const CONFIG_SECTIONS = [
       ['config.buzzer.relays', 'relays', 'Output'],
       ['config.buzzer.end_duration', 'int', 'Output duration (seconds)', 0, 999],
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
+  { group: 'Add-ons 🔧', title: 'Optional hardware',
+    hint: 'All add-on drivers are compiled into the firmware; these toggles gate each one at runtime. A pre-built firmware works with any subset of add-on hardware — enable only what you have wired.',
+    fields: [
+      ['config.addons.rtc', 'bool', 'RTC time source (HYM8563 / PCF8563)'],
+      ['config.addons.relays', 'bool', 'Relay outputs (Unit 2Relay bells/buzzers)'],
+      ['config.addons.pushbutton', 'bool', 'Manual push-button trigger (GPIO45)'],
+      ['config.addons.pahub', 'bool', 'PaHub v2.1 I2C hub (multiplexes I2C children)'],
+      ['config.addons.wifi', 'bool', 'ESP32-C6 SDIO Wi-Fi failover'],
+      ['config.addons.uart', 'bool', 'Hat2-Bus UART0 serial port (GPIO37 TX / GPIO38 RX)']] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
 function relayDisplayName(i) {
@@ -1534,7 +1549,7 @@ async function start() {
   loadStatus();
   if (started) return;
   started = true;
-  (function loop() { tick(); setTimeout(loop, 1000 - (performance.now() % 1000)); })();
+  (function loop() { if (state.tab === 'status' && !document.hidden) tick(); setTimeout(loop, 1000 - (performance.now() % 1000)); })();
   let statusInterval = setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, 1000);
   document.addEventListener('visibilitychange', () => {
     clearInterval(statusInterval);

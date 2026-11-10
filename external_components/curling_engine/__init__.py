@@ -1,13 +1,15 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 import esphome.components.esp32 as esp32
-from esphome.components import time
+from esphome.components import time, uart
 from esphome.const import CONF_ID, CONF_TIME_ID
 
 DEPENDENCIES = ["esp32", "time"]
 
 CONF_STORE_PATH = "store_path"
 CONF_PARTITION_SIZE = "partition_size"
+CONF_RTC_ID = "rtc_id"
+CONF_UART_ID = "uart_id"
 
 # Partition label mounted at store_path; name must not collide with ESPHome's
 # reserved partition names (esp32.RESERVED_PARTITION_NAMES includes "spiffs").
@@ -33,6 +35,8 @@ CONFIG_SCHEMA = cv.COMPONENT_SCHEMA.extend(
         # shrink automatically). Set to 0 if you declare your own partition.
         cv.Optional(CONF_PARTITION_SIZE, default=DEFAULT_PARTITION_SIZE): _validate_partition_size,
         cv.GenerateID(CONF_TIME_ID): cv.use_id(time.RealTimeClock),
+        cv.Optional(CONF_RTC_ID): cv.use_id(time.RealTimeClock),
+        cv.Optional(CONF_UART_ID): cv.use_id(uart.UARTComponent),
     }
 )
 
@@ -52,3 +56,9 @@ async def to_code(config):
     cg.add(var.set_store_path(config[CONF_STORE_PATH]))
     time_ = await cg.get_variable(config[CONF_TIME_ID])
     cg.add(var.set_time(time_))
+    if CONF_RTC_ID in config:
+        rtc_ = await cg.get_variable(config[CONF_RTC_ID])
+        cg.add(var.set_rtc_time(rtc_))
+    if CONF_UART_ID in config:
+        uart_ = await cg.get_variable(config[CONF_UART_ID])
+        cg.add(var.set_uart(uart_))

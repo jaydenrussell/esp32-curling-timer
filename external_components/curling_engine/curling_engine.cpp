@@ -101,8 +101,16 @@ bool CurlingEngineComponent::local_now(int *weekday_mon0, int *seconds_of_day,
   if (this->time_ == nullptr)
     return false;
   ESPTime now = this->time_->now();
-  if (!now.is_valid())
-    return false;
+  if (!now.is_valid()) {
+    // SNTP has no valid time yet; fall back to the addon RTC if enabled.
+    if (this->rtc_enabled_ && this->rtc_time_ != nullptr) {
+      now = this->rtc_time_->now();
+      if (!now.is_valid())
+        return false;
+    } else {
+      return false;
+    }
+  }
   if (weekday_mon0 != nullptr)
     *weekday_mon0 = (now.day_of_week + 5) % 7;  // tm Sun=1..Sat=7 -> Mon=0..Sun=6
   if (seconds_of_day != nullptr)
@@ -137,7 +145,6 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
   *out = DisplaySnapshot{};
   int weekday_mon0 = 0, seconds_of_day = 0;
   std::string date_iso;
-  bool clock_known = this->local_now(&weekday_mon0, &seconds_of_day, &date_iso);
 
   PiTimerSettings settings;
   std::string err;
@@ -156,6 +163,10 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
     }
     return false;
   }
+  // Gate the RTC fallback on the runtime addon flag from settings.
+  this->rtc_enabled_ = settings.addons.rtc;
+
+  bool clock_known = this->local_now(&weekday_mon0, &seconds_of_day, &date_iso);
   *out = render_snapshot(settings, clock_known, weekday_mon0, seconds_of_day, date_iso);
   if (this->display_test_mode_ != "normal") {
     out->header_text = "TEST " + this->display_test_mode_;
@@ -180,6 +191,10 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
   PiTimerSettings settings;
   std::string err;
   if (!this->read_parsed(&settings, nullptr, nullptr, &err))
+    return false;
+  // The relay add-on is gated at runtime: if it is off, no bell/relay
+  // output ever happens even if the settings file lists relays.
+  if (!settings.addons.relays)
     return false;
   // Test relay: if a test was requested, fire the configured relays for that event.
   if (this->test_relay_pending()) {
@@ -210,7 +225,10 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
   // Manual push-button trigger: the GPIO button asked for the next scheduled
   // game with manual_trigger == true to be started. Find the first game today
   // whose start is in the future and which needs manual input, ring its start
-  // relays once, and remember it so it won't ring again.
+  // relays once, and remember it so it won't ring again. Gated on the
+  // pushbutton add-on flag — if off, GPIO presses are ignored.
+  if (!settings.addons.pushbutton)
+    return false;
   if (this->manual_trigger_pending()) {
     this->clear_manual_trigger();
     int weekday_mon0 = 0, seconds_of_day = 0;
@@ -250,6 +268,8 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
   if (!::esphome::curling_engine::bell_tick(settings, game, date_iso, &this->fired_keys_, out))
     return false;
   ESP_LOGI(TAG, "bell: relays mask %d, %u ms", out->mask, static_cast<unsigned>(out->duration_ms));
+  if (settings.addons.uart)
+    this->uart_status();
   return true;
 }
 
@@ -284,6 +304,30 @@ std::string CurlingEngineComponent::get_logs() const {
 void CurlingEngineComponent::set_log_level(uint8_t level) {
   if (logger::global_logger != nullptr)
     logger::global_logger->set_log_level(level);
+}
+
+void CurlingEngineComponent::uart_status() {
+  if (this->uart_ == nullptr)
+    return;
+  int weekday_mon0 = 0, seconds_of_day = 0;
+  std::string date_iso;
+  if (!this->local_now(&weekday_mon0, &seconds_of_day, &date_iso))
+    return;
+  PiTimerSettings settings;
+  std::string err;
+  if (!this->read_parsed(&settings, nullptr, nullptr, &err))
+    return;
+  auto game = settings.find_current_game(weekday_mon0, seconds_of_day, date_iso);
+  std::string line = date_iso + " ";
+  if (game.has_value()) {
+    line += "start=" + std::to_string(game->start) + " buzzer=" + std::to_string(game->buzzer);
+    if (game->seconds_until_buzzer.has_value())
+      line += " left=" + std::to_string(*game->seconds_until_buzzer);
+  } else {
+    line += "idle";
+  }
+  line += "\n";
+  this->uart_->write_array(reinterpret_cast<const uint8_t *>(line.data()), line.size());
 }
 }  // namespace curling_engine
 }  // namespace esphome

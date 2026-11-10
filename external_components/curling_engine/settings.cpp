@@ -1421,6 +1421,12 @@ void PiTimerSettings::reset() {
   footer_color = "";
   background_color = "black";
   pregame_header_text = "Get ready";
+  addons.rtc = false;
+  addons.relays = true;
+  addons.pushbutton = true;
+  addons.pahub = false;
+  addons.wifi = false;
+  addons.uart = false;
    schedules.clear();
    exceptions.clear();
    leagues.clear();
@@ -1598,6 +1604,19 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = cfg->find("pregame_header_text")) != nullptr && v->type == YType::Str) pregame_header_text = v->s;
   if ((v = cfg->find("log_level")) != nullptr && v->type == YType::Int) log_level = static_cast<int>(v->i);
   if ((v = raw.find("log_level")) != nullptr && v->type == YType::Int) log_level = static_cast<int>(v->i);
+
+  // config.addons subsection — optional; absent means all defaults (off except
+  // relays/pushbutton which default on).
+  if ((v = cfg->find("addons")) != nullptr && v->type == YType::Map) {
+    const YamlValue *ac = v;
+    const YamlValue *av = nullptr;
+    if ((av = ac->find("rtc")) != nullptr && av->type == YType::Bool) addons.rtc = av->b;
+    if ((av = ac->find("relays")) != nullptr && av->type == YType::Bool) addons.relays = av->b;
+    if ((av = ac->find("pushbutton")) != nullptr && av->type == YType::Bool) addons.pushbutton = av->b;
+    if ((av = ac->find("pahub")) != nullptr && av->type == YType::Bool) addons.pahub = av->b;
+    if ((av = ac->find("wifi")) != nullptr && av->type == YType::Bool) addons.wifi = av->b;
+    if ((av = ac->find("uart")) != nullptr && av->type == YType::Bool) addons.uart = av->b;
+  }
 
   // buzzer subsection
   const YamlValue *buzzer = require_(cfg, "buzzer", YType::Map, "main config section", err);

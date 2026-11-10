@@ -6,6 +6,7 @@
 
 #include "bell.h"
 #include "esphome/components/time/real_time_clock.h"
+#include "esphome/components/uart/uart.h"
 #include "esphome/core/component.h"
 #include "esphome/components/logger/logger.h"
 #include "render.h"
@@ -38,6 +39,8 @@ class CurlingEngineComponent : public Component {
 
   void set_store_path(const std::string &path) { store_path_ = path; }
   void set_time(time::RealTimeClock *time) { time_ = time; }
+  void set_rtc_time(time::RealTimeClock *time) { rtc_time_ = time; }
+  void set_uart(uart::UARTComponent *uart) { uart_ = uart; }
 
   void setup() override;
   void dump_config() override;
@@ -96,6 +99,9 @@ class CurlingEngineComponent : public Component {
   bool manual_trigger_pending() const { return manual_trigger_pending_; }
   void clear_manual_trigger() { manual_trigger_pending_ = false; }
 
+  // Write a one-line status to the Hat2-Bus UART add-on when enabled.
+  void uart_status();
+
  protected:
   std::string store_path_{"/flash"};
   mutable std::mutex log_mutex_;
@@ -118,6 +124,10 @@ class CurlingEngineComponent : public Component {
   int32_t ntp_drift_ms_{0};
   bool ntp_ok_{false};
   std::string ntp_server_{};
+  time::RealTimeClock *rtc_time_{nullptr};   // addon RTC (SNTP fallback)
+  bool rtc_enabled_{false};                  // config.addons.rtc from settings
+  uart::UARTComponent *uart_{nullptr};          // Hat2-Bus UART0 add-on
+  bool uart_enabled_{false};                 // config.addons.uart from settings
 };
 
 }  // namespace curling_engine

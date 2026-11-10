@@ -1,0 +1,62 @@
+# =====================================================================
+# OPTIONAL RTC add-on — M5Stack Unit RTC (HYM8563), SKU U126
+#
+# Battery-backed real-time clock over I2C. Keeps time across power loss
+# so the timer knows the time immediately on boot, before SNTP can sync.
+# Recommended for any deployment where PoE/Ethernet may be interrupted.
+#
+# Wire to a Grove port — directly or via the PaHub v2.1 add-on
+# (addons/i2c_hub_pahub.yaml). Default pins below are Grove Port B
+# (GPIO53/GPIO54), the same port the PaHub add-on uses.
+#
+# Enable in curling-timer.yaml:
+#
+#   packages:
+#     rtc_addon: !include addons/rtc_addon.yaml
+#
+# Direct I2C (no PaHub) — default configuration:
+#
+#   curling_engine:
+#     time_id: rtc_time
+#
+# Via PaHub — point the RTC at a PaHub child bus instead of the direct
+# bus, and remove the direct i2c block:
+#
+#   i2c_id: pa_hub_ch0   # channel the RTC is plugged into
+# =====================================================================
+
+# Direct I2C bus on Grove Port B (GPIO53/GPIO54).
+# If you are using the PaHub add-on, remove this block and reference
+# the PaHub child bus (pa_hub_ch0…ch7) via i2c_id below instead.
+i2c:
+  - id: rtc_i2c_bus
+    sda: GPIO53
+    scl: GPIO54
+    frequency: 100kHz
+
+# HYM8563 is PCF8563-compatible; ESPHome's pcf8563 platform drives it.
+# Default address 0x51. update_interval controls how often ESPHome reads
+# the RTC chip — the chip itself keeps time independently via its backup
+# cell, so this is just for ESPHome's view of the clock.
+time:
+  - platform: pcf8563
+    id: rtc_time
+    i2c_id: rtc_i2c_bus    # remove this line if using a PaHub child bus
+    address: 0x51
+    update_interval: 60s
+
+# =====================================================================
+# Hardware notes
+# - HYM8563 default I2C address is 0x51. If you stack I2C devices, verify
+#   no address conflict with the PaHub (0x70) or LT8912B.
+# - GPIO53/GPIO54 = Grove Port B. The relay add-on also uses G53/G54 — do
+#   not enable both on the same port. Move one to a different GPIO pair via
+#   the ESP32-P4 GPIO matrix if both are needed.
+# - GPIO0/GPIO1 are taken by the LT8912B display I2C — do not remap the RTC
+#   to those pins.
+# - The RTC's backup cell keeps time across power loss; ESPHome reads it
+#   on boot, but SNTP should still correct drift periodically.
+# - To make curling_engine use the RTC instead of SNTP, change
+#   `curling-engine.time_id` from `sntp_time` to `rtc_time`.
+# - Verify all pins against docs/wiring-U213.md before flashing.
+# =====================================================================
