@@ -1445,7 +1445,7 @@ function configField(field) {
       return el('div', { class: 'field' },
         el('label', {}, `${display} duration (seconds)`,
           el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric',
-            style: 'width: 4ch',
+            style: 'width: 7ch',
             value: val == null ? '' : String(val),
             oninput: (event) => { state.configValues[path] = event.target.value === '' ? null : Number(event.target.value); configTouched(); } })));
     });
