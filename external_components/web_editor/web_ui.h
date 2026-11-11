@@ -448,7 +448,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--md-sys-color-surf
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">vv2026.11.99</span></h2>
+  <h2>Curling Timer <span class="version">vv2026.11.100</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -473,7 +473,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--md-sys-color-surf
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">vv2026.11.99</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">vv2026.11.100</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -1417,8 +1417,8 @@ function renderConfig() {
 
 async function renderAddonMarketplace() {
   if (!state.configValues) return;
-  const det = await api('/api/addons/detection');
-  if (det.ok) addonDetection = det.data || {};
+  const detectionResult = await api('/api/addons/detection');
+  if (detectionResult.ok) addonDetection = detectionResult.data || {};
   let market = document.getElementById('addon-marketplace');
   if (!market) {
     market = el('section', { id: 'addon-marketplace' },
@@ -1428,11 +1428,10 @@ async function renderAddonMarketplace() {
     $('tab-config').append(market);
   }
   const grid = market.querySelector('.addon-grid');
-  const det = addonDetection || {};
   grid.replaceChildren();
   for (const a of ADDONS) {
     const intent = state.configValues[`config.addons.${a.key}`] === true;
-    const detected = det[a.key] === true;
+    const detected = addonDetection[a.key] === true;
     const enabled = intent && (!a.auto || detected);
     const pillCls = a.auto ? (detected ? (intent ? 'enabled' : 'detected') : 'notdetected') : 'manual';
     const pillText = a.auto ? (detected ? (intent ? 'Enabled' : 'Detected') : 'Not detected') : 'Manual';

@@ -1420,8 +1420,8 @@ function renderConfig() {
 
 async function renderAddonMarketplace() {
   if (!state.configValues) return;
-  const det = await api('/api/addons/detection');
-  if (det.ok) addonDetection = det.data || {};
+  const detectionResult = await api('/api/addons/detection');
+  if (detectionResult.ok) addonDetection = detectionResult.data || {};
   let market = document.getElementById('addon-marketplace');
   if (!market) {
     market = el('section', { id: 'addon-marketplace' },
@@ -1431,11 +1431,10 @@ async function renderAddonMarketplace() {
     $('tab-config').append(market);
   }
   const grid = market.querySelector('.addon-grid');
-  const det = addonDetection || {};
   grid.replaceChildren();
   for (const a of ADDONS) {
     const intent = state.configValues[`config.addons.${a.key}`] === true;
-    const detected = det[a.key] === true;
+    const detected = addonDetection[a.key] === true;
     const enabled = intent && (!a.auto || detected);
     const pillCls = a.auto ? (detected ? (intent ? 'enabled' : 'detected') : 'notdetected') : 'manual';
     const pillText = a.auto ? (detected ? (intent ? 'Enabled' : 'Detected') : 'Not detected') : 'Manual';
