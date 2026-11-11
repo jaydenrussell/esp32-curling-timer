@@ -219,11 +219,12 @@ main {
 
 /* --- Hero / countdown --- */
 .hero {
-  background: linear-gradient(135deg, var(--pwa-primary) 0%, #C5A059 100%);
+  background: var(--pwa-primary);
   border: 1px solid var(--pwa-border);
-  border-radius: 28px;
-  padding: 32px 24px;
-  margin: 0;
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  margin: 0 0 16px 0;
+  box-shadow: var(--shadow);
 }
 .hero .game-name {
   font-size: 18px;
@@ -266,7 +267,7 @@ button.btn {
 }
 button.btn:disabled { opacity: 0.5; cursor: default; }
 button.btn.primary {
-  background: linear-gradient(135deg, var(--pwa-primary), #FB8C00);
+  background: var(--pwa-primary);
   border-color: var(--pwa-primary);
   color: var(--pwa-text);
 }
@@ -388,13 +389,26 @@ label.check input { width: 20px; height: 20px; margin: 0; min-height: 0; }
 .league-row:last-child { border-bottom: 0; }
 .league-row .num { font-family: Georgia, serif; font-weight: 700; color: var(--muted); font-size: 16px; }
 .league-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--pwa-border); border-radius: 28px; }
-.entry { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--pwa-border); }
-.entry:last-of-type { border-bottom: 0; }
-.entry .name { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
+.entry {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--pwa-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 10px;
+  background: var(--pwa-surface-elev);
+  align-items: start;
+}
+.entry .league { grid-column: 1; align-self: start; }
+.entry .start { grid-column: 2; align-self: start; }
+.entry .buzzer { grid-column: 3; align-self: start; }
+.entry .actions { grid-column: 4; align-self: start; display: flex; flex-direction: column; gap: 6px; }
+.entry .name { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--pwa-border); }
 .entry .name input { flex: 1; }
-.entry .more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-.entry .more label, .entry .times label { margin: 0; font-size: 12px; }
-@media (min-width: 720px) { .entry { grid-template-columns: 140px 140px 1fr; } .entry .name { grid-column: auto; } }
+.entry .more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--pwa-border); }
+.entry .more label, .entry .times label { margin: 0; font-size: 11px; color: var(--pwa-text-dim); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
+.entry label { font-size: 11px; color: var(--pwa-text-dim); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
 
 /* --- Collapsible fold cards --- */
 details.fold { padding: 0; margin: 0 0 14px 0; border: 1px solid var(--pwa-border); border-radius: 28px; overflow: hidden; }
@@ -483,7 +497,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
   align-self: flex-start;
 }
 .btn-toggle:disabled { opacity: 0.5; cursor: default; }
-.btn-toggle.primary { background: linear-gradient(135deg, var(--pwa-primary), #FB8C00); border-color: var(--pwa-primary); color: var(--pwa-text); }
+.btn-toggle.primary { background: var(--pwa-primary); border-color: var(--pwa-primary); color: var(--pwa-text); }
 .btn-toggle.primary:hover:not(:disabled) { filter: brightness(1.15); }
 .btn-toggle.danger { color: var(--pwa-bad); border-color: var(--pwa-bad); background: transparent; }
 .btn-toggle.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--pwa-bad) 8%, transparent); }
@@ -823,7 +837,7 @@ function renderStatus() {
     return;
   }
   if (quickForm) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
-  const now = el('div', { class: 'hero' });
+  const now = el('div', { class: 'card' });
   const cur = s.current;
   const head = el('div', {},
     el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Timer enabled' : 'Timer disabled'));
@@ -857,7 +871,12 @@ function renderStatus() {
     now.append(el('div', { class: 'state muted' }, 'Idle'),
                el('div', { class: 'muted' }, s.next ? `Next: ${s.next.name || 'game'} at ${shortTime(s.next.start)}` : 'No more games today'));
   }
-  $('status-now').replaceChildren(now);
+  let mirror = document.getElementById('display-mirror');
+  if (!mirror) {
+    mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:24px;border-radius:28px;margin-bottom:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:16px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,0.3)' });
+    $('status-now').append(mirror);
+  }
+  $('status-now').append(now);
 
   if (!s.clock_synced) {
     $('status-today').replaceChildren();
@@ -878,11 +897,6 @@ function renderStatus() {
     el('span', { class: 'name' }, e.name ? e.name : '',
        e.quick ? el('span', { class: 'pill quick' }, 'quick') : null)))));
   $('tab-status').querySelector('#status-today').replaceChildren(today);
-   let mirror = document.getElementById('display-mirror');
-   if (!mirror) {
-     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:24px;border-radius:28px;margin-top:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:16px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,0.3)' });
-     $('status-now').append(mirror);
-   }
    const sm = state.status || {};
    function unswap(c) { if (!c || typeof c !== 'string' || c.length < 7) return c || ''; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
   const scale = (state.configValues && state.configValues['config.mirror_scale'] != null)
@@ -1064,17 +1078,18 @@ function entryEditor(entries, index, leagues, rerender) {
     el('option', { value: '', selected: !entry.league }, '(none)'),
     ...(leagues || []).map((l) => el('option', { value: l.name, selected: entry.league === l.name }, l.name)));
   return el('div', { class: 'entry' },
-    el('div', { class: 'league' }, el('label', {}, 'League', leagueSelect)),
-    el('div', { class: 'times' }, el('label', {}, 'Start', timeInput('start'))),
-    el('div', { class: 'times' }, el('label', {}, 'Buzzer', timeInput('buzzer'))),
-    el('div', { class: 'name' }, text('name', 'League name'),
-      entry.quick ? el('span', { class: 'pill quick', style: 'align-self: center' }, 'quick') : null,
+    el('div', { class: 'league' }, el('label', {}, 'League'), leagueSelect),
+    el('div', { class: 'start' }, el('label', {}, 'Start'), timeInput('start')),
+    el('div', { class: 'buzzer' }, el('label', {}, 'Buzzer'), timeInput('buzzer')),
+    el('div', { class: 'actions' },
       el('button', { class: 'btn icon danger', type: 'button', title: 'Delete game', onclick: () => { entries.splice(index, 1); changed(); rerender(); } }, '✕')),
+    el('div', { class: 'name' }, text('name', 'League name'),
+      entry.quick ? el('span', { class: 'pill quick', style: 'align-self: center' }, 'quick') : null),
     el('div', { class: 'more' },
-      el('label', {}, 'Header when game completed', text('game_completed', 'default')),
-      el('label', {}, 'Header hold seconds', hold),
-      el('label', {}, 'Pace of play', pace),
-      el('label', {}, 'Minutes per end', unit)));
+      el('label', {}, 'Header when game completed'), text('game_completed', 'default'),
+      el('label', {}, 'Header hold seconds'), hold,
+      el('label', {}, 'Pace of play'), pace,
+      el('label', {}, 'Minutes per end'), unit));
 }
 
 function entryList(entries, leagues, rerender) {
@@ -1791,6 +1806,38 @@ async function renderLeagues() {
     return true;
   };
 
+  const leagueFields = (lp, prefix) => {
+    const nameInput = el('input', { type: 'text', id: prefix + '-name', value: lp.name || '', maxlength: 80,
+      oninput: (ev) => { lp.name = ev.target.value.trim(); } });
+    const durInput = el('input', { type: 'number', id: prefix + '-dur', value: lp.game_duration_minutes || '', min: 0,
+      oninput: (ev) => { lp.game_duration_minutes = parseInt(ev.target.value || '0', 10); } });
+    const pregameInput = el('input', { type: 'number', id: prefix + '-pregame', value: lp.pregame_countdown_seconds || '', min: 0,
+      oninput: (ev) => { lp.pregame_countdown_seconds = parseInt(ev.target.value || '0', 10); } });
+    const headerInput = el('input', { type: 'text', id: prefix + '-header', value: lp.header_text || '', maxlength: 80,
+      oninput: (ev) => { lp.header_text = ev.target.value.trim(); } });
+    const paceCheck = el('input', { type: 'checkbox', id: prefix + '-pace', checked: !!lp.pace_enabled,
+      onchange: (ev) => { lp.pace_enabled = ev.target.checked; } });
+    const paceMinInput = el('input', { type: 'number', id: prefix + '-pace-min', value: lp.pace_minutes_per_end || '', min: 0,
+      oninput: (ev) => { lp.pace_minutes_per_end = parseInt(ev.target.value || '0', 10); } });
+    const cmbInput = el('input', { type: 'number', id: prefix + '-cmb', value: lp.countdown_minutes_before || '', min: 0,
+      oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
+    const manualCheck = el('input', { type: 'checkbox', id: prefix + '-manual', checked: !!lp.manual_trigger,
+      disabled: !isAddonEnabled('pushbutton'), onchange: (ev) => { lp.manual_trigger = ev.target.checked; } });
+    return [
+      el('div', { class: 'grid2' },
+        el('label', {}, 'Name', nameInput),
+        el('label', {}, 'Duration (min)', durInput)),
+      el('div', { class: 'grid2' },
+        el('label', {}, 'Pre-game countdown (s)', pregameInput),
+        el('label', {}, 'Header text', headerInput)),
+      el('div', { class: 'grid2' },
+        el('label', { class: 'check' }, paceCheck, 'Pace of play'),
+        el('label', {}, 'Pace minutes/end', paceMinInput)),
+      el('div', { class: 'grid2' },
+        el('label', {}, 'Countdown warning minutes before', cmbInput),
+        el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'));
+  };
+
   const addForm = el('form', { class: 'card', onsubmit: async (e) => {
     e.preventDefault();
     const name = document.getElementById('lg-add-name').value.trim();
@@ -1811,88 +1858,48 @@ async function renderLeagues() {
     renderLeagues();
   } },
     el('h2', {}, 'Add League'),
-    el('div', { class: 'grid2' },
-      el('label', {}, 'Name', el('input', { type: 'text', id: 'lg-add-name', placeholder: 'League name' })),
-      el('label', {}, 'Game duration (min)', el('input', { type: 'number', id: 'lg-add-dur', min: 0 }))),
-    el('div', { class: 'grid2' },
-      el('label', {}, 'Pre-game countdown (s)', el('input', { type: 'number', id: 'lg-add-pregame', min: 0 })),
-      el('label', {}, 'Header text', el('input', { type: 'text', id: 'lg-add-header' }))),
-    el('div', { class: 'grid2' },
-      el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-pace' }), 'Pace of play'),
-      el('label', {}, 'Pace minutes/end', el('input', { type: 'number', id: 'lg-add-pace-min', min: 0 }))),
-    el('label', {}, 'Countdown warning minutes before', el('input', { type: 'number', id: 'lg-add-cmb', min: 0 })),
-    el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-manual', disabled: !isAddonEnabled('pushbutton') }), 'Manual push-button trigger'),
+    ...leagueFields({name:'',game_duration_minutes:0,pregame_countdown_seconds:0,header_text:'',pace_enabled:false,pace_minutes_per_end:0,countdown_minutes_before:0,manual_trigger:false}, 'lg-add'),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
 
-  const list = el('div', { class: 'league-list' });
+  const list = el('div', { class: 'card league-list' }, el('h2', {}, 'Leagues'));
   if (!leagues.length) {
     list.append(el('p', { class: 'muted' }, 'No leagues configured.'));
   } else {
     leagues.forEach((lp, idx) => {
       const editing = state.editingLeagueIdx === idx;
-      const row = el('li', {});
-      if (editing) {
-        const nameInput = el('input', { type: 'text', value: lp.name || '', maxlength: 80,
-          oninput: (ev) => { lp.name = ev.target.value.trim(); } });
-        const durInput = el('input', { type: 'number', value: lp.game_duration_minutes || '', min: 0,
-          oninput: (ev) => { lp.game_duration_minutes = parseInt(ev.target.value || '0', 10); } });
-        const pregameInput = el('input', { type: 'number', value: lp.pregame_countdown_seconds || '', min: 0,
-          oninput: (ev) => { lp.pregame_countdown_seconds = parseInt(ev.target.value || '0', 10); } });
-        const headerInput = el('input', { type: 'text', value: lp.header_text || '', maxlength: 80,
-          oninput: (ev) => { lp.header_text = ev.target.value.trim(); } });
-        const paceCheck = el('input', { type: 'checkbox', checked: !!lp.pace_enabled,
-          onchange: (ev) => { lp.pace_enabled = ev.target.checked; } });
-        const paceMinInput = el('input', { type: 'number', value: lp.pace_minutes_per_end || '', min: 0,
-          oninput: (ev) => { lp.pace_minutes_per_end = parseInt(ev.target.value || '0', 10); } });
-        const cmbInput = el('input', { type: 'number', value: lp.countdown_minutes_before || '', min: 0,
-          oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
-        const manualCheck = el('input', { type: 'checkbox', checked: !!lp.manual_trigger,
-          disabled: !isAddonEnabled('pushbutton'), onchange: (ev) => { lp.manual_trigger = ev.target.checked; } });
-        row.append(
-          el('div', { class: 'grid2' },
-            el('label', {}, 'Name', nameInput),
-            el('label', {}, 'Duration (min)', durInput)),
-          el('div', { class: 'grid2' },
-            el('label', {}, 'Pre-game countdown (s)', pregameInput),
-            el('label', {}, 'Header text', headerInput)),
-          el('div', { class: 'grid2' },
-            el('label', { class: 'check' }, paceCheck, 'Pace of play'),
-            el('label', {}, 'Pace minutes/end', paceMinInput)),
-          el('label', {}, 'Countdown warning minutes before', cmbInput),
-          el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'),
-          el('div', { class: 'row-actions'},
-            el('button', { class: 'btn primary', onclick: async () => {
-              if (!(await saveLeagues(leagues))) return;
-              state.editingLeagueIdx = null;
-              renderLeagues();
-            } }, 'Save'),
-            el('button', { class: 'btn', onclick: () => {
-              state.editingLeagueIdx = null;
-              renderLeagues();
-            } }, 'Cancel'),
-            el('button', { class: 'btn icon danger', onclick: async () => {
-              if (!confirm(`Delete league "${lp.name || ''}"?`)) return;
-              leagues.splice(idx, 1);
-              state.editingLeagueIdx = null;
-              if (!(await saveLeagues(leagues))) return;
-              renderLeagues();
-            } }, '✕')));
-      } else {
-        const num = el('div', { class: 'num' }, String(idx + 1));
-        const nameCell = el('span', {}, lp.name || '(unnamed)');
-        const durCell = lp.game_duration_minutes ? el('span', { class: 'muted small' }, `${lp.game_duration_minutes} min`) : null;
-        const manualCell = lp.manual_trigger && isAddonEnabled('pushbutton') ? el('span', { class: 'pill warn' }, 'manual trigger') : lp.manual_trigger && !isAddonEnabled('pushbutton') ? el('span', { class: 'pill notdetected', style: 'font-size: 10px' }, 'manual trigger (pushbutton disabled)') : null;
-        row.append(
-          num, nameCell, durCell, manualCell,
-          el('button', { class: 'btn icon', onclick: () => { state.editingLeagueIdx = idx; renderLeagues(); } }, 'Edit'),
+      const badge = el('span', { class: 'fold-badge muted' },
+        lp.manual_trigger && isAddonEnabled('pushbutton') ? 'manual trigger' :
+        lp.manual_trigger && !isAddonEnabled('pushbutton') ? 'manual trigger (pushbutton disabled)' :
+        '');
+      const note = el('span', { class: 'fold-note muted' }, `${lp.game_duration_minutes ? lp.game_duration_minutes + ' min' : 'no duration set'}`);
+      const body = el('div', { class: 'fold-body' },
+        ...leagueFields(lp, 'lg-' + idx),
+        el('div', { class: 'row-actions', style: 'margin-top: 10px' },
+          el('button', { class: 'btn primary', onclick: async () => {
+            if (!(await saveLeagues(leagues))) return;
+            state.editingLeagueIdx = null;
+            renderLeagues();
+          } }, 'Save'),
+          el('button', { class: 'btn', onclick: () => {
+            state.editingLeagueIdx = null;
+            renderLeagues();
+          } }, 'Cancel'),
           el('button', { class: 'btn icon danger', onclick: async () => {
             if (!confirm(`Delete league "${lp.name || ''}"?`)) return;
             leagues.splice(idx, 1);
+            state.editingLeagueIdx = null;
             if (!(await saveLeagues(leagues))) return;
             renderLeagues();
-          } }, '✕'));
-      }
-      list.append(row);
+          } }, '✕')));
+      list.append(el('details', { class: 'card fold', open: editing,
+          ontoggle: (event) => { if (event.target.open) { state.editingLeagueIdx = idx; } else { state.editingLeagueIdx = null; } } },
+        el('summary', {},
+          el('span', { class: 'chevron', 'aria-hidden': 'true' }, '▸'),
+          el('span', { class: 'fold-date' }, lp.name || '(unnamed)'),
+          badge,
+          note,
+          el('span', { class: 'fold-count muted' }, '')),
+        body));
     });
   }
 
@@ -1921,18 +1928,16 @@ async function renderLeagues() {
       leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0, manual_trigger: false });
       existing.add(n.toLowerCase());
       added++;
+
     });
      if (!(await saveLeagues(leagues))) return;
      renderLeagues();
      showMessage('Imported ' + added + ' new league(s).', 'ok');
    } }, 'Import from Club Manager');
 
-  const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
-    (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}${lp.manual_trigger ? ' · manual trigger' : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
   root.replaceChildren(el('div', { class: 'row-actions', style: 'margin: 0 0 16px' }, importBtn),
     addForm,
-    el('div', { class: 'card' }, el('h2', {}, 'Leagues'), list),
-    summary);
+    list);
 }
 
 // ---- start up -------------------------------------------------------------
