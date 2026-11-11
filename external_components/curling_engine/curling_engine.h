@@ -102,6 +102,11 @@ class CurlingEngineComponent : public Component {
   // Write a one-line status to the Hat2-Bus UART add-on when enabled.
   void uart_status();
 
+  // Read-only access for the web editor /api/addons/detection endpoint.
+  const PiTimerSettings::AddonDetection &get_addon_detected() const {
+    return addon_detected;
+  }
+
  protected:
   std::string store_path_{"/flash"};
   mutable std::mutex log_mutex_;
@@ -131,11 +136,6 @@ class CurlingEngineComponent : public Component {
 
   // Runtime add-on hardware detection (not persisted; recomputed every boot).
   PiTimerSettings::AddonDetection addon_detected{};
-
-  // Read-only access for the web editor /api/addons/detection endpoint.
-  const PiTimerSettings::AddonDetection &get_addon_detected() const {
-    return addon_detected;
-  }
 
   // Probe I2C/SDIO for add-on hardware presence. Called from setup() after
   // settings load. A detection failure is not fatal.
