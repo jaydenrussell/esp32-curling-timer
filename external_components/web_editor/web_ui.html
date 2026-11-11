@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Curling Timer</title>
 <meta name="theme-color" content="#6750A4">
-<meta name="color-scheme" content="light">
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIkN1cmxpbmcgVGltZXIiLCAic2hvcnRfbmFtZSI6ICJDdXJsaW5nIFRpbWVyIiwgInN0YXJ0X3VybCI6ICIvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNGRkZCRkUiLCAidGhlbWVfY29sb3IiOiAiIzY3NTBBNCIsICJpY29ucyI6IFt7InNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1EQWdNVEF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEF3SWlCb1pXbG5hSFE5SWpFd01DSWdjbmc5SWpJeUlpQm1hV3hzUFNJak5qYzFNRUUwSWk4K1BIQmhkR2dnWkQwaVRUSTFJRE0xSUVNME5TQTFOU0EzTlNBeU5TSWdjM1J5YjJ0bFBTSWpSa1pHUmtaR0lpQnpkSEp2YTJVdGQybGtkR2c5SWpnaUlHWnBiR3c5SW01dmJtVWlJSE4wY205clpTMXNhVzVsWTJGd1BTSnliM1Z1WkNJZ2MzUnliMnRsTFd4cGJtVnFiMmx1UFNKeWIzVnVaQ0lnTHo0OEwzTjJaejQ9IiwgInNpemVzIjogIjIyNHgyMjQiLCAidHlwZSI6ICJpbWFnZS9zdmcreG1sIn0sIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jaUlIWnBaWGRDYjNnOUlqQWdNQ0F4TURBZ01UQXdJajQ4Y21WamRDQjNhV1IwYUQwaU1UQXdJaUJvWldsbmFIUTlJakV3TUNJZ2NuZzlJakl5SWlCbWFXeHNQU0lqTmpjMU1FRTBJaTgrUEhCaGRHZ2daRDBpVFRJMUlETTFJRU0wTlNBMU5TQTNOU0F5TlNJZ2MzUnliMnRsUFNJalJrWkdSa1pHSWlCemRISnZhMlV0ZDJsa2RHZzlJamdpSUdacGJHdzlJbTV2Ym1VaUlITjBjbTlyWlMxc2FXNWxZMkZ3UFNKeWIzVnVaQ0lnYzNSeWIydGxMV3hwYm1WcWIybHVQU0p5YjNWdVpDSWdMejQ4TDNOMlp6ND0iLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwifV19">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIkN1cmxpbmcgVGltZXIiLCAic2hvcnRfbmFtZSI6ICJDdXJsaW5nIFRpbWVyIiwgInN0YXJ0X3VybCI6ICIvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNkQ0FDQkZFIiwgInRoZW1lX2NvbG9yIjogIiM2NzUwQTQiLCAiaWNvbnMiOiBbeyJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4yWnlCNGJXeHVjMGloUFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1EQWdNVEF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEF3SWlCb1pXbG5hSFE5SWpFd01DSWdjbmc5SWpJeUlpQm1hV3hzUFNJak5qYzFNRUUwSWk4K1BIQmhkR2dnWkQwaVRUSTFJRE0xSUVNME5TQTFOU0EzTlNBeU5TSWdjM1J5YjJ0bFBTSWpSa1pHUmtaR0lpQnpkSEp2YTJVdGQybGtkR2c5SWpnaUlHWnBiR3c5SW01dmJtVWlJSE4wY205clpTMXNhVzVsWTJGd1BTSnliM1Z1WkNJZ2MzUnliMnRsTFd4cGJtVnFiMmx1UFNKeWIzVnVaQ0lnTHo0OEwzTjJaejQ9IiwgInNpemVzIjogIjIyNHgyMjQiLCAidHlwZSI6ICJpbWFnZS9zdmcreG1sIn0sIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jaUlIWnBaWGRDYjNnOUlqQWdNQ0F4TURBZ01UQXdJajQ4Y21WamRDQjNhV1IwYUQwaU1UQXdJaUJvWldsbmFIUTlJakV3TUNJZ2NuZzlJakl5SWlCbWFXeHNQU0lqTmpjMU1FRTBJaTgrUEhCaGRHZ2daRDBpVFRJMUlETTFJRU0wTlNBMU5TQTNOU0F5TlNJZ2MzUnliMnRsUFNJalJrWkdSa1pHSWlCemRISnZhMlV0ZDJsa2RHZzlJamdpSUdacGJHdzlJbTV2Ym1VaUlITjBjbTlyWlMxc2FXNWxZMkZ3UFNKeWIzVnVaQ0lnYzNSeWIydGxMV3hwYm1WcWIybHVQU0p5YjNWdVpDSWdMejQ4TDNOMlp6ND0iLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwifV19">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236750A4'/%3E%3Cpath d='M25 35 L45 55 L75 25' stroke='%23FFFFFF' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
 /* ==========================================================================
@@ -14,35 +14,35 @@
    Single source of truth: edit this file; web_ui.h is regenerated at codegen.
    ========================================================================== */
 
-/* --- Material Design 3 color tokens (light, high-contrast) --- */
+/* --- Material Design 3 color tokens (dark, high-contrast) --- */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --md-sys-color-primary: #6750A4;
   --md-sys-color-on-primary: #FFFFFF;
-  --md-sys-color-primary-container: #EADDFF;
-  --md-sys-color-on-primary-container: #21005E;
-  --md-sys-color-secondary: #625B71;
-  --md-sys-color-on-secondary: #FFFFFF;
-  --md-sys-color-secondary-container: #E8DEF8;
-  --md-sys-color-on-secondary-container: #1D1B2E;
-  --md-sys-color-tertiary: #7D5260;
-  --md-sys-color-on-tertiary: #FFFFFF;
-  --md-sys-color-tertiary-container: #FFD8E4;
-  --md-sys-color-on-tertiary-container: #31121D;
-  --md-sys-color-error: #B3261E;
-  --md-sys-color-on-error: #FFFFFF;
-  --md-sys-color-error-container: #F9DEDC;
-  --md-sys-color-on-error-container: #410E0B;
-  --md-sys-color-background: #FFFBFE;
-  --md-sys-color-on-background: #1C1B1F;
-  --md-sys-color-surface: #FFFBFE;
-  --md-sys-color-on-surface: #1C1B1F;
-  --md-sys-color-surface-variant: #E7E0EC;
-  --md-sys-color-on-surface-variant: #49454F;
-  --md-sys-color-outline: #79747E;
-  --md-sys-color-outline-variant: #CAC4D0;
-  --md-sys-color-inverse-surface: #313033;
-  --md-sys-color-inverse-on-surface: #F2EFEE;
+  --md-sys-color-primary-container: #4F378B;
+  --md-sys-color-on-primary-container: #F3E9FF;
+  --md-sys-color-secondary: #CCC2DC;
+  --md-sys-color-on-secondary: #332D41;
+  --md-sys-color-secondary-container: #4A4458;
+  --md-sys-color-on-secondary-container: #F3E9FF;
+  --md-sys-color-tertiary: #EFB8C8;
+  --md-sys-color-on-tertiary: #492532;
+  --md-sys-color-tertiary-container: #63515E;
+  --md-sys-color-on-tertiary-container: #FDE2EA;
+  --md-sys-color-error: #F28B8B;
+  --md-sys-color-on-error: #60001E;
+  --md-sys-color-error-container: #8C1D18;
+  --md-sys-color-on-error-container: #F9DEDC;
+  --md-sys-color-background: #1C1B1F;
+  --md-sys-color-on-background: #E6E1E5;
+  --md-sys-color-surface: #1C1B1F;
+  --md-sys-color-on-surface: #E6E1E5;
+  --md-sys-color-surface-variant: #49454F;
+  --md-sys-color-on-surface-variant: #CAC4D0;
+  --md-sys-color-outline: #938F99;
+  --md-sys-color-outline-variant: #49454F;
+  --md-sys-color-inverse-surface: #E6E1E5;
+  --md-sys-color-inverse-on-surface: #1C1B1F;
   --md-sys-color-inverse-primary: #F0EFFF;
 
   /* Practical aliases used by JS inline styles */
@@ -653,12 +653,15 @@ async function selectTab(id) {
 // ---- status tab -----------------------------------------------------------
 async function loadStatus() {
   const result = await api('/api/status');
-  if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
-   state.status = result.data;
-   state.statusAt = performance.now();
-   renderStatus();
-   if (state.tab === 'quickstart') renderQuickstart();
- }
+  if (!result.ok) {
+    if (result.status !== 401) showMessage(result.data.error);
+    return;
+  }
+  state.status = result.data;
+  state.statusAt = performance.now();
+  renderStatus();
+  if (state.tab === 'quickstart') renderQuickstart();
+}
 
 // the quick start form is built once so the 5 second status refresh never wipes what is being typed
 let quickForm = null;
@@ -1266,7 +1269,10 @@ function validateConfigDiff(diff) {
 
 async function loadConfig() {
   const result = await api('/api/config');
-  if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
+  if (!result.ok) {
+    if (result.status !== 401) showMessage(result.data.error);
+    return;
+  }
   state.configOriginal = result.data.config;
   state.configValues = JSON.parse(JSON.stringify(result.data.config));
   state.configVersion = result.data.version;
