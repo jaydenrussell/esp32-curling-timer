@@ -852,12 +852,13 @@ ApiResponse PiTimerApi::get_config() {
 ApiResponse PiTimerApi::get_addon_detection() {
   JsonDocument doc;
   if (engine_ != nullptr) {
-    doc["rtc"] = engine_->addon_detected.rtc;
-    doc["relays"] = engine_->addon_detected.relays;
-    doc["pushbutton"] = engine_->addon_detected.pushbutton;
-    doc["pahub"] = engine_->addon_detected.pahub;
-    doc["wifi"] = engine_->addon_detected.wifi;
-    doc["uart"] = engine_->addon_detected.uart;
+    const auto &det = engine_->get_addon_detected();
+    doc["rtc"] = det.rtc;
+    doc["relays"] = det.relays;
+    doc["pushbutton"] = det.pushbutton;
+    doc["pahub"] = det.pahub;
+    doc["wifi"] = det.wifi;
+    doc["uart"] = det.uart;
   } else {
     doc["rtc"] = false;
     doc["relays"] = false;
