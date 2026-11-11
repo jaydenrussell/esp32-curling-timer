@@ -517,15 +517,50 @@ const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: fa
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
 
 // Add-on marketplace data model (spec §2). auto = hardware-detected gating.
+// configPaths = settings fields that belong to this addon (gated by enablement).
+// info = GPIO / I2C / port / hat details shown in the expansion.
 const ADDONS = [
-  { key: 'rtc', label: 'RTC time source', desc: 'Battery-backed clock (HYM8563 / PCF8563) — keeps time across power loss; timer knows the time on boot before SNTP syncs.', auto: true },
-  { key: 'relays', label: 'Relay outputs', desc: 'Unit 2Relay channels driving the 24VAC bell circuit + aux.', auto: false },
-  { key: 'pushbutton', label: 'Manual trigger button', desc: 'GPIO45 press rings the start relays for the next manually-triggered game.', auto: false },
-  { key: 'pahub', label: 'PaHub I2C hub', desc: 'PCA9548A 8-channel multiplexer — multiple I2C devices on one Grove port.', auto: true },
-  { key: 'wifi', label: 'Wi-Fi failover', desc: 'ESP32-C6 SDIO Wi-Fi failover.', auto: true },
-  { key: 'uart', label: 'UART0 serial port', desc: 'Hat2-Bus UART0 serial (GPIO37 TX / GPIO38 RX) — one-line status stream to a serial device.', auto: false },
+  { key: 'rtc', label: 'RTC time source', desc: 'Battery-backed clock (HYM8563 / PCF8563) — keeps time across power loss; timer knows the time on boot before SNTP syncs.', auto: true,
+    configPaths: ['config.addons.rtc'],
+    info: [ 'I2C: address 0x51 (HYM8563 / PCF8563)', 'Pins: Grove Port B — SDA GPIO53, SCL GPIO54', 'Hat: M5Stack Unit PoE-P4 (U213)' ] },
+  { key: 'relays', label: 'Relay outputs', desc: 'Unit 2Relay channels driving the 24VAC bell circuit + aux.', auto: false,
+    configPaths: ['config.addons.relays', 'config.relay_count', 'config.relay1_enabled', 'config.relay1_function', 'config.relay2_enabled', 'config.relay2_function', 'config.relay3_enabled', 'config.relay3_function', 'config.relay4_enabled', 'config.relay4_function', 'config.buzzer.ring_at_start', 'config.buzzer.countdown.relays', 'config.buzzer.relays'],
+    info: [ 'Pins: RELAY1 GPIO26, RELAY2 GPIO25, RELAY3 GPIO32, RELAY4 GPIO33', 'Hat: M5Stack Unit 2Relay on Hat2-Bus', 'Configure: Relay outputs under Global options → Relays' ] },
+  { key: 'pushbutton', label: 'Manual trigger button', desc: 'GPIO press rings the start relays for the next manually-triggered game.', auto: false,
+    configPaths: ['config.addons.pushbutton', 'config.manual_trigger_gpio'],
+    info: [ 'Pin: GPIO45 (manual trigger input)', 'Setting: Manual trigger GPIO under Global options → Timer' ] },
+  { key: 'pahub', label: 'PaHub I2C hub', desc: 'PCA9548A 8-channel multiplexer — multiple I2C devices on one Grove port.', auto: true,
+    configPaths: ['config.addons.pahub'],
+    info: [ 'I2C: address 0x70 (PCA9548A)', 'Port: Grove Port A — SDA GPIO5, SCL GPIO6', 'Channels: 0–7 (one per I2C device)' ] },
+  { key: 'wifi', label: 'Wi-Fi failover', desc: 'ESP32-C6 SDIO Wi-Fi failover.', auto: true,
+    configPaths: ['config.addons.wifi'],
+    info: [ 'Module: ESP32-C6 SuperMini on SDIO header', 'Reference: docs/flash-c6.md' ] },
+  { key: 'uart', label: 'UART0 serial port', desc: 'Hat2-Bus UART0 serial (GPIO37 TX / GPIO38 RX) — one-line status stream to a serial device.', auto: false,
+    configPaths: ['config.addons.uart'],
+    info: [ 'Pins: TX GPIO37, RX GPIO38 (INPUT_PULLUP)', 'Hat: Hat2-Bus UART0' ] },
 ];
 let addonDetection = {};
+
+// Map config path → addon key, for gating config fields by addon enablement.
+const PATH_TO_ADDON = {};
+for (const a of ADDONS) {
+  for (const path of a.configPaths) {
+    PATH_TO_ADDON[path] = a.key;
+  }
+}
+// The config.addons.* toggle fields themselves are never gated (they are the
+// enable switch), so remove them from gating consideration.
+for (const key of ['rtc', 'relays', 'pushbutton', 'pahub', 'wifi', 'uart']) {
+  delete PATH_TO_ADDON[`config.addons.${key}`];
+}
+
+function isAddonEnabled(key) {
+  const a = ADDONS.find((x) => x.key === key);
+  if (!a) return false;
+  const intent = state.configValues && state.configValues[`config.addons.${key}`] === true;
+  const detected = addonDetection && addonDetection[key] === true;
+  return intent && (!a.auto || detected);
+}
 
 // ---- small helpers --------------------------------------------------------
 function el(tag, props, ...children) {
@@ -1124,7 +1159,8 @@ const CONFIG_SECTIONS = [
   { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
     fields: [
       ['config.enabled', 'bool', 'Timer enabled (master on/off)'],
-      ['config.allow_midnight_wrap', 'bool', 'Allow timers past midnight']] },
+      ['config.allow_midnight_wrap', 'bool', 'Allow timers past midnight'],
+      ['config.manual_trigger_gpio', 'int', 'Manual trigger GPIO (pushbutton add-on)', 0, 40]] },
   { group: 'Global options', title: 'Curling Club Manager', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
     fields: [
       ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)'],
@@ -1284,6 +1320,15 @@ function configField(field) {
   const [path, type, label, min, max] = field;
   const value = state.configValues[path];
   const set = (next) => { state.configValues[path] = next; configTouched(); };
+
+  // Gate fields by add-on enablement: if the field belongs to a disabled
+  // add-on, render it as disabled with a hint so the user knows why.
+  const addonKey = PATH_TO_ADDON[path];
+  if (addonKey && !isAddonEnabled(addonKey)) {
+    return el('div', { class: 'field' }, el('label', {}, label,
+      el('span', { class: 'pill notdetected', style: 'margin-left: 8px; font-size: 10px' }, 'add-on disabled')));
+  }
+
   if (type === 'bool') {
     return el('div', { class: 'field' }, el('label', { class: 'check' },
       el('input', { type: 'checkbox', checked: value === true, onchange: (event) => set(event.target.checked) }), label));
@@ -1426,27 +1471,39 @@ async function renderAddonMarketplace() {
   if (!market) {
     market = el('section', { id: 'addon-marketplace' },
       el('h2', {}, 'Add-ons 🔧'),
-      el('p', { class: 'muted small', style: 'margin-top: 0' }, 'All add-on drivers are compiled into the firmware; tiles gate each one at runtime. Detected hardware can be enabled with a tap — nothing needs manual pin or address config.'),
+      el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Hardware add-on drivers are compiled into the firmware. Enable detected hardware with a tap — no manual pin or address config needed. Disabled add-ons hide their related config throughout the UI.'),
       el('div', { class: 'addon-grid' }));
-    $('tab-config').append(market);
+    $('tab-config').prepend(market);
   }
   const grid = market.querySelector('.addon-grid');
+  const det = addonDetection || {};
   grid.replaceChildren();
   for (const a of ADDONS) {
     const intent = state.configValues[`config.addons.${a.key}`] === true;
-    const detected = addonDetection[a.key] === true;
+    const detected = det[a.key] === true;
     const enabled = intent && (!a.auto || detected);
+    const showDetail = enabled || detected;
     const pillCls = a.auto ? (detected ? (intent ? 'enabled' : 'detected') : 'notdetected') : 'manual';
     const pillText = a.auto ? (detected ? (intent ? 'Enabled' : 'Detected') : 'Not detected') : 'Manual';
     const btnDisabled = a.auto && !detected;
     const btnText = intent ? 'Disable' : 'Enable';
     const btnCls = intent ? 'btn-toggle danger' : 'btn-toggle primary';
+
+    const infoLines = (a.info || []).map((line) => el('div', { class: 'muted small', style: 'margin: 2px 0' }, line));
+    const detail = el('details', { class: 'card fold', open: showDetail },
+      el('summary', {},
+        el('span', { class: 'chevron', 'aria-hidden': 'true' }, '▸'),
+        el('span', { class: 'fold-date' }, 'Configuration'),
+        el('span', { class: 'fold-count muted' }, showDetail ? 'open' : 'open')),
+      el('div', { class: 'fold-body' },
+        ...infoLines));
     const card = el('div', { class: 'addon-card' },
       el('h3', {}, a.label),
       el('p', { class: 'addon-desc' }, a.desc),
       el('div', { class: 'row-actions', style: 'margin-top: 8px; gap: 8px' },
         el('span', { class: `pill ${pillCls}` }, pillText),
-        el('button', { class: btnCls, disabled: btnDisabled, onclick: () => toggleAddon(a.key, !intent) }, btnText)));
+        el('button', { class: btnCls, disabled: btnDisabled, onclick: () => toggleAddon(a.key, !intent) }, btnText)),
+      showDetail ? detail : null);
     grid.append(card);
   }
 }
