@@ -53,6 +53,8 @@ int relay_duration_for(const PiTimerSettings &settings, const char *event, int r
   return 0;
 }
 
+}  // namespace
+
 // Duration (seconds) to pulse for an event: per-relay overrides win (longest
 // when several relays ring together, since the driver pulses all relays for
 // one length), falling back to the event-level duration then the global
@@ -73,8 +75,6 @@ int event_duration(const PiTimerSettings &settings, const char *event,
   if (std::string(event) == "countdown") return settings.relay_countdown_duration;
   return settings.relay_end_duration;
 }
-
-}  // namespace
 
 int bell_check(const PiTimerSettings &settings, const std::optional<PiTimerGame> &game,
                const std::string &date_iso, std::string *last_key, uint32_t *duration_ms) {
