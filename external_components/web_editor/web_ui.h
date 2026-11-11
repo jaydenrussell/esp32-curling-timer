@@ -7,8 +7,8 @@ static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Curling Timer</title>
-<meta name="theme-color" content="#6750A4">
-<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#0288D1">
+<meta name="color-scheme" content="dark">
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIkN1cmxpbmcgVGltZXIiLCAic2hvcnRfbmFtZSI6ICJDdXJsaW5nIFRpbWVyIiwgInN0YXJ0X3VybCI6ICIvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNGRkZCRkUiLCAidGhlbWVfY29sb3IiOiAiIzY3NTBBNCIsICJpY29ucyI6IFt7InNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1EQWdNVEF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEF3SWlCb1pXbG5hSFE5SWpFd01DSWdjbmc5SWpJeUlpQm1hV3hzUFNJak5qYzFNRUUwSWk4K1BIQmhkR2dnWkQwaVRUSTFJRE0xSUVNME5TQTFOU0EzTlNBeU5TSWdjM1J5YjJ0bFBTSWpSa1pHUmtaR0lpQnpkSEp2YTJVdGQybGtkR2c5SWpnaUlHWnBiR3c5SW01dmJtVWlJSE4wY205clpTMXNhVzVsWTJGd1BTSnliM1Z1WkNJZ2MzUnliMnRsTFd4cGJtVnFiMmx1UFNKeWIzVnVaQ0lnTHo0OEwzTjJaejQ9IiwgInNpemVzIjogIjIyNHgyMjQiLCAidHlwZSI6ICJpbWFnZS9zdmcreG1sIn0sIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jaUlIWnBaWGRDYjNnOUlqQWdNQ0F4TURBZ01UQXdJajQ4Y21WamRDQjNhV1IwYUQwaU1UQXdJaUJvWldsbmFIUTlJakV3TUNJZ2NuZzlJakl5SWlCbWFXeHNQU0lqTmpjMU1FRTBJaTgrUEhCaGRHZ2daRDBpVFRJMUlETTFJRU0wTlNBMU5TQTNOU0F5TlNJZ2MzUnliMnRsUFNJalJrWkdSa1pHSWlCemRISnZhMlV0ZDJsa2RHZzlJamdpSUdacGJHdzlJbTV2Ym1VaUlITjBjbTlyWlMxc2FXNWxZMkZ3UFNKeWIzVnVaQ0lnYzNSeWIydGxMV3hwYm1WcWIybHVQU0p5YjNWdVpDSWdMejQ4TDNOMlp6ND0iLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwifV19">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236750A4'/%3E%3Cpath d='M25 35 L45 55 L75 25' stroke='%23FFFFFF' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
@@ -17,36 +17,36 @@ static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
    Single source of truth: edit this file; web_ui.h is regenerated at codegen.
    ========================================================================== */
 
-/* --- Material Design 3 color tokens (light, high-contrast) --- */
+/* --- Material Design 3 color tokens (dark, curling ice-to-stone) --- */
 :root {
-  color-scheme: light;
-  --md-sys-color-primary: #6750A4;
+  color-scheme: dark;
+  --md-sys-color-primary: #0288D1;
   --md-sys-color-on-primary: #FFFFFF;
-  --md-sys-color-primary-container: #EADDFF;
-  --md-sys-color-on-primary-container: #21005E;
-  --md-sys-color-secondary: #625B71;
-  --md-sys-color-on-secondary: #FFFFFF;
-  --md-sys-color-secondary-container: #E8DEF8;
-  --md-sys-color-on-secondary-container: #1D1B2E;
-  --md-sys-color-tertiary: #7D5260;
-  --md-sys-color-on-tertiary: #FFFFFF;
-  --md-sys-color-tertiary-container: #FFD8E4;
-  --md-sys-color-on-tertiary-container: #31121D;
-  --md-sys-color-error: #B3261E;
-  --md-sys-color-on-error: #FFFFFF;
-  --md-sys-color-error-container: #F9DEDC;
-  --md-sys-color-on-error-container: #410E0B;
-  --md-sys-color-background: #FFFBFE;
-  --md-sys-color-on-background: #1C1B1F;
-  --md-sys-color-surface: #FFFBFE;
-  --md-sys-color-on-surface: #1C1B1F;
-  --md-sys-color-surface-variant: #E7E0EC;
-  --md-sys-color-on-surface-variant: #49454F;
-  --md-sys-color-outline: #79747E;
-  --md-sys-color-outline-variant: #CAC4D0;
-  --md-sys-color-inverse-surface: #313033;
-  --md-sys-color-inverse-on-surface: #F2EFEE;
-  --md-sys-color-inverse-primary: #F0EFFF;
+  --md-sys-color-primary-container: #01579B;
+  --md-sys-color-on-primary-container: #E3F2FD;
+  --md-sys-color-secondary: #CCC2DC;
+  --md-sys-color-on-secondary: #332D41;
+  --md-sys-color-secondary-container: #4A4458;
+  --md-sys-color-on-secondary-container: #F3E9FF;
+  --md-sys-color-tertiary: #EFB8C8;
+  --md-sys-color-on-tertiary: #492532;
+  --md-sys-color-tertiary-container: #63515E;
+  --md-sys-color-on-tertiary-container: #FDE2EA;
+  --md-sys-color-error: #F28B8B;
+  --md-sys-color-on-error: #60001E;
+  --md-sys-color-error-container: #8C1D18;
+  --md-sys-color-on-error-container: #F9DEDC;
+  --md-sys-color-background: #1C1B1F;
+  --md-sys-color-on-background: #E6E1E5;
+  --md-sys-color-surface: #1C1B1F;
+  --md-sys-color-on-surface: #E6E1E5;
+  --md-sys-color-surface-variant: #49454F;
+  --md-sys-color-on-surface-variant: #CAC4D0;
+  --md-sys-color-outline: #938F99;
+  --md-sys-color-outline-variant: #49454F;
+  --md-sys-color-inverse-surface: #E6E1E5;
+  --md-sys-color-inverse-on-surface: #1C1B1F;
+  --md-sys-color-inverse-primary: #4FC3F7;
 
   /* Practical aliases used by JS inline styles */
   --bg: var(--md-sys-color-background);
@@ -171,7 +171,7 @@ main {
 
 /* --- Hero / countdown --- */
 .hero {
-  background: var(--md-sys-color-primary-container);
+  background: linear-gradient(135deg, var(--md-sys-color-primary) 0%, #C5A059 100%);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: 28px;
   padding: 32px 24px;
@@ -218,11 +218,11 @@ button.btn {
 }
 button.btn:disabled { opacity: 0.5; cursor: default; }
 button.btn.primary {
-  background: var(--md-sys-color-primary);
+  background: linear-gradient(135deg, var(--md-sys-color-primary), #FB8C00);
   border-color: var(--md-sys-color-primary);
   color: var(--md-sys-color-on-primary);
 }
-button.btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-primary) 90%, black); }
+button.btn.primary:hover:not(:disabled) { filter: brightness(1.15); }
 button.btn.danger {
   color: var(--md-sys-color-error);
   border-color: var(--md-sys-color-error);
@@ -433,9 +433,9 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--md-sys-color-surf
   align-self: flex-start;
 }
 .btn-toggle:disabled { opacity: 0.5; cursor: default; }
-.btn-toggle.primary { background: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.btn-toggle.primary { background: linear-gradient(135deg, var(--md-sys-color-primary), #FB8C00); border-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.btn-toggle.primary:hover:not(:disabled) { filter: brightness(1.15); }
 .btn-toggle.danger { color: var(--md-sys-color-error); border-color: var(--md-sys-color-error); background: transparent; }
-.btn-toggle.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-primary) 90%, black); }
 .btn-toggle.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-error) 8%, transparent); }
 @media (max-width: 640px) { .addon-grid { grid-template-columns: 1fr; } }
 
@@ -448,7 +448,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--md-sys-color-surf
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">vv2026.11.101</span></h2>
+  <h2>Curling Timer <span class="version">vv2026.11.102</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -473,7 +473,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--md-sys-color-surf
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">vv2026.11.101</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">vv2026.11.102</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -679,7 +679,7 @@ async function selectTab(id) {
 
   if (id === 'config') {
     if (!state.configOriginal || !state.configDirty) await loadConfig();
-    else renderConfig();
+    else await renderConfig();
     await loadRaw();
   }
   if (id === 'history') loadHistory();
@@ -778,6 +778,9 @@ function renderStatus() {
   } else if (!s.clock_synced) {
     now.append(el('div', { class: 'banner warn' },
       'Waiting for the clock to sync (SNTP). The countdown, today\'s games and quick start appear once the time is known.'));
+  } else if (!isAddonEnabled('relays') && s.enabled) {
+    now.append(el('div', { class: 'banner warn' },
+      'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
   } else if (cur) {
     const name = el('div', { class: 'game-name' }, cur.name || 'Game in progress',
       cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null);
@@ -1310,7 +1313,7 @@ async function loadConfig() {
   state.configValues = JSON.parse(JSON.stringify(result.data.config));
   state.configVersion = result.data.version;
   setConfigDirty(false);
-  if (state.tab === 'config') renderConfig();
+  if (state.tab === 'config') await renderConfig();
 }
 
 function configField(field) {
@@ -1427,8 +1430,10 @@ async function testRelay(eventName, btn) {
   } catch(e) { console.error(e); if (btn) { btn.textContent = '✗'; btn.style.background = 'var(--bad)'; } }
 }
 
-function renderConfig() {
+async function renderConfig() {
   if (!state.configValues) return;
+  const detectionResult = await api('/api/addons/detection');
+  if (detectionResult.ok) addonDetection = detectionResult.data || {};
   if (!document.getElementById('pygame-colors')) {
     document.body.append(el('datalist', { id: 'pygame-colors' },
       PYGAME_COLORS.map((color) => el('option', { value: color }))));
@@ -1454,7 +1459,7 @@ function renderConfig() {
       section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
       el('h2', {}, section.title),
       el('div', { class: 'grid2' }, fields.map(configField)),
-      section.group.startsWith('Outputs') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null));
+      section.group.startsWith('Outputs') ? isAddonEnabled('relays') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null : null));
   }
   $('tab-config').replaceChildren(...nodes);
   renderAddonMarketplace();
@@ -1510,8 +1515,9 @@ async function toggleAddon(key, next) {
   if (!state.configVersion) { showMessage('Config not loaded, please reload the page'); return; }
   const result = await api('/api/config', { version: state.configVersion, config: { [`config.addons.${key}`]: next } });
   if (!result.ok) { showMessage(`Not saved: ${result.data.error}`); return; }
-  showMessage('Saved; detection re-evaluates on next boot', 'ok');
+  showMessage('Saved; reloading configuration', 'ok');
   loadConfig();
+  if (state.tab === 'config') await renderConfig();
 }
 
 $('config-save').addEventListener('click', async () => {
@@ -1750,7 +1756,7 @@ async function renderLeagues() {
       el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-pace' }), 'Pace of play'),
       el('label', {}, 'Pace minutes/end', el('input', { type: 'number', id: 'lg-add-pace-min', min: 0 }))),
     el('label', {}, 'Countdown warning minutes before', el('input', { type: 'number', id: 'lg-add-cmb', min: 0 })),
-    el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-manual' }), 'Manual push-button trigger'),
+    el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-manual', disabled: !isAddonEnabled('pushbutton') }), 'Manual push-button trigger'),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
 
   const list = el('div', { class: 'league-list' });
@@ -1776,7 +1782,7 @@ async function renderLeagues() {
         const cmbInput = el('input', { type: 'number', value: lp.countdown_minutes_before || '', min: 0,
           oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
         const manualCheck = el('input', { type: 'checkbox', checked: !!lp.manual_trigger,
-          onchange: (ev) => { lp.manual_trigger = ev.target.checked; } });
+          disabled: !isAddonEnabled('pushbutton'), onchange: (ev) => { lp.manual_trigger = ev.target.checked; } });
         row.append(
           el('div', { class: 'grid2' },
             el('label', {}, 'Name', nameInput),
@@ -1810,7 +1816,7 @@ async function renderLeagues() {
         const num = el('div', { class: 'num' }, String(idx + 1));
         const nameCell = el('span', {}, lp.name || '(unnamed)');
         const durCell = lp.game_duration_minutes ? el('span', { class: 'muted small' }, `${lp.game_duration_minutes} min`) : null;
-        const manualCell = lp.manual_trigger ? el('span', { class: 'pill warn' }, 'manual trigger') : null;
+        const manualCell = lp.manual_trigger && isAddonEnabled('pushbutton') ? el('span', { class: 'pill warn' }, 'manual trigger') : lp.manual_trigger && !isAddonEnabled('pushbutton') ? el('span', { class: 'pill notdetected', style: 'font-size: 10px' }, 'manual trigger (pushbutton disabled)') : null;
         row.append(
           num, nameCell, durCell, manualCell,
           el('button', { class: 'btn icon', onclick: () => { state.editingLeagueIdx = idx; renderLeagues(); } }, 'Edit'),
