@@ -1430,7 +1430,7 @@ function configField(field) {
   if (type === 'int') {
     let width = '';
     if (path === 'config.relay_count') width = '40px';
-    else if (path.endsWith('.duration') || path === 'config.buzzer.header_hold' || path.endsWith('header_hold')) width = '4ch';
+    else if (path.endsWith('.duration') || path === 'config.buzzer.header_hold' || path.endsWith('header_hold')) width = '7ch';
     return el('label', {}, label, el('input', { type: 'number', min, max, step: 1, inputmode: 'numeric',
       style: width ? `width: ${width}` : '',
       value: value == null ? '' : String(value),
