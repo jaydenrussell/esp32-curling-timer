@@ -130,7 +130,7 @@ class CurlingEngineComponent : public Component {
   bool uart_enabled_{false};                 // config.addons.uart from settings
 
   // Runtime add-on hardware detection (not persisted; recomputed every boot).
-  AddonDetection addon_detected{};
+  PiTimerSettings::AddonDetection addon_detected{};
 
   // Probe I2C/SDIO for add-on hardware presence. Called from setup() after
   // settings load. A detection failure is not fatal.

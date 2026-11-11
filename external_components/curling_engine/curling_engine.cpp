@@ -44,7 +44,7 @@ static const char *const PARTITION_LABEL = "storage";
 static constexpr size_t FAT_MAX_FILES = 16;
 
 void CurlingEngineComponent::detect_addons() {
-  this->addon_detected = AddonDetection{};
+  this->addon_detected = PiTimerSettings::AddonDetection{};
   this->addon_detected.detected_at_ms = millis();
 
   // RTC: probe the PCF8563-compatible device via the RealTimeClock component.
