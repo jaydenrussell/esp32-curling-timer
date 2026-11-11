@@ -3,240 +3,449 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<title>Countdown Timer</title>
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F172A" />
-<meta name="color-scheme" content="light dark" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%230F172A%22/><path d=%22M25 35 L45 55 L75 25%22 stroke=%22%23FFFFFF%22 stroke-width=%228%22 fill=%22none%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/></svg>">
+<title>Curling Timer</title>
+<meta name="theme-color" content="#6750A4">
+<meta name="color-scheme" content="light">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIkN1cmxpbmcgVGltZXIiLCAic2hvcnRfbmFtZSI6ICJDdXJsaW5nIFRpbWVyIiwgInN0YXJ0X3VybCI6ICIvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNGRkZCRkUiLCAidGhlbWVfY29sb3IiOiAiIzY3NTBBNCIsICJpY29ucyI6IFt7InNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1EQWdNVEF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEF3SWlCb1pXbG5hSFE5SWpFd01DSWdjbmc5SWpJeUlpQm1hV3hzUFNJak5qYzFNRUUwSWk4K1BIQmhkR2dnWkQwaVRUSTFJRE0xSUVNME5TQTFOU0EzTlNBeU5TSWdjM1J5YjJ0bFBTSWpSa1pHUmtaR0lpQnpkSEp2YTJVdGQybGtkR2c5SWpnaUlHWnBiR3c5SW01dmJtVWlJSE4wY205clpTMXNhVzVsWTJGd1BTSnliM1Z1WkNJZ2MzUnliMnRsTFd4cGJtVnFiMmx1UFNKeWIzVnVaQ0lnTHo0OEwzTjJaejQ9IiwgInNpemVzIjogIjIyNHgyMjQiLCAidHlwZSI6ICJpbWFnZS9zdmcreG1sIn0sIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jaUlIWnBaWGRDYjNnOUlqQWdNQ0F4TURBZ01UQXdJajQ4Y21WamRDQjNhV1IwYUQwaU1UQXdJaUJvWldsbmFIUTlJakV3TUNJZ2NuZzlJakl5SWlCbWFXeHNQU0lqTmpjMU1FRTBJaTgrUEhCaGRHZ2daRDBpVFRJMUlETTFJRU0wTlNBMU5TQTNOU0F5TlNJZ2MzUnliMnRsUFNJalJrWkdSa1pHSWlCemRISnZhMlV0ZDJsa2RHZzlJamdpSUdacGJHdzlJbTV2Ym1VaUlITjBjbTlyWlMxc2FXNWxZMkZ3UFNKeWIzVnVaQ0lnYzNSeWIydGxMV3hwYm1WcWIybHVQU0p5YjNWdVpDSWdMejQ4TDNOMlp6ND0iLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwifV19">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236750A4'/%3E%3Cpath d='M25 35 L45 55 L75 25' stroke='%23FFFFFF' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
+/* ==========================================================================
+   Material Design 3 — curling timer web UI
+   Single source of truth: edit this file; web_ui.h is regenerated at codegen.
+   ========================================================================== */
+
+/* --- Material Design 3 color tokens (light, high-contrast) --- */
 :root {
-  color-scheme: dark;
-  /* Design system tokens (glassmorphism dark mode) */
-  --color-background: #0F172A;
-  --color-card: #1B2336;
-  --color-surface-2: #1E293B;
-  --color-foreground: #F8FAFC;
-  --color-muted-surface: #272F42;
-  --color-muted-foreground: #94A3B8;
-  --color-border: #475569;
-  --color-border-strong: #64748B;
-  --color-accent: #22C55E;
-  --color-on-accent: #0F172A;
-  --color-destructive: #EF4444;
-  --color-on-destructive: #000000;
-  --color-ring: #FFFFFF;
-  --color-focus-ring: #3B82F6;
+  color-scheme: light;
+  --md-sys-color-primary: #6750A4;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #EADDFF;
+  --md-sys-color-on-primary-container: #21005E;
+  --md-sys-color-secondary: #625B71;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E8DEF8;
+  --md-sys-color-on-secondary-container: #1D1B2E;
+  --md-sys-color-tertiary: #7D5260;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #FFD8E4;
+  --md-sys-color-on-tertiary-container: #31121D;
+  --md-sys-color-error: #B3261E;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #F9DEDC;
+  --md-sys-color-on-error-container: #410E0B;
+  --md-sys-color-background: #FFFBFE;
+  --md-sys-color-on-background: #1C1B1F;
+  --md-sys-color-surface: #FFFBFE;
+  --md-sys-color-on-surface: #1C1B1F;
+  --md-sys-color-surface-variant: #E7E0EC;
+  --md-sys-color-on-surface-variant: #49454F;
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-outline-variant: #CAC4D0;
+  --md-sys-color-inverse-surface: #313033;
+  --md-sys-color-inverse-on-surface: #F2EFEE;
+  --md-sys-color-inverse-primary: #F0EFFF;
 
-  /* Brand accents (retained from cold rink palette) */
-  --rink: #3E9CC8;
-  --rink-dark: #0E6BA8;
-  --stone-red: #D66E64;
-  --stone-red-dark: #B5453B;
-  --stone-gold: #E0B55D;
-  --stone-gold-dark: #C49A2E;
+  /* Practical aliases used by JS inline styles */
+  --bg: var(--md-sys-color-background);
+  --surface: var(--md-sys-color-surface);
+  --text: var(--md-sys-color-on-surface);
+  --text-strong: var(--md-sys-color-on-surface);
+  --muted: var(--md-sys-color-on-surface-variant);
+  --border: var(--md-sys-color-outline);
+  --ok: #2E7D5C;
+  --ok-dark: #004D40;
+  --bad: #B3261E;
+  --warn: #C49A2E;
+}
 
-  /* Derived / legacy aliases kept for JS inline styles that reference them */
-  --bg: var(--color-background);
-  --surface: var(--color-card);
-  --text: var(--color-foreground);
-  --text-strong: var(--color-foreground);
-  --muted: var(--color-muted-foreground);
-  --border: var(--color-border);
-  --ok: var(--color-accent);
-  --ok-dark: #2E7D5C;
-  --bad: var(--stone-red);
-  --warn: var(--stone-gold);
-  --ice: #F2F5F9; --ice-2: #E8EDF5; --slate: #142132;
-}
-@media (prefers-color-scheme: light) {
-  :root {
-    color-scheme: light;
-    --color-background: #F2F5F9;
-    --color-card: #FFFFFF;
-    --color-surface-2: #E8EDF5;
-    --color-foreground: #0B1420;
-    --color-muted-surface: #C7D2DE;
-    --color-muted-foreground: #5B6B7D;
-    --color-border: #A9B8C9;
-    --color-border-strong: #8B9BB0;
-    --color-accent: #2E7D5C;
-    --color-on-accent: #F2F5F9;
-    --color-destructive: #B5453B;
-    --color-on-destructive: #FFFFFF;
-    --color-ring: #0B1420;
-    --color-focus-ring: #0E6BA8;
-    --rink: #0E6BA8;
-    --rink-dark: #0B5A8C;
-    --stone-red: #B5453B;
-    --stone-red-dark: #8F332B;
-    --stone-gold: #C49A2E;
-    --stone-gold-dark: #9E7C23;
-    --bg: var(--color-background);
-    --surface: var(--color-card);
-    --text: var(--color-foreground);
-    --text-strong: var(--color-foreground);
-    --muted: var(--color-muted-foreground);
-    --border: var(--color-border);
-    --ok: var(--color-accent);
-    --ok-dark: #1E5B43;
-    --bad: var(--stone-red);
-    --warn: var(--stone-gold);
-  }
-}
-html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+/* --- Reset & base --- */
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 Fira Sans, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-h1, h2, .display-serif { font-family: Georgia, "Times New Roman", serif; }
-h2 { font-size: 17px; font-weight: 700; margin: 16px 0 8px; letter-spacing: 0.06em; color: var(--text-strong); }
-button, a, [role="button"] { touch-action: manipulation; cursor: pointer; }
-button, [role="button"], .tab, .chip { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-button:active { transform: scale(0.97); }
-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--color-card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50; backdrop-filter: blur(12px); }
-header h1 { font-size: 18px; margin: 0; line-height: 1.3; font-family: Georgia, "Times New Roman", serif; font-weight: 700; color: var(--text-strong); }
-.header-brand { display: flex; flex-direction: column; gap: 2px; }
-.header-version { display: block; font-size: 10px; font-weight: 400; color: var(--muted); line-height: 1; letter-spacing: 0.05em; }
-.header-actions { display: flex; gap: 6px; margin-left: auto; }
-.header-actions button { padding: 6px 12px; font-size: 12px; min-height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--color-surface-2); color: var(--text); }
-nav { display: flex; gap: 4px; padding: 8px 12px; overflow-x: auto; background: var(--color-card); border-bottom: 1px solid var(--border); }
-nav button { background: none; border: 1px solid transparent; padding: 6px 12px; color: var(--muted); font-size: 13px; white-space: nowrap; border-radius: 8px; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 6px; }
-nav button svg { width: 16px; height: 16px; fill: currentColor; }
-nav button.active { color: var(--text-strong); border-color: var(--rink); background: color-mix(in srgb, var(--rink) 12%, transparent); }
-@media (hover: hover) and (pointer: fine) {
-  nav button:hover { color: var(--text); background: color-mix(in srgb, var(--rink) 6%, transparent); border-color: var(--border-strong); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
 }
-@media (max-width: 480px) {
-  header { padding: 8px 12px; gap: 8px; }
-  header h1 { font-size: 17px; }
-  .header-version { font-size: 9px; }
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; line-height: 1.2; }
+h1 { font-size: 24px; }
+h2 { font-size: 16px; font-weight: 500; letter-spacing: 0.01em; text-transform: uppercase; color: var(--muted); }
+h3 { font-size: 18px; font-weight: 500; }
+p { margin: 0 0 12px; line-height: 1.5; }
+a { color: var(--md-sys-color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button, a, [role="button"] { touch-action: manipulation; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:active { transform: scale(0.98); }
+.hidden { display: none !important; }
+.spacer { flex: 1; }
+
+/* --- Top app bar --- */
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 56px;
+  background: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
-main { max-width: 1000px; margin: 0 auto; padding: 20px 20px 140px; display: flex; flex-direction: column; gap: 24px; }
-/* hero: live countdown — the characteristic thing in curling's world */
-.hero { background: var(--color-surface-2); border: 1px solid var(--border); border-left: 4px solid var(--rink); border-radius: 0; padding: 24px; margin: 0; }
-.hero .countdown { font-family: Georgia, "Times New Roman", serif; font-size: clamp(64px, 24vw, 150px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 0.95; color: var(--text-strong); margin: 0 0 6px; letter-spacing: -0.02em; }
-.hero .countdown.subdued { color: var(--muted); }
-.hero .game-name { font-size: 18px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--rink); margin: 0 0 2px; }
-.hero .game-meta { font-size: 13px; color: var(--muted); margin: 0; }
-.card { background: var(--color-card); border: 1px solid var(--border); border-radius: 0; padding: 20px; margin: 0 0 20px 0; display: flex; flex-direction: column; }
-.card h2 { font-family: Georgia, "Times New Roman", serif; font-size: 16px; font-weight: 700; margin: 0 0 12px; letter-spacing: 0.06em; color: var(--text-strong); display: flex; align-items: center; gap: 8px; }
-.card h2 .spacer { flex: 1; }
-.muted { color: var(--muted); }
-.small { font-size: 13px; }
-button.btn { cursor: pointer; font: inherit; border: 1px solid var(--border); background: var(--color-surface-2); color: var(--text); border-radius: 8px; padding: 8px 14px; min-height: 38px; transition: all 0.15s ease; font-size: 13px; }
-button.btn.primary { background: var(--rink-dark); border-color: var(--rink-dark); color: var(--text-strong); }
-button.btn.primary:hover { filter: brightness(1.08); }
-button.btn.danger { color: var(--stone-red-dark); border-color: var(--stone-red-dark); background: transparent; }
-button.btn.danger:hover { background: color-mix(in srgb, var(--stone-red) 8%, transparent); }
-button.btn:disabled { opacity: 0.45; cursor: default; }
-button.btn.icon { padding: 6px 10px; min-height: 36px; width: 36px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; }
-button.btn.icon svg { width: 18px; height: 18px; fill: currentColor; }
-input, select, textarea { font: inherit; color: var(--text); background: var(--color-card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; min-height: 38px; min-width: 0; transition: border-color 0.15s ease; font-size: 13px; }
-@media (pointer: coarse) {
-  input, select, textarea { font-size: 16px; }
+.header-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.header-brand h1 { font-size: 20px; margin: 0; color: var(--text-strong); font-weight: 600; }
+.header-version { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: 0.02em; }
+#header-msg { font-size: 13px; padding: 6px 10px; border-radius: 8px; white-space: pre-wrap; flex: 1; }
+.header-actions { display: flex; gap: 4px; margin-left: auto; }
+
+/* --- Navigation --- */
+nav {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  background: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  position: sticky;
+  top: 56px;
+  z-index: 90;
 }
-input:focus, select:focus, textarea:focus { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; border-color: var(--color-focus-ring); }
-textarea { width: 100%; min-height: 40vh; font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
-label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 4px; font-weight: 600; letter-spacing: 0.04em; }
-label.check { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; margin: 0; }
-label.check input { min-height: 0; width: 18px; height: 18px; margin: 0; }
-.row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+nav button {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0 16px;
+  height: 48px;
+  min-width: 88px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+nav button.active {
+  color: var(--md-sys-color-primary);
+  border-bottom-color: var(--md-sys-color-primary);
+}
+@media (max-width: 640px) {
+  nav button { padding: 0 10px; min-width: 72px; font-size: 11px; gap: 4px; }
+}
+
+/* --- Main content --- */
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 16px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+@media (max-width: 640px) { main { padding: 16px 12px 110px; } }
+
+/* --- Cards --- */
+.card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 28px;
+  padding: 20px;
+  margin: 0 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03), 0 2px 6px 2px rgba(0,0,0,0.03);
+}
+.card > h2 { margin-top: 0; margin-bottom: 12px; font-size: 16px; font-weight: 500; letter-spacing: 0.01em; text-transform: uppercase; color: var(--muted); }
+.card h3 { margin: 0 0 8px; font-size: 18px; font-weight: 500; color: var(--text-strong); }
+.card p { margin: 0 0 8px; font-size: 14px; line-height: 1.5; }
+.card .muted { color: var(--muted); }
+.card .small { font-size: 12px; }
+
+/* --- Hero / countdown --- */
+.hero {
+  background: var(--md-sys-color-primary-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 28px;
+  padding: 32px 24px;
+  margin: 0;
+}
+.hero .game-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-primary-container);
+  margin: 0 0 4px;
+}
+.hero .countdown {
+  font-family: "Source Sans 3", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: clamp(56px, 22vw, 120px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+  color: var(--md-sys-color-on-primary-container);
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+.hero .countdown.subdued { color: color-mix(in srgb, var(--md-sys-color-on-primary-container) 60%, transparent); }
+.hero .game-meta { font-size: 13px; color: color-mix(in srgb, var(--md-sys-color-on-primary-container) 70%, transparent); margin: 0; }
+
+/* --- Buttons --- */
+button.btn {
+  cursor: pointer;
+  font: inherit;
+  border: 1px solid var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  border-radius: 12px;
+  padding: 10px 16px;
+  min-height: 48px;
+  transition: all 0.15s ease;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+button.btn:disabled { opacity: 0.5; cursor: default; }
+button.btn.primary {
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+button.btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-primary) 90%, black); }
+button.btn.danger {
+  color: var(--md-sys-color-error);
+  border-color: var(--md-sys-color-error);
+  background: transparent;
+}
+button.btn.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-error) 8%, transparent); }
+button.btn.icon { padding: 0; min-height: 0; width: 48px; height: 48px; border-radius: 12px; }
+button.btn.icon svg { width: 20px; height: 20px; fill: currentColor; }
+button.btn.preset { font-size: 13px; padding: 8px 12px; min-height: 40px; }
+
+/* --- Form controls --- */
+input, select, textarea {
+  font: inherit;
+  color: var(--md-sys-color-on-surface);
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-height: 48px;
+  min-width: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-size: 14px;
+}
+@media (pointer: coarse) { input, select, textarea { font-size: 16px; } }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+}
+textarea { width: 100%; min-height: 60vh; font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+label {
+  display: block;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0 0 6px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+label.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  margin: 0;
+  font-size: 14px;
+}
+label.check input { width: 20px; height: 20px; margin: 0; min-height: 0; }
+.field { margin: 0 0 14px 0; }
+.field > label { margin-bottom: 6px; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
 .row-actions .spacer { flex: 1; }
-.banner { border: 1px solid var(--border); border-radius: 0; padding: 10px 12px; white-space: pre-wrap; font-size: 13px; }
-.banner.bad { background: color-mix(in srgb, var(--stone-red) 10%, transparent); border-color: var(--stone-red); color: var(--stone-red-dark); }
+.duration { display: flex; align-items: center; gap: 8px; }
+.duration input { width: 6em; }
+
+/* --- Badges / pills --- */
+.pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 12px;
+  border: 1px solid currentColor;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.pill.ok { color: var(--ok-dark); border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.pill.bad { color: var(--bad); border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.pill.warn { color: color-mix(in srgb, var(--warn) 70%, black); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.pill.quick { color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent); }
+
+/* --- Banners --- */
+.banner {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  margin: 0 0 12px;
+}
+.banner.bad { background: color-mix(in srgb, var(--bad) 10%, transparent); border-color: var(--bad); color: var(--bad); }
 .banner.ok { background: color-mix(in srgb, var(--ok) 10%, transparent); border-color: var(--ok); color: var(--ok-dark); }
-.banner.warn { background: color-mix(in srgb, var(--stone-gold) 10%, transparent); border-color: var(--stone-gold); color: var(--stone-gold-dark); }
-.pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 6px; border: 1px solid currentColor; letter-spacing: 0.05em; }
-.pill.ok { color: var(--ok-dark); border-color: var(--ok); }
-.pill.bad { color: var(--bad); border-color: var(--bad); }
-.pill.warn { color: var(--stone-gold-dark); border-color: var(--stone-gold); }
-.pill.quick { color: var(--rink); border-color: var(--rink); }
-.state { font-weight: 700; letter-spacing: 0.05em; font-size: 13px; }
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-.field { margin: 0 0 10px 0; }
-.field > label { margin-bottom: 4px; }
-.duration { display: flex; align-items: center; gap: 6px; }
-.duration input { width: 5.5em; }
-/* schedule timeline — games are a sequence, numbered markers justified */
-.today { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 0; }
-.today li { display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; font-size: 13px; }
+.banner.warn { background: color-mix(in srgb, var(--warn) 10%, transparent); border-color: var(--warn); color: color-mix(in srgb, var(--warn) 70%, black); }
+
+/* --- State chips --- */
+.state { font-weight: 600; letter-spacing: 0.05em; font-size: 13px; }
+
+/* --- Grid --- */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+@media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* --- Timeline (today's games) --- */
+.today { list-style: none; margin: 0; padding: 0; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; }
+.today li {
+  display: grid;
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
 .today li:last-child { border-bottom: 0; }
-.today li.head { background: var(--color-surface-2); color: var(--muted); font-weight: 700; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--border-strong); }
-.today li.now { background: color-mix(in srgb, var(--rink) 12%, transparent); border-left: 3px solid var(--rink); font-weight: 700; color: var(--text-strong); }
+.today li.head { background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); font-weight: 600; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--md-sys-color-outline); }
+.today li.now { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent); border-left: 3px solid var(--md-sys-color-primary); font-weight: 600; color: var(--text-strong); }
 .today li.past { color: var(--muted); opacity: 0.7; }
 .today .name { overflow-wrap: anywhere; }
 .today .name .pill { margin-left: 8px; white-space: nowrap; }
-/* league row in timeline */
-.league-row { display: grid; grid-template-columns: 28px 1fr auto auto auto; gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+
+/* --- League list --- */
+.league-row { display: grid; grid-template-columns: 28px 1fr auto auto auto; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--md-sys-color-outline-variant); font-size: 13px; }
 .league-row:last-child { border-bottom: 0; }
 .league-row .num { font-family: Georgia, serif; font-weight: 700; color: var(--muted); font-size: 16px; }
-.league-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 0; }
-.entry { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.league-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; }
+.entry { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
 .entry:last-of-type { border-bottom: 0; }
 .entry .name { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
 .entry .name input { flex: 1; }
 .entry .more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
 .entry .more label, .entry .times label { margin: 0; font-size: 12px; }
-@media (min-width: 720px) {
-  .entry { grid-template-columns: 140px 140px 1fr; }
-  .entry .name { grid-column: auto; }
-}
-/* collapsible date exception cards */
-details.fold { padding: 0; margin: 0 0 10px 0; border: 1px solid var(--border); border-radius: 0; overflow: hidden; }
-details.fold > summary { display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; list-style: none; background: var(--color-surface-2); font-weight: 700; font-size: 13px; color: var(--text-strong); }
+@media (min-width: 720px) { .entry { grid-template-columns: 140px 140px 1fr; } .entry .name { grid-column: auto; } }
+
+/* --- Collapsible fold cards --- */
+details.fold { padding: 0; margin: 0 0 14px 0; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; overflow: hidden; }
+details.fold > summary { display: flex; align-items: center; gap: 10px; padding: 16px 20px; cursor: pointer; list-style: none; background: var(--md-sys-color-surface-variant); font-weight: 600; font-size: 14px; color: var(--text-strong); }
 details.fold > summary::-webkit-details-marker { display: none; }
-details.fold > summary:focus-visible { outline: 2px solid var(--color-focus-ring); outline-offset: 2px; }
+details.fold > summary:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
 details.fold .chevron { display: inline-block; width: 1em; transition: transform 0.15s; color: var(--muted); }
 details.fold[open] .chevron { transform: rotate(90deg); }
 details.fold .fold-date { white-space: nowrap; }
 details.fold .fold-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--muted); font-weight: 400; }
 details.fold .fold-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
-details.fold .fold-body { padding: 14px 16px 16px; background: var(--color-card); }
-.savebar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--color-card); border-top: 1px solid var(--border); padding: 10px 16px; display: none; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 60; backdrop-filter: blur(8px); }
+details.fold .fold-body { padding: 20px; background: var(--md-sys-color-surface); }
+
+/* --- Save bars --- */
+.savebar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--md-sys-color-surface);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding: 10px 16px;
+  display: none;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  z-index: 60;
+  box-shadow: 0 -2px 8px -2px rgba(0,0,0,0.1);
+}
 .savebar.show { display: flex; }
-.savebar span { color: var(--stone-gold-dark); font-weight: 700; font-size: 13px; }
-@media (max-width: 480px) { .savebar span { flex-basis: 100%; text-align: center; font-size: 12px; } }
-.modal { position: fixed; inset: 0; background: rgba(14, 23, 36, 0.7); display: none; align-items: center; justify-content: center; z-index: 20; padding: 16px; backdrop-filter: blur(4px); }
+.savebar span { color: var(--muted); font-weight: 600; font-size: 13px; }
+
+/* --- Modal --- */
+.modal { position: fixed; inset: 0; background: rgba(28, 27, 31, 0.45); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
 .modal.show { display: flex; }
 .modal-backdrop { position: absolute; inset: 0; }
-.modal-card { background: var(--color-card); border: 1px solid var(--border); border-radius: 0; padding: 24px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.45); }
-.modal-card h2 { margin: 0 0 16px; font-family: Georgia, "Times New Roman", serif; font-size: 20px; letter-spacing: 0.05em; color: var(--text-strong); }
+.modal-card { background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; padding: 24px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.15); }
+.modal-card h2 { margin: 0 0 16px; font-size: 20px; font-weight: 600; color: var(--text-strong); }
 .modal-card ul { margin: 8px 0 16px; padding-left: 20px; color: var(--muted); }
 .modal-card li { margin: 6px 0; }
-.backups { list-style: none; padding: 0; margin: 0; border: 1px solid var(--border); border-radius: 0; }
-.backups li { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; font-size: 13px; }
+
+/* --- Backups list --- */
+.backups { list-style: none; padding: 0; margin: 0; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; }
+.backups li { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--md-sys-color-outline-variant); flex-wrap: wrap; font-size: 13px; }
 .backups li:last-child { border-bottom: 0; }
 .backups li span { flex: 1; min-width: 200px; font-variant-numeric: tabular-nums; color: var(--muted); }
-pre.view { overflow: auto; max-height: 50vh; background: var(--bg); border: 1px solid var(--border); border-radius: 0; padding: 12px; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-#login { position: fixed; inset: 0; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 30; padding: 24px; }
+
+/* --- Raw YAML view --- */
+pre.view { overflow: auto; max-height: 50vh; background: var(--md-sys-color-surface-variant); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; padding: 12px; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* --- Login --- */
+#login { position: fixed; inset: 0; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
 #login.show { display: flex; }
 #login form { width: 100%; max-width: 340px; }
-#login h2 { font-family: Georgia, "Times New Roman", serif; font-size: 22px; margin: 0 0 4px; letter-spacing: 0.05em; color: var(--text-strong); }
-#login p { margin: 0 0 16px; font-size: 13px; color: var(--muted); }
-#login input { width: 100%; margin: 0 0 10px; }
-.hidden { display: none !important; }
-/* page-load reveal: single orchestrated moment, the countdown fades in */
-@keyframes heroIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-.hero { animation: heroIn 0.5s ease-out both; }
-input[type=number] { min-width: 60px; padding-right: 16px; }
-@media (max-width: 640px) {
-  main { padding: 14px 14px 120px; }
-  nav { gap: 2px; }
-  nav button { padding: 5px 8px; font-size: 12px; }
-  .card { padding: 14px; margin-bottom: 12px; }
-  .hero { padding: 18px; }
-  .hero .countdown { font-size: clamp(48px, 20vw, 110px); }
-  .grid2 { grid-template-columns: 1fr; }
-  .entry { grid-template-columns: 1fr; }
-  .modal-card { padding: 18px; max-width: 94vw; }
+#login h2 { font-size: 24px; margin: 0 0 4px; font-weight: 600; color: var(--text-strong); }
+#login p { margin: 0 0 20px; font-size: 14px; color: var(--muted); }
+#login input { width: 100%; margin: 0 0 12px; }
+
+/* --- Add-on marketplace --- */
+.addon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 16px 0; }
+.addon-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 20px;
+  padding: 20px;
+  background: var(--md-sys-color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-@media (prefers-reduced-motion: reduce) {
-  .hero { animation: none; }
-  * { transition: none !important; animation: none !important; }
+.addon-card h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-strong); }
+.addon-card p.addon-desc { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.pill.detected { color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent); }
+.pill.enabled { color: var(--ok-dark); border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.pill.notdetected { color: var(--muted); border-color: var(--md-sys-color-outline); background: transparent; }
+.pill.manual { color: var(--md-sys-color-tertiary); border-color: var(--md-sys-color-tertiary); background: color-mix(in srgb, var(--md-sys-color-tertiary) 12%, transparent); }
+.btn-toggle {
+  border: 1px solid var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  min-height: 40px;
+  align-self: flex-start;
 }
+.btn-toggle:disabled { opacity: 0.5; cursor: default; }
+.btn-toggle.primary { background: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.btn-toggle.danger { color: var(--md-sys-color-error); border-color: var(--md-sys-color-error); background: transparent; }
+.btn-toggle.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-primary) 90%, black); }
+.btn-toggle.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-error) 8%, transparent); }
+@media (max-width: 640px) { .addon-grid { grid-template-columns: 1fr; } }
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* --- Version dot --- */
+.version-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); margin-left: 6px; vertical-align: middle; cursor: pointer; }
 </style>
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Countdown Timer <span class="version">{{version}}</span></h2>
+  <h2>Curling Timer <span class="version">{{version}}</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -261,7 +470,7 @@ input[type=number] { min-width: 60px; padding-right: 16px; }
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Countdown Timer</h1><span class="header-version">{{version}}</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">{{version}}</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -285,18 +494,38 @@ input[type=number] { min-width: 60px; padding-right: 16px; }
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const NAV_LABELS = {
+  status: 'Status',
+  quickstart: 'Quick Start',
+  schedule: 'Schedule',
+  leagues: 'Leagues',
+  history: 'Report',
+  config: 'Settings',
+  diagnostics: 'Diagnostics'
+};
 const NAV_ICONS = {
-  status: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99 0.9-1.99 2L2 18c0 1.1 0.9 2 2 2h16c1.1 0 2-0.9 2-2V6c0-1.1-0.9-2-2-2zM6 14c-2.2 0-4-1.8-4-4 0-0.6 0.2-1.1 0.5-1.6L4.9 13.4c-0.6 0.6-0.6 1.5 0 2.1l1.4 1.4c0.2 0.2 0.4 0.3 0.5 0.3s0.3 0.1 0.5 0l3-3c0.4-0.4 1-0.4 1.4 0l1.6 1.6c0.4 0.4 1 0.4 1.4 0l2.4-2.4c0.5-0.5 0.5-1.3 0-1.8l-1.3-1.3c-0.5-0.5-1.3-0.5-1.8 0s-0.5 1.3 0 1.8l3.9 3.9c0.2 0.2 0.5 0.3 0.8 0.3s0.6-0.1 0.8-0.3c0.4-0.4 0.4-1 0-1.4L9.6 8c0.2-0.4 0.3-0.8 0.3-1.2 0-2.2-1.8-4-4-4z"/></svg>`,
-  quickstart: `<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`,
-  schedule: `<svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 0.9-2 2v14c0 1.1 0.9 2 2 2h14c1.1 0 2-0.9 2-2V5c0-1.1-0.9-2-2-2zm-1 16H9.5c-0.6 0-1-0.4-1-1s0.4-1 1-1 1 0.4 1 1-0.4 1-1 1H6c-1.1 0-1-0.9-1-2V9c0-1.1 0.9-2 2-2h4c1.1 0 2 0.9 2 2v9c0 1.1-0.9 2-2 2m-3.5-6c-0.6 0-1-0.4-1-1s0.4-1 1-1 1 0.4 1 1-0.4 1-1 1m7 0c-0.6 0-1-0.4-1-1s0.4-1 1-1 1 0.4 1 1-0.4 1-1 1z"/></svg>`,
-  leagues: `<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-0.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>`,
-  history: `<svg viewBox="0 0 24 24"><path d="M13 2c-4.9 0-9 3.9-9 8.8 0 3.9 2.8 7.4 7 8.2V22c0-0.6 0.4-1 1-1s1 0.4 1 1v-0.8c2.1-1.6 3.6-3.9 4-6.3 0.2-1.2 0.5-2.5 0.5-3.9 0-4.9-4.1-8.8-9-8.8z"/></svg>`,
-  config: `<svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-0.03-0.66-0.07-0.98l0.21-0.13-0.12-0.22c-0.17-0.31-0.4-0.58-0.69-0.82l0.25-0.24c0.29-0.29 0.49-0.66 0.58-1.04l0.02-0.07-0.07-0.02c-0.37-0.12-0.75-0.19-1.12-0.2l-0.07 0L9.9 4.43C9.56 4.31 9.2 4.21 8.81 4.17L8.61 4C8.23 4 7.85 4.04 7.5 4.14c-0.39 0.11-0.75 0.3-1.05 0.54L6.23 4.93C5.49 4.35 4.6 4 3.67 4c-1.12 0-2.09 0.7-2.53 1.72L1.1 5.85 0.83 6.09C0.33 6.52 0 7.07 0 7.64c0 0.58 0.26 1.11 0.68 1.49l1.51 1.45C2.48 11.89 3 13.16 3 14.56c0 2.4 1.7 4.58 4 5.16V22c0 0.55 0.45 1 1 1s1-0.45 1-1v-0.59c2.3-0.58 4-2.72 4-5.23 0-2.52-1.74-4.79-4.12-5.39zM7 18c-1.1 0-2-0.9-2-2s0.9-2 2-2 2 0.9 2 2-0.9 2-2 2zm0-4c-1.1 0-2-0.9-2-2s0.9-2 2-2 2 0.9 2 2-0.9 2-2 2zm0-4c-1.1 0-2-0.9-2-2s0.9-2 2-2 2 0.9 2 2-0.9 2-2 2z"/></svg>`,
-  diagnostics: `<svg viewBox="0 0 24 24"><path d="M20.71 7.04c-3.39-3.39-8.88-3.39-12.74 0L1 16.54c-3.39 3.39-3.39 8.88 0 12.74l16.95-16.95zM12 21c-4.97 0-9-4.03-9-9s4.03-9 9-9 9 4.03 9 9-4.03 9-9 9z"/></svg>`,
+  status: '📊',
+  quickstart: '▶️',
+  schedule: '📅',
+  leagues: '🏉',
+  history: '📋',
+  config: '⚙️',
+  diagnostics: '🔧'
 };
 const TABS = [['status', 'status', 'Status'], ['quickstart', 'quickstart', 'Quick Start'], ['schedule', 'schedule', 'Schedule'], ['leagues', 'leagues', 'Leagues'], ['history', 'history', 'Report'], ['config', 'config', 'Settings'], ['diagnostics', 'diagnostics', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
+
+// Add-on marketplace data model (spec §2). auto = hardware-detected gating.
+const ADDONS = [
+  { key: 'rtc', label: 'RTC time source', desc: 'Battery-backed clock (HYM8563 / PCF8563) — keeps time across power loss; timer knows the time on boot before SNTP syncs.', auto: true },
+  { key: 'relays', label: 'Relay outputs', desc: 'Unit 2Relay channels driving the 24VAC bell circuit + aux.', auto: false },
+  { key: 'pushbutton', label: 'Manual trigger button', desc: 'GPIO45 press rings the start relays for the next manually-triggered game.', auto: false },
+  { key: 'pahub', label: 'PaHub I2C hub', desc: 'PCA9548A 8-channel multiplexer — multiple I2C devices on one Grove port.', auto: true },
+  { key: 'wifi', label: 'Wi-Fi failover', desc: 'ESP32-C6 SDIO Wi-Fi failover.', auto: true },
+  { key: 'uart', label: 'UART0 serial port', desc: 'Hat2-Bus UART0 serial (GPIO37 TX / GPIO38 RX) — one-line status stream to a serial device.', auto: false },
+];
+let addonDetection = {};
 
 // ---- small helpers --------------------------------------------------------
 function el(tag, props, ...children) {
@@ -341,7 +570,6 @@ let messageTimer = 0;
 function showMessage(text, kind = 'bad') {
   const box = $('header-msg');
   if (box) { box.className = `banner ${kind}`; box.textContent = text; box.classList.remove('hidden'); }
-  // Also show in savebars
   for (const id of ['savebar', 'config-savebar']) {
     const bar = $(id);
     if (bar) {
@@ -377,7 +605,6 @@ $('login-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const btn = $('login-form').querySelector('button[type=submit]');
   btn.disabled = true; btn.textContent = 'Logging in...';
-  // Force a repaint so the user sees feedback immediately
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const result = await api('/api/login', { password: $('password').value });
   btn.disabled = false; btn.textContent = 'Log in';
@@ -398,7 +625,8 @@ $('help').addEventListener('click', () => { document.getElementById('help-modal'
 function renderTabs() {
   const wide = window.innerWidth >= 768;
   $('tabs').replaceChildren(...TABS.map(([id, icon, title]) =>
-    el('button', { class: id === state.tab ? 'active' : '', title, onclick: () => selectTab(id) }, wide ? NAV_ICONS[id] + ' ' + title : NAV_ICONS[id])));
+    el('button', { class: id === state.tab ? 'active' : '', title, onclick: () => selectTab(id) },
+       wide ? NAV_ICONS[id] + ' ' + NAV_LABELS[id] : NAV_ICONS[id])));
 }
 window.addEventListener('resize', renderTabs);
 async function selectTab(id) {
@@ -432,15 +660,10 @@ async function loadStatus() {
    if (state.tab === 'quickstart') renderQuickstart();
  }
 
-
 // the quick start form is built once so the 5 second status refresh never wipes what is being typed
 let quickForm = null;
-// one tap quick start timers: button label, name shown on the display, duration in seconds,
-// an optional title (wording for the tooltip and confirmation when it differs from the name on the display)
-// and the optional game_completed/header_hold overrides for the header shown after the buzzer
 const QUICK_PRESETS = [
-  { label: 'Practice (7m)', name: 'PRACTICE', title: 'Practice', seconds: 7 * 60,
-    game_completed: '--- PRACTICE DONE ---', header_hold: 60 },
+  { label: 'Practice (7m)', name: 'PRACTICE', title: 'Practice', seconds: 7 * 60, game_completed: '--- PRACTICE DONE ---', header_hold: 60 },
   { label: 'Game (6 ends)', name: 'Game (6 ends)', seconds: 75 * 60 },
   { label: 'Game (8 ends)', name: 'Game (8 ends)', seconds: 105 * 60 },
   { label: 'Doubles (8 ends)', name: 'Doubles (8 ends)', seconds: 105 * 60 },
@@ -542,30 +765,27 @@ function renderStatus() {
   const today = el('div', { class: 'card' },
     el('h2', {}, `Today (${s.weekday})`, el('span', { class: 'spacer' }),
        s.today.source === 'exception' ? el('span', { class: 'pill warn', style: 'max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle', title: s.today.note ? s.today.note : '' }, `Exception${s.today.note ? ': ' + s.today.note : ''}`)
-                                     : el('span', { class: 'pill' }, 'Weekly schedule')));
+                                    : el('span', { class: 'pill' }, 'Weekly schedule')));
   const nowSecs = secondsNow();
   if (!s.today.entries.length) today.append(el('p', { class: 'muted' }, 'No buzzers today.'));
   else today.append(el('ul', { class: 'today' },
-    // column headings, as the first row of the same grid so they line up with the values
     el('li', { class: 'head' }, el('span', {}, 'Start'), el('span', {}, 'Bell/Buzzer'), el('span', { class: 'name' }, 'Entry Name')),
     [...s.today.entries].sort((a, b) => a.start - b.start).map((e) => el('li', {
-      // an entry's own header_hold override wins over the file wide one
       class: cur && cur.start === e.start ? 'now' : (e.buzzer + (e.header_hold != null ? e.header_hold : s.header_hold) < nowSecs ? 'past' : '') },
     el('span', {}, shortTime(e.start)),
     el('span', {}, shortTime(e.buzzer)),
     el('span', { class: 'name' }, e.name ? e.name : '',
        e.quick ? el('span', { class: 'pill quick' }, 'quick') : null)))));
-  $('status-today').replaceChildren(today);
-   // Display mirror (mimics HDMI output)
+  $('tab-status').querySelector('#status-today').replaceChildren(today);
    let mirror = document.getElementById('display-mirror');
    if (!mirror) {
-     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:4px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:12px;position:relative' });
+     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:24px;border-radius:28px;margin-top:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:16px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,0.3)' });
      $('status-now').append(mirror);
    }
    const sm = state.status || {};
    function unswap(c) { if (!c || typeof c !== 'string' || c.length < 7) return c || ''; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
- const scale = (state.configValues && state.configValues['config.mirror_scale'] != null)
-       ? Number(state.configValues['config.mirror_scale']) / 100 : 0.85;
+  const scale = (state.configValues && state.configValues['config.mirror_scale'] != null)
+        ? Number(state.configValues['config.mirror_scale']) / 100 : 0.85;
    const fh = Math.min(Math.round((sm.font_header || 96) * scale), 200);
    const ft = Math.min(Math.round((sm.font_timer || 450) * scale), 400);
    const fp = Math.min(Math.round((sm.font_pace || 85) * scale * 0.85), 120);
@@ -619,10 +839,8 @@ function tick() {
   if (mc && s && s.current && s.current.seconds_until_buzzer != null) {
     const snap = (s.countdown || '');
     if (snap && !String(snap).includes('\u02F8')) {
-      // pre-game countdown: plain number, decrement live
       const left = parseInt(snap, 10) - Math.floor((performance.now() - state.statusAt) / 1000);
       if (left > 0) { mc.textContent = String(left); return; }
-      // pre-game finished: defer to the normal countdown rendered on the next status update
       return;
     } else {
       const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
@@ -640,13 +858,11 @@ async function toggleEnabled(enabled) {
   loadStatus();
 }
 
-// e.g. '25 min', '24 min 59 s' or '45 s' (same wording as the server's messages)
 function durationText(total) {
   const m = Math.floor(total / 60), s = total % 60;
   return [m ? `${m} min` : '', s || !m ? `${s} s` : ''].filter(Boolean).join(' ');
 }
 
-// the duration and name typed in the form, or null (with a message shown) if they are not valid
 function readQuickForm(minutesInput, secondsInput, nameInput) {
   const minutes = minutesInput.value === '' ? 0 : Number(minutesInput.value);
   const secs = secondsInput.value === '' ? 0 : Number(secondsInput.value);
@@ -657,11 +873,8 @@ function readQuickForm(minutesInput, secondsInput, nameInput) {
   return { seconds, name: nameInput.value.trim() || null };
 }
 
-// confirm, then start a quick start timer { seconds, name, title, game_completed, header_hold }
-// from the form or a preset button
 async function launchQuick({ seconds, name, title, game_completed, header_hold }, options) {
   const ends = new Date(Date.now() + seconds * 1000);
-  // title is only how the timer is worded here; name is what goes on the display
   const called = title || name;
   const what = called ? `"${called}" (${durationText(seconds)})` : `a ${durationText(seconds)} timer`;
   if (!confirm(`Start ${what} now? Bell/buzzer at about ${pad(ends.getHours())}:${pad(ends.getMinutes())}:${pad(ends.getSeconds())}.`)) return;
@@ -698,7 +911,6 @@ async function loadSettings() {
 function updateSavebars() {
   $('config-savebar').classList.toggle('show', state.configDirty);
   $('savebar').classList.toggle('show', state.dirty);
-  // both bars up: the schedule bar sits directly above the config bar
   $('savebar').style.bottom = state.configDirty ? `${$('config-savebar').offsetHeight}px` : '0px';
 }
 
@@ -713,7 +925,6 @@ function setConfigDirty(dirty) {
 }
 
 function newEntry(previous) {
-  // whole minutes, since the time inputs don't show seconds
   const start = previous ? Math.ceil((previous.buzzer + 25 * 60) / 60) * 60 : 9 * 3600;
   return { start: Math.min(start, 86340), buzzer: Math.min(start + 105 * 60, 86340), name: null,
            game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false, league: null };
@@ -722,8 +933,6 @@ function newEntry(previous) {
 function entryEditor(entries, index, leagues, rerender) {
   const entry = entries[index];
   const changed = () => setDirty(true);
-  // hours and minutes only; a stored time keeps its seconds (e.g. a quick start) until it is edited,
-  // and the YAML file always gets H:MM:SS
   const timeInput = (key) => el('input', { type: 'time', step: 60, value: hms(entry[key]).slice(0, 5), required: true,
     onchange: (event) => { const v = parseTime(event.target.value); if (v !== null) { entry[key] = v; changed(); } } });
   const text = (key, placeholder) => el('input', { type: 'text', value: entry[key] || '', placeholder, maxlength: 80,
@@ -735,7 +944,6 @@ function entryEditor(entries, index, leagues, rerender) {
   const unit = el('input', { type: 'number', min: 0.5, step: 0.5, inputmode: 'decimal', placeholder: 'default',
     value: entry.pace_unit_duration ? entry.pace_unit_duration / 60 : '',
     onchange: (event) => { const v = Number(event.target.value); entry.pace_unit_duration = v > 0 ? Math.round(v * 60) : null; changed(); } });
-  // seconds, like the file wide setting; 0 is a real value (no hold at all), so only '' clears the override
   const hold = el('input', { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: 'default',
     value: entry.header_hold != null ? entry.header_hold : '',
     onchange: (event) => { const v = Number(event.target.value);
@@ -775,8 +983,6 @@ function entryList(entries, leagues, rerender) {
   return box;
 }
 
-// collapsible card (like code folding), collapsed unless its key is in openSet; the summary line
-// shows the title, an optional badge and note, and how many games are inside
 function foldCard({ openSet, key, title, badge = null, note = null, count, body }) {
   return el('details', { class: 'card fold', open: openSet.has(key),
       ontoggle: (event) => { if (event.target.open) openSet.add(key); else openSet.delete(key); } },
@@ -789,7 +995,6 @@ function foldCard({ openSet, key, title, badge = null, note = null, count, body 
     el('div', { class: 'fold-body' }, body));
 }
 
-// Expand all / Collapse all buttons for the fold cards whose keys getKeys() returns when clicked
 function foldButtons(openSet, getKeys, rerender) {
   return [el('button', { class: 'btn', onclick: () => { getKeys().forEach((k) => openSet.add(k)); rerender(); } }, 'Expand all'),
           el('button', { class: 'btn', onclick: () => { openSet.clear(); rerender(); } }, 'Collapse all')];
@@ -912,9 +1117,6 @@ function renderExceptions() {
 }
 
 // ---- config tab (every parameter that is not the schedule) ----------------
-// field spec: [dotted path exactly as GET/POST /api/config uses it, type, label, ...]
-// types: bool, int (min..max), text, color (pygame name + datalist), minutes (UI minutes, sent as seconds),
-// relays (RELAY1..RELAY4 checkbox group)
 const CONFIG_SECTIONS = [
   { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
     fields: [
@@ -997,15 +1199,6 @@ const CONFIG_SECTIONS = [
       ['config.buzzer.relays', 'relays', 'Output'],
       ['config.buzzer.end_duration', 'int', 'Output duration (seconds)', 0, 999],
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
-  { group: 'Add-ons 🔧', title: 'Optional hardware',
-    hint: 'All add-on drivers are compiled into the firmware; these toggles gate each one at runtime. A pre-built firmware works with any subset of add-on hardware — enable only what you have wired.',
-    fields: [
-      ['config.addons.rtc', 'bool', 'RTC time source (HYM8563 / PCF8563)'],
-      ['config.addons.relays', 'bool', 'Relay outputs (Unit 2Relay bells/buzzers)'],
-      ['config.addons.pushbutton', 'bool', 'Manual push-button trigger (GPIO45)'],
-      ['config.addons.pahub', 'bool', 'PaHub v2.1 I2C hub (multiplexes I2C children)'],
-      ['config.addons.wifi', 'bool', 'ESP32-C6 SDIO Wi-Fi failover'],
-      ['config.addons.uart', 'bool', 'Hat2-Bus UART0 serial port (GPIO37 TX / GPIO38 RX)']] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
 function relayDisplayName(i) {
@@ -1026,19 +1219,16 @@ function RELAY_NAMES() {
 }
 const RELAYS_PATHS = new Set(['config.buzzer.relays', 'config.buzzer.ring_at_start',
   'config.buzzer.countdown.relays']);
-// common pygame colour names — the file accepts any single line of text, this just assists typing
 const PYGAME_COLORS = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta', 'gray', 'grey', 'orange', 'purple', 'pink', 'brown', 'navy', 'teal', 'lime', 'indigo', 'violet', 'gold', 'silver', 'maroon', 'olive', 'aqua', 'fuchsia', 'silver', 'darkred', 'darkgreen', 'darkblue', 'lightgray', 'lightgrey',
   'navy', 'skyblue', 'wheat', 'orange', 'purple', 'brown', 'pink', 'lime', 'teal', 'olive', 'maroon', 'silver',
   'gold', 'indigo', 'violet', 'coral', 'salmon', 'tan', 'beige', 'ivory', 'khaki', 'plum', 'azure', 'snow',
   'crimson', 'darkgreen', 'darkblue', 'darkred', 'lightblue', 'lightgreen', 'dgray', 'lgray'];
 
-// the value as it will be compared/sent: absent text and absent relays compare equal to cleared
 function configNorm(path, value) {
   if (RELAYS_PATHS.has(path)) return Array.isArray(value) ? value : [];
   if (value == null) return '';
   return value;
 }
-// only the fields whose working value differs from the loaded file are sent
 function configDiff() {
   const diff = {};
   for (const path of CONFIG_PATHS) {
@@ -1055,8 +1245,6 @@ function configDiff() {
 }
 function configTouched() { setConfigDirty(Object.keys(configDiff()).length > 0); }
 
-// the same limits the server enforces, checked before the request so a bad field never
-// costs a round trip (the server answer is still shown if it disagrees)
 function validateConfigDiff(diff) {
   for (const [path, value] of Object.entries(diff)) {
     if (path === 'config.pace_of_play.unit_duration') {
@@ -1064,7 +1252,7 @@ function validateConfigDiff(diff) {
         return 'Minutes per unit must be a number greater than 0';
     } else if (path === 'config.mirror_scale') {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 10 || value > 100)
-        return 'Display mirror scale must be an integer between 10 and 300 (percentage)';
+        return 'Display mirror scale must be an integer between 10 and 100 (percentage)';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
                path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
                path === 'config.buzzer.header_hold' ||
@@ -1142,20 +1330,20 @@ function configField(field) {
       oninput: (event) => set(event.target.value === '' ? null : Math.round(Number(event.target.value) * 60)) }));
   }
    if (type === 'relays') {
-      const selected = Array.isArray(value) ? value : [];
-      return el('div', { class: 'field' }, label, el('div', { class: 'row-actions', style: 'margin-top: 2px' },
-        RELAY_NAMES().map((name) => {
-          const i = Number(name.replace('RELAY', ''));
-          const display = relayDisplayName(i) || name;
-          return el('label', { class: 'check' },
-            el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
-              const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
-              const at = list.indexOf(name);
-              if (event.target.checked && at < 0) list.push(name);
-              if (!event.target.checked && at >= 0) list.splice(at, 1);
-              set(list);
-            } }), display);
-        })));
+     const selected = Array.isArray(value) ? value : [];
+     return el('div', { class: 'field' }, label, el('div', { class: 'row-actions', style: 'margin-top: 2px' },
+       RELAY_NAMES().map((name) => {
+         const i = Number(name.replace('RELAY', ''));
+         const display = relayDisplayName(i) || name;
+         return el('label', { class: 'check' },
+           el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
+             const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
+             const at = list.indexOf(name);
+             if (event.target.checked && at < 0) list.push(name);
+             if (!event.target.checked && at >= 0) list.splice(at, 1);
+             set(list);
+           } }), display);
+       })));
    }
   return el('div', {}, label);
 }
@@ -1202,8 +1390,7 @@ function renderConfig() {
   for (const section of CONFIG_SECTIONS) {
     if (section.group !== currentGroup) {
       currentGroup = section.group;
-       const icon = currentGroup === 'Display (HDMI output)' ? '🖥 ' : currentGroup === 'Audio' ? '🔊 ' : '';
-       nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, icon + currentGroup));
+       nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, currentGroup));
     }
     let fields = section.fields;
     if (section.title === 'Relays') {
@@ -1222,6 +1409,50 @@ function renderConfig() {
       section.group.startsWith('Outputs') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null));
   }
   $('tab-config').replaceChildren(...nodes);
+  renderAddonMarketplace();
+}
+
+async function renderAddonMarketplace() {
+  if (!state.configValues) return;
+  const det = await api('/api/addons/detection');
+  if (det.ok) addonDetection = det.data || {};
+  let market = document.getElementById('addon-marketplace');
+  if (!market) {
+    market = el('section', { id: 'addon-marketplace' },
+      el('h2', {}, 'Add-ons 🔧'),
+      el('p', { class: 'muted small', style: 'margin-top: 0' }, 'All add-on drivers are compiled into the firmware; tiles gate each one at runtime. Detected hardware can be enabled with a tap — nothing needs manual pin or address config.'),
+      el('div', { class: 'addon-grid' }));
+    $('tab-config').append(market);
+  }
+  const grid = market.querySelector('.addon-grid');
+  const det = addonDetection || {};
+  grid.replaceChildren();
+  for (const a of ADDONS) {
+    const intent = state.configValues[`config.addons.${a.key}`] === true;
+    const detected = det[a.key] === true;
+    const enabled = intent && (!a.auto || detected);
+    const pillCls = a.auto ? (detected ? (intent ? 'enabled' : 'detected') : 'notdetected') : 'manual';
+    const pillText = a.auto ? (detected ? (intent ? 'Enabled' : 'Detected') : 'Not detected') : 'Manual';
+    const btnDisabled = a.auto && !detected;
+    const btnText = intent ? 'Disable' : 'Enable';
+    const btnCls = intent ? 'btn-toggle danger' : 'btn-toggle primary';
+    const card = el('div', { class: 'addon-card' },
+      el('h3', {}, a.label),
+      el('p', { class: 'addon-desc' }, a.desc),
+      el('div', { class: 'row-actions', style: 'margin-top: 8px; gap: 8px' },
+        el('span', { class: `pill ${pillCls}` }, pillText),
+        el('button', { class: btnCls, disabled: btnDisabled, onclick: () => toggleAddon(a.key, !intent) }, btnText)));
+    grid.append(card);
+  }
+}
+
+async function toggleAddon(key, next) {
+  if (!state.configVersion) await loadConfig();
+  if (!state.configVersion) { showMessage('Config not loaded, please reload the page'); return; }
+  const result = await api('/api/config', { version: state.configVersion, config: { [`config.addons.${key}`]: next } });
+  if (!result.ok) { showMessage(`Not saved: ${result.data.error}`); return; }
+  showMessage('Saved; detection re-evaluates on next boot', 'ok');
+  loadConfig();
 }
 
 $('config-save').addEventListener('click', async () => {
@@ -1241,9 +1472,7 @@ $('config-save').addEventListener('click', async () => {
   showMessage('Saved; the display updates within a second', 'ok');
   loadConfig();
 });
-$('config-discard').addEventListener('click', () => {
-  if (confirm('Discard your unsaved config changes?')) loadConfig();
-});
+$('config-discard').addEventListener('click', () => { if (confirm('Discard your unsaved config changes?')) loadConfig(); });
 
 function checkModel(m) {
   const lists = [...DAYS.map((d) => [d, m.schedule[d]]), ...m.exceptions.map((d) => [d.date, d.entries])];
@@ -1432,7 +1661,6 @@ async function renderLeagues() {
     return true;
   };
 
-  // ---- Add League form (separate from edit) ----
   const addForm = el('form', { class: 'card', onsubmit: async (e) => {
     e.preventDefault();
     const name = document.getElementById('lg-add-name').value.trim();
@@ -1466,7 +1694,6 @@ async function renderLeagues() {
     el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-manual' }), 'Manual push-button trigger'),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
 
-  // ---- League list with inline row editing ----
   const list = el('div', { class: 'league-list' });
   if (!leagues.length) {
     list.append(el('p', { class: 'muted' }, 'No leagues configured.'));
@@ -1539,36 +1766,35 @@ async function renderLeagues() {
     });
   }
 
-  // ---- Import from Club Manager ----
-   const DEFAULT_LEAGUE_URL = 'https://simcoecurlingclub.ca/curling/leagues';
-   const cfg = state.model && state.model.config ? state.model.config : {};
-    const base = (cfg['config.league_page_url'] || cfg['config.club_website_url'] || '').trim();
-     const importBtn = el('button', { class: 'btn', onclick: async () => {
-        const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
-        const endpoint = url && url.trim() ? url.trim() : (base || DEFAULT_LEAGUE_URL);
-        if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
-        showMessage('Importing leagues...', 'info');
-        let names = [];
-        try {
-          const result = await api('/api/fetch_leagues', { url: endpoint });
-          if (!result.ok) { showMessage(result.data.error || 'import failed', 'warn'); return; }
-          names = Array.isArray(result.data) ? result.data : [];
-        } catch (e) {
-          const pasted = prompt('Could not fetch URL. Paste league names, one per line:', '');
-          if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
-        }
-        if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
-      const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
-      let added = 0;
-      names.forEach(n => {
-        if (existing.has(n.toLowerCase())) return;
-        leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0, manual_trigger: false });
-        existing.add(n.toLowerCase());
-        added++;
-      });
-       if (!(await saveLeagues(leagues))) return;
-       renderLeagues();
-       showMessage('Imported ' + added + ' new league(s).', 'ok');
+  const DEFAULT_LEAGUE_URL = 'https://simcoecurlingclub.ca/curling/leagues';
+  const cfg = state.model && state.model.config ? state.model.config : {};
+   const base = (cfg['config.league_page_url'] || cfg['config.club_website_url'] || '').trim();
+    const importBtn = el('button', { class: 'btn', onclick: async () => {
+      const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
+      const endpoint = url && url.trim() ? url.trim() : (base || DEFAULT_LEAGUE_URL);
+      if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
+      showMessage('Importing leagues...', 'info');
+      let names = [];
+      try {
+        const result = await api('/api/fetch_leagues', { url: endpoint });
+        if (!result.ok) { showMessage(result.data.error || 'import failed', 'warn'); return; }
+        names = Array.isArray(result.data) ? result.data : [];
+      } catch (e) {
+        const pasted = prompt('Could not fetch URL. Paste league names, one per line:', '');
+        if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
+      }
+      if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
+    const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
+    let added = 0;
+    names.forEach(n => {
+      if (existing.has(n.toLowerCase())) return;
+      leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0, manual_trigger: false });
+      existing.add(n.toLowerCase());
+      added++;
+    });
+     if (!(await saveLeagues(leagues))) return;
+     renderLeagues();
+     showMessage('Imported ' + added + ' new league(s).', 'ok');
    } }, 'Import from Club Manager');
 
   const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
@@ -1590,7 +1816,7 @@ async function checkVersion() {
     const v = document.querySelector('.version'); if (v && latest) v.textContent = 'v' + latest;
     if (latest && latest !== current) {
       const dot = document.createElement('span');
-      dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--stone-gold-dark);margin-left:6px;vertical-align:middle;cursor:pointer;';
+      dot.className = 'version-dot';
       dot.title = `New version ${latest} available - click to view`;
       dot.onclick = () => window.open('https://github.com/jaydenrussell/esp32-curling-timer/releases', '_blank');
       const v = document.querySelector('.version');
@@ -1614,6 +1840,11 @@ async function start() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden && state.tab === 'status') loadStatus(); });
 }
 start();
+
+// ---- PWA: service worker registration ------------------------------------
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>

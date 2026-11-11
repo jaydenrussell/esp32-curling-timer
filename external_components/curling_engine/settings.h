@@ -159,6 +159,20 @@ class PiTimerSettings {
   };
   AddonConfig addons;
 
+  // Runtime add-on hardware detection (recomputed every boot in
+  // CurlingEngineComponent::detect_addons(); not persisted). Effective enable:
+  //   auto-detect add-ons (rtc, pahub, wifi): user_enabled && detected
+  //   manual add-ons (relays, pushbutton, uart): user_enabled only
+  struct AddonDetection {
+    bool rtc{false};
+    bool relays{false};     // manual only — always false
+    bool pushbutton{false}; // manual only — always false
+    bool pahub{false};
+    bool wifi{false};
+    bool uart{false};       // manual only — always false
+    uint32_t detected_at_ms{0};
+  };
+
   // Restore the pre-parse defaults (also called by the constructor so two
   // instances never share state).
   void reset();

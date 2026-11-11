@@ -125,9 +125,16 @@ class CurlingEngineComponent : public Component {
   bool ntp_ok_{false};
   std::string ntp_server_{};
   time::RealTimeClock *rtc_time_{nullptr};   // addon RTC (SNTP fallback)
-  bool rtc_enabled_{false};                  // config.addons.rtc from settings
+  bool rtc_enabled_{false};                  // config.addons.rtc && addon_detected.rtc
   uart::UARTComponent *uart_{nullptr};          // Hat2-Bus UART0 add-on
   bool uart_enabled_{false};                 // config.addons.uart from settings
+
+  // Runtime add-on hardware detection (not persisted; recomputed every boot).
+  AddonDetection addon_detected{};
+
+  // Probe I2C/SDIO for add-on hardware presence. Called from setup() after
+  // settings load. A detection failure is not fatal.
+  void detect_addons();
 };
 
 }  // namespace curling_engine

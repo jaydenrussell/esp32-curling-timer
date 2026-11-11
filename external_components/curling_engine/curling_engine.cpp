@@ -1,4 +1,5 @@
 #include "curling_engine.h"
+#include "config_edit.h"
 
 #include <utility>
 
@@ -41,6 +42,24 @@ static const char *const TAG = "curling_engine";
 static const char *const PARTITION_LABEL = "storage";
 // FAT counts every open file and directory against this limit.
 static constexpr size_t FAT_MAX_FILES = 16;
+
+void CurlingEngineComponent::detect_addons() {
+  this->addon_detected = AddonDetection{};
+  this->addon_detected.detected_at_ms = millis();
+
+  // RTC: probe the PCF8563-compatible device via the RealTimeClock component.
+  // now().is_valid() is true when the hardware has answered at least one
+  // I2C read (pcf8563 performs an initial read in its own setup()).
+  if (this->rtc_time_ != nullptr) {
+    ESPTime now = this->rtc_time_->now();
+    this->addon_detected.rtc = now.is_valid();
+    ESP_LOGI(TAG, "addon rtc detected=%d", this->addon_detected.rtc ? 1 : 0);
+  }
+  // PaHub, Wi-Fi: manual only for v1 (no I2C/SDIO bus access yet).
+  // relays, pushbutton, uart: manual only — always false.
+  ESP_LOGI(TAG, "addon pahub detected=%d wifi detected=%d", this->addon_detected.pahub ? 1 : 0,
+           this->addon_detected.wifi ? 1 : 0);
+}
 
 void CurlingEngineComponent::setup() {
   esp_vfs_fat_mount_config_t conf = {};
@@ -85,9 +104,42 @@ void CurlingEngineComponent::setup() {
            logger::global_logger->set_log_level(settings.log_level);
        } else {
          ESP_LOGW(TAG, "Existing settings file does not validate: %s", err_msg.c_str());
-       }
-     }
-   }
+      }
+    }
+    this->detect_addons();
+
+    // Plug-and-play: auto-enable detected add-ons that the user hasn't
+    // explicitly disabled. Auto-detect add-ons (rtc, pahub, wifi) gate on
+    // detection at runtime; manual add-ons (relays, pushbutton, uart) are
+    // user-controlled only and never auto-enabled here.
+    std::string at_text, at_version, at_err;
+    if (this->store_->read(&at_text, &at_version, &at_err) == StoreStatus::OK) {
+      PiTimerSettings at_settings;
+      if (at_settings.parse_settings_text(at_text, SETTINGS_BASENAME, &at_err)) {
+        std::vector<ConfigValue> values;
+        if (this->addon_detected.rtc && !at_settings.addons.rtc)
+          values.push_back({"config.addons.rtc", yaml_bool(true)});
+        if (this->addon_detected.pahub && !at_settings.addons.pahub)
+          values.push_back({"config.addons.pahub", yaml_bool(true)});
+        if (this->addon_detected.wifi && !at_settings.addons.wifi)
+          values.push_back({"config.addons.wifi", yaml_bool(true)});
+        if (!values.empty()) {
+          std::string out, apply_err;
+          if (apply_config_values(at_text, values, &out, &apply_err)) {
+            std::string new_version;
+            if (this->store_->save(out, &at_version, &new_version, &at_err) == StoreStatus::OK) {
+              for (const auto &v : values)
+                ESP_LOGI(TAG, "addon auto-enabled: %s", v.path.c_str());
+            } else {
+              ESP_LOGE(TAG, "addon auto-enable save failed: %s", at_err.c_str());
+            }
+          } else {
+            ESP_LOGE(TAG, "addon auto-enable apply failed: %s", apply_err.c_str());
+          }
+        }
+      }
+    }
+  }
 }
 
 void CurlingEngineComponent::dump_config() {
@@ -163,8 +215,9 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
     }
     return false;
   }
-  // Gate the RTC fallback on the runtime addon flag from settings.
-  this->rtc_enabled_ = settings.addons.rtc;
+  // Gate the RTC fallback on the runtime addon flag from settings AND
+  // hardware detection (auto-detect add-on: effective = user_enabled && detected).
+  this->rtc_enabled_ = settings.addons.rtc && this->addon_detected.rtc;
 
   bool clock_known = this->local_now(&weekday_mon0, &seconds_of_day, &date_iso);
   *out = render_snapshot(settings, clock_known, weekday_mon0, seconds_of_day, date_iso);

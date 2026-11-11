@@ -224,7 +224,9 @@ i2c:
 uart:
   - id: uart_addon
     tx_pin: GPIO37
-    rx_pin: GPIO38
+    rx_pin:
+      number: GPIO38
+      mode: INPUT_PULLUP
     baud_rate: 115200
 
 # ---------------------------------------------------------------------
@@ -276,7 +278,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.92
+      ref: v2026.11.95
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]

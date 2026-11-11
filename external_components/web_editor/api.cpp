@@ -840,6 +840,32 @@ ApiResponse PiTimerApi::get_config() {
     }
   }
   cfg["config.pregame_header_text"] = s.pregame_header_text;
+  cfg["config.addons.rtc"] = s.addons.rtc;
+  cfg["config.addons.relays"] = s.addons.relays;
+  cfg["config.addons.pushbutton"] = s.addons.pushbutton;
+  cfg["config.addons.pahub"] = s.addons.pahub;
+  cfg["config.addons.wifi"] = s.addons.wifi;
+  cfg["config.addons.uart"] = s.addons.uart;
+  return from_document(doc);
+}
+
+ApiResponse PiTimerApi::get_addon_detection() {
+  JsonDocument doc;
+  if (engine_ != nullptr) {
+    doc["rtc"] = engine_->addon_detected.rtc;
+    doc["relays"] = engine_->addon_detected.relays;
+    doc["pushbutton"] = engine_->addon_detected.pushbutton;
+    doc["pahub"] = engine_->addon_detected.pahub;
+    doc["wifi"] = engine_->addon_detected.wifi;
+    doc["uart"] = engine_->addon_detected.uart;
+  } else {
+    doc["rtc"] = false;
+    doc["relays"] = false;
+    doc["pushbutton"] = false;
+    doc["pahub"] = false;
+    doc["wifi"] = false;
+    doc["uart"] = false;
+  }
   return from_document(doc);
 }
 
@@ -863,7 +889,10 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
         path == "config.relays_enabled" || path == "config.relay1_enabled" ||
         path == "config.allow_midnight_wrap" ||
         path == "config.relay2_enabled" || path == "config.relay3_enabled" ||
-        path == "config.relay4_enabled") {
+        path == "config.relay4_enabled" ||
+        path == "config.addons.rtc" || path == "config.addons.relays" ||
+        path == "config.addons.pushbutton" || path == "config.addons.pahub" ||
+        path == "config.addons.wifi" || path == "config.addons.uart") {
       if (!v.is<bool>())
         return error_json(422, path + " must be true or false");
       yaml = curling_engine::yaml_bool(v.as<bool>());
@@ -1259,7 +1288,9 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
      if (p == "/api/backups")
        return get_backups();
      if (p == "/api/config")
-       return get_config();
+        return get_config();
+     if (p == "/api/addons/detection")
+        return get_addon_detection();
      if (p == "/api/leagues")
        return get_leagues();
 

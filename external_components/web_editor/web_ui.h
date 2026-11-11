@@ -1,168 +1,456 @@
 // AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
 #pragma once
 
-static const char WEB_UI_HTML[] = R"WEB_UI_DELIMITER(<!DOCTYPE html>
+static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-<title>Countdown Timer</title>
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1d24" />
-<meta name="color-scheme" content="light dark" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>">
+<title>Curling Timer</title>
+<meta name="theme-color" content="#6750A4">
+<meta name="color-scheme" content="light">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIkN1cmxpbmcgVGltZXIiLCAic2hvcnRfbmFtZSI6ICJDdXJsaW5nIFRpbWVyIiwgInN0YXJ0X3VybCI6ICIvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNGRkZCRkUiLCAidGhlbWVfY29sb3IiOiAiIzY3NTBBNCIsICJpY29ucyI6IFt7InNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7YmFzZTY0LFBITjJaeUI0Yld4dWN6MGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TUM5emRtY2lJSFpwWlhkQ2IzZzlJakFnTUNBeE1EQWdNVEF3SWo0OGNtVmpkQ0IzYVdSMGFEMGlNVEF3SWlCb1pXbG5hSFE5SWpFd01DSWdjbmc5SWpJeUlpQm1hV3hzUFNJak5qYzFNRUUwSWk4K1BIQmhkR2dnWkQwaVRUSTFJRE0xSUVNME5TQTFOU0EzTlNBeU5TSWdjM1J5YjJ0bFBTSWpSa1pHUmtaR0lpQnpkSEp2YTJVdGQybGtkR2c5SWpnaUlHWnBiR3c5SW01dmJtVWlJSE4wY205clpTMXNhVzVsWTJGd1BTSnliM1Z1WkNJZ2MzUnliMnRsTFd4cGJtVnFiMmx1UFNKeWIzVnVaQ0lnTHo0OEwzTjJaejQ9IiwgInNpemVzIjogIjIyNHgyMjQiLCAidHlwZSI6ICJpbWFnZS9zdmcreG1sIn0sIHsic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjRiV3h1Y3owaWFIUjBjRG92TDNkM2R5NTNNeTV2Y21jdk1qQXdNQzl6ZG1jaUlIWnBaWGRDYjNnOUlqQWdNQ0F4TURBZ01UQXdJajQ4Y21WamRDQjNhV1IwYUQwaU1UQXdJaUJvWldsbmFIUTlJakV3TUNJZ2NuZzlJakl5SWlCbWFXeHNQU0lqTmpjMU1FRTBJaTgrUEhCaGRHZ2daRDBpVFRJMUlETTFJRU0wTlNBMU5TQTNOU0F5TlNJZ2MzUnliMnRsUFNJalJrWkdSa1pHSWlCemRISnZhMlV0ZDJsa2RHZzlJamdpSUdacGJHdzlJbTV2Ym1VaUlITjBjbTlyWlMxc2FXNWxZMkZ3UFNKeWIzVnVaQ0lnYzNSeWIydGxMV3hwYm1WcWIybHVQU0p5YjNWdVpDSWdMejQ4TDNOMlp6ND0iLCAic2l6ZXMiOiAiNTEyeDUxMiIsICJ0eXBlIjogImltYWdlL3N2Zyt4bWwifV19">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236750A4'/%3E%3Cpath d='M25 35 L45 55 L75 25' stroke='%23FFFFFF' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
+/* ==========================================================================
+   Material Design 3 — curling timer web UI
+   Single source of truth: edit this file; web_ui.h is regenerated at codegen.
+   ========================================================================== */
+
+/* --- Material Design 3 color tokens (light, high-contrast) --- */
 :root {
-  color-scheme: dark;
-  --bg-dark: #1a1d24; --bg: #1e2229; --bg-light: #262b35; --card: #262b35;
-  --text: #e8eaed; --text-muted: #9aa0ad; --border: #3a3f4b; --highlight: #4a5060;
-  --primary: #6b8cff; --secondary: #5cc4b8; --tertiary: #d4b55a;
-  --success: #4ade80; --warning: #f0b429; --danger: #f87171;
-  --ok: #4ade80; --warn: #f0b429; --bad: #f87171;
-  --ok-bg: #1a2e22; --warn-bg: #2e2a1a; --bad-bg: #2e1a1a; --quick: #a78bfa;
-  --preset-bg: #1e2d4a; --preset-text: #93c5fd; --preset-border: #3b82f6;
-  --line: #3a3f4b; --accent: #6b8cff; --accent-text: #0f1117; --muted: #9aa0ad;
+  color-scheme: light;
+  --md-sys-color-primary: #6750A4;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #EADDFF;
+  --md-sys-color-on-primary-container: #21005E;
+  --md-sys-color-secondary: #625B71;
+  --md-sys-color-on-secondary: #FFFFFF;
+  --md-sys-color-secondary-container: #E8DEF8;
+  --md-sys-color-on-secondary-container: #1D1B2E;
+  --md-sys-color-tertiary: #7D5260;
+  --md-sys-color-on-tertiary: #FFFFFF;
+  --md-sys-color-tertiary-container: #FFD8E4;
+  --md-sys-color-on-tertiary-container: #31121D;
+  --md-sys-color-error: #B3261E;
+  --md-sys-color-on-error: #FFFFFF;
+  --md-sys-color-error-container: #F9DEDC;
+  --md-sys-color-on-error-container: #410E0B;
+  --md-sys-color-background: #FFFBFE;
+  --md-sys-color-on-background: #1C1B1F;
+  --md-sys-color-surface: #FFFBFE;
+  --md-sys-color-on-surface: #1C1B1F;
+  --md-sys-color-surface-variant: #E7E0EC;
+  --md-sys-color-on-surface-variant: #49454F;
+  --md-sys-color-outline: #79747E;
+  --md-sys-color-outline-variant: #CAC4D0;
+  --md-sys-color-inverse-surface: #313033;
+  --md-sys-color-inverse-on-surface: #F2EFEE;
+  --md-sys-color-inverse-primary: #F0EFFF;
+
+  /* Practical aliases used by JS inline styles */
+  --bg: var(--md-sys-color-background);
+  --surface: var(--md-sys-color-surface);
+  --text: var(--md-sys-color-on-surface);
+  --text-strong: var(--md-sys-color-on-surface);
+  --muted: var(--md-sys-color-on-surface-variant);
+  --border: var(--md-sys-color-outline);
+  --ok: #2E7D5C;
+  --ok-dark: #004D40;
+  --bad: #B3261E;
+  --warn: #C49A2E;
 }
-@media (prefers-color-scheme: light) {
-  :root {
-    color-scheme: light;
-    --bg-dark: #e8e9ec; --bg: #f1f2f5; --bg-light: #ffffff; --card: #ffffff;
-    --text: #1a1d24; --text-muted: #5a6070; --border: #d0d3da; --highlight: #ffffff;
-    --primary: #4f6ef7; --secondary: #3ba89c; --tertiary: #b89a3e;
-    --success: #22c55e; --warning: #d97706; --danger: #ef4444;
-    --ok: #22c55e; --warn: #d97706; --bad: #ef4444;
-    --ok-bg: #dcfce7; --warn-bg: #fef3c7; --bad-bg: #fee2e2; --quick: #8b5cf6;
-    --preset-bg: #dbeafe; --preset-text: #1d4ed8; --preset-border: #3b82f6;
-    --line: #d0d3da; --accent: #4f6ef7; --accent-text: #ffffff; --muted: #5a6070;
-  }
-}
-html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+
+/* --- Reset & base --- */
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg-dark); color: var(--text); font: 16px/1.5 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-button, a, [role="button"] { touch-action: manipulation; }
-button, [role="button"], .tab, .chip { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-button.btn:active { transform: scale(0.97); }
-nav button:active { background: var(--bg); color: var(--text); }
-header { display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: var(--bg-light); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 5; backdrop-filter: blur(8px); }
-header h1 { font-size: 17px; margin: 0; line-height: 1.1; }
-.header-brand { display: flex; flex-direction: column; gap: 2px; }
-.header-version { display: block; font-size: 11px; font-weight: 400; color: var(--muted); line-height: 1; }
-.header-actions { display: flex; gap: 6px; margin-left: auto; }
-.header-actions .btn { padding: 6px 10px; font-size: 13px; min-height: 32px; }
-nav { display: flex; gap: 4px; padding: 8px 12px; overflow-x: auto; background: var(--bg-light); border-bottom: 1px solid var(--border); }
-nav button { background: none; border: 0; padding: 6px 12px; border-radius: 10px; color: var(--muted); font-size: 14px; line-height: 1; cursor: pointer; white-space: nowrap; transition: all 0.15s ease; }
-nav button.active { background: var(--primary); color: var(--accent-text); }
-@media (hover: hover) and (pointer: fine) {
-  nav button:hover { background: var(--bg); color: var(--text); }
-  button.btn.primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
 }
-@media (max-width: 480px) {
-  header { padding: 6px 12px; gap: 8px; }
-  header h1 { font-size: 16px; }
-  .header-version { font-size: 10px; }
-  .header-actions .btn { padding: 5px 8px; font-size: 12px; min-height: 30px; }
+h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; line-height: 1.2; }
+h1 { font-size: 24px; }
+h2 { font-size: 16px; font-weight: 500; letter-spacing: 0.01em; text-transform: uppercase; color: var(--muted); }
+h3 { font-size: 18px; font-weight: 500; }
+p { margin: 0 0 12px; line-height: 1.5; }
+a { color: var(--md-sys-color-primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button, a, [role="button"] { touch-action: manipulation; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button:active { transform: scale(0.98); }
+.hidden { display: none !important; }
+.spacer { flex: 1; }
+
+/* --- Top app bar --- */
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 56px;
+  background: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
-main { max-width: 960px; margin: 0 auto; padding: 16px 16px 96px; }
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 24px rgba(0,0,0,0.24); display: flex; flex-direction: column; }
-.card h2 { font-size: 17px; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; order: -1; }
-.card h2 .spacer { flex: 1; }
-.muted { color: var(--muted); }
-.small { font-size: 14px; }
-button.btn { cursor: pointer; font: inherit; border: 1px solid var(--border); background: var(--bg-light); color: var(--text); border-radius: 12px; padding: 8px 16px; cursor: pointer; min-height: 40px; transition: all 0.18s ease; }
-button.btn.primary { background: var(--primary); border-color: var(--primary); color: var(--accent-text); }
-button.btn.primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-button.btn.danger { color: var(--danger); border-color: var(--danger); }
-button.btn:disabled { opacity: .4; cursor: default; }
-input, select, textarea { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 8px 12px; min-height: 40px; min-width: 0; transition: border-color 0.18s ease, box-shadow 0.18s ease; }
-input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(107,140,255,0.15); }
-textarea { width: 100%; min-height: 60vh; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
-label.check { display: inline-flex; align-items: center; gap: 6px; }
-label.check input { min-height: 0; width: 18px; height: 18px; }
-.row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
-.banner { border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; }
-.banner.bad { background: var(--bad-bg); color: var(--bad); }
-.banner.ok { background: var(--ok-bg); color: var(--ok); }
-.banner.warn { background: var(--warn-bg); color: var(--warn); }
-.pill { display: inline-block; font-size: 13px; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
-.pill.ok { color: var(--ok); } .pill.bad { color: var(--bad); } .pill.quick { color: var(--quick); } .pill.warn { color: var(--warn); }
-.countdown { font-size: clamp(56px, 18vw, 120px); font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; margin: 8px 0; }
-.state { font-weight: 600; letter-spacing: .04em; }
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
-.field { margin-bottom: 8px; }
-.grid2 label, .grid2 .field { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
-.duration { display: flex; align-items: center; gap: 6px; }
-.duration input { width: 5.5em; }
-/* one shared grid (start | bell/buzzer | name) so the columns line up across rows */
-.today { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); column-gap: 12px; }
-.today li { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; padding: 6px 8px; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.header-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.header-brand h1 { font-size: 20px; margin: 0; color: var(--text-strong); font-weight: 600; }
+.header-version { font-size: 11px; color: var(--muted); margin-top: 2px; letter-spacing: 0.02em; }
+#header-msg { font-size: 13px; padding: 6px 10px; border-radius: 8px; white-space: pre-wrap; flex: 1; }
+.header-actions { display: flex; gap: 4px; margin-left: auto; }
+
+/* --- Navigation --- */
+nav {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  background: var(--md-sys-color-surface);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  position: sticky;
+  top: 56px;
+  z-index: 90;
+}
+nav button {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0 16px;
+  height: 48px;
+  min-width: 88px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+nav button.active {
+  color: var(--md-sys-color-primary);
+  border-bottom-color: var(--md-sys-color-primary);
+}
+@media (max-width: 640px) {
+  nav button { padding: 0 10px; min-width: 72px; font-size: 11px; gap: 4px; }
+}
+
+/* --- Main content --- */
+main {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 16px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+@media (max-width: 640px) { main { padding: 16px 12px 110px; } }
+
+/* --- Cards --- */
+.card {
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 28px;
+  padding: 20px;
+  margin: 0 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03), 0 2px 6px 2px rgba(0,0,0,0.03);
+}
+.card > h2 { margin-top: 0; margin-bottom: 12px; font-size: 16px; font-weight: 500; letter-spacing: 0.01em; text-transform: uppercase; color: var(--muted); }
+.card h3 { margin: 0 0 8px; font-size: 18px; font-weight: 500; color: var(--text-strong); }
+.card p { margin: 0 0 8px; font-size: 14px; line-height: 1.5; }
+.card .muted { color: var(--muted); }
+.card .small { font-size: 12px; }
+
+/* --- Hero / countdown --- */
+.hero {
+  background: var(--md-sys-color-primary-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 28px;
+  padding: 32px 24px;
+  margin: 0;
+}
+.hero .game-name {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--md-sys-color-on-primary-container);
+  margin: 0 0 4px;
+}
+.hero .countdown {
+  font-family: "Source Sans 3", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: clamp(56px, 22vw, 120px);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+  color: var(--md-sys-color-on-primary-container);
+  margin: 0 0 8px;
+  letter-spacing: -0.02em;
+}
+.hero .countdown.subdued { color: color-mix(in srgb, var(--md-sys-color-on-primary-container) 60%, transparent); }
+.hero .game-meta { font-size: 13px; color: color-mix(in srgb, var(--md-sys-color-on-primary-container) 70%, transparent); margin: 0; }
+
+/* --- Buttons --- */
+button.btn {
+  cursor: pointer;
+  font: inherit;
+  border: 1px solid var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  border-radius: 12px;
+  padding: 10px 16px;
+  min-height: 48px;
+  transition: all 0.15s ease;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+button.btn:disabled { opacity: 0.5; cursor: default; }
+button.btn.primary {
+  background: var(--md-sys-color-primary);
+  border-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+}
+button.btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-primary) 90%, black); }
+button.btn.danger {
+  color: var(--md-sys-color-error);
+  border-color: var(--md-sys-color-error);
+  background: transparent;
+}
+button.btn.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-error) 8%, transparent); }
+button.btn.icon { padding: 0; min-height: 0; width: 48px; height: 48px; border-radius: 12px; }
+button.btn.icon svg { width: 20px; height: 20px; fill: currentColor; }
+button.btn.preset { font-size: 13px; padding: 8px 12px; min-height: 40px; }
+
+/* --- Form controls --- */
+input, select, textarea {
+  font: inherit;
+  color: var(--md-sys-color-on-surface);
+  background: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-height: 48px;
+  min-width: 0;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-size: 14px;
+}
+@media (pointer: coarse) { input, select, textarea { font-size: 16px; } }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
+}
+textarea { width: 100%; min-height: 60vh; font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+label {
+  display: block;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0 0 6px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+label.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  margin: 0;
+  font-size: 14px;
+}
+label.check input { width: 20px; height: 20px; margin: 0; min-height: 0; }
+.field { margin: 0 0 14px 0; }
+.field > label { margin-bottom: 6px; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
+.row-actions .spacer { flex: 1; }
+.duration { display: flex; align-items: center; gap: 8px; }
+.duration input { width: 6em; }
+
+/* --- Badges / pills --- */
+.pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 12px;
+  border: 1px solid currentColor;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.pill.ok { color: var(--ok-dark); border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.pill.bad { color: var(--bad); border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
+.pill.warn { color: color-mix(in srgb, var(--warn) 70%, black); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.pill.quick { color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent); }
+
+/* --- Banners --- */
+.banner {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  margin: 0 0 12px;
+}
+.banner.bad { background: color-mix(in srgb, var(--bad) 10%, transparent); border-color: var(--bad); color: var(--bad); }
+.banner.ok { background: color-mix(in srgb, var(--ok) 10%, transparent); border-color: var(--ok); color: var(--ok-dark); }
+.banner.warn { background: color-mix(in srgb, var(--warn) 10%, transparent); border-color: var(--warn); color: color-mix(in srgb, var(--warn) 70%, black); }
+
+/* --- State chips --- */
+.state { font-weight: 600; letter-spacing: 0.05em; font-size: 13px; }
+
+/* --- Grid --- */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+@media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* --- Timeline (today's games) --- */
+.today { list-style: none; margin: 0; padding: 0; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; }
+.today li {
+  display: grid;
+  grid-template-columns: max-content max-content minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+}
+.today li:last-child { border-bottom: 0; }
+.today li.head { background: var(--md-sys-color-surface-variant); color: var(--md-sys-color-on-surface-variant); font-weight: 600; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--md-sys-color-outline); }
+.today li.now { background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent); border-left: 3px solid var(--md-sys-color-primary); font-weight: 600; color: var(--text-strong); }
+.today li.past { color: var(--muted); opacity: 0.7; }
 .today .name { overflow-wrap: anywhere; }
 .today .name .pill { margin-left: 8px; white-space: nowrap; }
-.today li:last-child { border-bottom: 0; }
-/* game in progress: accent background, readable text in both themes */
-.today li.now { font-weight: 700; background: var(--accent); color: var(--accent-text); border-radius: 6px; }
-.today li.now .pill { color: inherit; }
-.today li.past { color: var(--muted); }
-.today li.head { font-size: 14px; font-weight: 600; color: var(--muted); border-bottom-width: 2px; }
-.entry { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+
+/* --- League list --- */
+.league-row { display: grid; grid-template-columns: 28px 1fr auto auto auto; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--md-sys-color-outline-variant); font-size: 13px; }
+.league-row:last-child { border-bottom: 0; }
+.league-row .num { font-family: Georgia, serif; font-weight: 700; color: var(--muted); font-size: 16px; }
+.league-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; }
+.entry { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--md-sys-color-outline-variant); }
 .entry:last-of-type { border-bottom: 0; }
-.entry .name { grid-column: 1 / -1; display: flex; gap: 8px; }
+.entry .name { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
 .entry .name input { flex: 1; }
-.entry .more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
-.entry .more label, .entry .times label { display: flex; flex-direction: column; gap: 2px; font-size: 13px; color: var(--muted); }
-@media (min-width: 720px) {
-  .entry { grid-template-columns: 150px 150px 1fr; }
-  .entry .name { grid-column: auto; }
-}
-/* collapsible date exception cards */
-details.fold { padding: 0; margin-bottom: 8px; }
-details.fold > summary { display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; list-style: none; border-radius: 12px; }
+.entry .more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.entry .more label, .entry .times label { margin: 0; font-size: 12px; }
+@media (min-width: 720px) { .entry { grid-template-columns: 140px 140px 1fr; } .entry .name { grid-column: auto; } }
+
+/* --- Collapsible fold cards --- */
+details.fold { padding: 0; margin: 0 0 14px 0; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; overflow: hidden; }
+details.fold > summary { display: flex; align-items: center; gap: 10px; padding: 16px 20px; cursor: pointer; list-style: none; background: var(--md-sys-color-surface-variant); font-weight: 600; font-size: 14px; color: var(--text-strong); }
 details.fold > summary::-webkit-details-marker { display: none; }
-details.fold > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-details.fold .chevron { display: inline-block; width: 1em; transition: transform .15s; color: var(--muted); }
+details.fold > summary:focus-visible { outline: 2px solid var(--md-sys-color-primary); outline-offset: 2px; }
+details.fold .chevron { display: inline-block; width: 1em; transition: transform 0.15s; color: var(--muted); }
 details.fold[open] .chevron { transform: rotate(90deg); }
-details.fold .fold-date { font-weight: 600; white-space: nowrap; }
-details.fold .fold-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
-details.fold .fold-count { font-size: 14px; white-space: nowrap; }
-details.fold .fold-body { padding: 0 16px 16px; }
-.row-actions .spacer { flex: 1; }
-/* the message and buttons sit together in the middle, so they are not missed on a wide monitor */
-.savebar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); padding: 10px 16px; display: none; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 6; }
+details.fold .fold-date { white-space: nowrap; }
+details.fold .fold-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--muted); font-weight: 400; }
+details.fold .fold-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
+details.fold .fold-body { padding: 20px; background: var(--md-sys-color-surface); }
+
+/* --- Save bars --- */
+.savebar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--md-sys-color-surface);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding: 10px 16px;
+  display: none;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  z-index: 60;
+  box-shadow: 0 -2px 8px -2px rgba(0,0,0,0.1);
+}
 .savebar.show { display: flex; }
-.savebar span { color: var(--warn); }
-/* on a narrow phone the message takes its own line, with both buttons centred under it */
-@media (max-width: 480px) { .savebar span { flex-basis: 100%; text-align: center; } }
-.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+.savebar span { color: var(--muted); font-weight: 600; font-size: 13px; }
+
+/* --- Modal --- */
+.modal { position: fixed; inset: 0; background: rgba(28, 27, 31, 0.45); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
 .modal.show { display: flex; }
 .modal-backdrop { position: absolute; inset: 0; }
-.modal-card { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; max-width: 92vw; max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
-.modal-card h2 { margin: 0 0 12px; }
-.modal-card ul { margin: 8px 0 16px; padding-left: 20px; color: var(--text-muted); }
+.modal-card { background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; padding: 24px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.15); }
+.modal-card h2 { margin: 0 0 16px; font-size: 20px; font-weight: 600; color: var(--text-strong); }
+.modal-card ul { margin: 8px 0 16px; padding-left: 20px; color: var(--muted); }
 .modal-card li { margin: 6px 0; }
-.backups { list-style: none; padding: 0; margin: 0; }
-.backups li { display: flex; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-.backups li span { flex: 1; min-width: 180px; font-variant-numeric: tabular-nums; }
-pre.view { overflow: auto; max-height: 50vh; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px; font-size: 12px; }
-#login { position: fixed; inset: 0; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 10; padding: 16px; }
+
+/* --- Backups list --- */
+.backups { list-style: none; padding: 0; margin: 0; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 28px; }
+.backups li { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--md-sys-color-outline-variant); flex-wrap: wrap; font-size: 13px; }
+.backups li:last-child { border-bottom: 0; }
+.backups li span { flex: 1; min-width: 200px; font-variant-numeric: tabular-nums; color: var(--muted); }
+
+/* --- Raw YAML view --- */
+pre.view { overflow: auto; max-height: 50vh; background: var(--md-sys-color-surface-variant); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 12px; padding: 12px; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* --- Login --- */
+#login { position: fixed; inset: 0; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
 #login.show { display: flex; }
-#login form { width: 100%; max-width: 360px; }
-#login input { width: 100%; margin: 8px 0 12px; }
-.hidden { display: none !important; }
-/* mobile responsiveness */
-@media (max-width: 640px) {
-  nav { flex-wrap: nowrap; overflow-x: auto; }
-  .card { padding: 12px; }
-  .grid2 { grid-template-columns: 1fr; }
-  .savebar { left: 0; right: 0; width: 100%; }
+#login form { width: 100%; max-width: 340px; }
+#login h2 { font-size: 24px; margin: 0 0 4px; font-weight: 600; color: var(--text-strong); }
+#login p { margin: 0 0 20px; font-size: 14px; color: var(--muted); }
+#login input { width: 100%; margin: 0 0 12px; }
+
+/* --- Add-on marketplace --- */
+.addon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 16px 0; }
+.addon-card {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 20px;
+  padding: 20px;
+  background: var(--md-sys-color-surface);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
-/* consistent emoji icon spacing */
-.card h2, nav button { gap: 6px; }
-input[type=number] { min-width: 60px; padding-right: 18px; }
+.addon-card h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-strong); }
+.addon-card p.addon-desc { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+.pill.detected { color: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent); }
+.pill.enabled { color: var(--ok-dark); border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
+.pill.notdetected { color: var(--muted); border-color: var(--md-sys-color-outline); background: transparent; }
+.pill.manual { color: var(--md-sys-color-tertiary); border-color: var(--md-sys-color-tertiary); background: color-mix(in srgb, var(--md-sys-color-tertiary) 12%, transparent); }
+.btn-toggle {
+  border: 1px solid var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  border-radius: 12px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  min-height: 40px;
+  align-self: flex-start;
+}
+.btn-toggle:disabled { opacity: 0.5; cursor: default; }
+.btn-toggle.primary { background: var(--md-sys-color-primary); border-color: var(--md-sys-color-primary); color: var(--md-sys-color-on-primary); }
+.btn-toggle.danger { color: var(--md-sys-color-error); border-color: var(--md-sys-color-error); background: transparent; }
+.btn-toggle.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-primary) 90%, black); }
+.btn-toggle.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--md-sys-color-error) 8%, transparent); }
+@media (max-width: 640px) { .addon-grid { grid-template-columns: 1fr; } }
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* --- Version dot --- */
+.version-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); margin-left: 6px; vertical-align: middle; cursor: pointer; }
 </style>
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>🎯 Countdown Timer <span class="version">v2026.11.88</span></h2>
-  <label for="password" class="muted small">Password</label>
+  <h2>Curling Timer <span class="version">vv2026.11.94</span></h2>
+  <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
+  <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
   <div id="login-error" class="banner bad hidden"></div>
   <button class="btn primary" type="submit">Log in</button>
@@ -185,9 +473,9 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 </div>
 
 <header>
-  <div class="header-brand"><h1>🎯 Countdown Timer</h1><span class="header-version">v2026.11.88</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">vv2026.11.94</span></div>
   <span id="header-msg" class="banner hidden"></span>
-  <div class="header-actions"><button class="btn icon" id="help" title="Help">Help</button><button class="btn icon" id="logout" title="Log out">Log out</button></div>
+  <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
 <nav id="tabs"></nav>
 <main>
@@ -209,9 +497,38 @@ input[type=number] { min-width: 60px; padding-right: 18px; }
 <script>
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const TABS = [['status', '📊', 'Status'], ['quickstart', '⚡', 'Quick Start'], ['schedule', '📅', 'Schedule'], ['leagues', '🏆', 'Leagues'], ['history', '📈', 'Report'], ['config', '⚙', 'Settings'], ['diagnostics', '🩺', 'Diagnostics']];
+const NAV_LABELS = {
+  status: 'Status',
+  quickstart: 'Quick Start',
+  schedule: 'Schedule',
+  leagues: 'Leagues',
+  history: 'Report',
+  config: 'Settings',
+  diagnostics: 'Diagnostics'
+};
+const NAV_ICONS = {
+  status: '📊',
+  quickstart: '▶️',
+  schedule: '📅',
+  leagues: '🏉',
+  history: '📋',
+  config: '⚙️',
+  diagnostics: '🔧'
+};
+const TABS = [['status', 'status', 'Status'], ['quickstart', 'quickstart', 'Quick Start'], ['schedule', 'schedule', 'Schedule'], ['leagues', 'leagues', 'Leagues'], ['history', 'history', 'Report'], ['config', 'config', 'Settings'], ['diagnostics', 'diagnostics', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
+
+// Add-on marketplace data model (spec §2). auto = hardware-detected gating.
+const ADDONS = [
+  { key: 'rtc', label: 'RTC time source', desc: 'Battery-backed clock (HYM8563 / PCF8563) — keeps time across power loss; timer knows the time on boot before SNTP syncs.', auto: true },
+  { key: 'relays', label: 'Relay outputs', desc: 'Unit 2Relay channels driving the 24VAC bell circuit + aux.', auto: false },
+  { key: 'pushbutton', label: 'Manual trigger button', desc: 'GPIO45 press rings the start relays for the next manually-triggered game.', auto: false },
+  { key: 'pahub', label: 'PaHub I2C hub', desc: 'PCA9548A 8-channel multiplexer — multiple I2C devices on one Grove port.', auto: true },
+  { key: 'wifi', label: 'Wi-Fi failover', desc: 'ESP32-C6 SDIO Wi-Fi failover.', auto: true },
+  { key: 'uart', label: 'UART0 serial port', desc: 'Hat2-Bus UART0 serial (GPIO37 TX / GPIO38 RX) — one-line status stream to a serial device.', auto: false },
+];
+let addonDetection = {};
 
 // ---- small helpers --------------------------------------------------------
 function el(tag, props, ...children) {
@@ -256,7 +573,6 @@ let messageTimer = 0;
 function showMessage(text, kind = 'bad') {
   const box = $('header-msg');
   if (box) { box.className = `banner ${kind}`; box.textContent = text; box.classList.remove('hidden'); }
-  // Also show in savebars
   for (const id of ['savebar', 'config-savebar']) {
     const bar = $(id);
     if (bar) {
@@ -292,7 +608,6 @@ $('login-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const btn = $('login-form').querySelector('button[type=submit]');
   btn.disabled = true; btn.textContent = 'Logging in...';
-  // Force a repaint so the user sees feedback immediately
   await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const result = await api('/api/login', { password: $('password').value });
   btn.disabled = false; btn.textContent = 'Log in';
@@ -313,7 +628,8 @@ $('help').addEventListener('click', () => { document.getElementById('help-modal'
 function renderTabs() {
   const wide = window.innerWidth >= 768;
   $('tabs').replaceChildren(...TABS.map(([id, icon, title]) =>
-    el('button', { class: id === state.tab ? 'active' : '', title, onclick: () => selectTab(id) }, wide ? `${icon} ${title}` : icon)));
+    el('button', { class: id === state.tab ? 'active' : '', title, onclick: () => selectTab(id) },
+       wide ? NAV_ICONS[id] + ' ' + NAV_LABELS[id] : NAV_ICONS[id])));
 }
 window.addEventListener('resize', renderTabs);
 async function selectTab(id) {
@@ -347,15 +663,10 @@ async function loadStatus() {
    if (state.tab === 'quickstart') renderQuickstart();
  }
 
-
 // the quick start form is built once so the 5 second status refresh never wipes what is being typed
 let quickForm = null;
-// one tap quick start timers: button label, name shown on the display, duration in seconds,
-// an optional title (wording for the tooltip and confirmation when it differs from the name on the display)
-// and the optional game_completed/header_hold overrides for the header shown after the buzzer
 const QUICK_PRESETS = [
-  { label: 'Practice (7m)', name: 'PRACTICE', title: 'Practice', seconds: 7 * 60,
-    game_completed: '--- PRACTICE DONE ---', header_hold: 60 },
+  { label: 'Practice (7m)', name: 'PRACTICE', title: 'Practice', seconds: 7 * 60, game_completed: '--- PRACTICE DONE ---', header_hold: 60 },
   { label: 'Game (6 ends)', name: 'Game (6 ends)', seconds: 75 * 60 },
   { label: 'Game (8 ends)', name: 'Game (8 ends)', seconds: 105 * 60 },
   { label: 'Doubles (8 ends)', name: 'Doubles (8 ends)', seconds: 105 * 60 },
@@ -417,15 +728,15 @@ function renderStatus() {
     return;
   }
   if (quickForm) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
-  const now = el('div', { class: 'card' });
+  const now = el('div', { class: 'hero' });
   const cur = s.current;
-  const head = el('h2', {}, 'On the Display Now', el('span', { class: 'spacer' }),
+  const head = el('div', {},
     el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Timer enabled' : 'Timer disabled'));
   const triggered = (cur && cur.seconds_until_buzzer != null && cur.seconds_until_buzzer <= 0) ? 'Buzzer' : null;
   now.append(head);
   if (triggered) {
-    now.append(el('div', { style: 'margin: 4px 0' },
-      el('span', { class: 'pill', style: 'background: #f39c12; color: #fff; border: 1px solid #e67e22;' }, `Output: ${triggered}`)));
+    now.append(el('div', { style: 'margin: 6px 0 0 0' },
+      el('span', { class: 'pill warn' }, `Output: ${triggered}`)));
   }
   if (!s.enabled) {
     now.append(el('div', { class: 'state', style: 'color: var(--bad)' }, 'TIMER DISABLED'));
@@ -433,19 +744,21 @@ function renderStatus() {
     now.append(el('div', { class: 'banner warn' },
       'Waiting for the clock to sync (SNTP). The countdown, today\'s games and quick start appear once the time is known.'));
   } else if (cur) {
-    now.append(el('div', { class: 'state' }, cur.name || 'Game in progress',
-                  cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null));
+    const name = el('div', { class: 'game-name' }, cur.name || 'Game in progress',
+      cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null);
+    const countdown = el('div', { id: 'countdown', class: 'countdown' }, countdownText(cur.seconds_until_buzzer ?? 0));
+    now.append(name, countdown);
+    const actions = el('div', { class: 'row-actions', style: 'margin-top: 16px' },
+      el('button', { class: `btn ${s.enabled ? 'danger' : 'primary'}`, onclick: () => toggleEnabled(!s.enabled) },
+         s.enabled ? 'Disable timer' : 'Enable timer'));
+    if (cur && cur.quick) {
+      actions.append(el('button', { class: 'btn danger', onclick: () => cancelQuick(cur) }, 'Cancel quick start'));
+    }
+    now.append(actions);
   } else {
     now.append(el('div', { class: 'state muted' }, 'Idle'),
                el('div', { class: 'muted' }, s.next ? `Next: ${s.next.name || 'game'} at ${shortTime(s.next.start)}` : 'No more games today'));
   }
-  const actions = el('div', { class: 'row-actions' },
-    el('button', { class: `btn ${s.enabled ? 'danger' : 'primary'}`, onclick: () => toggleEnabled(!s.enabled) },
-       s.enabled ? 'Disable timer' : 'Enable timer'));
-  if (cur && cur.quick) {
-    actions.append(el('button', { class: 'btn danger', onclick: () => cancelQuick(cur) }, 'Cancel quick start'));
-  }
-  now.append(actions);
   $('status-now').replaceChildren(now);
 
   if (!s.clock_synced) {
@@ -455,30 +768,27 @@ function renderStatus() {
   const today = el('div', { class: 'card' },
     el('h2', {}, `Today (${s.weekday})`, el('span', { class: 'spacer' }),
        s.today.source === 'exception' ? el('span', { class: 'pill warn', style: 'max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle', title: s.today.note ? s.today.note : '' }, `Exception${s.today.note ? ': ' + s.today.note : ''}`)
-                                      : el('span', { class: 'pill' }, 'Weekly schedule')));
+                                    : el('span', { class: 'pill' }, 'Weekly schedule')));
   const nowSecs = secondsNow();
   if (!s.today.entries.length) today.append(el('p', { class: 'muted' }, 'No buzzers today.'));
   else today.append(el('ul', { class: 'today' },
-    // column headings, as the first row of the same grid so they line up with the values
     el('li', { class: 'head' }, el('span', {}, 'Start'), el('span', {}, 'Bell/Buzzer'), el('span', { class: 'name' }, 'Entry Name')),
     [...s.today.entries].sort((a, b) => a.start - b.start).map((e) => el('li', {
-      // an entry's own header_hold override wins over the file wide one
       class: cur && cur.start === e.start ? 'now' : (e.buzzer + (e.header_hold != null ? e.header_hold : s.header_hold) < nowSecs ? 'past' : '') },
     el('span', {}, shortTime(e.start)),
     el('span', {}, shortTime(e.buzzer)),
     el('span', { class: 'name' }, e.name ? e.name : '',
        e.quick ? el('span', { class: 'pill quick' }, 'quick') : null)))));
-  $('status-today').replaceChildren(today);
-   // Display mirror (mimics HDMI output)
+  $('tab-status').querySelector('#status-today').replaceChildren(today);
    let mirror = document.getElementById('display-mirror');
    if (!mirror) {
-     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:4px;border-radius:8px;margin-top:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:12px;position:relative' });
+     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:24px;border-radius:28px;margin-top:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:16px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,0.3)' });
      $('status-now').append(mirror);
    }
    const sm = state.status || {};
    function unswap(c) { if (!c || typeof c !== 'string' || c.length < 7) return c || ''; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
-const scale = (state.configValues && state.configValues['config.mirror_scale'] != null)
-      ? Number(state.configValues['config.mirror_scale']) / 100 : 0.85;
+  const scale = (state.configValues && state.configValues['config.mirror_scale'] != null)
+        ? Number(state.configValues['config.mirror_scale']) / 100 : 0.85;
    const fh = Math.min(Math.round((sm.font_header || 96) * scale), 200);
    const ft = Math.min(Math.round((sm.font_timer || 450) * scale), 400);
    const fp = Math.min(Math.round((sm.font_pace || 85) * scale * 0.85), 120);
@@ -490,8 +800,8 @@ const scale = (state.configValues && state.configValues['config.mirror_scale'] !
    const cft = pregame ? Math.round(ft * 0.55) : ft;
    if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:12px` }, sm.countdown || ''));
 if (sm.show_status && sm.status_text) {
-      mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center;margin:8px 0` }, sm.status_text));
-    }
+   mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center;margin:8px 0` }, sm.status_text));
+ }
    if (sm.show_pace && sm.pace_text) {
      mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-bottom:8px` }, sm.pace_text));
    }
@@ -532,10 +842,8 @@ function tick() {
   if (mc && s && s.current && s.current.seconds_until_buzzer != null) {
     const snap = (s.countdown || '');
     if (snap && !String(snap).includes('\u02F8')) {
-      // pre-game countdown: plain number, decrement live
       const left = parseInt(snap, 10) - Math.floor((performance.now() - state.statusAt) / 1000);
       if (left > 0) { mc.textContent = String(left); return; }
-      // pre-game finished: defer to the normal countdown rendered on the next status update
       return;
     } else {
       const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
@@ -553,13 +861,11 @@ async function toggleEnabled(enabled) {
   loadStatus();
 }
 
-// e.g. '25 min', '24 min 59 s' or '45 s' (same wording as the server's messages)
 function durationText(total) {
   const m = Math.floor(total / 60), s = total % 60;
   return [m ? `${m} min` : '', s || !m ? `${s} s` : ''].filter(Boolean).join(' ');
 }
 
-// the duration and name typed in the form, or null (with a message shown) if they are not valid
 function readQuickForm(minutesInput, secondsInput, nameInput) {
   const minutes = minutesInput.value === '' ? 0 : Number(minutesInput.value);
   const secs = secondsInput.value === '' ? 0 : Number(secondsInput.value);
@@ -570,11 +876,8 @@ function readQuickForm(minutesInput, secondsInput, nameInput) {
   return { seconds, name: nameInput.value.trim() || null };
 }
 
-// confirm, then start a quick start timer { seconds, name, title, game_completed, header_hold }
-// from the form or a preset button
 async function launchQuick({ seconds, name, title, game_completed, header_hold }, options) {
   const ends = new Date(Date.now() + seconds * 1000);
-  // title is only how the timer is worded here; name is what goes on the display
   const called = title || name;
   const what = called ? `"${called}" (${durationText(seconds)})` : `a ${durationText(seconds)} timer`;
   if (!confirm(`Start ${what} now? Bell/buzzer at about ${pad(ends.getHours())}:${pad(ends.getMinutes())}:${pad(ends.getSeconds())}.`)) return;
@@ -611,7 +914,6 @@ async function loadSettings() {
 function updateSavebars() {
   $('config-savebar').classList.toggle('show', state.configDirty);
   $('savebar').classList.toggle('show', state.dirty);
-  // both bars up: the schedule bar sits directly above the config bar
   $('savebar').style.bottom = state.configDirty ? `${$('config-savebar').offsetHeight}px` : '0px';
 }
 
@@ -626,7 +928,6 @@ function setConfigDirty(dirty) {
 }
 
 function newEntry(previous) {
-  // whole minutes, since the time inputs don't show seconds
   const start = previous ? Math.ceil((previous.buzzer + 25 * 60) / 60) * 60 : 9 * 3600;
   return { start: Math.min(start, 86340), buzzer: Math.min(start + 105 * 60, 86340), name: null,
            game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false, league: null };
@@ -635,8 +936,6 @@ function newEntry(previous) {
 function entryEditor(entries, index, leagues, rerender) {
   const entry = entries[index];
   const changed = () => setDirty(true);
-  // hours and minutes only; a stored time keeps its seconds (e.g. a quick start) until it is edited,
-  // and the YAML file always gets H:MM:SS
   const timeInput = (key) => el('input', { type: 'time', step: 60, value: hms(entry[key]).slice(0, 5), required: true,
     onchange: (event) => { const v = parseTime(event.target.value); if (v !== null) { entry[key] = v; changed(); } } });
   const text = (key, placeholder) => el('input', { type: 'text', value: entry[key] || '', placeholder, maxlength: 80,
@@ -648,7 +947,6 @@ function entryEditor(entries, index, leagues, rerender) {
   const unit = el('input', { type: 'number', min: 0.5, step: 0.5, inputmode: 'decimal', placeholder: 'default',
     value: entry.pace_unit_duration ? entry.pace_unit_duration / 60 : '',
     onchange: (event) => { const v = Number(event.target.value); entry.pace_unit_duration = v > 0 ? Math.round(v * 60) : null; changed(); } });
-  // seconds, like the file wide setting; 0 is a real value (no hold at all), so only '' clears the override
   const hold = el('input', { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: 'default',
     value: entry.header_hold != null ? entry.header_hold : '',
     onchange: (event) => { const v = Number(event.target.value);
@@ -688,8 +986,6 @@ function entryList(entries, leagues, rerender) {
   return box;
 }
 
-// collapsible card (like code folding), collapsed unless its key is in openSet; the summary line
-// shows the title, an optional badge and note, and how many games are inside
 function foldCard({ openSet, key, title, badge = null, note = null, count, body }) {
   return el('details', { class: 'card fold', open: openSet.has(key),
       ontoggle: (event) => { if (event.target.open) openSet.add(key); else openSet.delete(key); } },
@@ -702,7 +998,6 @@ function foldCard({ openSet, key, title, badge = null, note = null, count, body 
     el('div', { class: 'fold-body' }, body));
 }
 
-// Expand all / Collapse all buttons for the fold cards whose keys getKeys() returns when clicked
 function foldButtons(openSet, getKeys, rerender) {
   return [el('button', { class: 'btn', onclick: () => { getKeys().forEach((k) => openSet.add(k)); rerender(); } }, 'Expand all'),
           el('button', { class: 'btn', onclick: () => { openSet.clear(); rerender(); } }, 'Collapse all')];
@@ -825,9 +1120,6 @@ function renderExceptions() {
 }
 
 // ---- config tab (every parameter that is not the schedule) ----------------
-// field spec: [dotted path exactly as GET/POST /api/config uses it, type, label, ...]
-// types: bool, int (min..max), text, color (pygame name + datalist), minutes (UI minutes, sent as seconds),
-// relays (RELAY1..RELAY4 checkbox group)
 const CONFIG_SECTIONS = [
   { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
     fields: [
@@ -930,19 +1222,16 @@ function RELAY_NAMES() {
 }
 const RELAYS_PATHS = new Set(['config.buzzer.relays', 'config.buzzer.ring_at_start',
   'config.buzzer.countdown.relays']);
-// common pygame colour names — the file accepts any single line of text, this just assists typing
 const PYGAME_COLORS = ['black', 'white', 'red', 'green', 'blue', 'yellow', 'cyan', 'magenta', 'gray', 'grey', 'orange', 'purple', 'pink', 'brown', 'navy', 'teal', 'lime', 'indigo', 'violet', 'gold', 'silver', 'maroon', 'olive', 'aqua', 'fuchsia', 'silver', 'darkred', 'darkgreen', 'darkblue', 'lightgray', 'lightgrey',
   'navy', 'skyblue', 'wheat', 'orange', 'purple', 'brown', 'pink', 'lime', 'teal', 'olive', 'maroon', 'silver',
   'gold', 'indigo', 'violet', 'coral', 'salmon', 'tan', 'beige', 'ivory', 'khaki', 'plum', 'azure', 'snow',
   'crimson', 'darkgreen', 'darkblue', 'darkred', 'lightblue', 'lightgreen', 'dgray', 'lgray'];
 
-// the value as it will be compared/sent: absent text and absent relays compare equal to cleared
 function configNorm(path, value) {
   if (RELAYS_PATHS.has(path)) return Array.isArray(value) ? value : [];
   if (value == null) return '';
   return value;
 }
-// only the fields whose working value differs from the loaded file are sent
 function configDiff() {
   const diff = {};
   for (const path of CONFIG_PATHS) {
@@ -959,8 +1248,6 @@ function configDiff() {
 }
 function configTouched() { setConfigDirty(Object.keys(configDiff()).length > 0); }
 
-// the same limits the server enforces, checked before the request so a bad field never
-// costs a round trip (the server answer is still shown if it disagrees)
 function validateConfigDiff(diff) {
   for (const [path, value] of Object.entries(diff)) {
     if (path === 'config.pace_of_play.unit_duration') {
@@ -968,7 +1255,7 @@ function validateConfigDiff(diff) {
         return 'Minutes per unit must be a number greater than 0';
     } else if (path === 'config.mirror_scale') {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 10 || value > 100)
-        return 'Display mirror scale must be an integer between 10 and 300 (percentage)';
+        return 'Display mirror scale must be an integer between 10 and 100 (percentage)';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
                path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
                path === 'config.buzzer.header_hold' ||
@@ -1071,11 +1358,11 @@ async function testRelay(eventName, btn) {
       const dur = (result.data && result.data.duration) ? result.data.duration : 0;
       if (dur <= 0) {
         btn.textContent = result.ok ? '✓' : '✗';
-        btn.style.background = result.ok ? '#2ecc71' : '#e74c3c';
+        btn.style.background = result.ok ? 'var(--ok-dark)' : 'var(--bad)';
         setTimeout(() => { btn.textContent = 'Test'; btn.style.background = ''; }, 1000);
       } else {
         btn.classList.add('primary');
-        btn.style.background = result.ok ? '#2ecc71' : '#e74c3c';
+        btn.style.background = result.ok ? 'var(--ok-dark)' : 'var(--bad)';
         let remaining = dur;
         btn.textContent = remaining;
         const iv = setInterval(() => {
@@ -1092,7 +1379,7 @@ async function testRelay(eventName, btn) {
       }
     }
     if (!result.ok) showMessage(`Test failed: ${result.data.error}`);
-  } catch(e) { console.error(e); if (btn) { btn.textContent = '✗'; btn.style.background = '#e74c3c'; } }
+  } catch(e) { console.error(e); if (btn) { btn.textContent = '✗'; btn.style.background = 'var(--bad)'; } }
 }
 
 function renderConfig() {
@@ -1106,8 +1393,7 @@ function renderConfig() {
   for (const section of CONFIG_SECTIONS) {
     if (section.group !== currentGroup) {
       currentGroup = section.group;
-       const icon = currentGroup === 'Display (HDMI output)' ? '🖥 ' : currentGroup === 'Audio' ? '🔊 ' : '';
-       nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, icon + currentGroup));
+       nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, currentGroup));
     }
     let fields = section.fields;
     if (section.title === 'Relays') {
@@ -1126,6 +1412,50 @@ function renderConfig() {
       section.group.startsWith('Outputs') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null));
   }
   $('tab-config').replaceChildren(...nodes);
+  renderAddonMarketplace();
+}
+
+async function renderAddonMarketplace() {
+  if (!state.configValues) return;
+  const det = await api('/api/addons/detection');
+  if (det.ok) addonDetection = det.data || {};
+  let market = document.getElementById('addon-marketplace');
+  if (!market) {
+    market = el('section', { id: 'addon-marketplace' },
+      el('h2', {}, 'Add-ons 🔧'),
+      el('p', { class: 'muted small', style: 'margin-top: 0' }, 'All add-on drivers are compiled into the firmware; tiles gate each one at runtime. Detected hardware can be enabled with a tap — nothing needs manual pin or address config.'),
+      el('div', { class: 'addon-grid' }));
+    $('tab-config').append(market);
+  }
+  const grid = market.querySelector('.addon-grid');
+  const det = addonDetection || {};
+  grid.replaceChildren();
+  for (const a of ADDONS) {
+    const intent = state.configValues[`config.addons.${a.key}`] === true;
+    const detected = det[a.key] === true;
+    const enabled = intent && (!a.auto || detected);
+    const pillCls = a.auto ? (detected ? (intent ? 'enabled' : 'detected') : 'notdetected') : 'manual';
+    const pillText = a.auto ? (detected ? (intent ? 'Enabled' : 'Detected') : 'Not detected') : 'Manual';
+    const btnDisabled = a.auto && !detected;
+    const btnText = intent ? 'Disable' : 'Enable';
+    const btnCls = intent ? 'btn-toggle danger' : 'btn-toggle primary';
+    const card = el('div', { class: 'addon-card' },
+      el('h3', {}, a.label),
+      el('p', { class: 'addon-desc' }, a.desc),
+      el('div', { class: 'row-actions', style: 'margin-top: 8px; gap: 8px' },
+        el('span', { class: `pill ${pillCls}` }, pillText),
+        el('button', { class: btnCls, disabled: btnDisabled, onclick: () => toggleAddon(a.key, !intent) }, btnText)));
+    grid.append(card);
+  }
+}
+
+async function toggleAddon(key, next) {
+  if (!state.configVersion) await loadConfig();
+  if (!state.configVersion) { showMessage('Config not loaded, please reload the page'); return; }
+  const result = await api('/api/config', { version: state.configVersion, config: { [`config.addons.${key}`]: next } });
+  if (!result.ok) { showMessage(`Not saved: ${result.data.error}`); return; }
+  showMessage('Saved; detection re-evaluates on next boot', 'ok');
+  loadConfig();
 }
 
 $('config-save').addEventListener('click', async () => {
@@ -1145,9 +1475,7 @@ $('config-save').addEventListener('click', async () => {
   showMessage('Saved; the display updates within a second', 'ok');
   loadConfig();
 });
-$('config-discard').addEventListener('click', () => {
-  if (confirm('Discard your unsaved config changes?')) loadConfig();
-});
+$('config-discard').addEventListener('click', () => { if (confirm('Discard your unsaved config changes?')) loadConfig(); });
 
 function checkModel(m) {
   const lists = [...DAYS.map((d) => [d, m.schedule[d]]), ...m.exceptions.map((d) => [d.date, d.entries])];
@@ -1336,7 +1664,6 @@ async function renderLeagues() {
     return true;
   };
 
-  // ---- Add League form (separate from edit) ----
   const addForm = el('form', { class: 'card', onsubmit: async (e) => {
     e.preventDefault();
     const name = document.getElementById('lg-add-name').value.trim();
@@ -1370,10 +1697,9 @@ async function renderLeagues() {
     el('label', { class: 'check' }, el('input', { type: 'checkbox', id: 'lg-add-manual' }), 'Manual push-button trigger'),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
 
-  // ---- League list with inline row editing ----
-  const list = el('ul', { class: 'backups' });
+  const list = el('div', { class: 'league-list' });
   if (!leagues.length) {
-    list.append(el('li', { class: 'muted' }, 'No leagues configured.'));
+    list.append(el('p', { class: 'muted' }, 'No leagues configured.'));
   } else {
     leagues.forEach((lp, idx) => {
       const editing = state.editingLeagueIdx === idx;
@@ -1425,10 +1751,12 @@ async function renderLeagues() {
               renderLeagues();
             } }, '✕')));
       } else {
+        const num = el('div', { class: 'num' }, String(idx + 1));
+        const nameCell = el('span', {}, lp.name || '(unnamed)');
+        const durCell = lp.game_duration_minutes ? el('span', { class: 'muted small' }, `${lp.game_duration_minutes} min`) : null;
+        const manualCell = lp.manual_trigger ? el('span', { class: 'pill warn' }, 'manual trigger') : null;
         row.append(
-          el('span', {}, lp.name || '(unnamed)'),
-          lp.game_duration_minutes ? el('span', { class: 'muted small' }, ` · ${lp.game_duration_minutes} min`) : null,
-          lp.manual_trigger ? el('span', { class: 'pill warn', style: 'font-size: 11px; padding: 1px 6px' }, 'manual trigger') : null,
+          num, nameCell, durCell, manualCell,
           el('button', { class: 'btn icon', onclick: () => { state.editingLeagueIdx = idx; renderLeagues(); } }, 'Edit'),
           el('button', { class: 'btn icon danger', onclick: async () => {
             if (!confirm(`Delete league "${lp.name || ''}"?`)) return;
@@ -1441,37 +1769,36 @@ async function renderLeagues() {
     });
   }
 
-  // ---- Import from Club Manager ----
-   const DEFAULT_LEAGUE_URL = 'https://simcoecurlingclub.ca/curling/leagues';
-   const cfg = state.model && state.model.config ? state.model.config : {};
-    const base = (cfg['config.league_page_url'] || cfg['config.club_website_url'] || '').trim();
-     const importBtn = el('button', { class: 'btn', onclick: async () => {
-        const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
-        const endpoint = url && url.trim() ? url.trim() : (base || DEFAULT_LEAGUE_URL);
-        if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
-        showMessage('Importing leagues...', 'info');
-        let names = [];
-        try {
-          const result = await api('/api/fetch_leagues', { url: endpoint });
-          if (!result.ok) { showMessage(result.data.error || 'import failed', 'warn'); return; }
-          names = Array.isArray(result.data) ? result.data : [];
-        } catch (e) {
-          const pasted = prompt('Could not fetch URL. Paste league names, one per line:', '');
-          if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
-        }
-        if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
-      const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
-      let added = 0;
-      names.forEach(n => {
-        if (existing.has(n.toLowerCase())) return;
-        leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0, manual_trigger: false });
-        existing.add(n.toLowerCase());
-        added++;
-      });
-       if (!(await saveLeagues(leagues))) return;
-       renderLeagues();
-       showMessage('Imported ' + added + ' new league(s).', 'ok');
-    } }, 'Import from Club Manager');
+  const DEFAULT_LEAGUE_URL = 'https://simcoecurlingclub.ca/curling/leagues';
+  const cfg = state.model && state.model.config ? state.model.config : {};
+   const base = (cfg['config.league_page_url'] || cfg['config.club_website_url'] || '').trim();
+    const importBtn = el('button', { class: 'btn', onclick: async () => {
+      const url = prompt('Curling Club Manager leagues URL (leave blank to use configured default):', base);
+      const endpoint = url && url.trim() ? url.trim() : (base || DEFAULT_LEAGUE_URL);
+      if (!endpoint) { showMessage('No league page URL configured.', 'warn'); return; }
+      showMessage('Importing leagues...', 'info');
+      let names = [];
+      try {
+        const result = await api('/api/fetch_leagues', { url: endpoint });
+        if (!result.ok) { showMessage(result.data.error || 'import failed', 'warn'); return; }
+        names = Array.isArray(result.data) ? result.data : [];
+      } catch (e) {
+        const pasted = prompt('Could not fetch URL. Paste league names, one per line:', '');
+        if (pasted) names = pasted.split(/\n/).map(s => s.trim()).filter(Boolean);
+      }
+      if (!names.length) { showMessage('No leagues found.', 'warn'); return; }
+    const existing = new Set(leagues.map(l => (l.name || '').toLowerCase()));
+    let added = 0;
+    names.forEach(n => {
+      if (existing.has(n.toLowerCase())) return;
+      leagues.push({ name: n, game_duration_minutes: 0, pregame_countdown_seconds: 0, header_text: '', pace_enabled: false, pace_minutes_per_end: 0, countdown_minutes_before: 0, format: '', team_size: 0, manual_trigger: false });
+      existing.add(n.toLowerCase());
+      added++;
+    });
+     if (!(await saveLeagues(leagues))) return;
+     renderLeagues();
+     showMessage('Imported ' + added + ' new league(s).', 'ok');
+   } }, 'Import from Club Manager');
 
   const summary = el('div', { class: 'card' }, el('h2', {}, 'Summary of Leagues'),
     (leagues.length ? el('ul', { class: 'backups' }, leagues.map((lp) => el('li', {}, `${lp.name || '(unnamed)'}${lp.format ? ' — ' + lp.format : ''}${lp.manual_trigger ? ' · manual trigger' : ''}`))) : el('p', { class: 'muted' }, 'No leagues configured.')));
@@ -1492,7 +1819,7 @@ async function checkVersion() {
     const v = document.querySelector('.version'); if (v && latest) v.textContent = 'v' + latest;
     if (latest && latest !== current) {
       const dot = document.createElement('span');
-      dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#f39c12;margin-left:6px;vertical-align:middle;cursor:pointer;';
+      dot.className = 'version-dot';
       dot.title = `New version ${latest} available - click to view`;
       dot.onclick = () => window.open('https://github.com/jaydenrussell/esp32-curling-timer/releases', '_blank');
       const v = document.querySelector('.version');
@@ -1507,7 +1834,7 @@ async function start() {
   loadStatus();
   if (started) return;
   started = true;
-  (function loop() { tick(); setTimeout(loop, 1000 - (performance.now() % 1000)); })();
+  (function loop() { if (state.tab === 'status' && !document.hidden) tick(); setTimeout(loop, 1000 - (performance.now() % 1000)); })();
   let statusInterval = setInterval(() => { if (state.tab === 'status' && !document.hidden) loadStatus(); }, 1000);
   document.addEventListener('visibilitychange', () => {
     clearInterval(statusInterval);
@@ -1516,8 +1843,11 @@ async function start() {
   document.addEventListener('visibilitychange', () => { if (!document.hidden && state.tab === 'status') loadStatus(); });
 }
 start();
+
+// ---- PWA: service worker registration ------------------------------------
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
 </script>
 </body>
-</html>
-
-)WEB_UI_DELIMITER";
+</html>)esphome_web_ui";
