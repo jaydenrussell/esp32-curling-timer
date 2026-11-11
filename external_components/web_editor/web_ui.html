@@ -525,7 +525,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </form></div>
 
 <div id="help-modal" class="modal hidden">
-  <div class="modal-backdrop" onclick="document.getElementById('help-modal').classList.remove('show');"></div>
+  <div class="modal-backdrop" onclick="const m=document.getElementById('help-modal'); m.classList.add('hidden'); m.classList.remove('show');"></div>
   <div class="modal-card card">
     <h2>Help</h2>
     <p>ESP32-P4 Curling Timer - countdown, schedule, and relay control for curling games.</p>
@@ -536,7 +536,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
       <li><strong>Settings:</strong> relay durations, buzzer hold, web UI options.</li>
       <li><strong>Diagnostics:</strong> device info, network, logs.</li>
     </ul>
-    <button class="btn" onclick="document.getElementById('help-modal').classList.remove('show');">Close</button>
+    <button class="btn" onclick="const m=document.getElementById('help-modal'); m.classList.add('hidden'); m.classList.remove('show');">Close</button>
   </div>
 </div>
 
@@ -726,7 +726,7 @@ $('login-form').addEventListener('submit', async (event) => {
   start();
 });
 $('logout').addEventListener('click', async () => { await api('/api/logout', {}); location.reload(); });
-$('help').addEventListener('click', () => { document.getElementById('help-modal').classList.add('show'); });
+$('help').addEventListener('click', () => { const m=document.getElementById('help-modal'); m.classList.remove('hidden'); m.classList.add('show'); });
 
 // ---- tabs -----------------------------------------------------------------
 function renderTabs() {
@@ -1241,7 +1241,9 @@ const CONFIG_SECTIONS = [
   { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
     fields: [
       ['config.enabled', 'bool', 'Timer enabled (master on/off)'],
-      ['config.allow_midnight_wrap', 'bool', 'Allow timers past midnight'],
+      ['config.allow_midnight_wrap', 'bool', 'Allow timers past midnight']] },
+  { group: 'Global options', title: 'Manual trigger (pushbutton)', hint: 'GPIO press rings the start relays for the next manually-triggered game. Only shown when the pushbutton add-on is enabled.',
+    fields: [
       ['config.manual_trigger_gpio', 'int', 'Manual trigger GPIO (pushbutton add-on)', 0, 40]] },
   { group: 'Global options', title: 'Curling Club Manager', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
     fields: [
@@ -1307,21 +1309,26 @@ const CONFIG_SECTIONS = [
   { group: 'Outputs 🔊', title: 'Game Start',
     fields: [
       ['config.buzzer.ring_at_start', 'relays', 'Output'],
-      ['config.buzzer.start_duration', 'int', 'Output duration (seconds)', 0, 999]] },
+      ['config.buzzer.start_duration', 'output_duration', 'Duration', 'start']] },
   { group: 'Outputs 🔊', title: 'Countdown Warning',
     hint: 'Only applies to games longer than the minutes set here. For 8-end games, typical pace warning is 15-20 min before buzzer (7th end). For 6-end games, 10-12 min.',
     fields: [
       ['config.buzzer.countdown.minutes_before', 'int', 'Countdown warning: minutes before the buzzer (0 = off)', 0, 100000],
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
-      ['config.buzzer.countdown_duration', 'int', 'Output duration (seconds)', 0, 999]] },
+      ['config.buzzer.countdown_duration', 'output_duration', 'Duration', 'countdown']] },
   { group: 'Outputs 🔊', title: 'Game End',
     hint: 'Header hold: seconds the during-buzzer header text stays after ringing.',
     fields: [
       ['config.buzzer.relays', 'relays', 'Output'],
-      ['config.buzzer.end_duration', 'int', 'Output duration (seconds)', 0, 999],
+      ['config.buzzer.end_duration', 'output_duration', 'Duration', 'end'],
       ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
+// Per-output durations are rendered dynamically (one per selected relay) under
+// numbered paths; register them all so they are diffed and saved.
+for (const ev of ['start', 'countdown', 'end']) {
+  for (let n = 1; n <= 4; n++) CONFIG_PATHS.push(`config.buzzer.${ev}_duration_${n}`);
+}
 function relayDisplayName(i) {
   const enabled = state.configValues && state.configValues[`config.relay${i}_enabled`];
   if (!enabled) return null;
@@ -1375,9 +1382,10 @@ function validateConfigDiff(diff) {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 10 || value > 100)
         return 'Display mirror scale must be an integer between 10 and 100 (percentage)';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
-               path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
-               path === 'config.buzzer.header_hold' ||
-               path === 'config.buzzer.countdown.minutes_before') {
+                path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
+                path === 'config.buzzer.header_hold' ||
+                path === 'config.buzzer.countdown.minutes_before' ||
+                /config\.buzzer\.(start|countdown|end)_duration_[1-4]$/.test(path)) {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 100000)
         return `${path} must be a whole number of seconds or pixels (0 or more)`;
     }
@@ -1423,6 +1431,26 @@ function configField(field) {
       style: width ? `width: ${width}` : '',
       value: value == null ? '' : String(value),
       oninput: (event) => set(event.target.value === '' ? null : Number(event.target.value)) }));
+  }
+  if (type === 'output_duration') {
+    const event = field[3]; // 'start' | 'countdown' | 'end'
+    const relaysPath = event === 'countdown' ? 'config.buzzer.countdown.relays' :
+      event === 'start' ? 'config.buzzer.ring_at_start' : 'config.buzzer.relays';
+    const selected = Array.isArray(state.configValues[relaysPath]) ? state.configValues[relaysPath] : [];
+    const inputs = selected.map((name) => {
+      const i = Number(name.replace('RELAY', ''));
+      const display = relayDisplayName(i) || name;
+      const path = `config.buzzer.${event}_duration_${i}`;
+      const val = state.configValues[path];
+      return el('div', { class: 'field' },
+        el('label', {}, `${display} duration (seconds)`,
+          el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric',
+            style: 'width: 4ch',
+            value: val == null ? '' : String(val),
+            oninput: (event) => { state.configValues[path] = event.target.value === '' ? null : Number(event.target.value); configTouched(); } })));
+    });
+    if (selected.length === 0) inputs.push(el('p', { class: 'muted small' }, 'No outputs selected.'));
+    return el('div', {}, inputs);
   }
   if (type === 'text') {
     return el('label', {}, label, el('input', { type: 'text', maxlength: 80, value: value == null ? '' : value,
@@ -1525,6 +1553,8 @@ async function renderConfig() {
   const nodes = [];
   let currentGroup = null;
   for (const section of CONFIG_SECTIONS) {
+    if (section.title === 'Manual trigger (pushbutton)' && !isAddonEnabled('pushbutton'))
+      continue;
     if (section.group !== currentGroup) {
       currentGroup = section.group;
        nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, currentGroup));

@@ -806,15 +806,20 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.relay4_enabled"] = s.relay4_enabled;
   cfg["config.pregame_countdown"] = s.pregame_countdown;
   cfg["config.allow_midnight_wrap"] = s.allow_midnight_wrap;
+  cfg["config.manual_trigger_gpio"] = s.manual_trigger_gpio;
   cfg["config.pregame_font_size"] = s.pregame_font_size;
   cfg["config.mirror_scale"] = s.mirror_scale;  cfg["config.pregame_header_color"] = s.pregame_header_color;
   cfg["config.pregame_countdown_color"] = s.pregame_countdown_color;
   cfg["config.footer.date_font_size"] = s.date_font_size;
   cfg["config.footer.date_color"] = s.date_color;
-  cfg["config.footer.time_font_size"] = s.time_font_size;
-  cfg["config.footer.time_color"] = s.time_color;
+  cfg["config.footer.time_font_size"] = s.time_font_size;  cfg["config.footer.time_color"] = s.time_color;
   cfg["config.footer.color"] = s.footer_color;
   cfg["config.background_color"] = s.background_color;
+  for (int i = 1; i <= 4; i++) {
+    cfg["config.buzzer.start_duration_" + std::to_string(i)] = *(&s.relay_start_duration_1 + (i - 1));
+    cfg["config.buzzer.countdown_duration_" + std::to_string(i)] = *(&s.relay_countdown_duration_1 + (i - 1));
+    cfg["config.buzzer.end_duration_" + std::to_string(i)] = *(&s.relay_end_duration_1 + (i - 1));
+  }
   {
     std::string _t, _v, _e;
     if (engine_->get_store() != nullptr && engine_->get_store()->read(&_t, &_v, &_e) == StoreStatus::OK) {
@@ -914,7 +919,11 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                 path == "config.pregame_countdown" ||
                path == "config.pregame_font_size" ||
                path == "config.footer.date_font_size" ||
-               path == "config.footer.time_font_size") {
+               path == "config.footer.time_font_size" ||
+               path == "config.manual_trigger_gpio" ||
+               path.rfind("config.buzzer.start_duration_", 0) == 0 ||
+               path.rfind("config.buzzer.countdown_duration_", 0) == 0 ||
+               path.rfind("config.buzzer.end_duration_", 0) == 0) {
       if (!json_strict_int(v, &number) || number < 0 || number > 100000)
         return error_json(422, path + " must be a whole number of seconds or pixels (0 or more)");
       yaml = curling_engine::yaml_int(number);

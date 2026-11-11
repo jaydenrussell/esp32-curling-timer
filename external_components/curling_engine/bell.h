@@ -54,5 +54,12 @@ int bell_check(const PiTimerSettings &settings, const std::optional<PiTimerGame>
 bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame> &game,
                const std::string &date_iso, std::set<std::string> *fired, BellRing *out);
 
+// Duration (seconds) to pulse for an event: per-relay overrides win (longest
+// when several relays ring together, since the driver pulses all relays for
+// one length), falling back to the event-level duration then the global
+// buzzer.duration. RELAY3/RELAY4 have no hardware and are ignored.
+int event_duration(const PiTimerSettings &settings, const char *event,
+                   const std::vector<std::string> &relays);
+
 }  // namespace curling_engine
 }  // namespace esphome

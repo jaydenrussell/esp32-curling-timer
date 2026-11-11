@@ -115,6 +115,20 @@ class PiTimerSettings {
   int relay_start_duration{0};
   int relay_countdown_duration{0};
   int relay_end_duration{0};
+  // Per-relay output duration overrides (seconds). When set for a relay,
+  // that relay rings for its own duration instead of the event-level value.
+  int relay_start_duration_1{0};
+  int relay_start_duration_2{0};
+  int relay_start_duration_3{0};
+  int relay_start_duration_4{0};
+  int relay_countdown_duration_1{0};
+  int relay_countdown_duration_2{0};
+  int relay_countdown_duration_3{0};
+  int relay_countdown_duration_4{0};
+  int relay_end_duration_1{0};
+  int relay_end_duration_2{0};
+  int relay_end_duration_3{0};
+  int relay_end_duration_4{0};
   int relay_msg_time{0};
   int pregame_countdown{0};
   bool allow_midnight_wrap{false};
@@ -131,6 +145,7 @@ class PiTimerSettings {
   std::string pregame_header_text{"Get ready"};
   bool relays_enabled{true};
   int relay_count{4};
+  int manual_trigger_gpio{0};
   std::string relay1_function{"None"};
   std::string relay2_function{"None"};
   std::string relay3_function{"None"};

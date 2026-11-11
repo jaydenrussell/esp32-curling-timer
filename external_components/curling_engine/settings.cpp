@@ -1397,6 +1397,9 @@ void PiTimerSettings::reset() {
   relay_start_duration = 0;
   relay_countdown_duration = 0;
   relay_end_duration = 0;
+  relay_start_duration_1 = 0; relay_start_duration_2 = 0; relay_start_duration_3 = 0; relay_start_duration_4 = 0;
+  relay_countdown_duration_1 = 0; relay_countdown_duration_2 = 0; relay_countdown_duration_3 = 0; relay_countdown_duration_4 = 0;
+  relay_end_duration_1 = 0; relay_end_duration_2 = 0; relay_end_duration_3 = 0; relay_end_duration_4 = 0;
   relay_msg_time = 0;
   relays_enabled = true;
   relay_count = 4;
@@ -1592,6 +1595,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_enabled"; if((v=cfg->find(key))!=nullptr && v->type==YType::Bool){ if(i==1)relay1_enabled=v->b; if(i==2)relay2_enabled=v->b; if(i==3)relay3_enabled=v->b; if(i==4)relay4_enabled=v->b;} }
   if ((v = cfg->find("pregame_countdown")) != nullptr && v->type == YType::Int) pregame_countdown = static_cast<int>(v->i);
   if ((v = cfg->find("allow_midnight_wrap")) != nullptr && v->type == YType::Bool) allow_midnight_wrap = v->b;
+  if ((v = cfg->find("manual_trigger_gpio")) != nullptr && v->type == YType::Int) manual_trigger_gpio = static_cast<int>(v->i);
   if ((v = cfg->find("pregame_font_size")) != nullptr && v->type == YType::Int) pregame_font_size = static_cast<int>(v->i);
   if ((v = cfg->find("mirror_scale")) != nullptr && v->type == YType::Int) mirror_scale = static_cast<int>(v->i);
   if ((v = cfg->find("pregame_color")) != nullptr && v->type == YType::Str) pregame_header_color = v->s;
@@ -1673,6 +1677,29 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   if ((v = buzzer->find("start_duration")) != nullptr && v->type == YType::Int) relay_start_duration = static_cast<int>(v->i);
   if ((v = buzzer->find("countdown_duration")) != nullptr && v->type == YType::Int) relay_countdown_duration = static_cast<int>(v->i);
   if ((v = buzzer->find("end_duration")) != nullptr && v->type == YType::Int) relay_end_duration = static_cast<int>(v->i);
+  for (int i = 1; i <= 4; i++) {
+    std::string key = "start_duration_" + std::to_string(i);
+    if ((v = buzzer->find(key.c_str())) != nullptr && v->type == YType::Int) {
+      if (i == 1) relay_start_duration_1 = static_cast<int>(v->i);
+      if (i == 2) relay_start_duration_2 = static_cast<int>(v->i);
+      if (i == 3) relay_start_duration_3 = static_cast<int>(v->i);
+      if (i == 4) relay_start_duration_4 = static_cast<int>(v->i);
+    }
+    key = "countdown_duration_" + std::to_string(i);
+    if ((v = buzzer->find(key.c_str())) != nullptr && v->type == YType::Int) {
+      if (i == 1) relay_countdown_duration_1 = static_cast<int>(v->i);
+      if (i == 2) relay_countdown_duration_2 = static_cast<int>(v->i);
+      if (i == 3) relay_countdown_duration_3 = static_cast<int>(v->i);
+      if (i == 4) relay_countdown_duration_4 = static_cast<int>(v->i);
+    }
+    key = "end_duration_" + std::to_string(i);
+    if ((v = buzzer->find(key.c_str())) != nullptr && v->type == YType::Int) {
+      if (i == 1) relay_end_duration_1 = static_cast<int>(v->i);
+      if (i == 2) relay_end_duration_2 = static_cast<int>(v->i);
+      if (i == 3) relay_end_duration_3 = static_cast<int>(v->i);
+      if (i == 4) relay_end_duration_4 = static_cast<int>(v->i);
+    }
+  }
   if ((v = buzzer->find("relays_enabled")) != nullptr && v->type == YType::Bool) relays_enabled = v->b;
   if ((v = buzzer->find("relay_count")) != nullptr && v->type == YType::Int) relay_count = static_cast<int>(v->i);
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_function"; if((v=buzzer->find(key))!=nullptr && v->type==YType::Str){ if(i==1)relay1_function=v->s; if(i==2)relay2_function=v->s; if(i==3)relay3_function=v->s; if(i==4)relay4_function=v->s;} }

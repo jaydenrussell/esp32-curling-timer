@@ -213,14 +213,20 @@ static bool insertable_config_path(const std::string &path) {
          path == "config.relay3_function" || path == "config.relay4_function" ||
          path == "config.relay1_enabled" || path == "config.relay2_enabled" ||
          path == "config.relay3_enabled" || path == "config.relay4_enabled" ||
-          path == "config.pregame_countdown" || path == "config.pregame_font_size" ||
-          path == "config.mirror_scale" ||
-         path == "config.allow_midnight_wrap" ||
+         path == "config.pregame_countdown" || path == "config.pregame_font_size" ||
+         path == "config.mirror_scale" ||
+         path == "config.allow_midnight_wrap" || path == "config.manual_trigger_gpio" ||
          path == "config.pregame_color" || path == "config.pregame_header_color" ||
          path == "config.pregame_countdown_color" || path == "config.pregame_header_text" ||
          path == "config.buzzer.start_duration" ||
          path == "config.buzzer.countdown_duration" ||
          path == "config.buzzer.end_duration" ||
+         path == "config.buzzer.start_duration_1" || path == "config.buzzer.start_duration_2" ||
+         path == "config.buzzer.start_duration_3" || path == "config.buzzer.start_duration_4" ||
+         path == "config.buzzer.countdown_duration_1" || path == "config.buzzer.countdown_duration_2" ||
+         path == "config.buzzer.countdown_duration_3" || path == "config.buzzer.countdown_duration_4" ||
+         path == "config.buzzer.end_duration_1" || path == "config.buzzer.end_duration_2" ||
+         path == "config.buzzer.end_duration_3" || path == "config.buzzer.end_duration_4" ||
          path == "config.footer.date_font_size" || path == "config.footer.date_color" ||
          path == "config.footer.time_font_size" || path == "config.footer.time_color" ||
          path == "config.footer.color" ||
