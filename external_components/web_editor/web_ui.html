@@ -1835,7 +1835,8 @@ async function renderLeagues() {
         el('label', {}, 'Pace minutes/end', paceMinInput)),
       el('div', { class: 'grid2' },
         el('label', {}, 'Countdown warning minutes before', cmbInput),
-        el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'));
+        el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'))
+    ];
   };
 
   const addForm = el('form', { class: 'card', onsubmit: async (e) => {
