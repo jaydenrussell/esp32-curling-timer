@@ -302,6 +302,10 @@ input, select, textarea {
   font-size: 14px;
 }
 @media (pointer: coarse) { input, select, textarea { font-size: 16px; } }
+/* hide number-input spinner arrows so narrow fields stay readable */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--pwa-primary);
@@ -880,7 +884,7 @@ function renderStatus() {
     mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:24px;border-radius:28px;margin-bottom:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:16px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,0.3)' });
     $('status-now').append(mirror);
   }
-  $('status-now').append(now);
+  $('status-now').replaceChildren(mirror, now);
 
   if (!s.clock_synced) {
     $('status-today').replaceChildren();
