@@ -515,16 +515,16 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 
 /* --- Progress through end --- */
 .progress-container { margin: 16px 0 0; }
-.progress-title { font-size: 12px; color: var(--pwa-text-muted); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-.progress-bar { position: relative; height: 22px; border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 1px solid #333; }
-.progress-end { display: flex; height: 100%; }
+.progress-title { font-size: 12px; color: var(--pwa-text-muted); margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.progress-end-row { margin-bottom: 10px; }
+.progress-end-bar { position: relative; height: 20px; border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 1px solid #333; }
 .progress-seg { height: 100%; }
 .progress-seg.lead { background: #3b82f6; }
 .progress-seg.second { background: #10b981; }
 .progress-seg.vice { background: #f59e0b; }
 .progress-seg.skip { background: #ef4444; }
-.progress-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(255,255,255,0.15); pointer-events: none; z-index: 1; transition: width 0.5s ease; }
-.progress-pos-label { font-size: 10px; color: #888; margin-top: 4px; display: flex; justify-content: space-between; }
+.progress-end-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(0,0,0,0.45); pointer-events: none; z-index: 1; transition: width 0.5s ease; }
+.progress-pos-label { font-size: 10px; color: #888; margin-top: 6px; display: flex; justify-content: space-between; }
 .progress-pos-label span { flex: 1; text-align: center; }
 </style>
 </head>
@@ -942,26 +942,34 @@ function renderStatus() {
     now.append(name, countdown);
     if (cur.show_progress_through_end && cur.end_count && cur.end_count > 0 && cur.buzzer > cur.start) {
       const endCount = cur.end_count;
+      const gameDur = cur.buzzer - cur.start;
+      const endDur = gameDur / endCount;
       const unitsPerEnd = 4.4;
-      const segW = 100 / endCount;
-      const leadPct = (1 / unitsPerEnd) * segW;
-      const secondPct = (1 / unitsPerEnd) * segW;
-      const vicePct = (1 / unitsPerEnd) * segW;
-      const skipPct = (1.4 / unitsPerEnd) * segW;
+      const leadPct = (1 / unitsPerEnd * 100).toFixed(1);
+      const secondPct = (1 / unitsPerEnd * 100).toFixed(1);
+      const vicePct = (1 / unitsPerEnd * 100).toFixed(1);
+      const skipPct = (1.4 / unitsPerEnd * 100).toFixed(1);
       const container = el('div', { class: 'progress-container' });
       container.append(el('div', { class: 'progress-title' }, 'Progress through end'));
-      const bar = el('div', { class: 'progress-bar' });
+      const nowSecs = secondsNow();
       for (let e = 0; e < endCount; e++) {
-        const endSeg = el('div', { class: 'progress-end' });
-        endSeg.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct.toFixed(1)}%` }));
-        endSeg.append(el('div', { class: 'progress-seg second', style: `width:${secondPct.toFixed(1)}%` }));
-        endSeg.append(el('div', { class: 'progress-seg vice', style: `width:${vicePct.toFixed(1)}%` }));
-        endSeg.append(el('div', { class: 'progress-seg skip', style: `width:${skipPct.toFixed(1)}%` }));
-        bar.append(endSeg);
+        const endStart = cur.start + e * endDur;
+        const endEnd = endStart + endDur;
+        let fillPct = 0;
+        if (nowSecs >= endEnd) fillPct = 100;
+        else if (nowSecs > endStart) fillPct = ((nowSecs - endStart) / endDur * 100);
+        const endRow = el('div', { class: 'progress-end-row', style: 'margin-bottom: 10px' });
+        endRow.append(el('div', { class: 'progress-end-label', style: 'font-size:11px;color:var(--pwa-text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600' }, `End ${e + 1}`));
+        const bar = el('div', { class: 'progress-end-bar' });
+        bar.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct}%` }));
+        bar.append(el('div', { class: 'progress-seg second', style: `width:${secondPct}%` }));
+        bar.append(el('div', { class: 'progress-seg vice', style: `width:${vicePct}%` }));
+        bar.append(el('div', { class: 'progress-seg skip', style: `width:${skipPct}%` }));
+        const fill = el('div', { class: 'progress-end-fill', style: `width:${fillPct}%` });
+        bar.append(fill);
+        endRow.append(bar);
+        container.append(endRow);
       }
-      const fill = el('div', { class: 'progress-fill', style: 'width:0%' });
-      bar.append(fill);
-      container.append(bar);
       const labels = el('div', { class: 'progress-pos-label' });
       labels.append(el('span', {}, 'Lead'), el('span', {}, 'Second'), el('span', {}, 'Vice'), el('span', {}, 'Skip'));
       container.append(labels);
@@ -1057,12 +1065,20 @@ function tick() {
     box.textContent = countdownText(left);
     box.style.color = left <= 0 ? 'var(--bad)' : 'var(--ok)';
   }
-  const fill = document.querySelector('.progress-fill');
-  if (fill && s && s.current && s.current.show_progress_through_end && s.current.end_count && s.current.buzzer > s.current.start) {
+  const fills = document.querySelectorAll('.progress-end-fill');
+  if (fills.length && s && s.current && s.current.show_progress_through_end && s.current.end_count && s.current.buzzer > s.current.start) {
+    const endCount = s.current.end_count;
+    const gameDur = s.current.buzzer - s.current.start;
+    const endDur = gameDur / endCount;
     const nowSecs = secondsNow();
-    const elapsed = Math.max(0, Math.min(s.current.buzzer - s.current.start, nowSecs - s.current.start));
-    const progress = elapsed / (s.current.buzzer - s.current.start);
-    fill.style.width = `${Math.round(progress * 100)}%`;
+    fills.forEach((fill, e) => {
+      const endStart = s.current.start + e * endDur;
+      const endEnd = endStart + endDur;
+      let pct = 0;
+      if (nowSecs >= endEnd) pct = 100;
+      else if (nowSecs > endStart) pct = (nowSecs - endStart) / endDur * 100;
+      fill.style.width = `${Math.round(pct)}%`;
+    });
   }
   const mc = $('mirror-countdown');
   if (mc && s && s.current && s.current.seconds_until_buzzer != null) {
