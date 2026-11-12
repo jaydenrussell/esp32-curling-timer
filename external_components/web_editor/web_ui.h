@@ -758,29 +758,37 @@ function renderStatus() {
     now.append(el('div', { class: 'section-title' }, 'Timer status'),
       el('div', { class: 'banner warn' }, 'Waiting for the clock to sync (SNTP). The countdown, today\'s games and quick start appear once the time is known.'));
   } else if (cur) {
-    if (!isAddonEnabled('relays')) now.append(el('div', { class: 'banner warn' }, 'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
+    now.style.padding = '12px 14px';
+    if (!isAddonEnabled('relays')) now.append(el('div', { class: 'banner warn', style: 'margin-bottom:8px' }, 'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
     const displayName = cur.name || (cur.quick ? 'Quick Start' : 'Current game');
-    const rows = el('div', { class: 'stack', style: 'gap: 10px; margin-top: 4px' },
-      el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Timer'), el('div', { class: 'v' }, el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Enabled' : 'Disabled'))),
-      el('div', { class: 'kv' }, el('div', { class: 'k' }, cur.quick ? 'Game (Quick Start)' : 'Game / League'), el('div', { class: 'v', style: 'font-size: 18px' }, displayName)),
-      el('div', { class: 'grid2', style: 'gap: 12px' },
-        el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Start time'), el('div', { class: 'v' }, shortTime(cur.start))),
-        el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Game expiration'), el('div', { class: 'v' }, shortTime(cur.buzzer)))));
-    const actions = el('div', { class: 'row-actions', style: 'margin-top: 12px' });
-    if (cur.quick) actions.append(el('button', { class: 'btn', onclick: () => cancelQuick(cur) }, 'Cancel quick start'));
-    actions.append(el('button', { class: 'btn danger', onclick: () => toggleEnabled(false) }, 'Disable timer'));
-    now.append(el('div', { class: 'section-title' }, 'Current game'), rows, actions);
+    const header = el('div', { style: 'display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:6px' },
+      el('div', {},
+        el('div', { class: 'section-title', style: 'margin-bottom:2px' }, cur.quick ? 'Now on ice (Quick Start)' : 'Now on ice'),
+        el('div', { style: 'font-size:17px; font-weight:700; line-height:1.2' }, displayName)),
+      el('span', { class: 'pill ok' }, 'Timer enabled'));
+    const meta = el('div', { style: 'display:flex; flex-wrap:wrap; gap:14px; align-items:center; color:var(--muted); font-size:13px' },
+      el('span', {}, el('strong', { style: 'color:var(--text); font-weight:600' }, 'Start: '), shortTime(cur.start)),
+      el('span', {}, el('strong', { style: 'color:var(--text); font-weight:600' }, 'Game expiration: '), shortTime(cur.buzzer)));
+    const actions = el('div', { class: 'row-actions', style: 'margin-top:8px' });
+    if (cur.quick) actions.append(el('button', { class: 'btn sm', onclick: () => cancelQuick(cur) }, 'Cancel quick start'));
+    actions.append(el('button', { class: 'btn danger sm', onclick: () => toggleEnabled(false) }, 'Disable timer'));
+    now.append(header, meta, actions);
   } else {
-    if (!isAddonEnabled('relays')) now.append(el('div', { class: 'banner warn' }, 'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
-    const rows = el('div', { class: 'stack', style: 'gap: 10px; margin-top: 4px' },
-      el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Timer'), el('div', { class: 'v' }, el('span', { class: 'pill ok' }, 'Enabled'))),
-      el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Status'), el('div', { class: 'v', style: 'font-size: 18px' }, 'Idle')),
-      s.next ? el('div', { class: 'grid2', style: 'gap: 12px' },
-        el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Next game'), el('div', { class: 'v' }, s.next.name || 'Game')),
-        el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Start / Expiration'), el('div', { class: 'v' }, `${shortTime(s.next.start)} / ${shortTime(s.next.buzzer)}`)))
-      : el('div', { class: 'muted small' }, 'No more games today'));
-    now.append(el('div', { class: 'section-title' }, 'Status'), rows,
-      el('div', { class: 'row-actions', style: 'margin-top: 12px' }, el('button', { class: 'btn danger', onclick: () => toggleEnabled(false) }, 'Disable timer')));
+    now.style.padding = '12px 14px';
+    if (!isAddonEnabled('relays')) now.append(el('div', { class: 'banner warn', style: 'margin-bottom:8px' }, 'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
+    const header = el('div', { style: 'display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:6px' },
+      el('div', {},
+        el('div', { class: 'section-title', style: 'margin-bottom:2px' }, 'Status'),
+        el('div', { style: 'font-size:17px; font-weight:700; line-height:1.2' }, 'Idle')),
+      el('span', { class: 'pill ok' }, 'Timer enabled'));
+    const meta = s.next
+      ? el('div', { style: 'display:flex; flex-wrap:wrap; gap:14px; align-items:center; color:var(--muted); font-size:13px' },
+          el('span', {}, el('strong', { style: 'color:var(--text); font-weight:600' }, 'Next: '), s.next.name || 'Game'),
+          el('span', {}, el('strong', { style: 'color:var(--text); font-weight:600' }, 'Start: '), shortTime(s.next.start)),
+          el('span', {}, el('strong', { style: 'color:var(--text); font-weight:600' }, 'Game expiration: '), shortTime(s.next.buzzer)))
+      : el('div', { class: 'muted small' }, 'No more games today');
+    now.append(header, meta,
+      el('div', { class: 'row-actions', style: 'margin-top:8px' }, el('button', { class: 'btn danger sm', onclick: () => toggleEnabled(false) }, 'Disable timer')));
   }
   let mirror = document.getElementById('display-mirror');
   if (!mirror) {
