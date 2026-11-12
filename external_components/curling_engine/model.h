@@ -36,6 +36,11 @@ struct Entry {
   std::optional<std::vector<std::string>> end_relays;
   std::optional<int> start_duration;
   std::optional<int> end_duration;
+  // quick-start game details (populated by the web UI quick start form)
+  std::optional<int> end_count;
+  std::optional<int> stones_per_end;
+  std::optional<int> untimed_ends;
+  std::optional<bool> show_progress_through_end;
   // entry added by a quick start (marked with a trailing comment in the file)
   bool quick{false};
   // manual push-button trigger required for this game (start >= 17:00 by

@@ -69,6 +69,11 @@ struct LeagueProfile {
   int countdown_minutes_before{0};
   std::string format;
   int team_size{0};
+  // per-end game configuration for progress bar display
+  int stones_per_end{8};
+  int end_count{8};
+  int untimed_ends{0};
+  bool show_progress_through_end{true};
   // manual push-button trigger required for games in this league
   bool manual_trigger{false};
 };
@@ -87,6 +92,11 @@ struct PiTimerGame {
   std::optional<std::vector<std::string>> end_relays_override;
   std::optional<int> start_duration_override;
   std::optional<int> end_duration_override;
+  // quick-start game details
+  std::optional<int> end_count;
+  std::optional<int> stones_per_end;
+  std::optional<int> untimed_ends;
+  std::optional<bool> show_progress_through_end;
   // live state, set on the copy returned by find_current_game
   std::optional<int> seconds_until_buzzer;
   std::optional<int> seconds_since_start;

@@ -282,6 +282,22 @@ ApiResponse PiTimerApi::status() {
       current["seconds_until_buzzer"] = *game->seconds_until_buzzer;
     else
       current["seconds_until_buzzer"] = nullptr;
+    if (game->end_count.has_value())
+      current["end_count"] = *game->end_count;
+    else
+      current["end_count"] = nullptr;
+    if (game->stones_per_end.has_value())
+      current["stones_per_end"] = *game->stones_per_end;
+    else
+      current["stones_per_end"] = nullptr;
+    if (game->untimed_ends.has_value())
+      current["untimed_ends"] = *game->untimed_ends;
+    else
+      current["untimed_ends"] = nullptr;
+    if (game->show_progress_through_end.has_value())
+      current["show_progress_through_end"] = *game->show_progress_through_end;
+    else
+      current["show_progress_through_end"] = nullptr;
     bool quick = false;
     for (const Entry &entry : entries) {
       if (entry.start == game->start && entry.quick) {
@@ -584,6 +600,29 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
     if (!json_strict_int(data["end_duration"], &value) || value < 0)
       return error_json(400, "'end_duration' must be a whole number of seconds (0 or more)");
     opts.end_duration = static_cast<int>(value);
+  }
+  if (!data["end_count"].isNull()) {
+    long long value;
+    if (!json_strict_int(data["end_count"], &value) || value < 1 || value > 12)
+      return error_json(400, "'end_count' must be a whole number from 1 to 12");
+    opts.end_count = static_cast<int>(value);
+  }
+  if (!data["stones_per_end"].isNull()) {
+    long long value;
+    if (!json_strict_int(data["stones_per_end"], &value) || value < 1 || value > 10)
+      return error_json(400, "'stones_per_end' must be a whole number from 1 to 10");
+    opts.stones_per_end = static_cast<int>(value);
+  }
+  if (!data["untimed_ends"].isNull()) {
+    long long value;
+    if (!json_strict_int(data["untimed_ends"], &value) || value < 0 || value > 6)
+      return error_json(400, "'untimed_ends' must be a whole number from 0 to 6");
+    opts.untimed_ends = static_cast<int>(value);
+  }
+  if (!data["show_progress_through_end"].isNull()) {
+    if (!data["show_progress_through_end"].is<bool>())
+      return error_json(400, "'show_progress_through_end' must be true or false");
+    opts.show_progress_through_end = data["show_progress_through_end"].as<bool>();
   }
   Entry added;
   std::string new_version, err;

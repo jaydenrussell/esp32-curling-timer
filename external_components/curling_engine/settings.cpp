@@ -1340,6 +1340,43 @@ static bool parse_schedules_into(const YamlValue &src,
           return false;
         }
       }
+      if (entry_v.has("end_count")) {
+        const YamlValue *v = require_(&entry_v, "end_count", YType::Int, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.end_count = static_cast<int>(v->i);
+        if (*g.end_count < 1 || *g.end_count > 12) {
+          *err = "'end_count' must be from 1 to 12 for " + day;
+          return false;
+        }
+      }
+      if (entry_v.has("stones_per_end")) {
+        const YamlValue *v = require_(&entry_v, "stones_per_end", YType::Int, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.stones_per_end = static_cast<int>(v->i);
+        if (*g.stones_per_end < 1 || *g.stones_per_end > 10) {
+          *err = "'stones_per_end' must be from 1 to 10 for " + day;
+          return false;
+        }
+      }
+      if (entry_v.has("untimed_ends")) {
+        const YamlValue *v = require_(&entry_v, "untimed_ends", YType::Int, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.untimed_ends = static_cast<int>(v->i);
+        if (*g.untimed_ends < 0 || *g.untimed_ends > 6) {
+          *err = "'untimed_ends' must be from 0 to 6 for " + day;
+          return false;
+        }
+      }
+      if (entry_v.has("show_progress_through_end")) {
+        const YamlValue *v =
+            require_(&entry_v, "show_progress_through_end", YType::Bool, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.show_progress_through_end = v->b;
+      }
 
       // Apply per-league pace_of_play override when the game name matches a league
       // profile (fuzzy) and the entry did not explicitly set pace.
@@ -1800,6 +1837,14 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
        if (const YamlValue *f = lv.find("format"); f && f->type == YType::Str) lp.format = f->s;
         if (const YamlValue *ts = lv.find("team_size"); ts && ts->type == YType::Int)
           lp.team_size = static_cast<int>(ts->i);
+        if (const YamlValue *se = lv.find("stones_per_end"); se && se->type == YType::Int)
+          lp.stones_per_end = static_cast<int>(se->i);
+        if (const YamlValue *ec = lv.find("end_count"); ec && ec->type == YType::Int)
+          lp.end_count = static_cast<int>(ec->i);
+        if (const YamlValue *ue = lv.find("untimed_ends"); ue && ue->type == YType::Int)
+          lp.untimed_ends = static_cast<int>(ue->i);
+        if (const YamlValue *sp = lv.find("show_progress_through_end"); sp && sp->type == YType::Bool)
+          lp.show_progress_through_end = sp->b;
         if (const YamlValue *mt = lv.find("manual_trigger"); mt && mt->type == YType::Bool)
           lp.manual_trigger = mt->b;
         if (const YamlValue *rl = lv.find("relays"); rl) {
@@ -1841,6 +1886,11 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
           for (const auto &lp : leagues)
             if (league_name_match(lp.name, *g.message)) {
               g.manual_trigger = lp.manual_trigger;
+              if (!g.end_count.has_value()) g.end_count = lp.end_count;
+              if (!g.stones_per_end.has_value()) g.stones_per_end = lp.stones_per_end;
+              if (!g.untimed_ends.has_value()) g.untimed_ends = lp.untimed_ends;
+              if (!g.show_progress_through_end.has_value())
+                g.show_progress_through_end = lp.show_progress_through_end;
               break;
             }
     for (auto &day_kv : exceptions)
@@ -1849,6 +1899,11 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
           for (const auto &lp : leagues)
             if (league_name_match(lp.name, *g.message)) {
               g.manual_trigger = lp.manual_trigger;
+              if (!g.end_count.has_value()) g.end_count = lp.end_count;
+              if (!g.stones_per_end.has_value()) g.stones_per_end = lp.stones_per_end;
+              if (!g.untimed_ends.has_value()) g.untimed_ends = lp.untimed_ends;
+              if (!g.show_progress_through_end.has_value())
+                g.show_progress_through_end = lp.show_progress_through_end;
               break;
             }
 

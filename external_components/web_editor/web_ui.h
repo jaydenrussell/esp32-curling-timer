@@ -515,11 +515,25 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 
 /* --- Version dot --- */
 .version-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); margin-left: 6px; vertical-align: middle; cursor: pointer; }
+
+/* --- Progress through end --- */
+.progress-container { margin: 16px 0 0; }
+.progress-title { font-size: 12px; color: var(--pwa-text-muted); margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.progress-bar { position: relative; height: 22px; border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 1px solid #333; }
+.progress-end { display: flex; height: 100%; }
+.progress-seg { height: 100%; }
+.progress-seg.lead { background: #3b82f6; }
+.progress-seg.second { background: #10b981; }
+.progress-seg.vice { background: #f59e0b; }
+.progress-seg.skip { background: #ef4444; }
+.progress-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(255,255,255,0.15); pointer-events: none; z-index: 1; transition: width 0.5s ease; }
+.progress-pos-label { font-size: 10px; color: #888; margin-top: 4px; display: flex; justify-content: space-between; }
+.progress-pos-label span { flex: 1; text-align: center; }
 </style>
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.116</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.117</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -544,7 +558,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.116</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.117</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -843,6 +857,9 @@ function buildQuickForm() {
         start_duration: relayMaxDuration(startDur1, startDur2),
         end_relays: relayValues(expiresOut1, expiresOut2),
         end_duration: relayMaxDuration(expiresDur1, expiresDur2),
+        end_count: Number(endCount.value) || 8,
+        stones_per_end: Number(stonesPerEnd.value) || 8,
+        untimed_ends: Number(untimedEnds.value) || 0,
       });
     } },
     el('h2', {}, 'Quick Start Timer'),
@@ -926,6 +943,33 @@ function renderStatus() {
       cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null);
     const countdown = el('div', { id: 'countdown', class: 'countdown' }, countdownText(cur.seconds_until_buzzer ?? 0));
     now.append(name, countdown);
+    if (cur.show_progress_through_end && cur.end_count && cur.end_count > 0 && cur.buzzer > cur.start) {
+      const endCount = cur.end_count;
+      const unitsPerEnd = 4.4;
+      const segW = 100 / endCount;
+      const leadPct = (1 / unitsPerEnd) * segW;
+      const secondPct = (1 / unitsPerEnd) * segW;
+      const vicePct = (1 / unitsPerEnd) * segW;
+      const skipPct = (1.4 / unitsPerEnd) * segW;
+      const container = el('div', { class: 'progress-container' });
+      container.append(el('div', { class: 'progress-title' }, 'Progress through end'));
+      const bar = el('div', { class: 'progress-bar' });
+      for (let e = 0; e < endCount; e++) {
+        const endSeg = el('div', { class: 'progress-end' });
+        endSeg.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct.toFixed(1)}%` }));
+        endSeg.append(el('div', { class: 'progress-seg second', style: `width:${secondPct.toFixed(1)}%` }));
+        endSeg.append(el('div', { class: 'progress-seg vice', style: `width:${vicePct.toFixed(1)}%` }));
+        endSeg.append(el('div', { class: 'progress-seg skip', style: `width:${skipPct.toFixed(1)}%` }));
+        bar.append(endSeg);
+      }
+      const fill = el('div', { class: 'progress-fill', style: 'width:0%' });
+      bar.append(fill);
+      container.append(bar);
+      const labels = el('div', { class: 'progress-pos-label' });
+      labels.append(el('span', {}, 'Lead'), el('span', {}, 'Second'), el('span', {}, 'Vice'), el('span', {}, 'Skip'));
+      container.append(labels);
+      now.append(container);
+    }
     const actions = el('div', { class: 'row-actions', style: 'margin-top: 16px' },
       el('button', { class: `btn ${s.enabled ? 'danger' : 'primary'}`, onclick: () => toggleEnabled(!s.enabled) },
          s.enabled ? 'Disable timer' : 'Enable timer'));
@@ -1015,6 +1059,13 @@ function tick() {
     const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
     box.textContent = countdownText(left);
     box.style.color = left <= 0 ? 'var(--bad)' : 'var(--ok)';
+  }
+  const fill = document.querySelector('.progress-fill');
+  if (fill && s && s.current && s.current.show_progress_through_end && s.current.end_count && s.current.buzzer > s.current.start) {
+    const nowSecs = secondsNow();
+    const elapsed = Math.max(0, Math.min(s.current.buzzer - s.current.start, nowSecs - s.current.start));
+    const progress = elapsed / (s.current.buzzer - s.current.start);
+    fill.style.width = `${Math.round(progress * 100)}%`;
   }
   const mc = $('mirror-countdown');
   if (mc && s && s.current && s.current.seconds_until_buzzer != null) {
@@ -1923,6 +1974,14 @@ async function renderLeagues() {
       onchange: (ev) => { lp.pace_enabled = ev.target.checked; } });
     const paceMinInput = el('input', { type: 'number', id: prefix + '-pace-min', value: lp.pace_minutes_per_end || '', min: 0,
       oninput: (ev) => { lp.pace_minutes_per_end = parseInt(ev.target.value || '0', 10); } });
+    const stonesInput = el('input', { type: 'number', id: prefix + '-stones', value: lp.stones_per_end || '8', min: 1, max: 10,
+      oninput: (ev) => { lp.stones_per_end = parseInt(ev.target.value || '8', 10); } });
+    const endsInput = el('input', { type: 'number', id: prefix + '-ends', value: lp.end_count || '8', min: 1, max: 12,
+      oninput: (ev) => { lp.end_count = parseInt(ev.target.value || '8', 10); } });
+    const untimedInput = el('input', { type: 'number', id: prefix + '-untimed', value: lp.untimed_ends || '0', min: 0, max: 6,
+      oninput: (ev) => { lp.untimed_ends = parseInt(ev.target.value || '0', 10); } });
+    const progressCheck = el('input', { type: 'checkbox', id: prefix + '-progress', checked: lp.show_progress_through_end !== false,
+      onchange: (ev) => { lp.show_progress_through_end = ev.target.checked; } });
     const cmbInput = el('input', { type: 'number', id: prefix + '-cmb', value: lp.countdown_minutes_before || '', min: 0,
       oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
     const manualCheck = el('input', { type: 'checkbox', id: prefix + '-manual', checked: !!lp.manual_trigger,
@@ -1934,6 +1993,12 @@ async function renderLeagues() {
       el('div', { class: 'grid2' },
         el('label', {}, 'Pre-game countdown (s)', pregameInput),
         el('label', {}, 'Header text', headerInput)),
+      el('div', { class: 'grid2' },
+        el('label', {}, 'Stones per end', stonesInput),
+        el('label', {}, 'Total ends', endsInput)),
+      el('div', { class: 'grid2' },
+        el('label', {}, 'Ends after expiration', untimedInput),
+        el('label', { class: 'check' }, progressCheck, 'Show progress through end?')),
       el('div', { class: 'grid2' },
         el('label', { class: 'check' }, paceCheck, 'Pace of play'),
         el('label', {}, 'Pace minutes/end', paceMinInput)),
@@ -1952,6 +2017,10 @@ async function renderLeagues() {
       game_duration_minutes: parseInt(document.getElementById('lg-add-dur').value || '0', 10),
       pregame_countdown_seconds: parseInt(document.getElementById('lg-add-pregame').value || '0', 10),
       header_text: document.getElementById('lg-add-header').value,
+      stones_per_end: parseInt(document.getElementById('lg-add-stones').value || '8', 10),
+      end_count: parseInt(document.getElementById('lg-add-ends').value || '8', 10),
+      untimed_ends: parseInt(document.getElementById('lg-add-untimed').value || '0', 10),
+      show_progress_through_end: document.getElementById('lg-add-progress').checked,
       pace_enabled: document.getElementById('lg-add-pace').checked,
       pace_minutes_per_end: parseInt(document.getElementById('lg-add-pace-min').value || '0', 10),
       countdown_minutes_before: parseInt(document.getElementById('lg-add-cmb').value || '0', 10),
@@ -1963,7 +2032,7 @@ async function renderLeagues() {
     renderLeagues();
   } },
     el('h2', {}, 'Add League'),
-    ...leagueFields({name:'',game_duration_minutes:0,pregame_countdown_seconds:0,header_text:'',pace_enabled:false,pace_minutes_per_end:0,countdown_minutes_before:0,manual_trigger:false}, 'lg-add'),
+    ...leagueFields({name:'',game_duration_minutes:0,pregame_countdown_seconds:0,header_text:'',stones_per_end:8,end_count:8,untimed_ends:0,show_progress_through_end:true,pace_enabled:false,pace_minutes_per_end:0,countdown_minutes_before:0,manual_trigger:false}, 'lg-add'),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
 
   const list = el('div', { class: 'card league-list' }, el('h2', {}, 'Leagues'));

@@ -100,6 +100,14 @@ bool quick_entry(const QuickStartOptions &opts, Entry *out, std::string *err) {
     entry.start_duration = opts.start_duration;
   if (opts.end_duration.has_value())
     entry.end_duration = opts.end_duration;
+  if (opts.end_count.has_value())
+    entry.end_count = opts.end_count;
+  if (opts.stones_per_end.has_value())
+    entry.stones_per_end = opts.stones_per_end;
+  if (opts.untimed_ends.has_value())
+    entry.untimed_ends = opts.untimed_ends;
+  if (opts.show_progress_through_end.has_value())
+    entry.show_progress_through_end = opts.show_progress_through_end;
   *out = std::move(entry);
   return true;
 }

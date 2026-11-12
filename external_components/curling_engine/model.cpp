@@ -314,6 +314,42 @@ bool entry_from_map(const YamlValue &data, const std::string &where, Entry *out,
     }
     out->end_duration = static_cast<int>(v->i);
   }
+  v = data.find("end_count");
+  out->end_count = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Int || v->i < 1 || v->i > 12) {
+      *err = where + ": end_count must be a whole number from 1 to 12";
+      return false;
+    }
+    out->end_count = static_cast<int>(v->i);
+  }
+  v = data.find("stones_per_end");
+  out->stones_per_end = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Int || v->i < 1 || v->i > 10) {
+      *err = where + ": stones_per_end must be a whole number from 1 to 10";
+      return false;
+    }
+    out->stones_per_end = static_cast<int>(v->i);
+  }
+  v = data.find("untimed_ends");
+  out->untimed_ends = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Int || v->i < 0 || v->i > 6) {
+      *err = where + ": untimed_ends must be a whole number from 0 to 6";
+      return false;
+    }
+    out->untimed_ends = static_cast<int>(v->i);
+  }
+  v = data.find("show_progress_through_end");
+  out->show_progress_through_end = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Bool) {
+      *err = where + ": show_progress_through_end must be true or false";
+      return false;
+    }
+    out->show_progress_through_end = v->b;
+  }
   return true;
 }
 
@@ -337,7 +373,8 @@ bool entries_from_yaml(const YamlValue *raw, const std::string &where, std::vect
     static const char *kKnown[] = {"start",       "buzzer",            "name", "during_buzzer",
                                    "game_completed", "header_hold",      "pace_of_play",
                                    "pace_unit_duration", "manual_trigger",
-                                   "start_relays", "end_relays", "start_duration", "end_duration"};
+                                   "start_relays", "end_relays", "start_duration", "end_duration",
+                                   "end_count", "stones_per_end", "untimed_ends", "show_progress_through_end"};
     std::set<std::string> unknown;
     for (const auto &kv : item->map) {
       bool known = false;
@@ -641,6 +678,14 @@ std::string render_entry(const Entry &entry) {
     line += ", start_duration: " + std::to_string(*entry.start_duration);
   if (entry.end_duration.has_value())
     line += ", end_duration: " + std::to_string(*entry.end_duration);
+  if (entry.end_count.has_value())
+    line += ", end_count: " + std::to_string(*entry.end_count);
+  if (entry.stones_per_end.has_value())
+    line += ", stones_per_end: " + std::to_string(*entry.stones_per_end);
+  if (entry.untimed_ends.has_value())
+    line += ", untimed_ends: " + std::to_string(*entry.untimed_ends);
+  if (entry.show_progress_through_end.has_value())
+    line += std::string(", show_progress_through_end: ") + (*entry.show_progress_through_end ? "True" : "False");
   line += "}";
   if (entry.quick)
     line += std::string("  ") + QUICK_COMMENT;

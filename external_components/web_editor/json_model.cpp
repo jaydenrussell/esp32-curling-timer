@@ -144,6 +144,22 @@ static void entry_into(JsonObject obj, const Entry &entry) {
     obj["end_duration"] = *entry.end_duration;
   else
     obj["end_duration"] = nullptr;
+  if (entry.end_count.has_value())
+    obj["end_count"] = *entry.end_count;
+  else
+    obj["end_count"] = nullptr;
+  if (entry.stones_per_end.has_value())
+    obj["stones_per_end"] = *entry.stones_per_end;
+  else
+    obj["stones_per_end"] = nullptr;
+  if (entry.untimed_ends.has_value())
+    obj["untimed_ends"] = *entry.untimed_ends;
+  else
+    obj["untimed_ends"] = nullptr;
+  if (entry.show_progress_through_end.has_value())
+    obj["show_progress_through_end"] = *entry.show_progress_through_end;
+  else
+    obj["show_progress_through_end"] = nullptr;
 }
 
 void entry_into_json(JsonObject obj, const Entry &entry) { entry_into(obj, entry); }

@@ -29,6 +29,11 @@ struct QuickStartOptions {
   std::optional<int> start_duration;
   std::optional<std::vector<std::string>> end_relays;
   std::optional<int> end_duration;
+  // quick-start game details
+  std::optional<int> end_count;
+  std::optional<int> stones_per_end;
+  std::optional<int> untimed_ends;
+  std::optional<bool> show_progress_through_end;
 };
 
 // Add a game starting now lasting duration seconds to today's exception in
