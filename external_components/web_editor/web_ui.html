@@ -827,12 +827,12 @@ function renderStatus() {
   const scale = renderScale * userScale;
   const px = (n) => Math.max(1, Math.round((n || 0) * scale));
 
-  // Exact HDMI base font sizes at 100% (from config/status; defaults match esphome font sizes)
-  const baseHeader = Number(sm.font_header || 96);
-  const baseTimer4 = Number(sm.font_timer_4 || sm.font_timer || 450);
-  const baseTimer5 = Number(sm.font_timer_5 || Math.round((sm.font_timer || 450) * 370 / 450)); // fallback proportional to HDMI defaults
-  const basePace = Number(sm.font_pace || 85);
-  const baseFooter = Number(sm.font_footer || 52);
+  // Font sizes from settings, scaled to 16:9 1280x720 HDMI reference (mirror width / 1280 * mirror_scale)
+  const baseHeader = Number(sm.font_header);
+  const baseTimer4 = Number(sm.font_timer_4 || sm.font_timer);
+  const baseTimer5 = Number(sm.font_timer_5 || Math.round(baseTimer4 * 370 / 450));
+  const basePace = Number(sm.font_pace);
+  const baseFooter = Number(sm.font_footer);
   const isFiveDigit = !!(sm.show_countdown && sm.seconds_until_buzzer >= 3600);
   const baseTimer = isFiveDigit ? baseTimer5 : baseTimer4;
   const pregame = !!(sm.countdown && !String(sm.countdown ?? '').includes('\u02F8'));
