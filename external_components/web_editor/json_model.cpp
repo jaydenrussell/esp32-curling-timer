@@ -225,6 +225,36 @@ static bool entry_from_json(JsonObjectConst data, const std::string &where, Entr
   JsonVariantConst manual = data["manual_trigger"];
   if (!manual.isNull())
     entry->manual_trigger = manual.as<bool>();
+  if (!data["start_relays"].isNull()) {
+    JsonArrayConst arr = data["start_relays"].as<JsonArrayConst>();
+    if (!arr.isNull()) {
+      std::vector<std::string> relays;
+      for (JsonVariantConst v : arr) if (v.is<const char*>()) relays.push_back(v.as<const char*>());
+      if (!relays.empty()) entry->start_relays = std::move(relays);
+    }
+  }
+  if (!data["end_relays"].isNull()) {
+    JsonArrayConst arr = data["end_relays"].as<JsonArrayConst>();
+    if (!arr.isNull()) {
+      std::vector<std::string> relays;
+      for (JsonVariantConst v : arr) if (v.is<const char*>()) relays.push_back(v.as<const char*>());
+      if (!relays.empty()) entry->end_relays = std::move(relays);
+    }
+  }
+  if (!data["start_duration"].isNull())
+    entry->start_duration = static_cast<int>(data["start_duration"].as<long long>());
+  if (!data["end_duration"].isNull())
+    entry->end_duration = static_cast<int>(data["end_duration"].as<long long>());
+  if (!data["end_count"].isNull())
+    entry->end_count = static_cast<int>(data["end_count"].as<long long>());
+  if (!data["stones_per_end"].isNull())
+    entry->stones_per_end = static_cast<int>(data["stones_per_end"].as<long long>());
+  if (!data["untimed_ends"].isNull())
+    entry->untimed_ends = static_cast<int>(data["untimed_ends"].as<long long>());
+  if (!data["show_progress_through_end"].isNull())
+    entry->show_progress_through_end = data["show_progress_through_end"].as<bool>();
+  if (!data["pregame_countdown"].isNull())
+    entry->pregame_countdown_override = static_cast<int>(data["pregame_countdown"].as<long long>());
   return true;
 }
 
