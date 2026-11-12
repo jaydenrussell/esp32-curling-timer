@@ -749,14 +749,6 @@ function renderStatus() {
   if (quickForm) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
   const now = el('div', { class: 'card' });
   const cur = s.current;
-  const head = el('div', {},
-    el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Timer enabled' : 'Timer disabled'));
-  const triggered = (cur && cur.seconds_until_buzzer != null && cur.seconds_until_buzzer <= 0) ? 'Buzzer' : null;
-  now.append(head);
-  if (triggered) {
-    now.append(el('div', { style: 'margin: 6px 0 0 0' },
-      el('span', { class: 'pill warn' }, `Output: ${triggered}`)));
-  }
   if (!s.enabled) {
     now.append(el('div', { class: 'section-title' }, 'Timer status'),
       el('div', { class: 'state', style: 'color: var(--bad); font-size: 22px' }, 'TIMER DISABLED'),
@@ -767,24 +759,28 @@ function renderStatus() {
       el('div', { class: 'banner warn' }, 'Waiting for the clock to sync (SNTP). The countdown, today\'s games and quick start appear once the time is known.'));
   } else if (cur) {
     if (!isAddonEnabled('relays')) now.append(el('div', { class: 'banner warn' }, 'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
-    const name = el('div', { class: 'game-name' }, cur.name || 'Game in progress',
-      cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null);
-    const countdown = el('div', { id: 'countdown', class: 'countdown' }, countdownText(cur.seconds_until_buzzer ?? 0));
-    const meta = el('div', { class: 'info-row' },
-      el('span', { class: 'pill' }, `Start ${shortTime(cur.start)}`),
-      el('span', { class: 'pill' }, `Buzzer ${shortTime(cur.buzzer)}`),
-      cur.end_count ? el('span', { class: 'pill' }, `${cur.end_count} ends`) : null);
-    now.append(el('div', { class: 'section-title' }, 'Now on ice'), name, countdown, meta);
-    const actions = el('div', { class: 'row-actions', style: 'margin-top: 8px' },
-      el('button', { class: 'btn danger', onclick: () => toggleEnabled(false) }, 'Disable timer'));
-    if (cur && cur.quick) actions.append(el('button', { class: 'btn', onclick: () => cancelQuick(cur) }, 'Cancel quick start'));
-    now.append(actions);
+    const displayName = cur.name || (cur.quick ? 'Quick Start' : 'Current game');
+    const rows = el('div', { class: 'stack', style: 'gap: 10px; margin-top: 4px' },
+      el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Timer'), el('div', { class: 'v' }, el('span', { class: `pill ${s.enabled ? 'ok' : 'bad'}` }, s.enabled ? 'Enabled' : 'Disabled'))),
+      el('div', { class: 'kv' }, el('div', { class: 'k' }, cur.quick ? 'Game (Quick Start)' : 'Game / League'), el('div', { class: 'v', style: 'font-size: 18px' }, displayName)),
+      el('div', { class: 'grid2', style: 'gap: 12px' },
+        el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Start time'), el('div', { class: 'v' }, shortTime(cur.start))),
+        el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Game expiration'), el('div', { class: 'v' }, shortTime(cur.buzzer)))));
+    const actions = el('div', { class: 'row-actions', style: 'margin-top: 12px' });
+    if (cur.quick) actions.append(el('button', { class: 'btn', onclick: () => cancelQuick(cur) }, 'Cancel quick start'));
+    actions.append(el('button', { class: 'btn danger', onclick: () => toggleEnabled(false) }, 'Disable timer'));
+    now.append(el('div', { class: 'section-title' }, 'Current game'), rows, actions);
   } else {
     if (!isAddonEnabled('relays')) now.append(el('div', { class: 'banner warn' }, 'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
-    now.append(el('div', { class: 'section-title' }, 'Timer status'),
-      el('div', { class: 'state muted', style: 'font-size: 22px' }, 'Idle'),
-      el('div', { class: 'muted' }, s.next ? `Next: ${s.next.name || 'game'} at ${shortTime(s.next.start)} (buzzer ${shortTime(s.next.buzzer)})` : 'No more games today'),
-      el('div', { class: 'row-actions', style: 'margin-top: 8px' }, el('button', { class: 'btn danger', onclick: () => toggleEnabled(false) }, 'Disable timer')));
+    const rows = el('div', { class: 'stack', style: 'gap: 10px; margin-top: 4px' },
+      el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Timer'), el('div', { class: 'v' }, el('span', { class: 'pill ok' }, 'Enabled'))),
+      el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Status'), el('div', { class: 'v', style: 'font-size: 18px' }, 'Idle')),
+      s.next ? el('div', { class: 'grid2', style: 'gap: 12px' },
+        el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Next game'), el('div', { class: 'v' }, s.next.name || 'Game')),
+        el('div', { class: 'kv' }, el('div', { class: 'k' }, 'Start / Expiration'), el('div', { class: 'v' }, `${shortTime(s.next.start)} / ${shortTime(s.next.buzzer)}`)))
+      : el('div', { class: 'muted small' }, 'No more games today'));
+    now.append(el('div', { class: 'section-title' }, 'Status'), rows,
+      el('div', { class: 'row-actions', style: 'margin-top: 12px' }, el('button', { class: 'btn danger', onclick: () => toggleEnabled(false) }, 'Disable timer')));
   }
   let mirror = document.getElementById('display-mirror');
   if (!mirror) {
