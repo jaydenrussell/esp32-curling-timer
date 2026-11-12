@@ -1025,12 +1025,12 @@ function renderStatus() {
   $('tab-status').querySelector('#status-today').replaceChildren(today);
    const sm = state.status || {};
    function unswap(c) { if (!c || typeof c !== 'string' || c.length < 7) return c || ''; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
-  const scale = (state.configValues && state.configValues['config.mirror_scale'] != null)
-        ? Number(state.configValues['config.mirror_scale']) / 100 : 0.85;
-   const fh = Math.min(Math.round((sm.font_header || 96) * scale), 200);
-   const ft = Math.min(Math.round((sm.font_timer || 450) * scale), 400);
-   const fp = Math.min(Math.round((sm.font_pace || 85) * scale * 0.85), 120);
-   const ff = Math.min(Math.round((sm.font_footer || 52) * scale), 80);
+  const scale = ((sm.mirror_scale != null ? Number(sm.mirror_scale)
+        : (state.configValues && state.configValues['config.mirror_scale'] != null ? Number(state.configValues['config.mirror_scale']) : 100)) / 100);
+   const fh = Math.round((sm.font_header || 96) * scale);
+   const ft = Math.round((sm.font_timer || 450) * scale);
+   const fp = Math.round((sm.font_pace || 85) * scale);
+   const ff = Math.round((sm.font_footer || 52) * scale);
   mirror.style.background = '#000';
   mirror.replaceChildren();
    if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:left;align-self:flex-start;margin-top:0;overflow-wrap:anywhere;max-height:${fh*2.5}px;overflow:hidden` }, sm.header_text));

@@ -343,6 +343,7 @@ ApiResponse PiTimerApi::status() {
     doc["font_timer"] = live.settings.font_sizes.count("countdown") ? live.settings.font_sizes.at("countdown") : 450;
     doc["font_pace"] = live.settings.font_sizes.count("pace_of_play") ? live.settings.font_sizes.at("pace_of_play") : 85;
     doc["font_footer"] = live.settings.font_sizes.count("footer") ? live.settings.font_sizes.at("footer") : 52;
+    doc["mirror_scale"] = live.settings.mirror_scale;
     doc["show_countdown"] = snap.show_countdown;
     doc["show_pace"] = snap.show_pace;
     doc["show_status"] = snap.show_status;
