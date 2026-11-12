@@ -849,7 +849,7 @@ function renderStatus() {
   const stage = el('div', { style: 'position:absolute; inset:0; overflow:hidden;' });
 
   if (sm.header_text) {
-    stage.append(el('div', { style: `position:absolute; top:${padY}px; left:${px(12)}px; right:${px(12)}px; color:${unswap(sm.header_color) || '#fff'}; font-size:${fh}px; font-weight:bold; text-align:center; line-height:1.05; overflow:hidden; max-height:${px(baseHeader * 2.6)}px; overflow-wrap:anywhere;` }, sm.header_text));
+    stage.append(el('div', { style: `position:absolute; top:${padY}px; left:0; width:100%; box-sizing:border-box; padding:0 ${px(12)}px; color:${unswap(sm.header_color) || '#fff'}; font-size:${fh}px; font-weight:bold; text-align:center; line-height:1.05; overflow:hidden; max-height:${px(baseHeader * 2.6)}px; overflow-wrap:anywhere;` }, sm.header_text));
   }
 
   const showPace = !!(sm.show_pace && sm.pace_text);
