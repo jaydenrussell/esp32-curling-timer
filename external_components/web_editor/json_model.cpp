@@ -160,6 +160,10 @@ static void entry_into(JsonObject obj, const Entry &entry) {
     obj["show_progress_through_end"] = *entry.show_progress_through_end;
   else
     obj["show_progress_through_end"] = nullptr;
+  if (entry.pregame_countdown_override.has_value())
+    obj["pregame_countdown"] = *entry.pregame_countdown_override;
+  else
+    obj["pregame_countdown"] = nullptr;
 }
 
 void entry_into_json(JsonObject obj, const Entry &entry) { entry_into(obj, entry); }

@@ -234,11 +234,14 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
   if (settings.enabled && game.has_value()) {
     const PiTimerGame &g = *game;
     const int since_start = g.seconds_since_start.value_or(0);
-    const bool pregame = since_start < 0 && settings.pregame_countdown > 0;
+    const int pregame_secs = g.pregame_countdown_override.has_value()
+        ? *g.pregame_countdown_override
+        : settings.pregame_countdown;
+    const bool pregame = since_start < 0 && pregame_secs > 0;
     const int seconds_left = pregame ? (-since_start) : g.seconds_until_buzzer.value_or(0);
     out.show_countdown = true;
     out.game_completed = !pregame && seconds_left <= 0;
-    out.seconds_until_buzzer = pregame ? (g.seconds_until_buzzer.value_or(0) + settings.pregame_countdown) : seconds_left;
+    out.seconds_until_buzzer = pregame ? (g.seconds_until_buzzer.value_or(0) + pregame_secs) : seconds_left;
     out.countdown = pregame ? std::to_string(seconds_left) : format_countdown(seconds_left);
     out.countdown_color = color_to_hex(pregame ? settings.pregame_countdown_color : [&settings](const char *key) {
           auto it = settings.countdown_colors.find(key);
@@ -253,6 +256,11 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
     int pace_unit_duration = settings.pace_unit_duration;
     if (g.pace_unit_override.has_value())
       pace_unit_duration = *g.pace_unit_override;
+    else if (show_pace && g.end_count.has_value() && g.end_count.value() > 0) {
+      int game_dur = g.buzzer - g.start;
+      if (game_dur > 0)
+        pace_unit_duration = game_dur / g.end_count.value();
+    }
     if (show_pace && pace_unit_duration > 0 && g.seconds_since_start.has_value()) {
       int unit_number = 1;
       std::string position = pace_position(*g.seconds_since_start, pace_unit_duration, &unit_number);

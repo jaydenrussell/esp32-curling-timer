@@ -41,6 +41,9 @@ struct Entry {
   std::optional<int> stones_per_end;
   std::optional<int> untimed_ends;
   std::optional<bool> show_progress_through_end;
+  // per-game pre-game countdown override (seconds; quick start sets it from
+  // the form's pre-game minutes, absent = use the global settings value)
+  std::optional<int> pregame_countdown_override;
   // entry added by a quick start (marked with a trailing comment in the file)
   bool quick{false};
   // manual push-button trigger required for this game (start >= 17:00 by

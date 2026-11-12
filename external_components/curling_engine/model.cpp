@@ -350,6 +350,15 @@ bool entry_from_map(const YamlValue &data, const std::string &where, Entry *out,
     }
     out->show_progress_through_end = v->b;
   }
+  v = data.find("pregame_countdown");
+  out->pregame_countdown_override = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Int) {
+      *err = where + ": pregame_countdown must be a whole number of seconds";
+      return false;
+    }
+    out->pregame_countdown_override = static_cast<int>(v->i);
+  }
   return true;
 }
 
@@ -374,7 +383,7 @@ bool entries_from_yaml(const YamlValue *raw, const std::string &where, std::vect
                                    "game_completed", "header_hold",      "pace_of_play",
                                    "pace_unit_duration", "manual_trigger",
                                    "start_relays", "end_relays", "start_duration", "end_duration",
-                                   "end_count", "stones_per_end", "untimed_ends", "show_progress_through_end"};
+                                   "end_count", "stones_per_end", "untimed_ends", "show_progress_through_end", "pregame_countdown"};
     std::set<std::string> unknown;
     for (const auto &kv : item->map) {
       bool known = false;
@@ -686,6 +695,8 @@ std::string render_entry(const Entry &entry) {
     line += ", untimed_ends: " + std::to_string(*entry.untimed_ends);
   if (entry.show_progress_through_end.has_value())
     line += std::string(", show_progress_through_end: ") + (*entry.show_progress_through_end ? "True" : "False");
+  if (entry.pregame_countdown_override.has_value())
+    line += ", pregame_countdown: " + std::to_string(*entry.pregame_countdown_override);
   line += "}";
   if (entry.quick)
     line += std::string("  ") + QUICK_COMMENT;

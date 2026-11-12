@@ -101,6 +101,8 @@ struct PiTimerGame {
   std::optional<int> stones_per_end;
   std::optional<int> untimed_ends;
   std::optional<bool> show_progress_through_end;
+  // per-game pre-game countdown override (seconds; absent = use global)
+  std::optional<int> pregame_countdown_override;
   // live state, set on the copy returned by find_current_game
   std::optional<int> seconds_until_buzzer;
   std::optional<int> seconds_since_start;

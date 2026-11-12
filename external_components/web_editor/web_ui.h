@@ -899,6 +899,7 @@ function buildQuickForm() {
         name: timer.name,
         header_hold: (Number(expiresMin.value) || 10) * 60,
         ...options(),
+        pregame_countdown: (pregame.checked ? (Number(pregameMin.value) || 0) * 60 : 0),
         start_relays: relayValues(startBoxes),
         start_duration: relayMaxDuration(startDurs),
         end_relays: relayValues(endBoxes),
@@ -926,7 +927,6 @@ function buildQuickForm() {
         el('label', {}, 'Number of ends allowed after expiration'),
         untimedEnds,
         el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends played after the buzzer when the game is not finished. Use it to allow a few extra ends so the game can conclude naturally rather than cutting off mid-end.')),
-      el('div', { class: 'field' }, el('label', {}, 'Pace of Play'), pace)),
     el('div', { class: 'row-actions', style: 'margin: 0 0 14px' },
       el('label', { class: 'check' }, pregame, 'Enable pre-game countdown'),
       el('label', { class: 'check' }, pace, 'Pace of play'),
@@ -999,7 +999,7 @@ function renderStatus() {
   }
   let mirror = document.getElementById('display-mirror');
   if (!mirror) {
-    mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:24px;border-radius:28px;margin-bottom:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;aspect-ratio:16/9;gap:16px;position:relative;box-shadow:0 4px 12px rgba(0,0,0,0.3)' });
+    mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:6px 12px;border-radius:28px;margin-bottom:16px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;aspect-ratio:16/9;position:relative;box-shadow:0 4px 12px rgba(0,0,0,0.3)' });
     $('status-now').append(mirror);
   }
   $('status-now').replaceChildren(mirror, now);
@@ -1011,7 +1011,7 @@ function renderStatus() {
   const today = el('div', { class: 'card' },
     el('h2', {}, `Today (${s.weekday})`, el('span', { class: 'spacer' }),
        s.today.source === 'exception' ? el('span', { class: 'pill warn', style: 'max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle', title: s.today.note ? s.today.note : '' }, `Exception${s.today.note ? ': ' + s.today.note : ''}`)
-                                    : el('span', { class: 'pill' }, 'Weekly schedule')));
+                                       : el('span', { class: 'pill' }, 'Weekly schedule')));
   const nowSecs = secondsNow();
   if (!s.today.entries.length) today.append(el('p', { class: 'muted' }, 'No buzzers today.'));
   else today.append(el('ul', { class: 'today' },
@@ -1031,18 +1031,22 @@ function renderStatus() {
    const ft = Math.min(Math.round((sm.font_timer || 450) * scale), 400);
    const fp = Math.min(Math.round((sm.font_pace || 85) * scale * 0.85), 120);
    const ff = Math.min(Math.round((sm.font_footer || 52) * scale), 80);
-   mirror.style.background = '#000';
-   mirror.replaceChildren();
-   if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:center;margin-top:0;overflow-wrap:anywhere;max-height:${fh*2.5}px;overflow:hidden` }, sm.header_text));
-     const pregame = !!(sm.countdown && !String(sm.countdown ?? '').includes('\u02F8'));
-   const cft = pregame ? Math.round(ft * 0.55) : ft;
-   if (sm.show_countdown) mirror.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin-top:12px` }, sm.countdown || ''));
-if (sm.show_status && sm.status_text) {
-   mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center;margin:8px 0` }, sm.status_text));
- }
-   if (sm.show_pace && sm.pace_text) {
-      mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-bottom:8px` }, sm.pace_text));
+  mirror.style.background = '#000';
+  mirror.replaceChildren();
+   if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:left;align-self:flex-start;margin-top:0;overflow-wrap:anywhere;max-height:${fh*2.5}px;overflow:hidden` }, sm.header_text));
+    const pregame = !!(sm.countdown && !String(sm.countdown ?? '').includes('\u02F8'));
+  const cft = pregame ? Math.round(ft * 0.55) : ft;
+
+  // Center wrapper: countdown vertically centred between header and the
+  // pace/progress bar (or footer when neither is shown).
+  const centerWrap = el('div', { style: 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%' });
+  if (sm.show_countdown) centerWrap.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin:0` }, sm.countdown || ''));
+  if (sm.show_status && sm.status_text) {
+    centerWrap.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center;margin:8px 0` }, sm.status_text));
    }
+   if (sm.show_pace && sm.pace_text) {
+     centerWrap.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-bottom:8px` }, sm.pace_text));
+    }
    if (s.current && s.current.show_progress_through_end && s.current.end_count && s.current.end_count > 0 && s.current.buzzer > s.current.start) {
      const endCount = s.current.end_count;
      const gameDur = s.current.buzzer - s.current.start;
@@ -1066,10 +1070,11 @@ if (sm.show_status && sm.status_text) {
        bar.append(el('div', { class: 'progress-seg skip', style: `width:${skipPct}%` }));
        const fill = el('div', { class: 'progress-end-fill', style: `width:${fillPct}%` });
        bar.append(fill);
-       mirror.append(bar);
+       centerWrap.append(bar);
      }
    }
-   const footerRow = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-top:auto;width:100%' });
+  mirror.append(centerWrap);
+   const footerRow = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;width:100%' });
    if (sm.show_date_time && sm.date_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px` }, sm.date_text));
    if (sm.show_game_name && sm.game_name) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px;text-align:center;flex:1` }, sm.game_name));
    if (sm.show_date_time && sm.time_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px;text-align:right` }, sm.time_text));

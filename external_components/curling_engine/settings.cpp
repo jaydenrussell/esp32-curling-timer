@@ -1377,6 +1377,12 @@ static bool parse_schedules_into(const YamlValue &src,
           return false;
         g.show_progress_through_end = v->b;
       }
+      if (entry_v.has("pregame_countdown")) {
+        const YamlValue *v = require_(&entry_v, "pregame_countdown", YType::Int, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.pregame_countdown_override = static_cast<int>(v->i);
+      }
 
       // Apply per-league pace_of_play override when the game name matches a league
       // profile (fuzzy) and the entry did not explicitly set pace.
@@ -1943,7 +1949,9 @@ std::optional<PiTimerGame> PiTimerSettings::find_current_game(int weekday,
   // into account extra buzzer header hold time and returns a negative
   // seconds_until_buzzer while inside that hold time
   for (const PiTimerGame &entry : *list) {
-    const int pregame = pregame_countdown;
+    const int pregame = entry.pregame_countdown_override.has_value()
+        ? *entry.pregame_countdown_override
+        : pregame_countdown;
     if (seconds_since_midnight >= entry.start - pregame &&
         seconds_since_midnight <= entry.buzzer + header_hold(entry)) {
       PiTimerGame copy = entry;

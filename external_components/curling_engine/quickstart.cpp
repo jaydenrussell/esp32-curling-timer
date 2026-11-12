@@ -108,6 +108,8 @@ bool quick_entry(const QuickStartOptions &opts, Entry *out, std::string *err) {
     entry.untimed_ends = opts.untimed_ends;
   if (opts.show_progress_through_end.has_value())
     entry.show_progress_through_end = opts.show_progress_through_end;
+  if (opts.pregame_countdown > 0)
+    entry.pregame_countdown_override = opts.pregame_countdown;
   *out = std::move(entry);
   return true;
 }

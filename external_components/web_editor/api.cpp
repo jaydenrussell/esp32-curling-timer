@@ -569,7 +569,9 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
   opts.hold = live.settings.relay_msg_time;
   // the quick-start form's "Pre-game countdown" checkbox: when ticked the
   // configured countdown applies, when unticked the game starts immediately
-  opts.pregame_countdown = (data["pregame"].is<bool>() && data["pregame"].as<bool>()) ? live.settings.pregame_countdown : 0;
+  opts.pregame_countdown = data["pregame_countdown"].isNull()
+    ? ((data["pregame"].is<bool>() && data["pregame"].as<bool>()) ? live.settings.pregame_countdown : 0)
+    : static_cast<int>(data["pregame_countdown"].as<int>());
   opts.allow_midnight_wrap = live.settings.allow_midnight_wrap;
   if (data["start_relays"].is<JsonArrayConst>()) {
     std::vector<std::string> relays;
