@@ -842,7 +842,9 @@ function renderStatus() {
   const stage = el('div', { style: 'position:absolute; inset:0; overflow:hidden;' });
 
   if (sm.header_text) {
-    stage.append(el('div', { style: `position:absolute; top:${padY}px; left:0; width:100%; box-sizing:border-box; padding:0 ${px(12)}px; color:${unswap(sm.header_color) || '#fff'}; font-size:${fh}px; font-weight:bold; text-align:center; line-height:1.05; overflow:hidden; max-height:${px(baseHeader * 2.6)}px; overflow-wrap:anywhere;` }, sm.header_text));
+    const h = el('div', { id: 'mirror-header', style: `position:absolute; top:${padY}px; left:0; width:100%; box-sizing:border-box; padding:0 ${px(12)}px; color:${unswap(sm.header_color) || '#fff'}; font-size:${fh}px; font-weight:bold; text-align:center; line-height:1; white-space:nowrap; overflow:hidden;` }, sm.header_text);
+    h.dataset.maxFont = String(fh);
+    stage.append(h);
   }
 
   const showPace = !!(sm.show_pace && sm.pace_text);
@@ -851,9 +853,15 @@ function renderStatus() {
   const centerBottom = px(20 + baseFooter * 1.4 + (showProgress ? 24 : 0));
   const centerWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; top:${centerTop}px; bottom:${centerBottom}px; display:flex; flex-direction:column; align-items:center; justify-content:center;` });
 
-  if (sm.show_countdown) centerWrap.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0;` }, sm.countdown || ''));
+  if (sm.show_countdown) {
+    const cd = el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` }, sm.countdown || '');
+    cd.dataset.maxFont = String(fcd);
+    centerWrap.append(cd);
+  }
   if (sm.show_status && sm.status_text) {
-    centerWrap.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'}; font-size:${px(Math.round(basePace*0.8))}px; text-align:center; margin:${px(8)}px 0 0;` }, sm.status_text));
+    const st = el('div', { id: 'mirror-status-text', style: `color:${unswap(sm.status_color) || '#fff'}; font-size:${px(Math.round(basePace*0.8))}px; text-align:center; margin:${px(8)}px 0 0; width:100%; white-space:nowrap; overflow:hidden;` }, sm.status_text);
+    st.dataset.maxFont = String(px(Math.round(basePace*0.8)));
+    centerWrap.append(st);
   }
   if (showPace) {
     centerWrap.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'}; font-size:${fp}px; text-align:center; margin-top:${px(8)}px;` }, sm.pace_text));
@@ -896,6 +904,7 @@ function renderStatus() {
 
   if (!stage.childElementCount) stage.append(el('div', { style: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#666;' }, '(display idle)'));
   mirror.append(stage);
+  fitMirrorText();
   tick();
 }
 
