@@ -528,7 +528,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.122</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.124</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -553,7 +553,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.122</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.124</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -926,7 +926,7 @@ function buildQuickForm() {
       el('div', { class: 'field' },
         el('label', {}, 'Number of ends allowed after expiration'),
         untimedEnds,
-        el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends played after the buzzer when the game is not finished. Use it to allow a few extra ends so the game can conclude naturally rather than cutting off mid-end.')),
+        el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends played after the buzzer when the game is not finished. Use it to allow a few extra ends so the game can conclude naturally rather than cutting off mid-end.'))),
     el('div', { class: 'row-actions', style: 'margin: 0 0 14px' },
       el('label', { class: 'check' }, pregame, 'Enable pre-game countdown'),
       el('label', { class: 'check' }, pace, 'Pace of play'),
