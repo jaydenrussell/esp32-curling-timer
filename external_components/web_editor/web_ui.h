@@ -792,8 +792,14 @@ function buildQuickForm() {
   const minutes = el('input', { type: 'number', min: 0, max: 179, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Minutes' });
   const seconds = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Seconds' });
   const name = el('input', { type: 'text', maxlength: 60, placeholder: 'QUICK START' });
+  const pregameMin = el('input', { type: 'number', min: 0, max: 60, step: 1, inputmode: 'numeric', value: '5', 'aria-label': 'Pre-game countdown minutes' });
   const expiresMin = el('input', { type: 'number', min: 0, max: 60, step: 1, inputmode: 'numeric', value: '10', 'aria-label': 'Expire minutes' });
-  const extraEnds = el('input', { type: 'checkbox', checked: false });
+  const stonesPerEnd = el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Stones per end' });
+  const endCount = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Total number of ends' });
+  const untimedEnds = el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', value: '0', 'aria-label': 'Ends after expiration' });
+  const warnSound = el('input', { type: 'checkbox', checked: true });
+  const expireSound = el('input', { type: 'checkbox', checked: true });
+  const showProgress = el('input', { type: 'checkbox', checked: true });
   const pregame = el('input', { type: 'checkbox', checked: true });
   const pace = el('input', { type: 'checkbox', checked: true });
   const replace = el('input', { type: 'checkbox', checked: false });
@@ -831,16 +837,23 @@ function buildQuickForm() {
     el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start a game right now — set the duration and you are done.'),
     el('div', { class: 'row-actions', style: 'margin: 0 0 14px; gap: 8px; align-items: center' }, el('span', { class: 'muted small', style: 'margin-right: 8px' }, 'Quick pick:'), ...presets),
     el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
+      el('div', { class: 'field', role: 'group', 'aria-label': 'Pre-game countdown duration' }, el('label', {}, 'Pre-game countdown duration (minutes)'), pregameMin),
       el('div', { class: 'field', role: 'group', 'aria-label': 'Full game time' }, el('label', {}, 'Full game time (minutes)'),
-        el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's'))),
+        el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's')))),
+    el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
+      el('div', { class: 'field' }, el('label', {}, 'Expire time (minutes)'), expiresMin),
       el('div', { class: 'field' }, el('label', {}, 'Name shown on display'), el('div', {}, name))),
     el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
-      el('div', { class: 'field' }, el('label', {}, 'Pre-game countdown'), el('span', { class: 'muted small' }, '(from Settings)')),
-      el('div', { class: 'field' }, el('label', {}, 'Expires (minutes)'), expiresMin)),
+      el('div', { class: 'field' }, el('label', {}, 'Stones per end (per team; mixed doubles = 5)'), stonesPerEnd),
+      el('div', { class: 'field' }, el('label', {}, 'Total number of ends'), endCount)),
+    el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
+      el('div', { class: 'field' }, el('label', {}, 'Number of ends allowed after expiration'), untimedEnds),
+      el('div', { class: 'field' }, el('label', {}, 'Pace of Play'), pace)),
     el('div', { class: 'row-actions', style: 'margin: 0 0 14px' },
-      el('label', { class: 'check' }, extraEnds, 'Allow additional ends after expiration'),
+      el('label', { class: 'check' }, warnSound, 'Play warning sound?'),
+      el('label', { class: 'check' }, expireSound, 'Play expiration sound?'),
+      el('label', { class: 'check' }, showProgress, 'Show progress through end?'),
       el('label', { class: 'check' }, pregame, 'Enable pre-game countdown'),
-      el('label', { class: 'check' }, pace, 'Show pace of play'),
       el('label', { class: 'check' }, replace, 'Replace same-time games')),
     preview,
     el('div', { class: 'row-actions' }, button, hint));
