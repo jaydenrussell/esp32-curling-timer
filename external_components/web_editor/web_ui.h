@@ -528,7 +528,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.119</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.120</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -553,7 +553,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.119</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.120</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -810,35 +810,86 @@ function buildQuickForm() {
   const pregame = el('input', { type: 'checkbox', checked: true });
   const pace = el('input', { type: 'checkbox', checked: true });
   const replace = el('input', { type: 'checkbox', checked: false });
-  const startOut1 = el('input', { type: 'checkbox', value: 'RELAY1', checked: false });
-  const startDur1 = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
-  const startOut2 = el('input', { type: 'checkbox', value: 'RELAY2', checked: false });
-  const startDur2 = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
-  const expiresOut1 = el('input', { type: 'checkbox', value: 'RELAY1', checked: false });
-  const expiresDur1 = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
-  const expiresOut2 = el('input', { type: 'checkbox', value: 'RELAY2', checked: false });
-  const expiresDur2 = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
-  const relayValues = (...boxes) => boxes.filter(b => b.checked).map(b => b.value);
-  const relayMaxDuration = (...inputs) => { let m = 0; for (const i of inputs) { const v = Number(i.value) || 0; if (v > m) m = v; } return m || null; };
+
+  const options = () => ({ pregame: pregame.checked, pace_of_play: pace.checked, replace_conflicts: replace.checked, show_progress_through_end: showProgress.checked });
+
+  // Outputs driven from global settings: only enabled relays are offered,
+  // each with its own duration field for Game Start and Game Expires.
+  const relayNames = RELAY_NAMES();
+  const makeRelayRow = (label, boxes, durs) => {
+    const row = el('div', { class: 'row-actions', style: 'margin-bottom: 10px; gap: 10px; align-items: baseline' },
+      el('span', { class: 'muted small', style: 'margin-right: 8px' }, label));
+    for (let i = 0; i < boxes.length; i++) {
+      row.append(el('label', { class: 'check' }, boxes[i], relayNames[i] || `RELAY${i + 1}`));
+      row.append(el('div', { class: 'duration' }, durs[i], el('span', {}, 's')));
+    }
+    return row;
+  };
+  const startBoxes = relayNames.map(() => el('input', { type: 'checkbox', checked: false }));
+  const startDurs = relayNames.map(() => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' }));
+  const endBoxes = relayNames.map(() => el('input', { type: 'checkbox', checked: false }));
+  const endDurs = relayNames.map(() => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' }));
+  const startRow = relayNames.length ? makeRelayRow('Game Start:', startBoxes, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
+  const endRow = relayNames.length ? makeRelayRow('Game Expires:', endBoxes, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
+
+  const relayValues = (boxes) => boxes.filter((b, i) => b.checked).map((b, i) => relayNames[i] || `RELAY${i + 1}`);
+  const relayMaxDuration = (durs) => { let m = 0; for (const d of durs) { const v = Number(d.value) || 0; if (v > m) m = v; } return m || null; };
+
   const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start game');
   const hint = el('span', { class: 'muted small' });
-  const preview = el('div', { class: 'muted small', style: 'margin-top: 8px' });
-  const options = () => ({ pregame: pregame.checked, pace_of_play: pace.checked, replace_conflicts: replace.checked, show_progress_through_end: showProgress.checked });
+
+  // Preview section: shows what will be applied, styled like the display.
+  const previewLine = (label, value) => el('div', { style: 'display:flex;justify-content:space-between;font-size:13px;color:#eee;margin:2px 0' },
+    el('div', { style: 'color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.05em' }, label),
+    el('div', {}, value));
+  const preview = el('div', {
+    class: 'card',
+    style: 'margin: 0 0 14px; background:#111; border:1px solid #333; color:#eee; padding:14px; border-radius:12px'
+  });
+
+  const refreshPreview = () => {
+    const s = Number(minutes.value) || 0;
+    const sec = Number(seconds.value) || 0;
+    const gameSecs = s * 60 + sec;
+    const expires = Number(expiresMin.value) || 10;
+    const total = gameSecs + expires * 60;
+    const when = new Date(Date.now() + total * 1000);
+    const endN = Number(endCount.value) || 8;
+    const untimed = Number(untimedEnds.value) || 0;
+    const startRelays = relayValues(startBoxes);
+    const endRelays = relayValues(endBoxes);
+    const startDur = relayMaxDuration(startDurs);
+    const endDur = relayMaxDuration(endDurs);
+
+    preview.replaceChildren(
+      el('div', { style: 'font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px' }, 'Preview — settings that will be applied'),
+      previewLine('Game time', gameSecs === 0 ? '—' : durationText(gameSecs)),
+      previewLine('Expires at', gameSecs === 0 ? '—' : pad(when.getHours()) + ':' + pad(when.getMinutes())),
+      previewLine('Pre-game countdown', pregame.checked ? (pregameMin.value || 5) + ' min' : 'Off'),
+      previewLine('Pace of play', pace.checked ? 'On' : 'Off'),
+      previewLine('Progress through end', showProgress.checked ? 'On' : 'Off'),
+      previewLine('Replace same-time games', replace.checked ? 'On' : 'Off'),
+      previewLine('Stones per end', stonesPerEnd.value || 8),
+      previewLine('Total ends', endCount.value || 8),
+      previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
+      el('div', { style: 'margin-top:8px;border-top:1px solid #333;padding-top:8px' }),
+      previewLine('Outputs — Game Start', startRelays.length ? startRelays.map((r, i) => r + ' ' + ((Number(startDurs[i].value) || 0) || 'default') + 's').join(', ') : 'None'),
+      previewLine('Outputs — Game Expires', endRelays.length ? endRelays.map((r, i) => r + ' ' + ((Number(endDurs[i].value) || 0) || 'default') + 's').join(', ') : 'None')
+    );
+  };
+
+  const wire = (input) => { input.addEventListener('input', refreshPreview); input.addEventListener('change', refreshPreview); };
+  wire(minutes); wire(seconds); wire(expiresMin);
+  wire(pregameMin);
+  [pregame, pace, replace, showProgress].forEach(c => { c.addEventListener('change', refreshPreview); });
+  [stonesPerEnd, endCount, untimedEnds].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
+  [...startBoxes, ...startDurs, ...endBoxes, ...endDurs].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
+
   const presets = QUICK_PRESETS.map((preset) => el('button', { class: 'btn preset', type: 'button',
     title: `${preset.title || preset.name}, ${durationText(preset.seconds)}`,
     onclick: () => launchQuick({ seconds: preset.seconds, name: preset.name, title: preset.title,
                                  game_completed: preset.game_completed, header_hold: preset.header_hold },
                                options()) }, preset.label));
-  const refreshPreview = () => {
-    const s = Number(minutes.value) || 0;
-    const sec = Number(seconds.value) || 0;
-    const expires = Number(expiresMin.value) || 10;
-    const total = s * 60 + sec + expires * 60;
-    const when = new Date(Date.now() + total * 1000);
-    preview.textContent = `Preview: expires at ${pad(when.getHours())}:${pad(when.getMinutes())} (game ${durationText(s * 60 + sec)} + expires ${durationText(expires * 60)}). Total time includes untimed ends.`;
-  };
-  const wire = (input) => { input.addEventListener('input', refreshPreview); input.addEventListener('change', refreshPreview); };
-  wire(minutes); wire(seconds); wire(expiresMin);
   const form = el('form', { class: 'card', onsubmit: (event) => {
       event.preventDefault();
       const timer = readQuickForm(minutes, seconds, name);
@@ -848,10 +899,10 @@ function buildQuickForm() {
         name: timer.name,
         header_hold: (Number(expiresMin.value) || 10) * 60,
         ...options(),
-        start_relays: relayValues(startOut1, startOut2),
-        start_duration: relayMaxDuration(startDur1, startDur2),
-        end_relays: relayValues(expiresOut1, expiresOut2),
-        end_duration: relayMaxDuration(expiresDur1, expiresDur2),
+        start_relays: relayValues(startBoxes),
+        start_duration: relayMaxDuration(startDurs),
+        end_relays: relayValues(endBoxes),
+        end_duration: relayMaxDuration(endDurs),
         end_count: Number(endCount.value) || 8,
         stones_per_end: Number(stonesPerEnd.value) || 8,
         untimed_ends: Number(untimedEnds.value) || 0,
@@ -871,24 +922,21 @@ function buildQuickForm() {
       el('div', { class: 'field' }, el('label', {}, 'Stones per end (per team; mixed doubles = 5)'), stonesPerEnd),
       el('div', { class: 'field' }, el('label', {}, 'Total number of ends'), endCount)),
     el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
-      el('div', { class: 'field' }, el('label', {}, 'Number of ends allowed after expiration'), untimedEnds),
+      el('div', { class: 'field' },
+        el('label', {}, 'Number of ends allowed after expiration'),
+        untimedEnds,
+        el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends played after the buzzer when the game is not finished. Use it to allow a few extra ends so the game can conclude naturally rather than cutting off mid-end.')),
       el('div', { class: 'field' }, el('label', {}, 'Pace of Play'), pace)),
     el('div', { class: 'row-actions', style: 'margin: 0 0 14px' },
-      el('label', { class: 'check' }, showProgress, 'Show progress through end?'),
       el('label', { class: 'check' }, pregame, 'Enable pre-game countdown'),
+      el('label', { class: 'check' }, pace, 'Pace of play'),
+      el('label', { class: 'check' }, showProgress, 'Show progress through end'),
       el('label', { class: 'check' }, replace, 'Replace same-time games')),
     el('div', { class: 'card', style: 'margin: 0 0 14px' },
       el('h3', {}, 'Outputs 🔊'),
-      el('div', { class: 'row-actions', style: 'margin-bottom: 10px; gap: 10px; align-items: baseline' }, el('span', { class: 'muted small', style: 'margin-right: 8px' }, 'Game Start:')),
-      el('label', { class: 'check' }, startOut1, 'RELAY1'),
-      el('div', { class: 'duration' }, startDur1, el('span', {}, 's')),
-      el('label', { class: 'check' }, startOut2, 'RELAY2'),
-      el('div', { class: 'duration' }, startDur2, el('span', {}, 's')),
-      el('div', { class: 'row-actions', style: 'margin: 10px 0 0; gap: 10px; align-items: baseline' }, el('span', { class: 'muted small', style: 'margin-right: 8px' }, 'Game Expires:')),
-      el('label', { class: 'check' }, expiresOut1, 'RELAY1'),
-      el('div', { class: 'duration' }, expiresDur1, el('span', {}, 's')),
-      el('label', { class: 'check' }, expiresOut2, 'RELAY2'),
-      el('div', { class: 'duration' }, expiresDur2, el('span', {}, 's'))),
+      el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which enabled relay outputs ring at Game Start and Game Expires, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
+      startRow,
+      endRow),
     preview,
     el('div', { class: 'row-actions' }, button, hint));
   form.update = (enabled, clockOk = true) => {
