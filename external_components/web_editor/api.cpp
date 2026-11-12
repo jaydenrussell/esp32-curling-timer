@@ -1079,11 +1079,16 @@ ApiResponse PiTimerApi::get_leagues() {
     o["pregame_countdown_seconds"] = lp.pregame_countdown_seconds;
     o["header_text"] = lp.header_text;
     o["pace_enabled"] = lp.pace_enabled;
-    o["pace_minutes_per_end"] = lp.pace_minutes_per_end;
     o["countdown_minutes_before"] = lp.countdown_minutes_before;
     o["format"] = lp.format;
     o["team_size"] = lp.team_size;
     o["manual_trigger"] = lp.manual_trigger;
+    JsonArray srs = o.createNestedArray("start_relays");
+    for (const auto &r : lp.start_relays) srs.add(r.c_str());
+    o["start_duration"] = lp.start_duration;
+    JsonArray ers = o.createNestedArray("end_relays");
+    for (const auto &r : lp.end_relays) ers.add(r.c_str());
+    o["end_duration"] = lp.end_duration;
   }
   return from_document(doc);
 }
@@ -1112,12 +1117,33 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
     const char *ht = item["header_text"].as<const char *>();
     yaml += "    header_text: " + curling_engine::yaml_quote(ht ? ht : "") + "\n";
     yaml += "    pace_enabled: " + std::string(item["pace_enabled"].as<bool>() ? "true" : "false") + "\n";
-    yaml += "    pace_minutes_per_end: " + std::to_string(item["pace_minutes_per_end"].as<int>()) + "\n";
     yaml += "    countdown_minutes_before: " + std::to_string(item["countdown_minutes_before"].as<int>()) + "\n";
     const char *fmt = item["format"].as<const char *>();
     yaml += "    format: " + curling_engine::yaml_quote(fmt ? fmt : "") + "\n";
     yaml += "    team_size: " + std::to_string(item["team_size"].as<int>()) + "\n";
     yaml += "    manual_trigger: " + std::string(item["manual_trigger"].as<bool>() ? "true" : "false") + "\n";
+    if (item["start_relays"].is<JsonArrayConst>()) {
+      yaml += "    start_relays: [";
+      bool first = true;
+      for (JsonVariantConst r : item["start_relays"].as<JsonArrayConst>()) {
+        if (!first) yaml += ", ";
+        first = false;
+        yaml += curling_engine::yaml_quote(r.as<const char *>());
+      }
+      yaml += "]\n";
+    }
+    yaml += "    start_duration: " + std::to_string(item["start_duration"].as<int>()) + "\n";
+    if (item["end_relays"].is<JsonArrayConst>()) {
+      yaml += "    end_relays: [";
+      bool first = true;
+      for (JsonVariantConst r : item["end_relays"].as<JsonArrayConst>()) {
+        if (!first) yaml += ", ";
+        first = false;
+        yaml += curling_engine::yaml_quote(r.as<const char *>());
+      }
+      yaml += "]\n";
+    }
+    yaml += "    end_duration: " + std::to_string(item["end_duration"].as<int>()) + "\n";
     }
   }
 

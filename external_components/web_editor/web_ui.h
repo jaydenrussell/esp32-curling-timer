@@ -528,7 +528,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.120</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.122</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -553,7 +553,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.120</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.122</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -2022,8 +2022,6 @@ async function renderLeagues() {
       oninput: (ev) => { lp.header_text = ev.target.value.trim(); } });
     const paceCheck = el('input', { type: 'checkbox', id: prefix + '-pace', checked: !!lp.pace_enabled,
       onchange: (ev) => { lp.pace_enabled = ev.target.checked; } });
-    const paceMinInput = el('input', { type: 'number', id: prefix + '-pace-min', value: lp.pace_minutes_per_end || '', min: 0,
-      oninput: (ev) => { lp.pace_minutes_per_end = parseInt(ev.target.value || '0', 10); } });
     const stonesInput = el('input', { type: 'number', id: prefix + '-stones', value: lp.stones_per_end || '8', min: 1, max: 10,
       oninput: (ev) => { lp.stones_per_end = parseInt(ev.target.value || '8', 10); } });
     const endsInput = el('input', { type: 'number', id: prefix + '-ends', value: lp.end_count || '8', min: 1, max: 12,
@@ -2036,6 +2034,44 @@ async function renderLeagues() {
       oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
     const manualCheck = el('input', { type: 'checkbox', id: prefix + '-manual', checked: !!lp.manual_trigger,
       disabled: !isAddonEnabled('pushbutton'), onchange: (ev) => { lp.manual_trigger = ev.target.checked; } });
+
+    // Outputs driven from global settings: only enabled relays offered, each with one duration per event.
+    const relayNames = RELAY_NAMES();
+    const startBoxes = relayNames.map(() => el('input', { type: 'checkbox', checked: false }));
+    const startDur = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
+    const endBoxes = relayNames.map(() => el('input', { type: 'checkbox', checked: false }));
+    const endDur = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
+    // restore saved values
+    const savedSR = lp.start_relays || [];
+    const savedER = lp.end_relays || [];
+    startBoxes.forEach((b, i) => { b.checked = savedSR.includes(relayNames[i]); });
+    endBoxes.forEach((b, i) => { b.checked = savedER.includes(relayNames[i]); });
+    startDur.value = String(lp.start_duration || '');
+    endDur.value = String(lp.end_duration || '');
+
+    const relayRow = (label, boxes, durInput) => {
+      boxes.forEach((b, i) => b.addEventListener('change', () => {
+        const checked = boxes.filter((bb, j) => bb.checked).map((bb, j) => relayNames[j] || `RELAY${j + 1}`);
+        lp.start_relays = label.startsWith('Game Start') ? checked : lp.start_relays || [];
+        lp.end_relays = label.startsWith('Game Expires') ? checked : lp.end_relays || [];
+      }));
+      durInput.addEventListener('input', () => {
+        const v = parseInt(durInput.value || '0', 10);
+        if (label.startsWith('Game Start')) lp.start_duration = v; else lp.end_duration = v;
+      });
+      return el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 10px; align-items: baseline' },
+        el('span', { class: 'muted small', style: 'margin-right: 8px' }, label),
+        ...boxes.flatMap((b, i) => el('label', { class: 'check' }, b, relayNames[i] || `RELAY${i + 1}`)),
+        el('div', { class: 'duration' }, durInput, el('span', {}, 's')));
+    };
+    const outputsCard = relayNames.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
+      el('h3', {}, 'Outputs 🔊'),
+      el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which enabled relay outputs ring at Game Start and Game Expires, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
+      relayRow('Game Start:', startBoxes, startDur),
+      relayRow('Game Expires:', endBoxes, endDur)) : el('div', { class: 'card', style: 'margin: 10px 0 0' },
+      el('h3', {}, 'Outputs 🔊'),
+      el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
+
     return [
       el('div', { class: 'grid2' },
         el('label', {}, 'Name', nameInput),
@@ -2050,31 +2086,35 @@ async function renderLeagues() {
         el('label', {}, 'Ends after expiration', untimedInput),
         el('label', { class: 'check' }, progressCheck, 'Show progress through end?')),
       el('div', { class: 'grid2' },
-        el('label', { class: 'check' }, paceCheck, 'Pace of play'),
-        el('label', {}, 'Pace minutes/end', paceMinInput)),
+        el('label', { class: 'check' }, paceCheck, 'Pace of play (auto: game duration ÷ ends)'),
+        el('label', {}, 'Countdown warning minutes before', cmbInput)),
       el('div', { class: 'grid2' },
-        el('label', {}, 'Countdown warning minutes before', cmbInput),
-        el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'))
+        el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger')),
+      outputsCard
     ];
   };
 
+  let addLeagueDefaults;
   const addForm = el('form', { class: 'card', onsubmit: async (e) => {
     e.preventDefault();
     const name = document.getElementById('lg-add-name').value.trim();
     if (!name) { showMessage('Name required', 'bad'); return; }
     const entry = {
       name,
-      game_duration_minutes: parseInt(document.getElementById('lg-add-dur').value || '0', 10),
-      pregame_countdown_seconds: parseInt(document.getElementById('lg-add-pregame').value || '0', 10),
-      header_text: document.getElementById('lg-add-header').value,
-      stones_per_end: parseInt(document.getElementById('lg-add-stones').value || '8', 10),
-      end_count: parseInt(document.getElementById('lg-add-ends').value || '8', 10),
-      untimed_ends: parseInt(document.getElementById('lg-add-untimed').value || '0', 10),
-      show_progress_through_end: document.getElementById('lg-add-progress').checked,
-      pace_enabled: document.getElementById('lg-add-pace').checked,
-      pace_minutes_per_end: parseInt(document.getElementById('lg-add-pace-min').value || '0', 10),
-      countdown_minutes_before: parseInt(document.getElementById('lg-add-cmb').value || '0', 10),
-      manual_trigger: document.getElementById('lg-add-manual').checked,
+      game_duration_minutes: addLeagueDefaults.game_duration_minutes,
+      pregame_countdown_seconds: addLeagueDefaults.pregame_countdown_seconds,
+      header_text: document.getElementById('lg-add-header').value || addLeagueDefaults.header_text,
+      stones_per_end: addLeagueDefaults.stones_per_end,
+      end_count: addLeagueDefaults.end_count,
+      untimed_ends: addLeagueDefaults.untimed_ends,
+      show_progress_through_end: addLeagueDefaults.show_progress_through_end,
+      pace_enabled: addLeagueDefaults.pace_enabled,
+      countdown_minutes_before: addLeagueDefaults.countdown_minutes_before,
+      manual_trigger: addLeagueDefaults.manual_trigger,
+      start_relays: addLeagueDefaults.start_relays,
+      start_duration: addLeagueDefaults.start_duration,
+      end_relays: addLeagueDefaults.end_relays,
+      end_duration: addLeagueDefaults.end_duration,
     };
     leagues.push(entry);
     if (!(await saveLeagues(leagues))) return;
@@ -2082,7 +2122,12 @@ async function renderLeagues() {
     renderLeagues();
   } },
     el('h2', {}, 'Add League'),
-    ...leagueFields({name:'',game_duration_minutes:0,pregame_countdown_seconds:0,header_text:'',stones_per_end:8,end_count:8,untimed_ends:0,show_progress_through_end:true,pace_enabled:false,pace_minutes_per_end:0,countdown_minutes_before:0,manual_trigger:false}, 'lg-add'),
+    ...leagueFields(addLeagueDefaults = {
+      name:'', game_duration_minutes:0, pregame_countdown_seconds:0, header_text:'',
+      stones_per_end:8, end_count:8, untimed_ends:0, show_progress_through_end:true,
+      pace_enabled:false, countdown_minutes_before:0, manual_trigger:false,
+      start_relays:[], start_duration:0, end_relays:[], end_duration:0
+    }, 'lg-add'),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
 
   const list = el('div', { class: 'card league-list' }, el('h2', {}, 'Leagues'));

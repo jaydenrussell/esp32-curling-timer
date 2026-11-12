@@ -1380,12 +1380,14 @@ static bool parse_schedules_into(const YamlValue &src,
 
       // Apply per-league pace_of_play override when the game name matches a league
       // profile (fuzzy) and the entry did not explicitly set pace.
+      // Pace is auto-calculated: unit_duration = game_duration_seconds / end_count.
       if (leagues != nullptr && g.message.has_value() && !g.pace_of_play_override.has_value()) {
         for (const auto &lp : *leagues) {
           if (!league_name_match(lp.name, *g.message)) continue;
-          g.pace_of_play_override = lp.pace_enabled;
-          if (lp.pace_minutes_per_end > 0)
-            g.pace_unit_override = lp.pace_minutes_per_end * 60;
+          if (lp.game_duration_minutes > 0 && lp.end_count > 0) {
+            g.pace_of_play_override = true;
+            g.pace_unit_override = (lp.game_duration_minutes * 60) / lp.end_count;
+          }
           break;
         }
       }
@@ -1829,13 +1831,11 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
        if (const YamlValue *p = lv.find("pregame_countdown_seconds"); p && p->type == YType::Int)
          lp.pregame_countdown_seconds = static_cast<int>(p->i);
        if (const YamlValue *h = lv.find("header_text"); h && h->type == YType::Str) lp.header_text = h->s;
-       if (const YamlValue *pe = lv.find("pace_enabled"); pe && pe->type == YType::Bool) lp.pace_enabled = pe->b;
-       if (const YamlValue *pm = lv.find("pace_minutes_per_end"); pm && pm->type == YType::Int)
-         lp.pace_minutes_per_end = static_cast<int>(pm->i);
-       if (const YamlValue *cm = lv.find("countdown_minutes_before"); cm && cm->type == YType::Int)
-         lp.countdown_minutes_before = static_cast<int>(cm->i);
-       if (const YamlValue *f = lv.find("format"); f && f->type == YType::Str) lp.format = f->s;
-        if (const YamlValue *ts = lv.find("team_size"); ts && ts->type == YType::Int)
+        if (const YamlValue *pe = lv.find("pace_enabled"); pe && pe->type == YType::Bool) lp.pace_enabled = pe->b;
+        if (const YamlValue *cm = lv.find("countdown_minutes_before"); cm && cm->type == YType::Int)
+          lp.countdown_minutes_before = static_cast<int>(cm->i);
+        if (const YamlValue *f = lv.find("format"); f && f->type == YType::Str) lp.format = f->s;
+         if (const YamlValue *ts = lv.find("team_size"); ts && ts->type == YType::Int)
           lp.team_size = static_cast<int>(ts->i);
         if (const YamlValue *se = lv.find("stones_per_end"); se && se->type == YType::Int)
           lp.stones_per_end = static_cast<int>(se->i);
@@ -1845,6 +1845,14 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
           lp.untimed_ends = static_cast<int>(ue->i);
         if (const YamlValue *sp = lv.find("show_progress_through_end"); sp && sp->type == YType::Bool)
           lp.show_progress_through_end = sp->b;
+        if (const YamlValue *sr = lv.find("start_relays"); sr && sr->type == YType::Seq)
+          parse_relay_seq(*sr, "start_relays", "league", &lp.start_relays, err);
+        if (const YamlValue *sd = lv.find("start_duration"); sd && sd->type == YType::Int)
+          lp.start_duration = static_cast<int>(sd->i);
+        if (const YamlValue *er = lv.find("end_relays"); er && er->type == YType::Seq)
+          parse_relay_seq(*er, "end_relays", "league", &lp.end_relays, err);
+        if (const YamlValue *ed = lv.find("end_duration"); ed && ed->type == YType::Int)
+          lp.end_duration = static_cast<int>(ed->i);
         if (const YamlValue *mt = lv.find("manual_trigger"); mt && mt->type == YType::Bool)
           lp.manual_trigger = mt->b;
         if (const YamlValue *rl = lv.find("relays"); rl) {
@@ -1859,38 +1867,31 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
      }
    }
 
-   // Apply per-league pace_of_play override to scheduled games (fuzzy name match).
-   for (auto &day_kv : schedules)
-     for (auto &g : day_kv.second)
-       if (g.message.has_value() && !g.pace_of_play_override.has_value())
-         for (const auto &lp : leagues)
-           if (league_name_match(lp.name, *g.message)) {
-             g.pace_of_play_override = lp.pace_enabled;
-             if (lp.pace_minutes_per_end > 0) g.pace_unit_override = lp.pace_minutes_per_end * 60;
-             break;
-           }
-    for (auto &day_kv : exceptions)
-      for (auto &g : day_kv.second)
-        if (g.message.has_value() && !g.pace_of_play_override.has_value())
-          for (const auto &lp : leagues)
-            if (league_name_match(lp.name, *g.message)) {
-              g.pace_of_play_override = lp.pace_enabled;
-              if (lp.pace_minutes_per_end > 0) g.pace_unit_override = lp.pace_minutes_per_end * 60;
-              break;
-            }
-
-    // Apply per-league manual_trigger override to scheduled games (fuzzy name match).
+    // Apply per-league overrides to scheduled games (fuzzy name match).
+    // Pace of play is auto-calculated: unit_duration = game_duration_seconds / end_count.
     for (auto &day_kv : schedules)
       for (auto &g : day_kv.second)
         if (g.message.has_value())
           for (const auto &lp : leagues)
             if (league_name_match(lp.name, *g.message)) {
+              if (!g.pace_of_play_override.has_value() && lp.game_duration_minutes > 0 && lp.end_count > 0) {
+                g.pace_of_play_override = true;
+                g.pace_unit_override = (lp.game_duration_minutes * 60) / lp.end_count;
+              }
               g.manual_trigger = lp.manual_trigger;
               if (!g.end_count.has_value()) g.end_count = lp.end_count;
               if (!g.stones_per_end.has_value()) g.stones_per_end = lp.stones_per_end;
               if (!g.untimed_ends.has_value()) g.untimed_ends = lp.untimed_ends;
               if (!g.show_progress_through_end.has_value())
                 g.show_progress_through_end = lp.show_progress_through_end;
+              if (!g.start_relays_override.has_value() && !lp.start_relays.empty())
+                g.start_relays_override = lp.start_relays;
+              if (!g.start_duration_override.has_value() && lp.start_duration > 0)
+                g.start_duration_override = lp.start_duration;
+              if (!g.end_relays_override.has_value() && !lp.end_relays.empty())
+                g.end_relays_override = lp.end_relays;
+              if (!g.end_duration_override.has_value() && lp.end_duration > 0)
+                g.end_duration_override = lp.end_duration;
               break;
             }
     for (auto &day_kv : exceptions)
@@ -1898,12 +1899,24 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
         if (g.message.has_value())
           for (const auto &lp : leagues)
             if (league_name_match(lp.name, *g.message)) {
+              if (!g.pace_of_play_override.has_value() && lp.game_duration_minutes > 0 && lp.end_count > 0) {
+                g.pace_of_play_override = true;
+                g.pace_unit_override = (lp.game_duration_minutes * 60) / lp.end_count;
+              }
               g.manual_trigger = lp.manual_trigger;
               if (!g.end_count.has_value()) g.end_count = lp.end_count;
               if (!g.stones_per_end.has_value()) g.stones_per_end = lp.stones_per_end;
               if (!g.untimed_ends.has_value()) g.untimed_ends = lp.untimed_ends;
               if (!g.show_progress_through_end.has_value())
                 g.show_progress_through_end = lp.show_progress_through_end;
+              if (!g.start_relays_override.has_value() && !lp.start_relays.empty())
+                g.start_relays_override = lp.start_relays;
+              if (!g.start_duration_override.has_value() && lp.start_duration > 0)
+                g.start_duration_override = lp.start_duration;
+              if (!g.end_relays_override.has_value() && !lp.end_relays.empty())
+                g.end_relays_override = lp.end_relays;
+              if (!g.end_duration_override.has_value() && lp.end_duration > 0)
+                g.end_duration_override = lp.end_duration;
               break;
             }
 

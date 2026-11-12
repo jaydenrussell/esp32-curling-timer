@@ -64,7 +64,6 @@ struct LeagueProfile {
   int pregame_countdown_seconds{0};
   std::string header_text;
   bool pace_enabled{false};
-  int pace_minutes_per_end{0};
   std::vector<std::string> buzzer_relays;
   int countdown_minutes_before{0};
   std::string format;
@@ -74,6 +73,11 @@ struct LeagueProfile {
   int end_count{8};
   int untimed_ends{0};
   bool show_progress_through_end{true};
+  // per-event output override for games in this league
+  std::vector<std::string> start_relays;
+  int start_duration{0};
+  std::vector<std::string> end_relays;
+  int end_duration{0};
   // manual push-button trigger required for games in this league
   bool manual_trigger{false};
 };
