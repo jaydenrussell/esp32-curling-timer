@@ -785,9 +785,9 @@ function renderStatus() {
   }
   let mirror = document.getElementById('display-mirror');
   if (!mirror) {
-    mirror = el('div', { id: 'display-mirror', class: 'display-mirror', style: 'background:#000;color:#fff;padding:10px 14px;border-radius:28px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;aspect-ratio:16/9;position:relative;overflow:hidden' });
+    mirror = el('div', { id: 'display-mirror', class: 'display-mirror', style: 'background:#000;color:#fff;border-radius:18px;position:relative;overflow:hidden;width:100%;max-width:100%;aspect-ratio:16/9;margin:0 auto' });
   }
-  const mirrorCard = el('div', { class: 'card', style: 'padding:14px' },
+  const mirrorCard = el('div', { class: 'card', style: 'padding:14px; grid-column: 1 / -1; max-width: 100%' },
     el('div', { class: 'page-head', style: 'margin-bottom:10px' },
       el('div', {}, el('div', { class: 'section-title' }, 'Live display'), el('h3', {}, 'On-display mirror')),
       el('span', { class: 'pill' }, `Scale ${Math.round((s.mirror_scale ?? 100))}%`)),
@@ -816,62 +816,91 @@ function renderStatus() {
   $('tab-status').querySelector('#status-today').replaceChildren(today);
    const sm = state.status || {};
    function unswap(c) { if (!c || typeof c !== 'string' || c.length < 7) return c || ''; return '#' + c.slice(5,7) + c.slice(3,5) + c.slice(1,3); }
-  const scale = ((sm.mirror_scale != null ? Number(sm.mirror_scale)
+  const userScale = ((sm.mirror_scale != null ? Number(sm.mirror_scale)
         : (state.configValues && state.configValues['config.mirror_scale'] != null ? Number(state.configValues['config.mirror_scale']) : 100)) / 100);
-   const fh = Math.round((sm.font_header || 96) * scale);
-   const ft = Math.round((sm.font_timer || 450) * scale);
-   const fp = Math.round((sm.font_pace || 85) * scale);
-   const ff = Math.round((sm.font_footer || 52) * scale);
+  const vw = Math.max(1, (mirror.getBoundingClientRect().width || mirror.clientWidth || 0));
+  const renderScale = vw ? (vw / 1280) : 1;
+  const scale = renderScale * userScale;
+  const px = (n) => Math.max(1, Math.round((n || 0) * scale));
+
+  // Exact HDMI base font sizes at 100% (from config/status; defaults match esphome font sizes)
+  const baseHeader = Number(sm.font_header || 96);
+  const baseTimer4 = Number(sm.font_timer_4 || sm.font_timer || 450);
+  const baseTimer5 = Number(sm.font_timer_5 || Math.round((sm.font_timer || 450) * 370 / 450)); // fallback proportional to HDMI defaults
+  const basePace = Number(sm.font_pace || 85);
+  const baseFooter = Number(sm.font_footer || 52);
+  const isFiveDigit = !!(sm.show_countdown && sm.seconds_until_buzzer >= 3600);
+  const baseTimer = isFiveDigit ? baseTimer5 : baseTimer4;
+  const pregame = !!(sm.countdown && !String(sm.countdown ?? '').includes('\u02F8'));
+  const baseCountdown = pregame ? Math.round(baseTimer * 0.55) : baseTimer;
+
+  const fh = px(baseHeader);
+  const fcd = px(baseCountdown);
+  const fp = px(basePace);
+  const ff = px(baseFooter);
+  const padY = px(20); // HDMI header y: 20
+  const padX = px(10); // HDMI footer x: 10
+
   mirror.style.background = '#000';
   mirror.replaceChildren();
-   if (sm.header_text) mirror.append(el('div', { style: `color:${unswap(sm.header_color) || '#fff'};font-size:${fh}px;font-weight:bold;text-align:left;align-self:flex-start;margin-top:0;overflow-wrap:anywhere;max-height:${fh*2.5}px;overflow:hidden` }, sm.header_text));
-    const pregame = !!(sm.countdown && !String(sm.countdown ?? '').includes('\u02F8'));
-  const cft = pregame ? Math.round(ft * 0.55) : ft;
+  const stage = el('div', { style: 'position:absolute; inset:0; overflow:hidden;' });
 
-  // Center wrapper: countdown vertically centred between header and the
-  // pace/progress bar (or footer when neither is shown).
-  const centerWrap = el('div', { style: 'flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%' });
-  if (sm.show_countdown) centerWrap.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'};font-size:${cft}px;font-weight:bold;text-align:center;line-height:1;width:100%;margin:0` }, sm.countdown || ''));
+  if (sm.header_text) {
+    stage.append(el('div', { style: `position:absolute; top:${padY}px; left:${px(12)}px; right:${px(12)}px; color:${unswap(sm.header_color) || '#fff'}; font-size:${fh}px; font-weight:bold; text-align:center; line-height:1.05; overflow:hidden; max-height:${px(baseHeader * 2.6)}px; overflow-wrap:anywhere;` }, sm.header_text));
+  }
+
+  const showPace = !!(sm.show_pace && sm.pace_text);
+  const showProgress = !!(s.current && s.current.show_progress_through_end && s.current.end_count && s.current.end_count > 0 && s.current.buzzer > s.current.start);
+  const centerTop = sm.header_text ? px(20 + baseHeader * 1.4) : px(20);
+  const centerBottom = px(20 + baseFooter * 1.4 + (showProgress ? 24 : 0));
+  const centerWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; top:${centerTop}px; bottom:${centerBottom}px; display:flex; flex-direction:column; align-items:center; justify-content:center;` });
+
+  if (sm.show_countdown) centerWrap.append(el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0;` }, sm.countdown || ''));
   if (sm.show_status && sm.status_text) {
-    centerWrap.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center;margin:8px 0` }, sm.status_text));
-   }
-   if (sm.show_pace && sm.pace_text) {
-     centerWrap.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-bottom:8px` }, sm.pace_text));
+    centerWrap.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'}; font-size:${px(Math.round(basePace*0.8))}px; text-align:center; margin:${px(8)}px 0 0;` }, sm.status_text));
+  }
+  if (showPace) {
+    centerWrap.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'}; font-size:${fp}px; text-align:center; margin-top:${px(8)}px;` }, sm.pace_text));
+  }
+  stage.append(centerWrap);
+
+  if (showProgress) {
+    const endCount = s.current.end_count;
+    const gameDur = s.current.buzzer - s.current.start;
+    const endDur = gameDur / endCount;
+    const unitsPerEnd = 4.4;
+    const leadPct = (1 / unitsPerEnd * 100).toFixed(1);
+    const secondPct = (1 / unitsPerEnd * 100).toFixed(1);
+    const vicePct = (1 / unitsPerEnd * 100).toFixed(1);
+    const skipPct = (1.4 / unitsPerEnd * 100).toFixed(1);
+    const nowSecs = secondsNow();
+    const progWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; bottom:${px(20 + baseFooter * 1.5)}px; display:flex; flex-direction:column; gap:${Math.max(2, px(3))}px;` });
+    for (let e = 0; e < endCount; e++) {
+      const endStart = s.current.start + e * endDur;
+      const endEnd = endStart + endDur;
+      let fillPct = 0;
+      if (nowSecs >= endEnd) fillPct = 100;
+      else if (nowSecs > endStart) fillPct = ((nowSecs - endStart) / endDur * 100);
+      const bar = el('div', { class: 'progress-end-bar', style: `width:100%; height:${Math.max(6, px(14))}px;` });
+      bar.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct}%` }));
+      bar.append(el('div', { class: 'progress-seg second', style: `width:${secondPct}%` }));
+      bar.append(el('div', { class: 'progress-seg vice', style: `width:${vicePct}%` }));
+      bar.append(el('div', { class: 'progress-seg skip', style: `width:${skipPct}%` }));
+      bar.append(el('div', { class: 'progress-end-fill', style: `width:${fillPct}%` }));
+      progWrap.append(bar);
     }
-   if (s.current && s.current.show_progress_through_end && s.current.end_count && s.current.end_count > 0 && s.current.buzzer > s.current.start) {
-     const endCount = s.current.end_count;
-     const gameDur = s.current.buzzer - s.current.start;
-     const endDur = gameDur / endCount;
-     const unitsPerEnd = 4.4;
-     const leadPct = (1 / unitsPerEnd * 100).toFixed(1);
-     const secondPct = (1 / unitsPerEnd * 100).toFixed(1);
-     const vicePct = (1 / unitsPerEnd * 100).toFixed(1);
-     const skipPct = (1.4 / unitsPerEnd * 100).toFixed(1);
-     const nowSecs = secondsNow();
-     for (let e = 0; e < endCount; e++) {
-       const endStart = s.current.start + e * endDur;
-       const endEnd = endStart + endDur;
-       let fillPct = 0;
-       if (nowSecs >= endEnd) fillPct = 100;
-       else if (nowSecs > endStart) fillPct = ((nowSecs - endStart) / endDur * 100);
-       const bar = el('div', { class: 'progress-end-bar', style: 'width:100%' });
-       bar.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct}%` }));
-       bar.append(el('div', { class: 'progress-seg second', style: `width:${secondPct}%` }));
-       bar.append(el('div', { class: 'progress-seg vice', style: `width:${vicePct}%` }));
-       bar.append(el('div', { class: 'progress-seg skip', style: `width:${skipPct}%` }));
-       const fill = el('div', { class: 'progress-end-fill', style: `width:${fillPct}%` });
-       bar.append(fill);
-       centerWrap.append(bar);
-     }
-   }
-  mirror.append(centerWrap);
-   const footerRow = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;width:100%' });
-   if (sm.show_date_time && sm.date_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px` }, sm.date_text));
-   if (sm.show_game_name && sm.game_name) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px;text-align:center;flex:1` }, sm.game_name));
-   if (sm.show_date_time && sm.time_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px;text-align:right` }, sm.time_text));
-   if (footerRow.childElementCount) mirror.append(footerRow);
-   if (!mirror.childElementCount) mirror.append(el('div', { style: 'color:#fff;text-align:center;margin:auto' }, '(display idle)'));
-   tick();
+    stage.append(progWrap);
+  }
+
+  const footerRow = el('div', { style: `position:absolute; left:${padX}px; right:${padX}px; bottom:${px(4)}px; display:flex; justify-content:space-between; align-items:center;` });
+  if (sm.show_date_time && sm.date_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'}; font-size:${ff}px; line-height:1;` }, sm.date_text)); else footerRow.append(el('div'));
+  if (sm.show_game_name && sm.game_name) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'}; font-size:${ff}px; line-height:1; text-align:center; flex:1; padding:0 ${px(8)}px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;` }, sm.game_name)); else footerRow.append(el('div', { style: 'flex:1' }));
+  if (sm.show_date_time && sm.time_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'}; font-size:${ff}px; line-height:1; text-align:right;` }, sm.time_text)); else footerRow.append(el('div'));
+  if (footerRow.childElementCount) stage.append(footerRow);
+
+  if (!stage.childElementCount) stage.append(el('div', { style: 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#666;' }, '(display idle)'));
+  mirror.append(stage);
+  tick();
 }
 
 function renderQuickstart() {
