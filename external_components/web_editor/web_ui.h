@@ -517,23 +517,18 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 .version-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); margin-left: 6px; vertical-align: middle; cursor: pointer; }
 
 /* --- Progress through end --- */
-.progress-container { margin: 16px 0 0; }
-.progress-title { font-size: 12px; color: var(--pwa-text-muted); margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-.progress-end-row { margin-bottom: 10px; }
-.progress-end-bar { position: relative; height: 20px; border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 1px solid #333; }
+.progress-end-bar { position: relative; height: 20px; border-radius: 10px; overflow: hidden; background: #1a1a1a; border: 1px solid #333; width: 100%; }
 .progress-seg { height: 100%; }
 .progress-seg.lead { background: #3b82f6; }
 .progress-seg.second { background: #10b981; }
 .progress-seg.vice { background: #f59e0b; }
 .progress-seg.skip { background: #ef4444; }
 .progress-end-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(0,0,0,0.45); pointer-events: none; z-index: 1; transition: width 0.5s ease; }
-.progress-pos-label { font-size: 10px; color: #888; margin-top: 6px; display: flex; justify-content: space-between; }
-.progress-pos-label span { flex: 1; text-align: center; }
 </style>
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.118</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.119</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -558,7 +553,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.118</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.119</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -943,41 +938,6 @@ function renderStatus() {
       cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null);
     const countdown = el('div', { id: 'countdown', class: 'countdown' }, countdownText(cur.seconds_until_buzzer ?? 0));
     now.append(name, countdown);
-    if (cur.show_progress_through_end && cur.end_count && cur.end_count > 0 && cur.buzzer > cur.start) {
-      const endCount = cur.end_count;
-      const gameDur = cur.buzzer - cur.start;
-      const endDur = gameDur / endCount;
-      const unitsPerEnd = 4.4;
-      const leadPct = (1 / unitsPerEnd * 100).toFixed(1);
-      const secondPct = (1 / unitsPerEnd * 100).toFixed(1);
-      const vicePct = (1 / unitsPerEnd * 100).toFixed(1);
-      const skipPct = (1.4 / unitsPerEnd * 100).toFixed(1);
-      const container = el('div', { class: 'progress-container' });
-      container.append(el('div', { class: 'progress-title' }, 'Progress through end'));
-      const nowSecs = secondsNow();
-      for (let e = 0; e < endCount; e++) {
-        const endStart = cur.start + e * endDur;
-        const endEnd = endStart + endDur;
-        let fillPct = 0;
-        if (nowSecs >= endEnd) fillPct = 100;
-        else if (nowSecs > endStart) fillPct = ((nowSecs - endStart) / endDur * 100);
-        const endRow = el('div', { class: 'progress-end-row', style: 'margin-bottom: 10px' });
-        endRow.append(el('div', { class: 'progress-end-label', style: 'font-size:11px;color:var(--pwa-text-muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600' }, `End ${e + 1}`));
-        const bar = el('div', { class: 'progress-end-bar' });
-        bar.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct}%` }));
-        bar.append(el('div', { class: 'progress-seg second', style: `width:${secondPct}%` }));
-        bar.append(el('div', { class: 'progress-seg vice', style: `width:${vicePct}%` }));
-        bar.append(el('div', { class: 'progress-seg skip', style: `width:${skipPct}%` }));
-        const fill = el('div', { class: 'progress-end-fill', style: `width:${fillPct}%` });
-        bar.append(fill);
-        endRow.append(bar);
-        container.append(endRow);
-      }
-      const labels = el('div', { class: 'progress-pos-label' });
-      labels.append(el('span', {}, 'Lead'), el('span', {}, 'Second'), el('span', {}, 'Vice'), el('span', {}, 'Skip'));
-      container.append(labels);
-      now.append(container);
-    }
     const actions = el('div', { class: 'row-actions', style: 'margin-top: 16px' },
       el('button', { class: `btn ${s.enabled ? 'danger' : 'primary'}`, onclick: () => toggleEnabled(!s.enabled) },
          s.enabled ? 'Disable timer' : 'Enable timer'));
@@ -1033,7 +993,33 @@ if (sm.show_status && sm.status_text) {
    mirror.append(el('div', { style: `color:${unswap(sm.status_color) || '#fff'};font-size:${Math.round(fp*0.8)}px;text-align:center;margin:8px 0` }, sm.status_text));
  }
    if (sm.show_pace && sm.pace_text) {
-     mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-bottom:8px` }, sm.pace_text));
+      mirror.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'};font-size:${fp}px;text-align:center;margin-bottom:8px` }, sm.pace_text));
+   }
+   if (s.current && s.current.show_progress_through_end && s.current.end_count && s.current.end_count > 0 && s.current.buzzer > s.current.start) {
+     const endCount = s.current.end_count;
+     const gameDur = s.current.buzzer - s.current.start;
+     const endDur = gameDur / endCount;
+     const unitsPerEnd = 4.4;
+     const leadPct = (1 / unitsPerEnd * 100).toFixed(1);
+     const secondPct = (1 / unitsPerEnd * 100).toFixed(1);
+     const vicePct = (1 / unitsPerEnd * 100).toFixed(1);
+     const skipPct = (1.4 / unitsPerEnd * 100).toFixed(1);
+     const nowSecs = secondsNow();
+     for (let e = 0; e < endCount; e++) {
+       const endStart = s.current.start + e * endDur;
+       const endEnd = endStart + endDur;
+       let fillPct = 0;
+       if (nowSecs >= endEnd) fillPct = 100;
+       else if (nowSecs > endStart) fillPct = ((nowSecs - endStart) / endDur * 100);
+       const bar = el('div', { class: 'progress-end-bar', style: 'width:100%' });
+       bar.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct}%` }));
+       bar.append(el('div', { class: 'progress-seg second', style: `width:${secondPct}%` }));
+       bar.append(el('div', { class: 'progress-seg vice', style: `width:${vicePct}%` }));
+       bar.append(el('div', { class: 'progress-seg skip', style: `width:${skipPct}%` }));
+       const fill = el('div', { class: 'progress-end-fill', style: `width:${fillPct}%` });
+       bar.append(fill);
+       mirror.append(bar);
+     }
    }
    const footerRow = el('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-top:auto;width:100%' });
    if (sm.show_date_time && sm.date_text) footerRow.append(el('div', { style: `color:${unswap(sm.footer_color) || '#fff'};font-size:${ff}px` }, sm.date_text));
