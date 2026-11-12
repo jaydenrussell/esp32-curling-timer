@@ -1,8 +1,7 @@
 // AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
 #pragma once
 
-static const char WEB_UI_HTML[] = R"esphome_web_ui(
-<!DOCTYPE html>
+static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -428,7 +427,7 @@ details.fold[open] .chevron { transform: rotate(90deg); }
 details.fold .fold-date { white-space: nowrap; }
 details.fold .fold-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--muted); font-weight: 400; }
 details.fold .fold-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
-details.fold .fold-body { padding: 20px; background: var(--pwa-surface); }
+details.fold .fold-body { padding: 12px 20px 16px; background: var(--pwa-surface); }
 
 /* --- Save bars --- */
 .savebar {
@@ -520,7 +519,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">{{version}}</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.110</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -545,7 +544,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">{{version}}</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.110</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -809,18 +808,17 @@ function buildQuickForm() {
       const timer = readQuickForm(minutes, seconds, name);
       if (timer) launchQuick(timer, options());
     } },
-    el('h2', {}, 'Quick start timer'),
-    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start counting down right now and ring the bell/buzzer when the duration time has elapsed.'),
-    el('div', { class: 'row-actions', style: 'margin: 0 0 12px' }, el('span', { class: 'muted small' }, 'Presets:'), presets),
-    el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Or set your own:'),
-    el('div', { class: 'grid2' },
-      el('div', { class: 'field', role: 'group', 'aria-label': 'Duration' }, 'Duration (minutes and seconds)',
+    el('h2', {}, 'Direct setup'),
+    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start a game right now — duration and name are all you need.'),
+    el('div', { class: 'row-actions', style: 'margin: 0 0 14px; gap: 8px; align-items: center' }, el('span', { class: 'muted small', style: 'margin-right: 8px' }, 'Quick pick:'), ...presets),
+    el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
+      el('div', { class: 'field', role: 'group', 'aria-label': 'Duration' }, el('label', {}, 'Duration'),
         el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's'))),
-      el('label', {}, 'Name on display (optional)', name)),
-    el('div', { class: 'row-actions' },
-      el('label', { class: 'check' }, pregame, 'Pre-game countdown (from Settings)'),
+      el('div', { class: 'field' }, el('label', {}, 'Name shown on display'), el('div', {}, name))),
+    el('div', { class: 'row-actions', style: 'margin: 0 0 14px' },
+      el('label', { class: 'check' }, pregame, 'Pre-game countdown'),
       el('label', { class: 'check' }, pace, 'Show pace of play'),
-      el('label', { class: 'check' }, replace, 'Replace conflicting games today')),
+      el('label', { class: 'check' }, replace, 'Replace same-time games')),
     el('div', { class: 'row-actions' }, button, hint));
   form.update = (enabled, clockOk = true) => {
     button.disabled = !enabled;
@@ -1501,13 +1499,21 @@ function configField(field) {
          const i = Number(name.replace('RELAY', ''));
          const display = relayDisplayName(i) || name;
          return el('label', { class: 'check' },
-           el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
-             const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
-             const at = list.indexOf(name);
-             if (event.target.checked && at < 0) list.push(name);
-             if (!event.target.checked && at >= 0) list.splice(at, 1);
-             set(list);
-           } }), display);
+        el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
+          const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
+          const at = list.indexOf(name);
+          if (event.target.checked && at < 0) list.push(name);
+          if (!event.target.checked && at >= 0) {
+            list.splice(at, 1);
+            // Clearing a relay also drops its per-event duration overrides so
+            // stale values are not saved for an output that is no longer selected.
+            for (const ev of ['start', 'countdown', 'end']) {
+              const dp = `config.buzzer.${ev}_duration_${i}`;
+              if (dp in state.configValues) delete state.configValues[dp];
+            }
+          }
+          set(list);
+        } }), display);
        })));
    }
   return el('div', {}, label);
@@ -1610,11 +1616,11 @@ async function renderAddonMarketplace() {
     const btnCls = intent ? 'btn-toggle danger' : 'btn-toggle primary';
 
     const infoLines = (a.info || []).map((line) => el('div', { class: 'muted small', style: 'margin: 2px 0' }, line));
-    const detail = el('details', { class: 'card fold', open: showDetail },
+    const detail = el('details', { class: 'card fold', open: false },
       el('summary', {},
         el('span', { class: 'chevron', 'aria-hidden': 'true' }, '▸'),
         el('span', { class: 'fold-date' }, 'Configuration'),
-        el('span', { class: 'fold-count muted' }, showDetail ? 'open' : 'open')),
+        el('span', { class: 'fold-count muted' }, 'details')),
       el('div', { class: 'fold-body' },
         ...infoLines));
     const card = el('div', { class: 'addon-card' },
@@ -2021,5 +2027,4 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-</html>
-esphome_web_ui";
+</html>)esphome_web_ui";
