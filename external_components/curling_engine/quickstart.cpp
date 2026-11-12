@@ -92,6 +92,14 @@ bool quick_entry(const QuickStartOptions &opts, Entry *out, std::string *err) {
   entry.header_hold = opts.header_hold;
   entry.pace_of_play = opts.pace_of_play;
   entry.quick = true;
+  if (opts.start_relays.has_value())
+    entry.start_relays = opts.start_relays;
+  if (opts.end_relays.has_value())
+    entry.end_relays = opts.end_relays;
+  if (opts.start_duration.has_value())
+    entry.start_duration = opts.start_duration;
+  if (opts.end_duration.has_value())
+    entry.end_duration = opts.end_duration;
   *out = std::move(entry);
   return true;
 }

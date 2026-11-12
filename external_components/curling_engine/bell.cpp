@@ -116,11 +116,24 @@ bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame>
   };
   int mask = 0;
   // Game start: seconds_since_start in [0, grace] (skip-tolerant like buzzer).
-  if (settings.ring_at_start.has_value() && !settings.ring_at_start->empty() && since_start >= 0 &&
-      since_start <= BUZZER_GRACE_SECONDS && fires("start")) {
-    mask |= relays_mask(*settings.ring_at_start);
-    int dur = event_duration(settings, "start", *settings.ring_at_start);
-    if (dur > 0 && static_cast<uint32_t>(dur) * 1000U > out->duration_ms) out->duration_ms = static_cast<uint32_t>(dur) * 1000U;
+  // Per-game start_relays/start_duration override wins over settings.
+  if (since_start >= 0 && since_start <= BUZZER_GRACE_SECONDS && fires("start")) {
+    const std::vector<std::string> *start_relays = nullptr;
+    if (game->start_relays_override.has_value() && !game->start_relays_override->empty())
+      start_relays = &(*game->start_relays_override);
+    else if (settings.ring_at_start.has_value())
+      start_relays = &(*settings.ring_at_start);
+    if (start_relays != nullptr && !start_relays->empty()) {
+      mask |= relays_mask(*start_relays);
+      if (game->start_duration_override.has_value() && *game->start_duration_override > 0) {
+        if (static_cast<uint32_t>(*game->start_duration_override) * 1000U > out->duration_ms)
+          out->duration_ms = static_cast<uint32_t>(*game->start_duration_override) * 1000U;
+      } else {
+        int dur = event_duration(settings, "start", *start_relays);
+        if (dur > 0 && static_cast<uint32_t>(dur) * 1000U > out->duration_ms)
+          out->duration_ms = static_cast<uint32_t>(dur) * 1000U;
+      }
+    }
   }
   // Countdown warning: seconds_until_buzzer descending into [target-grace, target].
   if (settings.countdown_minutes_before > 0 && !settings.countdown_relays.empty()) {
@@ -131,11 +144,24 @@ bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame>
       if (dur > 0 && static_cast<uint32_t>(dur) * 1000U > out->duration_ms) out->duration_ms = static_cast<uint32_t>(dur) * 1000U;
     }
   }
-  // Buzzer (pitimer buzz_if_due).
-  if (until >= -1 && until <= 0 && fires("buzzer") && settings.relays.has_value()) {
-    mask |= relays_mask(*settings.relays);
-    int dur = event_duration(settings, "end", *settings.relays);
-    if (dur > 0 && static_cast<uint32_t>(dur) * 1000U > out->duration_ms) out->duration_ms = static_cast<uint32_t>(dur) * 1000U;
+  // Buzzer (pitimer buzz_if_due). Per-game end_relays/end_duration override wins.
+  if (until >= -1 && until <= 0 && fires("buzzer")) {
+    const std::vector<std::string> *end_relays = nullptr;
+    if (game->end_relays_override.has_value() && !game->end_relays_override->empty())
+      end_relays = &(*game->end_relays_override);
+    else if (settings.relays.has_value())
+      end_relays = &(*settings.relays);
+    if (end_relays != nullptr && !end_relays->empty()) {
+      mask |= relays_mask(*end_relays);
+      if (game->end_duration_override.has_value() && *game->end_duration_override > 0) {
+        if (static_cast<uint32_t>(*game->end_duration_override) * 1000U > out->duration_ms)
+          out->duration_ms = static_cast<uint32_t>(*game->end_duration_override) * 1000U;
+      } else {
+        int dur = event_duration(settings, "end", *end_relays);
+        if (dur > 0 && static_cast<uint32_t>(dur) * 1000U > out->duration_ms)
+          out->duration_ms = static_cast<uint32_t>(dur) * 1000U;
+      }
+    }
   }
   if (mask == 0)
     return false;

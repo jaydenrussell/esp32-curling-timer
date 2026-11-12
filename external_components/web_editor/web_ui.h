@@ -519,7 +519,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.110</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.116</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -544,7 +544,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.110</span></div>
+  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">v2026.11.116</span></div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
 </header>
@@ -797,16 +797,24 @@ function buildQuickForm() {
   const stonesPerEnd = el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Stones per end' });
   const endCount = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Total number of ends' });
   const untimedEnds = el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', value: '0', 'aria-label': 'Ends after expiration' });
-  const warnSound = el('input', { type: 'checkbox', checked: true });
-  const expireSound = el('input', { type: 'checkbox', checked: true });
   const showProgress = el('input', { type: 'checkbox', checked: true });
   const pregame = el('input', { type: 'checkbox', checked: true });
   const pace = el('input', { type: 'checkbox', checked: true });
   const replace = el('input', { type: 'checkbox', checked: false });
+  const startOut1 = el('input', { type: 'checkbox', value: 'RELAY1', checked: false });
+  const startDur1 = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
+  const startOut2 = el('input', { type: 'checkbox', value: 'RELAY2', checked: false });
+  const startDur2 = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
+  const expiresOut1 = el('input', { type: 'checkbox', value: 'RELAY1', checked: false });
+  const expiresDur1 = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
+  const expiresOut2 = el('input', { type: 'checkbox', value: 'RELAY2', checked: false });
+  const expiresDur2 = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
+  const relayValues = (...boxes) => boxes.filter(b => b.checked).map(b => b.value);
+  const relayMaxDuration = (...inputs) => { let m = 0; for (const i of inputs) { const v = Number(i.value) || 0; if (v > m) m = v; } return m || null; };
   const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start game');
   const hint = el('span', { class: 'muted small' });
   const preview = el('div', { class: 'muted small', style: 'margin-top: 8px' });
-  const options = () => ({ pregame: pregame.checked, pace_of_play: pace.checked, replace_conflicts: replace.checked });
+  const options = () => ({ pregame: pregame.checked, pace_of_play: pace.checked, replace_conflicts: replace.checked, show_progress_through_end: showProgress.checked });
   const presets = QUICK_PRESETS.map((preset) => el('button', { class: 'btn preset', type: 'button',
     title: `${preset.title || preset.name}, ${durationText(preset.seconds)}`,
     onclick: () => launchQuick({ seconds: preset.seconds, name: preset.name, title: preset.title,
@@ -830,7 +838,11 @@ function buildQuickForm() {
         seconds: timer.seconds,
         name: timer.name,
         header_hold: (Number(expiresMin.value) || 10) * 60,
-        ...options()
+        ...options(),
+        start_relays: relayValues(startOut1, startOut2),
+        start_duration: relayMaxDuration(startDur1, startDur2),
+        end_relays: relayValues(expiresOut1, expiresOut2),
+        end_duration: relayMaxDuration(expiresDur1, expiresDur2),
       });
     } },
     el('h2', {}, 'Quick Start Timer'),
@@ -850,11 +862,21 @@ function buildQuickForm() {
       el('div', { class: 'field' }, el('label', {}, 'Number of ends allowed after expiration'), untimedEnds),
       el('div', { class: 'field' }, el('label', {}, 'Pace of Play'), pace)),
     el('div', { class: 'row-actions', style: 'margin: 0 0 14px' },
-      el('label', { class: 'check' }, warnSound, 'Play warning sound?'),
-      el('label', { class: 'check' }, expireSound, 'Play expiration sound?'),
       el('label', { class: 'check' }, showProgress, 'Show progress through end?'),
       el('label', { class: 'check' }, pregame, 'Enable pre-game countdown'),
       el('label', { class: 'check' }, replace, 'Replace same-time games')),
+    el('div', { class: 'card', style: 'margin: 0 0 14px' },
+      el('h3', {}, 'Outputs 🔊'),
+      el('div', { class: 'row-actions', style: 'margin-bottom: 10px; gap: 10px; align-items: baseline' }, el('span', { class: 'muted small', style: 'margin-right: 8px' }, 'Game Start:')),
+      el('label', { class: 'check' }, startOut1, 'RELAY1'),
+      el('div', { class: 'duration' }, startDur1, el('span', {}, 's')),
+      el('label', { class: 'check' }, startOut2, 'RELAY2'),
+      el('div', { class: 'duration' }, startDur2, el('span', {}, 's')),
+      el('div', { class: 'row-actions', style: 'margin: 10px 0 0; gap: 10px; align-items: baseline' }, el('span', { class: 'muted small', style: 'margin-right: 8px' }, 'Game Expires:')),
+      el('label', { class: 'check' }, expiresOut1, 'RELAY1'),
+      el('div', { class: 'duration' }, expiresDur1, el('span', {}, 's')),
+      el('label', { class: 'check' }, expiresOut2, 'RELAY2'),
+      el('div', { class: 'duration' }, expiresDur2, el('span', {}, 's'))),
     preview,
     el('div', { class: 'row-actions' }, button, hint));
   form.update = (enabled, clockOk = true) => {

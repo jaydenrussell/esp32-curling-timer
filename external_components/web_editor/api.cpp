@@ -555,6 +555,36 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
   // configured countdown applies, when unticked the game starts immediately
   opts.pregame_countdown = (data["pregame"].is<bool>() && data["pregame"].as<bool>()) ? live.settings.pregame_countdown : 0;
   opts.allow_midnight_wrap = live.settings.allow_midnight_wrap;
+  if (data["start_relays"].is<JsonArrayConst>()) {
+    std::vector<std::string> relays;
+    for (auto item : data["start_relays"].as<JsonArrayConst>()) {
+      if (item.is<const char *>())
+        relays.push_back(trim_spaces(item.as<const char *>()));
+    }
+    if (!relays.empty())
+      opts.start_relays = std::move(relays);
+  }
+  if (!data["start_duration"].isNull()) {
+    long long value;
+    if (!json_strict_int(data["start_duration"], &value) || value < 0)
+      return error_json(400, "'start_duration' must be a whole number of seconds (0 or more)");
+    opts.start_duration = static_cast<int>(value);
+  }
+  if (data["end_relays"].is<JsonArrayConst>()) {
+    std::vector<std::string> relays;
+    for (auto item : data["end_relays"].as<JsonArrayConst>()) {
+      if (item.is<const char *>())
+        relays.push_back(trim_spaces(item.as<const char *>()));
+    }
+    if (!relays.empty())
+      opts.end_relays = std::move(relays);
+  }
+  if (!data["end_duration"].isNull()) {
+    long long value;
+    if (!json_strict_int(data["end_duration"], &value) || value < 0)
+      return error_json(400, "'end_duration' must be a whole number of seconds (0 or more)");
+    opts.end_duration = static_cast<int>(value);
+  }
   Entry added;
   std::string new_version, err;
   SettingsStore *store = engine_->get_store();

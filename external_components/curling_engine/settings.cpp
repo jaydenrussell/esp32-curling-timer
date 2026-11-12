@@ -1292,6 +1292,54 @@ static bool parse_schedules_into(const YamlValue &src,
       } else {
         g.manual_trigger = g.start >= 17 * 3600;
       }
+      if (entry_v.has("start_relays")) {
+        const YamlValue *v = require_(&entry_v, "start_relays", YType::Seq, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        std::vector<std::string> relays;
+        for (const auto &item : v->seq) {
+          if (item.type != YType::Str) {
+            *err = "'start_relays' entries must be relay names for " + day;
+            return false;
+          }
+          relays.push_back(item.s);
+        }
+        g.start_relays_override = std::move(relays);
+      }
+      if (entry_v.has("end_relays")) {
+        const YamlValue *v = require_(&entry_v, "end_relays", YType::Seq, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        std::vector<std::string> relays;
+        for (const auto &item : v->seq) {
+          if (item.type != YType::Str) {
+            *err = "'end_relays' entries must be relay names for " + day;
+            return false;
+          }
+          relays.push_back(item.s);
+        }
+        g.end_relays_override = std::move(relays);
+      }
+      if (entry_v.has("start_duration")) {
+        const YamlValue *v = require_(&entry_v, "start_duration", YType::Int, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.start_duration_override = static_cast<int>(v->i);
+        if (*g.start_duration_override < 0) {
+          *err = "'start_duration' cannot be negative for " + day;
+          return false;
+        }
+      }
+      if (entry_v.has("end_duration")) {
+        const YamlValue *v = require_(&entry_v, "end_duration", YType::Int, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.end_duration_override = static_cast<int>(v->i);
+        if (*g.end_duration_override < 0) {
+          *err = "'end_duration' cannot be negative for " + day;
+          return false;
+        }
+      }
 
       // Apply per-league pace_of_play override when the game name matches a league
       // profile (fuzzy) and the entry did not explicitly set pace.

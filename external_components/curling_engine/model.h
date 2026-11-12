@@ -30,6 +30,12 @@ struct Entry {
   std::optional<int> header_hold;
   std::optional<bool> pace_of_play;
   std::optional<int> pace_unit_duration;
+  // per-entry output override: which relays ring at game start / buzzer, and
+  // for how many seconds (absent = use the settings file's buzzer config)
+  std::optional<std::vector<std::string>> start_relays;
+  std::optional<std::vector<std::string>> end_relays;
+  std::optional<int> start_duration;
+  std::optional<int> end_duration;
   // entry added by a quick start (marked with a trailing comment in the file)
   bool quick{false};
   // manual push-button trigger required for this game (start >= 17:00 by

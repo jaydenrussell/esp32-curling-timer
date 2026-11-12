@@ -81,6 +81,12 @@ struct PiTimerGame {
   std::optional<int> header_hold_override;
   std::optional<bool> pace_of_play_override;
   std::optional<int> pace_unit_override;
+  // per-entry output override: which relays ring at game start / buzzer, and
+  // for how many seconds (absent = use the settings file's buzzer config)
+  std::optional<std::vector<std::string>> start_relays_override;
+  std::optional<std::vector<std::string>> end_relays_override;
+  std::optional<int> start_duration_override;
+  std::optional<int> end_duration_override;
   // live state, set on the copy returned by find_current_game
   std::optional<int> seconds_until_buzzer;
   std::optional<int> seconds_since_start;

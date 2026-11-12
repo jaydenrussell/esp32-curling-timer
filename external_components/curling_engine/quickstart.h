@@ -24,6 +24,11 @@ struct QuickStartOptions {
   int hold{0};  // file wide config.buzzer.header_hold
   int pregame_countdown{0};
   bool allow_midnight_wrap{false};  // seconds of countdown before game starts
+  // per-event output override for this quick-start game only
+  std::optional<std::vector<std::string>> start_relays;
+  std::optional<int> start_duration;
+  std::optional<std::vector<std::string>> end_relays;
+  std::optional<int> end_duration;
 };
 
 // Add a game starting now lasting duration seconds to today's exception in

@@ -124,6 +124,26 @@ static void entry_into(JsonObject obj, const Entry &entry) {
     obj["pace_unit_duration"] = nullptr;
   obj["quick"] = entry.quick;
   obj["manual_trigger"] = entry.manual_trigger;
+  if (entry.start_relays.has_value()) {
+    JsonArray arr = obj.createNestedArray("start_relays");
+    for (const auto &r : *entry.start_relays) arr.add(r.c_str());
+  } else {
+    obj["start_relays"] = nullptr;
+  }
+  if (entry.end_relays.has_value()) {
+    JsonArray arr = obj.createNestedArray("end_relays");
+    for (const auto &r : *entry.end_relays) arr.add(r.c_str());
+  } else {
+    obj["end_relays"] = nullptr;
+  }
+  if (entry.start_duration.has_value())
+    obj["start_duration"] = *entry.start_duration;
+  else
+    obj["start_duration"] = nullptr;
+  if (entry.end_duration.has_value())
+    obj["end_duration"] = *entry.end_duration;
+  else
+    obj["end_duration"] = nullptr;
 }
 
 void entry_into_json(JsonObject obj, const Entry &entry) { entry_into(obj, entry); }

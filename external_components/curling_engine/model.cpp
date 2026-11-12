@@ -262,6 +262,58 @@ bool entry_from_map(const YamlValue &data, const std::string &where, Entry *out,
   out->quick = v != nullptr && v->type == YType::Bool && v->b;
   v = data.find("manual_trigger");
   out->manual_trigger = v != nullptr && v->type == YType::Bool && v->b;
+  v = data.find("start_relays");
+  out->start_relays = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Seq) {
+      *err = where + ": start_relays must be a list of relay names";
+      return false;
+    }
+    std::vector<std::string> relays;
+    for (const auto &item : v->seq) {
+      if (item.type != YType::Str) {
+        *err = where + ": start_relays entries must be relay names";
+        return false;
+      }
+      relays.push_back(item.s);
+    }
+    out->start_relays = std::move(relays);
+  }
+  v = data.find("end_relays");
+  out->end_relays = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Seq) {
+      *err = where + ": end_relays must be a list of relay names";
+      return false;
+    }
+    std::vector<std::string> relays;
+    for (const auto &item : v->seq) {
+      if (item.type != YType::Str) {
+        *err = where + ": end_relays entries must be relay names";
+        return false;
+      }
+      relays.push_back(item.s);
+    }
+    out->end_relays = std::move(relays);
+  }
+  v = data.find("start_duration");
+  out->start_duration = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Int || v->i < 0) {
+      *err = where + ": start_duration must be a whole number of seconds (0 or more)";
+      return false;
+    }
+    out->start_duration = static_cast<int>(v->i);
+  }
+  v = data.find("end_duration");
+  out->end_duration = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Int || v->i < 0) {
+      *err = where + ": end_duration must be a whole number of seconds (0 or more)";
+      return false;
+    }
+    out->end_duration = static_cast<int>(v->i);
+  }
   return true;
 }
 
@@ -284,7 +336,8 @@ bool entries_from_yaml(const YamlValue *raw, const std::string &where, std::vect
     }
     static const char *kKnown[] = {"start",       "buzzer",            "name", "during_buzzer",
                                    "game_completed", "header_hold",      "pace_of_play",
-                                   "pace_unit_duration", "manual_trigger"};
+                                   "pace_unit_duration", "manual_trigger",
+                                   "start_relays", "end_relays", "start_duration", "end_duration"};
     std::set<std::string> unknown;
     for (const auto &kv : item->map) {
       bool known = false;
@@ -568,6 +621,26 @@ std::string render_entry(const Entry &entry) {
     line += ", pace_unit_duration: " + std::to_string(*entry.pace_unit_duration);
   if (entry.manual_trigger)
     line += ", manual_trigger: True";
+  if (entry.start_relays.has_value() && !entry.start_relays->empty()) {
+    line += ", start_relays: [";
+    for (size_t i = 0; i < entry.start_relays->size(); i++) {
+      if (i != 0) line += ", ";
+      line += quote((*entry.start_relays)[i]);
+    }
+    line += "]";
+  }
+  if (entry.end_relays.has_value() && !entry.end_relays->empty()) {
+    line += ", end_relays: [";
+    for (size_t i = 0; i < entry.end_relays->size(); i++) {
+      if (i != 0) line += ", ";
+      line += quote((*entry.end_relays)[i]);
+    }
+    line += "]";
+  }
+  if (entry.start_duration.has_value())
+    line += ", start_duration: " + std::to_string(*entry.start_duration);
+  if (entry.end_duration.has_value())
+    line += ", end_duration: " + std::to_string(*entry.end_duration);
   line += "}";
   if (entry.quick)
     line += std::string("  ") + QUICK_COMMENT;
