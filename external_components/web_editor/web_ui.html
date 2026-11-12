@@ -568,7 +568,7 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const NAV_LABELS = {
   status: 'Status',
-  quickstart: 'Quick Start',
+  quickstart: 'Quick Game',
   schedule: 'Schedule',
   leagues: 'Leagues',
   history: 'Report',
@@ -584,7 +584,7 @@ const NAV_ICONS = {
   config: '⚙️',
   diagnostics: '🔧'
 };
-const TABS = [['status', 'status', 'Status'], ['quickstart', 'quickstart', 'Quick Start'], ['schedule', 'schedule', 'Schedule'], ['leagues', 'leagues', 'Leagues'], ['history', 'history', 'Report'], ['config', 'config', 'Settings'], ['diagnostics', 'diagnostics', 'Diagnostics']];
+const TABS = [['status', 'status', 'Status'], ['quickstart', 'quickstart', 'Quick Game'], ['schedule', 'schedule', 'Schedule'], ['leagues', 'leagues', 'Leagues'], ['history', 'history', 'Report'], ['config', 'config', 'Settings'], ['diagnostics', 'diagnostics', 'Diagnostics']];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
 
@@ -805,7 +805,7 @@ function buildQuickForm() {
       const timer = readQuickForm(minutes, seconds, name);
       if (timer) launchQuick(timer, options());
     } },
-    el('h2', {}, 'Direct setup'),
+    el('h2', {}, 'Quick Start Timer'),
     el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start a game right now — duration and name are all you need.'),
     el('div', { class: 'row-actions', style: 'margin: 0 0 14px; gap: 8px; align-items: center' }, el('span', { class: 'muted small', style: 'margin-right: 8px' }, 'Quick pick:'), ...presets),
     el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
