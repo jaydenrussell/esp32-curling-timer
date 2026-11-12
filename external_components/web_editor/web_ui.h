@@ -792,10 +792,11 @@ function buildQuickForm() {
   const minutes = el('input', { type: 'number', min: 0, max: 179, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Minutes' });
   const seconds = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Seconds' });
   const name = el('input', { type: 'text', maxlength: 60, placeholder: 'QUICK START' });
-  const pregame = el('input', { type: 'checkbox' });
-  const pace = el('input', { type: 'checkbox' });
-  const replace = el('input', { type: 'checkbox' });
-  const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start now');
+  const expireMin = el('input', { type: 'number', min: 0, max: 60, step: 1, inputmode: 'numeric', value: '10', 'aria-label': 'Expire minutes' });
+  const pregame = el('input', { type: 'checkbox', checked: true });
+  const pace = el('input', { type: 'checkbox', checked: true });
+  const replace = el('input', { type: 'checkbox', checked: false });
+  const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start game');
   const hint = el('span', { class: 'muted small' });
   const options = () => ({ pregame: pregame.checked, pace_of_play: pace.checked, replace_conflicts: replace.checked });
   const presets = QUICK_PRESETS.map((preset) => el('button', { class: 'btn preset', type: 'button',
@@ -806,17 +807,26 @@ function buildQuickForm() {
   const form = el('form', { class: 'card', onsubmit: (event) => {
       event.preventDefault();
       const timer = readQuickForm(minutes, seconds, name);
-      if (timer) launchQuick(timer, options());
+      if (!timer) return;
+      launchQuick({
+        seconds: timer.seconds,
+        name: timer.name,
+        header_hold: (Number(expireMin.value) || 10) * 60,
+        ...options()
+      });
     } },
     el('h2', {}, 'Quick Start Timer'),
-    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start a game right now — duration and name are all you need.'),
+    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start a game right now — set the duration and you are done.'),
     el('div', { class: 'row-actions', style: 'margin: 0 0 14px; gap: 8px; align-items: center' }, el('span', { class: 'muted small', style: 'margin-right: 8px' }, 'Quick pick:'), ...presets),
     el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
-      el('div', { class: 'field', role: 'group', 'aria-label': 'Duration' }, el('label', {}, 'Duration'),
+      el('div', { class: 'field', role: 'group', 'aria-label': 'Full game time' }, el('label', {}, 'Full game time (minutes)'),
         el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's'))),
       el('div', { class: 'field' }, el('label', {}, 'Name shown on display'), el('div', {}, name))),
+    el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
+      el('div', { class: 'field' }, el('label', {}, 'Pre-game countdown duration (minutes)'), el('span', { class: 'muted small' }, '(from Settings)')),
+      el('div', { class: 'field' }, el('label', {}, 'Expire time after buzzer (minutes)'), expireMin)),
     el('div', { class: 'row-actions', style: 'margin: 0 0 14px' },
-      el('label', { class: 'check' }, pregame, 'Pre-game countdown'),
+      el('label', { class: 'check' }, pregame, 'Enable pre-game countdown'),
       el('label', { class: 'check' }, pace, 'Show pace of play'),
       el('label', { class: 'check' }, replace, 'Replace same-time games')),
     el('div', { class: 'row-actions' }, button, hint));
