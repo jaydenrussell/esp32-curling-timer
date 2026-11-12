@@ -4,523 +4,293 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
 <title>Curling Timer</title>
-<meta name="theme-color" content="#0B1120">
+<meta name="theme-color" content="#07182a">
 <meta name="color-scheme" content="dark">
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIkN1cmxpbmcgVGltZXIiLCAic2hvcnRfbmFtZSI6ICJDdXJsaW5nIFRpbWVyIiwgInN0YXJ0X3VybCI6ICIvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIjBCMTEyMCIgfQ==">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236750A4'/%3E%3Cpath d='M25 35 L45 55 L75 25' stroke='%23FFFFFF' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
-/* ==========================================================================
-   Material Design 3 — curling timer web UI
-   Single source of truth: edit this file; web_ui.h is regenerated at codegen.
-   ========================================================================== */
-
-/* --- Frosted Slate PWA theme --- */
 :root {
   color-scheme: dark;
-  --pwa-bg: #0B1120;
-  --pwa-surface: rgba(30, 41, 59, 0.55);
-  --pwa-surface-elev: rgba(30, 41, 59, 0.75);
-  --pwa-border: rgba(148, 163, 184, 0.10);
-  --pwa-border-bright: rgba(148, 163, 184, 0.25);
-  --pwa-text: #F8FAFC;
-  --pwa-text-muted: #94A3B8;
-  --pwa-text-dim: #64748B;
-  --pwa-primary: #06B6D4;
-  --pwa-primary-grad: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
-  --pwa-primary-soft: rgba(6, 182, 212, 0.15);
-  --pwa-accent: #8B5CF6;
-  --pwa-ok: #10B981;
-  --pwa-bad: #EF4444;
-  --pwa-warn: #F59E0B;
-  --radius-lg: 24px;
+  --bg: #07182a;
+  --bg-2: #0b2540;
+  --surface: rgba(255,255,255,0.07);
+  --surface-strong: rgba(255,255,255,0.11);
+  --surface-soft: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.14);
+  --border-strong: rgba(255,255,255,0.22);
+  --text: #eaf4ff;
+  --text-strong: #ffffff;
+  --muted: #9fb7cf;
+  --text-dim: #7e98b3;
+  --primary: #14b8a6;
+  --primary-2: #22d3ee;
+  --accent: #3b82f6;
+  --primary-soft: rgba(20,184,166,0.16);
+  --accent-soft: rgba(59,130,246,0.16);
+  --ok: #34d399;
+  --ok-dark: #065f46;
+  --bad: #f87171;
+  --warn: #fbbf24;
+  --shadow: 0 18px 45px rgba(2, 10, 20, 0.45);
+  --shadow-lg: 0 24px 60px rgba(2, 10, 20, 0.55);
+  --radius-lg: 22px;
   --radius-md: 16px;
   --radius-sm: 12px;
-  --shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 20px 50px rgba(0, 0, 0, 0.45);
-
-  /* backward-compat aliases used elsewhere */
-  --bg: var(--pwa-bg);
-  --surface: var(--pwa-surface);
-  --text: var(--pwa-text);
-  --text-strong: var(--pwa-text);
-  --muted: var(--pwa-text-muted);
-  --border: var(--pwa-border);
-  --ok: var(--pwa-ok);
-  --ok-dark: #047857;
-  --bad: var(--pwa-bad);
-  --warn: var(--pwa-warn);
 }
-
-/* --- Reset & base --- */
-html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
 * { box-sizing: border-box; }
+html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: var(--bg);
   color: var(--text);
-  font: 16px/1.5 "Source Sans 3", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font: 15px/1.55 Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background:
+    radial-gradient(900px 500px at 10% -10%, rgba(20,184,166,0.18), transparent 60%),
+    radial-gradient(800px 420px at 95% 0%, rgba(59,130,246,0.22), transparent 55%),
+    radial-gradient(700px 380px at 50% 120%, rgba(34,211,238,0.10), transparent 60%),
+    linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%);
+  min-height: 100vh;
   overflow-x: hidden;
 }
-h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; line-height: 1.2; }
-h1 { font-size: 24px; }
-h2 { font-size: 16px; font-weight: 500; letter-spacing: 0.01em; text-transform: uppercase; color: var(--muted); }
-h3 { font-size: 18px; font-weight: 500; }
-p { margin: 0 0 12px; line-height: 1.5; }
-a { color: var(--pwa-primary); text-decoration: none; }
+h1,h2,h3 { margin: 0 0 8px; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong); }
+h1 { font-size: 22px; font-weight: 700; }
+h2 { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+h3 { font-size: 17px; font-weight: 600; }
+p { margin: 0 0 12px; color: var(--text); }
+a { color: var(--primary-2); text-decoration: none; }
 a:hover { text-decoration: underline; }
 button, a, [role="button"] { touch-action: manipulation; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-button:active { transform: scale(0.98); }
+button:active { transform: scale(0.985); }
 .hidden { display: none !important; }
 .spacer { flex: 1; }
+.muted { color: var(--muted); }
+.small { font-size: 12px; color: var(--text-dim); }
 
-/* --- Top app bar --- */
+.glass, .card, .hero, .modal-card, .savebar, .addon-card, .entry, .league-list, details.fold, .today, .backups, .league-row, pre.view, #login form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: var(--shadow);
+}
+
 header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 0 16px;
-  height: 56px;
-  background: var(--pwa-surface);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border-bottom: 1px solid var(--pwa-border);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 18px; min-height: 64px;
+  position: sticky; top: 0; z-index: 120;
+  background: rgba(7, 24, 42, 0.55);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
 }
 .header-brand { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-.header-brand h1 { font-size: 19px; margin: 0; color: var(--pwa-text); font-weight: 600; letter-spacing: -0.01em; }
-.header-version { font-size: 11px; color: var(--pwa-text-dim); margin-top: 2px; letter-spacing: 0.02em; }
-#header-msg { font-size: 13px; padding: 6px 10px; border-radius: var(--radius-sm); white-space: pre-wrap; flex: 1; background: color-mix(in srgb, var(--pwa-primary) 10%, transparent); border: 1px solid var(--pwa-border-bright); color: var(--pwa-primary); }
-.header-actions { display: flex; gap: 4px; margin-left: auto; }
+.header-brand h1 { font-size: 18px; margin: 0; }
+.header-version { font-size: 11px; color: var(--text-dim); padding: 3px 8px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); }
+#header-msg { font-size: 13px; padding: 8px 12px; border-radius: 12px; white-space: pre-wrap; flex: 1; margin: 0; }
+.header-actions { display: flex; gap: 8px; margin-left: auto; }
 
-/* --- Navigation --- */
-nav {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  background: var(--pwa-surface);
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
-  border-top: 1px solid var(--pwa-border);
-  border-bottom: 1px solid var(--pwa-border);
-  position: sticky;
-  top: 56px;
-  z-index: 90;
-  padding: 4px 8px;
+nav#tabs {
+  display: flex; gap: 8px; overflow-x: auto;
+  position: sticky; top: 64px; z-index: 110;
+  padding: 10px 14px;
+  background: rgba(7, 24, 42, 0.45);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
 }
-nav button {
-  flex-shrink: 0;
-  background: rgba(30, 41, 59, 0.3);
-  border: 1px solid var(--pwa-border);
-  border-radius: var(--radius-md);
-  padding: 0 14px;
-  height: 40px;
-  min-width: 76px;
-  color: var(--pwa-text-muted);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  line-height: 1;
-  transition: all 0.15s ease;
+nav#tabs button {
+  flex-shrink: 0; border: 1px solid var(--border); background: rgba(255,255,255,0.04);
+  color: var(--muted); border-radius: 999px; padding: 8px 14px; min-height: 38px;
+  font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
+  transition: all .15s ease;
 }
-nav button:hover { background: rgba(30, 41, 59, 0.5); border-color: var(--pwa-border-bright); }
-nav button.active {
-  background: var(--pwa-primary-soft);
-  border-color: var(--pwa-primary);
-  color: var(--pwa-primary);
-  box-shadow: 0 0 0 1px var(--pwa-primary);
+nav#tabs button:hover { background: rgba(255,255,255,0.08); color: var(--text); border-color: var(--border-strong); }
+nav#tabs button.active {
+  background: linear-gradient(135deg, rgba(20,184,166,0.22), rgba(59,130,246,0.22));
+  color: var(--text-strong); border-color: rgba(34,211,238,0.45);
+  box-shadow: 0 0 0 1px rgba(34,211,238,0.18) inset;
 }
-@media (max-width: 640px) {
-  nav button { padding: 0 10px; min-width: 68px; font-size: 11px; gap: 4px; height: 36px; }
-}
-
-/* --- Mobile bottom tab bar (PWA-style) --- */
 .bottom-nav {
-  position: fixed;
-  left: 0; right: 0; bottom: 0;
-  display: none; /* mobile only, enabled via JS/media */
-  flex-direction: row;
-  background: rgba(11, 17, 32, 0.8);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-top: 1px solid var(--pwa-border);
-  padding: 8px 4px;
-  z-index: 110;
-  gap: 2px;
+  position: fixed; left: 10px; right: 10px; bottom: 10px;
+  display: none; flex-direction: row; gap: 4px; z-index: 130;
+  border-radius: 18px; padding: 6px;
+  background: rgba(7, 24, 42, 0.72);
 }
 .bottom-nav button {
-  flex: 1;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 8px 4px;
-  height: 56px;
-  min-width: 0;
-  color: var(--pwa-text-muted);
-  font-size: 11px;
-  font-weight: 500;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  transition: all 0.15s ease;
+  flex: 1; border: 1px solid transparent; background: transparent; color: var(--muted);
+  border-radius: 14px; padding: 8px 4px; min-height: 54px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-size: 11px; font-weight: 600;
 }
-.bottom-nav button.active {
-  background: var(--pwa-primary-soft);
-  color: var(--pwa-primary);
-  box-shadow: 0 0 0 1px var(--pwa-primary);
-}
-.bottom-nav button .icon { font-size: 20px; line-height: 1; }
-.bottom-nav button .label { font-size: 10px; line-height: 1; }
+.bottom-nav button.active { background: var(--primary-soft); color: var(--text-strong); border-color: rgba(34,211,238,0.35); }
+.bottom-nav .icon { font-size: 18px; line-height: 1; }
 @media (max-width: 768px) {
   .bottom-nav { display: flex; }
   nav#tabs { display: none !important; }
-  .savebar { bottom: 72px !important; }
+  .savebar { bottom: 84px !important; }
+  main { padding-bottom: 150px; }
 }
-@media (min-width: 769px) {
-  .bottom-nav { display: none !important; }
-}
+@media (min-width: 769px) { .bottom-nav { display: none !important; } }
+
 main {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 24px 16px 120px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  max-width: 1120px; margin: 0 auto; padding: 22px 16px 120px;
+  display: flex; flex-direction: column; gap: 18px;
 }
-@media (max-width: 640px) { main { padding: 16px 12px 150px; } }
+@media (max-width: 640px) { main { padding: 14px 10px 150px; } }
 
-/* --- Cards --- */
-.card {
-  background: var(--pwa-surface);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid var(--pwa-border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  margin: 0 0 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: var(--shadow);
+.card, .hero, .addon-card {
+  border-radius: var(--radius-lg); padding: 20px; margin: 0 0 14px;
+  display: flex; flex-direction: column; gap: 12px;
 }
-.card > h2 { margin-top: 0; margin-bottom: 12px; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase; color: var(--pwa-text-muted); }
-.card h3 { margin: 0 0 8px; font-size: 18px; font-weight: 600; color: var(--pwa-text); }
-.card p { margin: 0 0 8px; font-size: 14px; line-height: 1.5; color: var(--pwa-text); }
-.card .muted { color: var(--pwa-text-muted); }
-.card .small { font-size: 12px; color: var(--pwa-text-dim); }
+.card > h2 { margin: 0 0 4px; }
+.card h3 { margin: 0 0 6px; }
+.hero { padding: 22px; }
 
-/* --- Hero / countdown --- */
-.hero {
-  background: var(--pwa-primary);
-  border: 1px solid var(--pwa-border);
-  border-radius: var(--radius-lg);
-  padding: 24px 20px;
-  margin: 0 0 16px 0;
-  box-shadow: var(--shadow);
+button.btn, .btn-toggle {
+  font: inherit; border: 1px solid var(--border); background: rgba(255,255,255,0.05);
+  color: var(--text); border-radius: 12px; padding: 10px 16px; min-height: 44px;
+  transition: all .15s ease; font-size: 14px; font-weight: 600;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
 }
-.hero .game-name {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--pwa-text);
-  margin: 0 0 4px;
+button.btn:hover:not(:disabled), .btn-toggle:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: var(--border-strong); }
+button.btn:disabled, .btn-toggle:disabled { opacity: 0.5; cursor: default; }
+button.btn.primary, .btn-toggle.primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  color: #042a2a; border-color: rgba(34,211,238,0.45);
+  box-shadow: 0 10px 24px rgba(20,184,166,0.22);
 }
-.hero .countdown {
-  font-family: "Source Sans 3", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: clamp(56px, 22vw, 120px);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  line-height: 0.95;
-  color: var(--pwa-text);
-  margin: 0 0 8px;
-  letter-spacing: -0.02em;
-}
-.hero .countdown.subdued { color: color-mix(in srgb, var(--pwa-text) 60%, transparent); }
-.hero .game-meta { font-size: 13px; color: color-mix(in srgb, var(--pwa-text) 70%, transparent); margin: 0; }
+button.btn.primary:hover:not(:disabled), .btn-toggle.primary:hover:not(:disabled) { filter: brightness(1.05); }
+button.btn.danger, .btn-toggle.danger { color: #fecaca; border-color: rgba(248,113,113,0.45); background: rgba(248,113,113,0.08); }
+button.btn.icon { padding: 0; width: 42px; height: 42px; min-height: 42px; border-radius: 12px; }
+button.btn.icon svg { width: 18px; height: 18px; fill: currentColor; }
+button.btn.preset { font-size: 13px; padding: 8px 12px; min-height: 38px; }
 
-/* --- Buttons --- */
-button.btn {
-  cursor: pointer;
-  font: inherit;
-  border: 1px solid var(--pwa-border);
-  background: var(--pwa-surface);
-  color: var(--pwa-text);
-  border-radius: 12px;
-  padding: 10px 16px;
-  min-height: 48px;
-  transition: all 0.15s ease;
-  font-size: 14px;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-button.btn:disabled { opacity: 0.5; cursor: default; }
-button.btn.primary {
-  background: var(--pwa-primary);
-  border-color: var(--pwa-primary);
-  color: var(--pwa-text);
-}
-button.btn.primary:hover:not(:disabled) {
-  filter: brightness(1.15);
-}
-button.btn.danger {
-  color: var(--pwa-bad);
-  border-color: var(--pwa-bad);
-  background: transparent;
-}
-button.btn.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--pwa-bad) 8%, transparent); }
-button.btn.icon { padding: 0; min-height: 0; width: 48px; height: 48px; border-radius: 12px; }
-button.btn.icon svg { width: 20px; height: 20px; fill: currentColor; }
-button.btn.preset { font-size: 13px; padding: 8px 12px; min-height: 40px; }
-
-/* --- Form controls --- */
 input, select, textarea {
-  font: inherit;
-  color: var(--pwa-text);
-  background: var(--pwa-surface);
-  border: 1px solid var(--pwa-border);
-  border-radius: 12px;
-  padding: 10px 14px;
-  min-height: 48px;
-  min-width: 0;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  font-size: 14px;
+  font: inherit; color: var(--text); background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); border-radius: 12px; padding: 10px 13px;
+  min-height: 44px; min-width: 0; font-size: 14px;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
 }
 @media (pointer: coarse) { input, select, textarea { font-size: 16px; } }
-/* hide number-input spinner arrows so narrow fields stay readable */
-input[type="number"]::-webkit-outer-spin-button,
-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type="number"] { -moz-appearance: textfield; }
 input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--pwa-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pwa-primary) 40%, transparent);
+  outline: none; border-color: rgba(34,211,238,0.55);
+  box-shadow: 0 0 0 3px rgba(20,184,166,0.18); background: rgba(255,255,255,0.08);
 }
-textarea { width: 100%; min-height: 60vh; font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
-label {
-  display: block;
-  font-size: 12px;
-  color: var(--pwa-text-muted);
-  margin: 0 0 6px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-}
-label.check {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-  margin: 0;
-  font-size: 14px;
-}
-label.check input { width: 20px; height: 20px; margin: 0; min-height: 0; }
-.field { margin: 0 0 14px 0; }
-.field > label { margin-bottom: 6px; }
-.row-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
-.row-actions .spacer { flex: 1; }
+textarea { width: 100%; min-height: 60vh; font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
+label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px; font-weight: 600; letter-spacing: 0.03em; }
+label.check { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; color: var(--text); font-weight: 500; }
+label.check input { width: 18px; height: 18px; min-height: 0; margin: 0; accent-color: var(--primary); }
+.field { margin: 0 0 10px; }
+.row-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 6px; }
 .duration { display: flex; align-items: center; gap: 8px; }
 .duration input { width: 6em; }
 
-/* --- Badges / pills --- */
 .pill {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 10px;
-  border-radius: 12px;
-  border: 1px solid currentColor;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border);
+  letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: rgba(255,255,255,0.04);
 }
-.pill.ok { color: var(--ok-dark); border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
-.pill.bad { color: var(--bad); border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, transparent); }
-.pill.warn { color: color-mix(in srgb, var(--warn) 70%, black); border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
-.pill.quick { color: var(--pwa-primary); border-color: var(--pwa-primary); background: color-mix(in srgb, var(--pwa-primary) 12%, transparent); }
+.pill.ok { color: #a7f3d0; border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.12); }
+.pill.bad { color: #fecaca; border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.12); }
+.pill.warn { color: #fde68a; border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.12); }
+.pill.quick { color: #99f6e4; border-color: rgba(34,211,238,0.4); background: rgba(20,184,166,0.14); }
+.pill.detected { color: #bfdbfe; border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.14); }
+.pill.enabled { color: #a7f3d0; border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.12); }
+.pill.notdetected { color: var(--muted); border-color: var(--border); background: rgba(255,255,255,0.03); }
+.pill.manual { color: #ddd6fe; border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.14); }
+.banner { border: 1px solid var(--border); border-radius: 14px; padding: 10px 14px; font-size: 13px; line-height: 1.5; margin: 0 0 10px; background: rgba(255,255,255,0.04); }
+.banner.bad { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.35); color: #fecaca; }
+.banner.ok { background: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.35); color: #a7f3d0; }
+.banner.warn { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.35); color: #fde68a; }
+.state { font-weight: 700; letter-spacing: 0.04em; font-size: 13px; }
 
-/* --- Banners --- */
-.banner {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 10px 14px;
-  font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  margin: 0 0 12px;
-}
-.banner.bad { background: color-mix(in srgb, var(--bad) 10%, transparent); border-color: var(--bad); color: var(--bad); }
-.banner.ok { background: color-mix(in srgb, var(--ok) 10%, transparent); border-color: var(--ok); color: var(--ok-dark); }
-.banner.warn { background: color-mix(in srgb, var(--warn) 10%, transparent); border-color: var(--warn); color: color-mix(in srgb, var(--warn) 70%, black); }
-
-/* --- State chips --- */
-.state { font-weight: 600; letter-spacing: 0.05em; font-size: 13px; }
-
-/* --- Grid --- */
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+.page-head h1, .page-head h2 { margin: 0; }
+.section-title { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 4px 0 2px; }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.split { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 14px; }
+@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
 @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
 
-/* --- Timeline (today's games) --- */
-.today { list-style: none; margin: 0; padding: 0; border: 1px solid var(--pwa-border); border-radius: 28px; }
-.today li {
-  display: grid;
-  grid-template-columns: max-content max-content minmax(0, 1fr);
-  column-gap: 12px;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid var(--pwa-border);
-  font-variant-numeric: tabular-nums;
-  font-size: 13px;
-}
+.countdown { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: clamp(44px, 12vw, 72px); font-weight: 800; color: var(--text-strong); margin: 8px 0; letter-spacing: -0.02em; }
+.game-name { font-size: 20px; font-weight: 700; color: var(--text-strong); }
+#status-now { display: grid; gap: 14px; }
+.status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; align-items: start; }
+.display-mirror, #display-mirror { border: 1px solid rgba(255,255,255,0.10); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+.info-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.kv { display: grid; gap: 2px; }
+.kv .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+.kv .v { font-weight: 600; color: var(--text-strong); }
+
+.today { list-style: none; margin: 0; padding: 0; border-radius: var(--radius-md); overflow: hidden; }
+.today li { display: grid; grid-template-columns: max-content max-content minmax(0, 1fr); column-gap: 12px; align-items: center; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 13px; font-variant-numeric: tabular-nums; }
 .today li:last-child { border-bottom: 0; }
-.today li.head { background: var(--pwa-surface-elev); color: var(--pwa-text-muted); font-weight: 600; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 1px solid var(--pwa-border); }
-.today li.now { background: color-mix(in srgb, var(--pwa-primary) 12%, transparent); border-left: 3px solid var(--pwa-primary); font-weight: 600; color: var(--text-strong); }
-.today li.past { color: var(--muted); opacity: 0.7; }
+.today li.head { background: rgba(255,255,255,0.04); color: var(--muted); font-weight: 700; font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; }
+.today li.now { background: var(--primary-soft); border-left: 3px solid var(--primary); }
+.today li.past { color: var(--text-dim); opacity: 0.75; }
 .today .name { overflow-wrap: anywhere; }
-.today .name .pill { margin-left: 8px; white-space: nowrap; }
-
-/* --- League list --- */
-.league-row { display: grid; grid-template-columns: 28px 1fr auto auto auto; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--pwa-border); font-size: 13px; }
+.league-list { border-radius: var(--radius-md); overflow: hidden; }
+.league-row { display: grid; grid-template-columns: 28px 1fr auto auto auto; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 13px; background: transparent; box-shadow: none; }
 .league-row:last-child { border-bottom: 0; }
-.league-row .num { font-family: Georgia, serif; font-weight: 700; color: var(--muted); font-size: 16px; }
-.league-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--pwa-border); border-radius: 28px; }
 .entry {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr auto;
-  gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--pwa-border);
-  border-radius: var(--radius-md);
-  margin-bottom: 10px;
-  background: var(--pwa-surface-elev);
-  align-items: start;
+  display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px;
+  padding: 14px; border-radius: var(--radius-md); margin-bottom: 10px; align-items: start;
 }
-.entry .league { grid-column: 1; align-self: start; }
-.entry .start { grid-column: 2; align-self: start; }
-.entry .buzzer { grid-column: 3; align-self: start; }
-.entry .actions { grid-column: 4; align-self: start; display: flex; flex-direction: column; gap: 6px; }
-.entry .name { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--pwa-border); }
+.entry .league { grid-column: 1; }
+.entry .start { grid-column: 2; }
+.entry .buzzer { grid-column: 3; }
+.entry .actions { grid-column: 4; display: flex; flex-direction: column; gap: 6px; }
+.entry .name { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); }
 .entry .name input { flex: 1; }
-.entry .more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--pwa-border); }
-.entry .more label, .entry .times label { margin: 0; font-size: 11px; color: var(--pwa-text-dim); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
-.entry label { font-size: 11px; color: var(--pwa-text-dim); text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
+.entry .more { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); }
+.entry label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
 
-/* --- Collapsible fold cards --- */
-details.fold { padding: 0; margin: 0 0 14px 0; border: 1px solid var(--pwa-border); border-radius: 28px; overflow: hidden; }
-details.fold > summary { display: flex; align-items: center; gap: 10px; padding: 16px 20px; cursor: pointer; list-style: none; background: var(--pwa-surface-elev); font-weight: 600; font-size: 14px; color: var(--text-strong); }
+details.fold { padding: 0; margin: 0 0 12px; border-radius: var(--radius-md); overflow: hidden; }
+details.fold > summary { display: flex; align-items: center; gap: 10px; padding: 14px 16px; cursor: pointer; list-style: none; background: rgba(255,255,255,0.04); font-weight: 700; font-size: 14px; color: var(--text-strong); }
 details.fold > summary::-webkit-details-marker { display: none; }
-details.fold > summary:focus-visible { outline: 2px solid var(--pwa-primary); outline-offset: 2px; }
-details.fold .chevron { display: inline-block; width: 1em; transition: transform 0.15s; color: var(--muted); }
+details.fold .chevron { display: inline-block; width: 1em; transition: transform .15s; color: var(--muted); }
 details.fold[open] .chevron { transform: rotate(90deg); }
-details.fold .fold-date { white-space: nowrap; }
-details.fold .fold-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--muted); font-weight: 400; }
-details.fold .fold-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
-details.fold .fold-body { padding: 12px 20px 16px; background: var(--pwa-surface); }
-
-/* --- Save bars --- */
+details.fold .fold-note { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--muted); font-weight: 500; }
+details.fold .fold-count, details.fold .fold-date { font-size: 12px; color: var(--muted); white-space: nowrap; }
+details.fold .fold-body { padding: 12px 16px 16px; background: transparent; }
 .savebar {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--pwa-surface);
-  border-top: 1px solid var(--pwa-border);
-  padding: 10px 16px;
-  display: none;
-  gap: 10px;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  z-index: 60;
-  box-shadow: 0 -2px 8px -2px rgba(0,0,0,0.1);
+  position: fixed; left: 12px; right: 12px; bottom: 12px; border-radius: 16px;
+  padding: 10px 14px; display: none; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 140;
+  background: rgba(7,24,42,0.75);
 }
 .savebar.show { display: flex; }
 .savebar span { color: var(--muted); font-weight: 600; font-size: 13px; }
-
-/* --- Modal --- */
-.modal { position: fixed; inset: 0; background: rgba(28, 27, 31, 0.45); display: none; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+.modal { position: fixed; inset: 0; background: rgba(2,10,20,0.55); display: none; align-items: center; justify-content: center; z-index: 300; padding: 16px; }
 .modal.show { display: flex; }
 .modal-backdrop { position: absolute; inset: 0; }
-.modal-card { background: var(--pwa-surface); border: 1px solid var(--pwa-border); border-radius: 28px; padding: 24px; max-width: 92vw; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 48px rgba(0,0,0,0.15); }
-.modal-card h2 { margin: 0 0 16px; font-size: 20px; font-weight: 600; color: var(--text-strong); }
+.modal-card { position: relative; border-radius: 22px; padding: 22px; max-width: 92vw; max-height: 90vh; overflow-y: auto; }
+.modal-card h2 { color: var(--text-strong); font-size: 20px; text-transform: none; letter-spacing: -0.01em; }
 .modal-card ul { margin: 8px 0 16px; padding-left: 20px; color: var(--muted); }
-.modal-card li { margin: 6px 0; }
-
-/* --- Backups list --- */
-.backups { list-style: none; padding: 0; margin: 0; border: 1px solid var(--pwa-border); border-radius: 28px; }
-.backups li { display: flex; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--pwa-border); flex-wrap: wrap; font-size: 13px; }
-.backups li:last-child { border-bottom: 0; }
-.backups li span { flex: 1; min-width: 200px; font-variant-numeric: tabular-nums; color: var(--muted); }
-
-/* --- Raw YAML view --- */
-pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev); border: 1px solid var(--pwa-border); border-radius: 12px; padding: 12px; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-
-/* --- Login --- */
-#login { position: fixed; inset: 0; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 300; padding: 24px; }
+#login { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 400; padding: 24px; background: radial-gradient(800px 400px at 20% 0%, rgba(20,184,166,0.18), transparent 60%), linear-gradient(180deg, var(--bg-2), var(--bg)); }
 #login.show { display: flex; }
-#login form { width: 100%; max-width: 340px; }
-#login h2 { font-size: 24px; margin: 0 0 4px; font-weight: 600; color: var(--text-strong); }
-#login p { margin: 0 0 20px; font-size: 14px; color: var(--muted); }
+#login form { width: 100%; max-width: 360px; border-radius: 22px; padding: 24px; }
+#login h2 { font-size: 24px; text-transform: none; letter-spacing: -0.01em; color: var(--text-strong); }
+#login p { color: var(--muted); }
 #login input { width: 100%; margin: 0 0 12px; }
+pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: rgba(0,0,0,0.25); }
+.backups { list-style: none; padding: 0; margin: 0; border-radius: var(--radius-md); overflow: hidden; }
+.backups li { display: flex; gap: 10px; align-items: center; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; font-size: 13px; }
+.backups li:last-child { border-bottom: 0; }
+.backups li span { flex: 1; min-width: 200px; color: var(--muted); }
 
-/* --- Add-on marketplace --- */
-.addon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 16px 0; }
-.addon-card {
-  border: 1px solid var(--pwa-border);
-  border-radius: 20px;
-  padding: 20px;
-  background: var(--pwa-surface);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.addon-card h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-strong); }
-.addon-card p.addon-desc { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
-.pill.detected { color: var(--pwa-primary); border-color: var(--pwa-primary); background: color-mix(in srgb, var(--pwa-primary) 12%, transparent); }
-.pill.enabled { color: var(--ok-dark); border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
-.pill.notdetected { color: var(--muted); border-color: var(--pwa-border); background: transparent; }
-.pill.manual { color: var(--pwa-accent); border-color: var(--pwa-accent); background: color-mix(in srgb, var(--pwa-accent) 12%, transparent); }
-.btn-toggle {
-  border: 1px solid var(--pwa-border);
-  background: var(--pwa-surface);
-  color: var(--pwa-text);
-  border-radius: 12px;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 500;
-  min-height: 40px;
-  align-self: flex-start;
-}
-.btn-toggle:disabled { opacity: 0.5; cursor: default; }
-.btn-toggle.primary { background: var(--pwa-primary); border-color: var(--pwa-primary); color: var(--pwa-text); }
-.btn-toggle.primary:hover:not(:disabled) { filter: brightness(1.15); }
-.btn-toggle.danger { color: var(--pwa-bad); border-color: var(--pwa-bad); background: transparent; }
-.btn-toggle.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--pwa-bad) 8%, transparent); }
-@media (max-width: 640px) { .addon-grid { grid-template-columns: 1fr; } }
+.addon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 10px 0; }
+.addon-card h3 { font-size: 16px; }
+.addon-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
 
-/* --- Reduced motion --- */
+.progress-end-bar { position: relative; height: 18px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); width: 100%; }
+.progress-seg.lead { background: #38bdf8; } .progress-seg.second { background: #34d399; } .progress-seg.vice { background: #fbbf24; } .progress-seg.skip { background: #f87171; }
+.progress-end-fill { position: absolute; top:0; left:0; height:100%; background: rgba(2,10,20,0.55); pointer-events:none; z-index:1; transition: width .5s ease; }
+.version-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background: var(--warn); margin-left:6px; vertical-align:middle; cursor:pointer; }
+
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
-
-/* --- Version dot --- */
-.version-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); margin-left: 6px; vertical-align: middle; cursor: pointer; }
-
-/* --- Progress through end --- */
-.progress-end-bar { position: relative; height: 20px; border-radius: 10px; overflow: hidden; background: #1a1a1a; border: 1px solid #333; width: 100%; }
-.progress-seg { height: 100%; }
-.progress-seg.lead { background: #3b82f6; }
-.progress-seg.second { background: #10b981; }
-.progress-seg.vice { background: #f59e0b; }
-.progress-seg.skip { background: #ef4444; }
-.progress-end-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(0,0,0,0.45); pointer-events: none; z-index: 1; transition: width 0.5s ease; }
 </style>
 </head>
 <body>
@@ -550,12 +320,18 @@ pre.view { overflow: auto; max-height: 50vh; background: var(--pwa-surface-elev)
 </div>
 
 <header>
-  <div class="header-brand"><h1>⏱️ Curling Timer</h1><span class="header-version">{{version}}</span></div>
+  <div class="header-brand">
+    <h1>⏱️ Curling Timer</h1>
+    <span class="header-version">{{version}}</span>
+  </div>
   <span id="header-msg" class="banner hidden"></span>
-  <div class="header-actions"><button class="btn" id="help" title="Help">Help</button><button class="btn" id="logout" title="Log out">Log out</button></div>
+  <div class="header-actions">
+    <button class="btn" id="help" title="Help">Help</button>
+    <button class="btn" id="logout" title="Log out">Log out</button>
+  </div>
 </header>
-<nav id="tabs"></nav>
-<nav class="bottom-nav" id="bottom-nav"></nav>
+<nav id="tabs" aria-label="Primary"></nav>
+<nav class="bottom-nav" id="bottom-nav" aria-label="Mobile"></nav>
 <main>
   <section id="tab-status"></section>
   <section id="tab-quickstart" class="hidden"></section>
@@ -758,9 +534,14 @@ async function selectTab(id) {
   for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== id);
   if (id === 'status') { if (state.status) renderStatus(); loadStatus(); }
   if (id === 'quickstart') { loadStatus(); renderQuickstart(); }
-  if ((id === 'schedule' || id === 'exceptions') && !state.model) await loadSettings();
-  else if (id === 'schedule') renderSchedule();
-
+  if (id === 'schedule') {
+    if (!state.model) await loadSettings();
+    else renderSchedule();
+  }
+  if (id === 'leagues') {
+    if (!state.model) await loadSettings();
+    renderLeagues();
+  }
   if (id === 'config') {
     if (!state.configOriginal || !state.configDirty) await loadConfig();
     else await renderConfig();
@@ -768,8 +549,6 @@ async function selectTab(id) {
   }
   if (id === 'history') loadHistory();
   if (id === 'diagnostics') renderDiagnostics();
-  if (id === 'schedule') renderSchedule();
-  if (id === 'leagues') renderLeagues();
 }
 
 // ---- status tab -----------------------------------------------------------
@@ -836,12 +615,12 @@ function buildQuickForm() {
   const hint = el('span', { class: 'muted small' });
 
   // Preview section: shows what will be applied, styled like the display.
-  const previewLine = (label, value) => el('div', { style: 'display:flex;justify-content:space-between;font-size:13px;color:#eee;margin:2px 0' },
-    el('div', { style: 'color:#888;font-size:11px;text-transform:uppercase;letter-spacing:0.05em' }, label),
-    el('div', {}, value));
+  const previewLine = (label, value) => el('div', { style: 'display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--text);margin:4px 0' },
+    el('div', { style: 'color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:0.05em' }, label),
+    el('div', { style: 'text-align:right;font-weight:600;color:var(--text-strong)' }, value));
   const preview = el('div', {
     class: 'card',
-    style: 'margin: 0 0 14px; background:#111; border:1px solid #333; color:#eee; padding:14px; border-radius:12px'
+    style: 'margin: 0 0 14px; background:rgba(2,10,20,0.45); border:1px solid rgba(255,255,255,0.12); padding:16px'
   });
 
   const refreshPreview = () => {
@@ -859,7 +638,7 @@ function buildQuickForm() {
     const endDur = relayMaxDuration(endDurs);
 
     preview.replaceChildren(
-      el('div', { style: 'font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px' }, 'Preview — settings that will be applied'),
+      el('div', { class: 'section-title', style: 'margin:0 0 10px' }, 'Preview — settings that will be applied'),
       previewLine('Game time', gameSecs === 0 ? '—' : durationText(gameSecs)),
       previewLine('Expires at', gameSecs === 0 ? '—' : pad(when.getHours()) + ':' + pad(when.getMinutes())),
       previewLine('Pre-game countdown', pregame.checked ? (pregameMin.value || 5) + ' min' : 'Off'),
@@ -869,7 +648,7 @@ function buildQuickForm() {
       previewLine('Stones per end', stonesPerEnd.value || 8),
       previewLine('Total ends', endCount.value || 8),
       previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
-      el('div', { style: 'margin-top:8px;border-top:1px solid #333;padding-top:8px' }),
+      el('div', { style: 'margin-top:10px;border-top:1px solid rgba(255,255,255,0.10);padding-top:10px' }),
       previewLine('Outputs — Game Start', startRelays.length ? startRelays.map((r, i) => r + ' ' + ((Number(startDurs[i].value) || 0) || 'default') + 's').join(', ') : 'None'),
       previewLine('Outputs — Game Expires', endRelays.length ? endRelays.map((r, i) => r + ' ' + ((Number(endDurs[i].value) || 0) || 'default') + 's').join(', ') : 'None')
     );
@@ -906,32 +685,36 @@ function buildQuickForm() {
         untimed_ends: Number(untimedEnds.value) || 0,
       });
     } },
-    el('h2', {}, 'Quick Start Timer'),
-    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Start a game right now — set the duration and you are done.'),
-    el('div', { class: 'row-actions', style: 'margin: 0 0 14px; gap: 8px; align-items: center' }, el('span', { class: 'muted small', style: 'margin-right: 8px' }, 'Quick pick:'), ...presets),
-    el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
-      el('div', { class: 'field', role: 'group', 'aria-label': 'Pre-game countdown duration' }, el('label', {}, 'Pre-game countdown duration (minutes)'), pregameMin),
-      el('div', { class: 'field', role: 'group', 'aria-label': 'Full game time' }, el('label', {}, 'Full game time (minutes)'),
-        el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's')))),
-    el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
+    el('div', { class: 'page-head' },
+      el('div', {}, el('div', { class: 'section-title' }, 'Quick Game'), el('h3', {}, 'Start a game now')),
+      el('span', { class: 'pill' }, 'Ad hoc timer')),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Pick a preset or set the timing, options, and outputs below. The preview shows exactly what will be applied.'),
+    el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
+      el('div', { class: 'section-title', style: 'margin-bottom: 8px' }, 'Quick picks'),
+      el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px' }, ...presets)),
+    el('div', { class: 'grid2' },
+      el('div', { class: 'field', role: 'group', 'aria-label': 'Pre-game countdown duration' }, el('label', {}, 'Pre-game countdown (minutes)'), pregameMin),
+      el('div', { class: 'field', role: 'group', 'aria-label': 'Full game time' }, el('label', {}, 'Full game time'),
+        el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's'))),
       el('div', { class: 'field' }, el('label', {}, 'Expire time (minutes)'), expiresMin),
-      el('div', { class: 'field' }, el('label', {}, 'Name shown on display'), el('div', {}, name))),
-    el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
+      el('div', { class: 'field' }, el('label', {}, 'Name shown on display'), name)),
+    el('div', { class: 'grid2' },
       el('div', { class: 'field' }, el('label', {}, 'Stones per end (per team; mixed doubles = 5)'), stonesPerEnd),
       el('div', { class: 'field' }, el('label', {}, 'Total number of ends'), endCount)),
-    el('div', { class: 'grid2', style: 'margin: 0 0 14px' },
-      el('div', { class: 'field' },
-        el('label', {}, 'Number of ends allowed after expiration'),
-        untimedEnds,
-        el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends played after the buzzer when the game is not finished. Use it to allow a few extra ends so the game can conclude naturally rather than cutting off mid-end.'))),
-    el('div', { class: 'row-actions', style: 'margin: 0 0 14px' },
-      el('label', { class: 'check' }, pregame, 'Enable pre-game countdown'),
-      el('label', { class: 'check' }, pace, 'Pace of play'),
-      el('label', { class: 'check' }, showProgress, 'Show progress through end'),
-      el('label', { class: 'check' }, replace, 'Replace same-time games')),
-    el('div', { class: 'card', style: 'margin: 0 0 14px' },
-      el('h3', {}, 'Outputs 🔊'),
-      el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which enabled relay outputs ring at Game Start and Game Expires, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
+    el('div', { class: 'field' },
+      el('label', {}, 'Ends after expiration'),
+      untimedEnds,
+      el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends after the buzzer so the game can finish naturally instead of cutting off mid-end.')),
+    el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
+      el('div', { class: 'section-title', style: 'margin-bottom: 8px' }, 'Game options'),
+      el('div', { class: 'row-actions', style: 'margin: 0' },
+        el('label', { class: 'check' }, pregame, 'Enable pre-game countdown'),
+        el('label', { class: 'check' }, pace, 'Pace of play'),
+        el('label', { class: 'check' }, showProgress, 'Show progress through end'),
+        el('label', { class: 'check' }, replace, 'Replace same-time games'))),
+    el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
+      el('div', { class: 'section-title', style: 'margin-bottom: 4px' }, 'Outputs'),
+      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Game Start and Game Expires, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
       startRow,
       endRow),
     preview,
@@ -953,9 +736,10 @@ function renderStatus() {
   if (quickForm) quickForm.classList.toggle('hidden', !s.valid);
   if (!s.valid) {
     $('status-now').replaceChildren(el('div', { class: 'card' },
-      el('h2', {}, 'Settings file has an error'),
+      el('div', { class: 'section-title' }, 'System status'),
+      el('h3', {}, 'Settings file has an error'),
       el('div', { class: 'banner bad' }, s.error),
-      el('p', { class: 'muted' }, 'The display shows this error until the file is fixed. Use the Raw YAML or History tab.')));
+      el('p', { class: 'muted' }, 'The display shows this error until the file is fixed. Use Settings → Raw settings or History to recover.')));
     $('status-today').replaceChildren();
     return;
   }
@@ -971,44 +755,54 @@ function renderStatus() {
       el('span', { class: 'pill warn' }, `Output: ${triggered}`)));
   }
   if (!s.enabled) {
-    now.append(el('div', { class: 'state', style: 'color: var(--bad)' }, 'TIMER DISABLED'));
+    now.append(el('div', { class: 'section-title' }, 'Timer status'),
+      el('div', { class: 'state', style: 'color: var(--bad); font-size: 22px' }, 'TIMER DISABLED'),
+      el('p', { class: 'muted small' }, 'The display shows the disabled message and no buzzers will ring.'),
+      el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', onclick: () => toggleEnabled(true) }, 'Enable timer')));
   } else if (!s.clock_synced) {
-    now.append(el('div', { class: 'banner warn' },
-      'Waiting for the clock to sync (SNTP). The countdown, today\'s games and quick start appear once the time is known.'));
-  } else if (!isAddonEnabled('relays') && s.enabled) {
-    now.append(el('div', { class: 'banner warn' },
-      'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
+    now.append(el('div', { class: 'section-title' }, 'Timer status'),
+      el('div', { class: 'banner warn' }, 'Waiting for the clock to sync (SNTP). The countdown, today\'s games and quick start appear once the time is known.'));
   } else if (cur) {
+    if (!isAddonEnabled('relays')) now.append(el('div', { class: 'banner warn' }, 'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
     const name = el('div', { class: 'game-name' }, cur.name || 'Game in progress',
       cur.quick ? el('span', { class: 'pill quick', style: 'margin-left: 8px' }, 'quick start') : null);
     const countdown = el('div', { id: 'countdown', class: 'countdown' }, countdownText(cur.seconds_until_buzzer ?? 0));
-    now.append(name, countdown);
-    const actions = el('div', { class: 'row-actions', style: 'margin-top: 16px' },
-      el('button', { class: `btn ${s.enabled ? 'danger' : 'primary'}`, onclick: () => toggleEnabled(!s.enabled) },
-         s.enabled ? 'Disable timer' : 'Enable timer'));
-    if (cur && cur.quick) {
-      actions.append(el('button', { class: 'btn danger', onclick: () => cancelQuick(cur) }, 'Cancel quick start'));
-    }
+    const meta = el('div', { class: 'info-row' },
+      el('span', { class: 'pill' }, `Start ${shortTime(cur.start)}`),
+      el('span', { class: 'pill' }, `Buzzer ${shortTime(cur.buzzer)}`),
+      cur.end_count ? el('span', { class: 'pill' }, `${cur.end_count} ends`) : null);
+    now.append(el('div', { class: 'section-title' }, 'Now on ice'), name, countdown, meta);
+    const actions = el('div', { class: 'row-actions', style: 'margin-top: 8px' },
+      el('button', { class: 'btn danger', onclick: () => toggleEnabled(false) }, 'Disable timer'));
+    if (cur && cur.quick) actions.append(el('button', { class: 'btn', onclick: () => cancelQuick(cur) }, 'Cancel quick start'));
     now.append(actions);
   } else {
-    now.append(el('div', { class: 'state muted' }, 'Idle'),
-               el('div', { class: 'muted' }, s.next ? `Next: ${s.next.name || 'game'} at ${shortTime(s.next.start)}` : 'No more games today'));
+    if (!isAddonEnabled('relays')) now.append(el('div', { class: 'banner warn' }, 'Relay add-on is disabled — bells/buzzer will not ring. Enable it in Settings → Add-ons.'));
+    now.append(el('div', { class: 'section-title' }, 'Timer status'),
+      el('div', { class: 'state muted', style: 'font-size: 22px' }, 'Idle'),
+      el('div', { class: 'muted' }, s.next ? `Next: ${s.next.name || 'game'} at ${shortTime(s.next.start)} (buzzer ${shortTime(s.next.buzzer)})` : 'No more games today'),
+      el('div', { class: 'row-actions', style: 'margin-top: 8px' }, el('button', { class: 'btn danger', onclick: () => toggleEnabled(false) }, 'Disable timer')));
   }
   let mirror = document.getElementById('display-mirror');
   if (!mirror) {
-    mirror = el('div', { id: 'display-mirror', style: 'background:#000;color:#fff;padding:6px 12px;border-radius:28px;margin-bottom:16px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;aspect-ratio:16/9;position:relative;box-shadow:0 4px 12px rgba(0,0,0,0.3)' });
-    $('status-now').append(mirror);
+    mirror = el('div', { id: 'display-mirror', class: 'display-mirror', style: 'background:#000;color:#fff;padding:10px 14px;border-radius:28px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;aspect-ratio:16/9;position:relative;overflow:hidden' });
   }
-  $('status-now').replaceChildren(mirror, now);
+  const mirrorCard = el('div', { class: 'card', style: 'padding:14px' },
+    el('div', { class: 'page-head', style: 'margin-bottom:10px' },
+      el('div', {}, el('div', { class: 'section-title' }, 'Live display'), el('h3', {}, 'On-display mirror')),
+      el('span', { class: 'pill' }, `Scale ${Math.round((s.mirror_scale ?? 100))}%`)),
+    mirror);
+  $('status-now').replaceChildren(mirrorCard, now);
 
   if (!s.clock_synced) {
     $('status-today').replaceChildren();
     return;
   }
   const today = el('div', { class: 'card' },
-    el('h2', {}, `Today (${s.weekday})`, el('span', { class: 'spacer' }),
-       s.today.source === 'exception' ? el('span', { class: 'pill warn', style: 'max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle', title: s.today.note ? s.today.note : '' }, `Exception${s.today.note ? ': ' + s.today.note : ''}`)
-                                       : el('span', { class: 'pill' }, 'Weekly schedule')));
+    el('div', { class: 'page-head' },
+      el('div', {}, el('div', { class: 'section-title' }, 'Today'), el('h3', {}, s.weekday)),
+      s.today.source === 'exception' ? el('span', { class: 'pill warn', style: 'max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', title: s.today.note ? s.today.note : '' }, `Exception${s.today.note ? ': ' + s.today.note : ''}`)
+                                     : el('span', { class: 'pill' }, 'Weekly schedule')));
   const nowSecs = secondsNow();
   if (!s.today.entries.length) today.append(el('p', { class: 'muted' }, 'No buzzers today.'));
   else today.append(el('ul', { class: 'today' },
@@ -1288,11 +1082,32 @@ function foldButtons(openSet, getKeys, rerender) {
 function renderSchedule() {
   const m = state.model;
   if (!m) return;
-  const cards = [el('div', { class: 'row-actions', style: 'margin: 0 0 16px' },
-    el('span', { class: 'spacer' }), foldButtons(state.openDays, () => DAYS, renderSchedule))];
-  if (m.inner_comments) cards.unshift(commentWarning(m.inner_comments));
   const todayWeekday = m.exceptions.some((d) => d.date === todayIso()) ? null : weekdayOf(todayIso());
-  cards.push(el('h2', { style: 'margin-top: 8px' }, 'Schedule'));
+  const cards = [
+    el('div', { class: 'page-head' },
+      el('div', {}, el('div', { class: 'section-title' }, 'Schedule'), el('h3', {}, 'Weekly games & exceptions')),
+      el('span', { class: 'pill' }, `${DAYS.length} days · ${m.exceptions.length} exceptions`))
+  ];
+  if (m.inner_comments) cards.push(commentWarning(m.inner_comments));
+  const calCard = el('div', { class: 'card' },
+    el('div', { class: 'section-title' }, 'Import'),
+    el('h3', {}, '📅 Calendar import'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Import games from an ICS calendar URL.'),
+    el('div', { class: 'grid2' },
+      el('label', {}, 'ICS URL', el('input', { type: 'url', placeholder: 'https://example.com/calendar.ics', id: 'ics-url' })),
+      el('div', { class: 'field' }, el('label', {}, 'Action'),
+        el('button', { class: 'btn primary', onclick: () => {
+          const url = document.getElementById('ics-url').value.trim();
+          if (!url) return showMessage('Enter an ICS URL');
+          showMessage('Importing calendar…', 'ok');
+        } }, 'Import calendar'))),
+    el('div', { id: 'imported-events', class: 'muted small' }, 'No imported events yet.'));
+  cards.push(calCard);
+  cards.push(el('div', { class: 'card' },
+    el('div', { class: 'page-head' },
+      el('div', {}, el('div', { class: 'section-title' }, 'Weekly schedule'), el('h3', {}, 'Default games by day')),
+      el('div', { class: 'row-actions', style: 'margin:0' }, foldButtons(state.openDays, () => DAYS, renderSchedule))),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Each day defines the default games. Date exceptions below replace a specific day.')));
   for (const day of DAYS) {
     const entries = m.schedule[day];
     const copyTo = el('select', { onchange: (event) => {
@@ -1311,25 +1126,17 @@ function renderSchedule() {
             entries.push(newEntry(entries[entries.length - 1])); setDirty(true); renderSchedule(); } }, '+ Add game'),
           el('span', { class: 'spacer' }), copyTo)] }));
   }
-  const calCard = el('div', { class: 'card' },
-    el('h2', {}, '📅 Calendar Import'),
-    el('div', { class: 'grid2' },
-      el('label', {}, 'ICS URL', el('input', { type: 'url', placeholder: 'https://example.com/calendar.ics', id: 'ics-url' })),
-      el('div', { class: 'field' }, el('button', { class: 'btn primary', onclick: () => {
-        const url = document.getElementById('ics-url').value.trim();
-        if (!url) return showMessage('Enter an ICS URL');
-        showMessage('Importing calendar…', 'ok');
-      } }, 'Import Calendar'))),
-    el('div', { id: 'imported-events', class: 'muted small' }, 'No imported events yet.'));
-  cards.unshift(calCard);
-  const excContainer = el('div', { style: 'margin-top:16px' });
-  excContainer.append(el('h2', { style: 'margin-top:0' }, 'Exceptions'));
+  const excContainer = el('div', { class: 'stack', style: 'margin-top: 4px' });
   state.exceptionsRoot = excContainer;
   renderExceptions();
   state.exceptionsRoot = null;
-  cards.push(excContainer);
-  cards.push(el('div', { class: 'card' }, el('h2', {}, 'Schedule Summary'),
-    el('p', { class: 'muted small' }, `${DAYS.length} weekday(s), ${m.exceptions.length} exception(s).`)));
+  cards.push(el('div', { class: 'card' },
+    el('div', { class: 'section-title' }, 'Exceptions'),
+    el('h3', {}, 'Date-specific overrides'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'A date exception replaces that day\'s weekly schedule (use an empty day for no buzzers).')),
+    excContainer);
+  cards.push(el('div', { class: 'card' }, el('div', { class: 'section-title' }, 'Summary'), el('h3', {}, 'Schedule coverage'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, `${DAYS.length} weekday(s), ${m.exceptions.length} exception(s) configured.`)));
   $('tab-schedule').replaceChildren(...cards);
 }
 
@@ -1357,30 +1164,32 @@ function renderExceptions() {
       setDirty(true);
       renderExceptions();
     } },
-    el('h2', {}, 'Add a date'),
-    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'A date exception replaces that day\'s weekly schedule. Leave it with no games for a day without buzzers.'),
+    el('div', { class: 'section-title' }, 'Add exception'),
+    el('h3', {}, 'Create a date override'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Replace one day\'s weekly schedule. Leave it with no games for a day without buzzers.'),
     el('div', { class: 'grid2' }, el('label', {}, 'Date', date), el('label', {}, 'Note', note)),
     el('div', { class: 'row-actions' }, el('label', { class: 'check' }, prefill, 'Start from the weekly schedule for that day'),
       el('button', { class: 'btn primary', type: 'submit' }, 'Add date')));
 
   const past = m.exceptions.filter((d) => d.date < today);
   let shown = [];
-  const tools = el('div', { class: 'row-actions', style: 'margin: 0 0 16px' },
-    el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: state.showPast,
-      onchange: (event) => { state.showPast = event.target.checked; renderExceptions(); } }), `Show past dates (${past.length})`),
-    el('button', { class: 'btn danger', disabled: !past.length, onclick: () => {
-      if (!confirm(`Remove ${past.length} past date(s)?`)) return;
-      m.exceptions = m.exceptions.filter((d) => d.date >= today);
-      setDirty(true);
-      renderExceptions();
-    } }, 'Remove past dates'),
-    el('span', { class: 'spacer' }),
-    foldButtons(state.openDates, () => shown.map((d) => d.date), renderExceptions));
+  const tools = el('div', { class: 'card', style: 'padding: 14px' },
+    el('div', { class: 'row-actions', style: 'margin: 0' },
+      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: state.showPast,
+        onchange: (event) => { state.showPast = event.target.checked; renderExceptions(); } }), `Show past dates (${past.length})`),
+      el('button', { class: 'btn danger', disabled: !past.length, onclick: () => {
+        if (!confirm(`Remove ${past.length} past date(s)?`)) return;
+        m.exceptions = m.exceptions.filter((d) => d.date >= today);
+        setDirty(true);
+        renderExceptions();
+      } }, 'Remove past dates'),
+      el('span', { class: 'spacer' }),
+      foldButtons(state.openDates, () => shown.map((d) => d.date), renderExceptions)));
 
   const cards = [add, tools];
   if (m.inner_comments) cards.unshift(commentWarning(m.inner_comments));
   shown = [...m.exceptions].filter((d) => state.showPast || d.date >= today).sort((a, b) => a.date.localeCompare(b.date));
-  if (!shown.length) cards.push(el('p', { class: 'muted' }, 'No upcoming date exceptions.'));
+  if (!shown.length) cards.push(el('div', { class: 'card' }, el('p', { class: 'muted', style: 'margin:0' }, 'No upcoming date exceptions.')));
   for (const day of shown) {
     const noteText = el('span', { class: 'fold-note muted' }, day.note);
     cards.push(foldCard({ openSet: state.openDates, key: day.date, title: `${weekdayOf(day.date)} ${day.date}`,
@@ -1730,7 +1539,7 @@ async function renderConfig() {
       continue;
     if (section.group !== currentGroup) {
       currentGroup = section.group;
-       nodes.push(el('h2', { style: 'margin: 16px 0 8px' }, currentGroup));
+       nodes.push(el('div', { class: 'section-title', style: 'margin: 8px 0 0; font-size: 12px' }, currentGroup));
     }
     let fields = section.fields;
     if (section.title === 'Relays') {
@@ -1743,13 +1552,18 @@ async function renderConfig() {
       fields = [['config.relay_count', 'int', 'Number of relays', 0, 4]].concat(relayFields);
     }
     nodes.push(el('div', { class: 'card' },
-      section.hint ? el('p', { class: 'muted small', style: 'margin-top: 0' }, section.hint) : null,
-      el('h2', {}, section.title),
+      el('div', { class: 'section-title' }, section.group),
+      el('h3', {}, section.title),
+      section.hint ? el('p', { class: 'muted small', style: 'margin: 0' }, section.hint) : null,
       el('div', { class: 'grid2' }, fields.map(configField)),
       section.group.startsWith('Outputs') ? isAddonEnabled('relays') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null : null));
   }
-  $('tab-config').replaceChildren(...nodes);
+  $('tab-config').replaceChildren(
+    el('div', { class: 'page-head' },
+      el('div', {}, el('div', { class: 'section-title' }, 'Settings'), el('h3', {}, 'Configuration & add-ons')),
+      el('span', { class: 'pill' }, 'Device config')));
   renderAddonMarketplace();
+  $('tab-config').append(...nodes);
 }
 
 async function renderAddonMarketplace() {
@@ -1758,9 +1572,10 @@ async function renderAddonMarketplace() {
   if (detectionResult.ok) addonDetection = detectionResult.data || {};
   let market = document.getElementById('addon-marketplace');
   if (!market) {
-    market = el('section', { id: 'addon-marketplace' },
-      el('h2', {}, 'Add-ons 🔧'),
-      el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Hardware add-on drivers are compiled into the firmware. Enable detected hardware with a tap — no manual pin or address config needed. Disabled add-ons hide their related config throughout the UI.'),
+    market = el('section', { id: 'addon-marketplace', class: 'card' },
+      el('div', { class: 'section-title' }, 'Hardware'),
+      el('h3', {}, 'Add-ons 🔧'),
+      el('p', { class: 'muted small', style: 'margin: 0' }, 'Hardware add-on drivers are compiled into the firmware. Enable detected hardware with a tap — no manual pin or address config needed. Disabled add-ons hide their related config throughout the UI.'),
       el('div', { class: 'addon-grid' }));
     $('tab-config').prepend(market);
   }
@@ -1876,8 +1691,9 @@ async function loadRaw() {
     loadRaw();
   };
   $('tab-config').append(el('div', { class: 'card' },
-    el('h2', {}, 'Raw settings file'),
-    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'Full access to every setting (fonts, colours, relays…). Changes are checked before they are applied.'),
+    el('div', { class: 'section-title' }, 'Advanced'),
+    el('h3', {}, 'Raw settings file'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Full access to every setting (fonts, colours, relays…). Changes are checked before they are applied.'),
     area,
     el('div', { class: 'row-actions' },
       el('button', { class: 'btn', onclick: validate }, 'Check'),
@@ -1917,10 +1733,16 @@ async function loadHistory() {
       showMessage('Restored; the display updates within a second', 'ok');
       state.model = null; setDirty(false); loadHistory();
     } }, 'Restore'))));
-  $('tab-history').replaceChildren(el('div', { class: 'card' },
-    el('h2', {}, 'Previous versions'),
-    el('p', { class: 'muted small', style: 'margin-top: 0' }, 'A copy is kept automatically before every change (latest 30).'),
-    result.data.backups.length ? list : el('p', { class: 'muted' }, 'No backups yet.'), view));
+  $('tab-history').replaceChildren(
+    el('div', { class: 'page-head' },
+      el('div', {}, el('div', { class: 'section-title' }, 'Report'), el('h3', {}, 'History & backups')),
+      el('span', { class: 'pill' }, `${result.data.backups.length} backup${result.data.backups.length === 1 ? '' : 's'}`)),
+    el('div', { class: 'card' },
+      el('div', { class: 'section-title' }, 'Previous versions'),
+      el('h3', {}, 'Restore or inspect saved settings'),
+      el('p', { class: 'muted small', style: 'margin: 0' }, 'A copy is kept automatically before every change (latest 30). Restore creates a backup of the current file first.'),
+      result.data.backups.length ? list : el('p', { class: 'muted', style: 'margin:0' }, 'No backups yet.'),
+      view));
 }
 
 // ---- diagnostics tab -------------------------------------------------------
@@ -1943,8 +1765,9 @@ async function renderDiagnostics() {
     el('option', { value: 'colorbars' }, 'colorbars'));
   mode.value = (state.status && state.status.display_test_mode) || 'normal';
   const section1 = el('div', { class: 'card' },
-    el('h2', {}, 'Display Test Mode'),
-    el('p', { class: 'muted small' }, 'Pick a test pattern to take over the display. Choose "normal" to resume normal operation.'),
+    el('div', { class: 'section-title' }, 'Display'),
+    el('h3', {}, 'Display test mode'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Pick a test pattern to take over the display. Choose "normal" to resume normal operation.'),
     el('label', {}, 'Mode', mode));
   const hwTime = el('span', {}, '--');
   const ntpTime = el('span', {}, '--');
@@ -1958,7 +1781,7 @@ async function renderDiagnostics() {
     } else {
       showMessage('NTP sync failed: ' + ((r.data && r.data.error) || r.status), 'bad');
     }
-  } }, 'Sync Now');
+  } }, 'Sync now');
   async function loadNtp() {
     const r = await api('/api/ntp_status');
     if (r.ok) {
@@ -1993,12 +1816,17 @@ async function renderDiagnostics() {
     el('option', { value: '5' }, 'VERBOSE'));
   levelSelect.value = String(savedLevel);
   const section3 = el('div', { class: 'card' },
-    el('h2', {}, 'Logs'),
-    el('p', { class: 'muted small' }, 'Download captured logs (500-line ring buffer).'),
+    el('div', { class: 'section-title' }, 'Logs'),
+    el('h3', {}, 'Device logs'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Download captured logs (500-line ring buffer) and adjust log verbosity.'),
     el('div', { class: 'row-actions' },
       el('a', { class: 'btn', href: '/api/logs', target: '_blank', rel: 'noopener' }, 'Download logs'),
-      el('label', {}, 'Level', levelSelect)));
-  root.replaceChildren(section1, section2, section3);
+      el('label', { style: 'min-width: 180px' }, 'Log level', levelSelect)));
+  root.replaceChildren(
+    el('div', { class: 'page-head' },
+      el('div', {}, el('div', { class: 'section-title' }, 'Diagnostics'), el('h3', {}, 'Display, time, and logs')),
+      el('span', { class: 'pill' }, 'Troubleshooting')),
+    el('div', { class: 'stack' }, section1, section2, section3));
 }
 
 // ---- leagues tab -----------------------------------------------------------
@@ -2123,7 +1951,9 @@ async function renderLeagues() {
     showMessage('League added', 'ok');
     renderLeagues();
   } },
-    el('h2', {}, 'Add League'),
+    el('div', { class: 'section-title' }, 'Leagues'),
+    el('h3', {}, 'Add league profile'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Define reusable league settings (timing, outputs, display options) to apply to scheduled games.'),
     ...leagueFields(addLeagueDefaults = {
       name:'', game_duration_minutes:0, pregame_countdown_seconds:0, header_text:'',
       stones_per_end:8, end_count:8, untimed_ends:0, show_progress_through_end:true,
@@ -2132,9 +1962,12 @@ async function renderLeagues() {
     }, 'lg-add'),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
 
-  const list = el('div', { class: 'card league-list' }, el('h2', {}, 'Leagues'));
+  const list = el('div', { class: 'card league-list' },
+    el('div', { class: 'section-title' }, 'Library'),
+    el('h3', {}, 'Configured leagues'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Edit or remove league profiles used by the schedule.'));
   if (!leagues.length) {
-    list.append(el('p', { class: 'muted' }, 'No leagues configured.'));
+    list.append(el('p', { class: 'muted', style: 'margin:0' }, 'No leagues configured yet.'));
   } else {
     leagues.forEach((lp, idx) => {
       const editing = state.editingLeagueIdx === idx;
