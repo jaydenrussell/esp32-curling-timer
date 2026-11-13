@@ -278,7 +278,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.134
+      ref: v2026.11.135
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -1099,11 +1099,10 @@ interval:
           ::esphome::curling_engine::BellRing ring;
           if (!eng->bell_tick(&ring))
             return;
-          const int pulse_ms = static_cast<int>(ring.duration_ms);
           if (ring.mask & ::esphome::curling_engine::BELL_RELAY_1)
-            id(pulse_relay_bell).execute(pulse_ms);
+            id(pulse_relay_bell).execute(static_cast<int>(ring.duration_ms_1 ? ring.duration_ms_1 : ring.duration_ms));
           if (ring.mask & ::esphome::curling_engine::BELL_RELAY_2)
-            id(pulse_relay_aux).execute(pulse_ms);
+            id(pulse_relay_aux).execute(static_cast<int>(ring.duration_ms_2 ? ring.duration_ms_2 : ring.duration_ms));
 
   - interval: 5s
     then:

@@ -55,10 +55,19 @@ int relay_duration_for(const PiTimerSettings &settings, const char *event, int r
 
 }  // namespace
 
-// Duration (seconds) to pulse for an event: per-relay overrides win (longest
-// when several relays ring together, since the driver pulses all relays for
-// one length), falling back to the event-level duration then the global
-// buzzer.duration. RELAY3/RELAY4 have no hardware here and are ignored.
+int relay_event_duration(const PiTimerSettings &settings, const char *event, int relay_index) {
+  int d = relay_duration_for(settings, event, relay_index);
+  if (d > 0) return d;
+  if (std::string(event) == "start") d = settings.relay_start_duration;
+  else if (std::string(event) == "countdown") d = settings.relay_countdown_duration;
+  else d = settings.relay_end_duration;
+  if (d > 0) return d;
+  return settings.relay_duration;
+}
+
+// Duration (seconds) to pulse for an event: per-relay overrides win,
+// falling back to the event-level duration then the global buzzer.duration.
+// RELAY3/RELAY4 have no hardware here and are ignored.
 int event_duration(const PiTimerSettings &settings, const char *event,
                    const std::vector<std::string> &relays) {
   int best = 0;
@@ -67,13 +76,26 @@ int event_duration(const PiTimerSettings &settings, const char *event,
     if (r == "RELAY1") i = 1;
     else if (r == "RELAY2") i = 2;
     else continue;
-    int d = relay_duration_for(settings, event, i);
+    int d = relay_event_duration(settings, event, i);
     if (d > best) best = d;
   }
-  if (best > 0) return best;
-  if (std::string(event) == "start") return settings.relay_start_duration;
-  if (std::string(event) == "countdown") return settings.relay_countdown_duration;
-  return settings.relay_end_duration;
+  return best;
+}
+
+static void apply_relay_durations(const PiTimerSettings &settings, const char *event,
+                                  const std::vector<std::string> &relays, BellRing *out,
+                                  int override_duration = 0) {
+  for (const std::string &r : relays) {
+    int i = 0;
+    if (r == "RELAY1") i = 1;
+    else if (r == "RELAY2") i = 2;
+    else continue;
+    int dur = override_duration > 0 ? override_duration : relay_event_duration(settings, event, i);
+    uint32_t ms = static_cast<uint32_t>(dur) * 1000U;
+    if (i == 1 && ms > out->duration_ms_1) out->duration_ms_1 = ms;
+    if (i == 2 && ms > out->duration_ms_2) out->duration_ms_2 = ms;
+    if (ms > out->duration_ms) out->duration_ms = ms;
+  }
 }
 
 int bell_check(const PiTimerSettings &settings, const std::optional<PiTimerGame> &game,
@@ -125,23 +147,17 @@ bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame>
       start_relays = &(*settings.ring_at_start);
     if (start_relays != nullptr && !start_relays->empty()) {
       mask |= relays_mask(*start_relays);
-      if (game->start_duration_override.has_value() && *game->start_duration_override > 0) {
-        if (static_cast<uint32_t>(*game->start_duration_override) * 1000U > out->duration_ms)
-          out->duration_ms = static_cast<uint32_t>(*game->start_duration_override) * 1000U;
-      } else {
-        int dur = event_duration(settings, "start", *start_relays);
-        if (dur > 0 && static_cast<uint32_t>(dur) * 1000U > out->duration_ms)
-          out->duration_ms = static_cast<uint32_t>(dur) * 1000U;
-      }
+      int override_d = (game->start_duration_override.has_value() && *game->start_duration_override > 0)
+                           ? *game->start_duration_override : 0;
+      apply_relay_durations(settings, "start", *start_relays, out, override_d);
     }
   }
   // Countdown warning: seconds_until_buzzer descending into [target-grace, target].
   if (settings.countdown_minutes_before > 0 && !settings.countdown_relays.empty()) {
     const int target = settings.countdown_minutes_before * 60;
-    if (settings.countdown_minutes_before > 0 && until <= target && until >= target - BUZZER_GRACE_SECONDS && fires("countdown")) {
+    if (until <= target && until >= target - BUZZER_GRACE_SECONDS && fires("countdown")) {
       mask |= relays_mask(settings.countdown_relays);
-      int dur = event_duration(settings, "countdown", settings.countdown_relays);
-      if (dur > 0 && static_cast<uint32_t>(dur) * 1000U > out->duration_ms) out->duration_ms = static_cast<uint32_t>(dur) * 1000U;
+      apply_relay_durations(settings, "countdown", settings.countdown_relays, out);
     }
   }
   // Buzzer (pitimer buzz_if_due). Per-game end_relays/end_duration override wins.
@@ -153,14 +169,9 @@ bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame>
       end_relays = &(*settings.relays);
     if (end_relays != nullptr && !end_relays->empty()) {
       mask |= relays_mask(*end_relays);
-      if (game->end_duration_override.has_value() && *game->end_duration_override > 0) {
-        if (static_cast<uint32_t>(*game->end_duration_override) * 1000U > out->duration_ms)
-          out->duration_ms = static_cast<uint32_t>(*game->end_duration_override) * 1000U;
-      } else {
-        int dur = event_duration(settings, "end", *end_relays);
-        if (dur > 0 && static_cast<uint32_t>(dur) * 1000U > out->duration_ms)
-          out->duration_ms = static_cast<uint32_t>(dur) * 1000U;
-      }
+      int override_d = (game->end_duration_override.has_value() && *game->end_duration_override > 0)
+                           ? *game->end_duration_override : 0;
+      apply_relay_durations(settings, "end", *end_relays, out, override_d);
     }
   }
   if (mask == 0)

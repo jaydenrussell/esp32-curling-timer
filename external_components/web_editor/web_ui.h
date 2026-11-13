@@ -382,10 +382,10 @@ const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: fa
 const ADDONS = [
   { key: 'rtc', label: 'RTC time source', desc: 'Battery-backed clock (HYM8563 / PCF8563) — keeps time across power loss; timer knows the time on boot before SNTP syncs.', auto: true,
     configPaths: ['config.addons.rtc'],
-    info: [ 'I2C: address 0x51 (HYM8563 / PCF8563)', 'Pins: Grove Port B — SDA GPIO53, SCL GPIO54', 'Hat: M5Stack Unit PoE-P4 (U213)' ] },
-  { key: 'relays', label: 'Relay outputs', desc: 'Unit 2Relay channels driving the 24VAC bell circuit + aux.', auto: false,
+    info: [ 'I2C: address 0x51 (HYM8563 / PCF8563)', 'Default build bus: SDA GPIO5, SCL GPIO6 (separate from GPIO relay pins)', 'Addon/example wiring may use Grove Port B (GPIO53/GPIO54); do not share those pins with GPIO relay outputs', 'No address conflict with common I2C relay modules (typically 0x25/0x26), but I2C relay modules are not supported by this firmware' ] },
+  { key: 'relays', label: 'Relay outputs', desc: 'GPIO relay outputs driving the bell circuit + aux (Unit 2Relay / direct GPIO).', auto: false,
     configPaths: ['config.addons.relays', 'config.relay_count', 'config.relay1_enabled', 'config.relay1_function', 'config.relay2_enabled', 'config.relay2_function', 'config.relay3_enabled', 'config.relay3_function', 'config.relay4_enabled', 'config.relay4_function', 'config.buzzer.ring_at_start', 'config.buzzer.countdown.relays', 'config.buzzer.relays'],
-    info: [ 'Pins: RELAY1 GPIO26, RELAY2 GPIO25, RELAY3 GPIO32, RELAY4 GPIO33', 'Hat: M5Stack Unit 2Relay on Hat2-Bus', 'Configure: Relay outputs under Global options → Relays' ] },
+    info: [ 'Current GPIO pins (main config): RELAY1 GPIO53, RELAY2 GPIO54', 'Grove Port B HY2.0-4P wiring: G53/G54 — do not use same pins for I2C RTC/add-ons at the same time', 'Each selected output now pulses for its own configured/test duration', 'I2C addressable 2-relay modules (e.g. 0x25/0x26) are not supported by this firmware' ] },
   { key: 'pushbutton', label: 'Manual trigger button', desc: 'GPIO press rings the start relays for the next manually-triggered game.', auto: false,
     configPaths: ['config.addons.pushbutton', 'config.manual_trigger_gpio'],
     info: [ 'Pin: GPIO45 (manual trigger input)', 'Setting: Manual trigger GPIO under Global options → Timer' ] },

@@ -36,8 +36,10 @@ static constexpr int BELL_RELAY_2 = 2;
 
 // One merged ring decision for the current tick.
 struct BellRing {
-  int mask{0};          // BELL_RELAY_* bits to switch on
-  uint32_t duration_ms{0};  // pulse length (settings buzzer.duration)
+  int mask{0};              // BELL_RELAY_* bits to switch on
+  uint32_t duration_ms{0};  // max pulse length across relays (legacy/compat)
+  uint32_t duration_ms_1{0}; // RELAY1 pulse length
+  uint32_t duration_ms_2{0}; // RELAY2 pulse length
 };
 
 // pitimer buzz_if_due(): returns the relay bitmask to switch on, or 0 when
@@ -54,12 +56,15 @@ int bell_check(const PiTimerSettings &settings, const std::optional<PiTimerGame>
 bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame> &game,
                const std::string &date_iso, std::set<std::string> *fired, BellRing *out);
 
-// Duration (seconds) to pulse for an event: per-relay overrides win (longest
-// when several relays ring together, since the driver pulses all relays for
-// one length), falling back to the event-level duration then the global
-// buzzer.duration. RELAY3/RELAY4 have no hardware and are ignored.
+// Duration (seconds) to pulse for an event: per-relay overrides win,
+// falling back to the event-level duration then the global buzzer.duration.
+// RELAY3/RELAY4 have no hardware and are ignored.
 int event_duration(const PiTimerSettings &settings, const char *event,
                    const std::vector<std::string> &relays);
+
+// Per-relay duration (seconds) for an event, using per-relay override when set,
+// else event-level duration, else global buzzer.duration.
+int relay_event_duration(const PiTimerSettings &settings, const char *event, int relay_index);
 
 }  // namespace curling_engine
 }  // namespace esphome

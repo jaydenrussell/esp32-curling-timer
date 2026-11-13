@@ -264,13 +264,21 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
     }
     if (mask != 0) {
       out->mask = mask;
-      int dur = 0;
-      if (ev == "Game Start") dur = event_duration(settings, "start", relays);
-      else if (ev == "Countdown Warning") dur = event_duration(settings, "countdown", relays);
-      else if (ev == "Game End") dur = event_duration(settings, "end", relays);
-      if (dur <= 0) dur = settings.relay_duration;
-      out->duration_ms = static_cast<uint32_t>(dur) * 1000;
-      ESP_LOGI(TAG, "test relay: event %s, mask %d, %u ms", ev.c_str(), mask, static_cast<unsigned>(out->duration_ms));
+      const char *ev_key = (ev == "Game Start") ? "start" : (ev == "Countdown Warning") ? "countdown" : "end";
+      for (const auto &r : relays) {
+        int i = 0;
+        if (r == "RELAY1") i = 1;
+        else if (r == "RELAY2") i = 2;
+        else continue;
+        int dur = relay_event_duration(settings, ev_key, i);
+        if (dur <= 0) dur = settings.relay_duration;
+        uint32_t ms = static_cast<uint32_t>(dur) * 1000U;
+        if (i == 1) out->duration_ms_1 = ms;
+        if (i == 2) out->duration_ms_2 = ms;
+        if (ms > out->duration_ms) out->duration_ms = ms;
+      }
+      ESP_LOGI(TAG, "test relay: event %s, mask %d, r1=%ums r2=%ums", ev.c_str(), mask,
+               static_cast<unsigned>(out->duration_ms_1), static_cast<unsigned>(out->duration_ms_2));
       return true;
     }
     return false;
@@ -306,11 +314,22 @@ bool CurlingEngineComponent::bell_tick(BellRing *out) {
             }
           }
           if (mask != 0) {
-            int dur = event_duration(settings, "start", *settings.ring_at_start);
-            if (dur <= 0) dur = settings.relay_start_duration;
             out->mask = mask;
-            out->duration_ms = static_cast<uint32_t>(dur) * 1000;
-            ESP_LOGI(TAG, "manual trigger: game %s start %d, mask %d", g.message.value_or("None").c_str(), g.start, out->mask);
+            for (const auto &r : *settings.ring_at_start) {
+              int i = 0;
+              if (r == "RELAY1") i = 1;
+              else if (r == "RELAY2") i = 2;
+              else continue;
+              int dur = relay_event_duration(settings, "start", i);
+              if (dur <= 0) dur = settings.relay_start_duration;
+              uint32_t ms = static_cast<uint32_t>(dur) * 1000U;
+              if (i == 1) out->duration_ms_1 = ms;
+              if (i == 2) out->duration_ms_2 = ms;
+              if (ms > out->duration_ms) out->duration_ms = ms;
+            }
+            ESP_LOGI(TAG, "manual trigger: game %s start %d, mask %d r1=%ums r2=%ums",
+                     g.message.value_or("None").c_str(), g.start, out->mask,
+                     static_cast<unsigned>(out->duration_ms_1), static_cast<unsigned>(out->duration_ms_2));
             return true;
           }
         }
