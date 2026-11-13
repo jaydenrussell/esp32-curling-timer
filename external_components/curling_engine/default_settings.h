@@ -93,6 +93,7 @@ config:
     # pregame_countdown - Seconds of countdown before game starts
     pregame_countdown: 10
     # pregame display options
+    pregame_blink: False
     pregame_font_size: 0
     mirror_scale: 100
     pregame_header_color: ''

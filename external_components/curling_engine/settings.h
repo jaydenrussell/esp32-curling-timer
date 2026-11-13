@@ -153,6 +153,7 @@ class PiTimerSettings {
   int relay_end_duration_4{0};
   int relay_msg_time{0};
   int pregame_countdown{0};
+  bool pregame_blink{false};
   bool allow_midnight_wrap{false};
   int pregame_font_size{0};
   int mirror_scale{100};

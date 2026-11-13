@@ -287,6 +287,10 @@ ApiResponse PiTimerApi::status() {
       current["seconds_until_buzzer"] = *game->seconds_until_buzzer;
     else
       current["seconds_until_buzzer"] = nullptr;
+    if (game->seconds_since_start.has_value())
+      current["seconds_since_start"] = *game->seconds_since_start;
+    else
+      current["seconds_since_start"] = nullptr;
     if (game->end_count.has_value())
       current["end_count"] = *game->end_count;
     else
@@ -330,12 +334,14 @@ ApiResponse PiTimerApi::status() {
   JsonArray today_entries = today["entries"].to<JsonArray>();
   for (const Entry &entry : entries)
     add_entry_json(today_entries, entry);
-  if (clock_ok && live.valid && live.model_ok) {
+    if (clock_ok && live.valid && live.model_ok) {
     const DisplaySnapshot snap = curling_engine::render_snapshot(live.settings, clock_ok, weekday, sec, date_iso);
     doc["header_text"] = snap.header_text;
     doc["header_color"] = snap.header_color;
     doc["countdown"] = snap.countdown;
     doc["countdown_color"] = snap.countdown_color;
+    doc["is_pregame"] = snap.is_pregame;
+    doc["pregame_blink"] = snap.pregame_blink;
     doc["pace_text"] = snap.pace_text;
     doc["pace_color"] = snap.pace_color;
     doc["status_text"] = snap.status_text;
@@ -355,6 +361,11 @@ ApiResponse PiTimerApi::status() {
     doc["show_game_name"] = snap.show_game_name;
     doc["show_date_time"] = snap.show_date_time;
     doc["seconds_until_buzzer"] = snap.seconds_until_buzzer;
+    doc["pregame_countdown_seconds"] = live.settings.pregame_countdown;
+    doc["show_progress"] = snap.show_progress;
+    doc["progress_end_count"] = snap.progress_end_count;
+    doc["progress_seconds_since_start"] = snap.progress_seconds_since_start;
+    doc["progress_game_duration"] = snap.progress_game_duration;
   }
   return from_document(doc);
 }
@@ -882,6 +893,7 @@ ApiResponse PiTimerApi::get_config() {
   cfg["config.relay3_enabled"] = s.relay3_enabled;
   cfg["config.relay4_enabled"] = s.relay4_enabled;
   cfg["config.pregame_countdown"] = s.pregame_countdown;
+  cfg["config.pregame_blink"] = s.pregame_blink;
   cfg["config.allow_midnight_wrap"] = s.allow_midnight_wrap;
   cfg["config.manual_trigger_gpio"] = s.manual_trigger_gpio;
   cfg["config.pregame_font_size"] = s.pregame_font_size;
@@ -993,8 +1005,8 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.buzzer.end_duration" ||
                 path == "config.relay_count" ||
                 path == "config.log_level" ||
-                path == "config.pregame_countdown" ||
-               path == "config.pregame_font_size" ||
+                path == "config.pregame_countdown" || path == "config.pregame_blink" ||
+                path == "config.pregame_font_size" ||
                path == "config.footer.date_font_size" ||
                path == "config.footer.time_font_size" ||
                path == "config.manual_trigger_gpio" ||
@@ -1091,6 +1103,10 @@ ApiResponse PiTimerApi::get_leagues() {
     o["format"] = lp.format;
     o["team_size"] = lp.team_size;
     o["manual_trigger"] = lp.manual_trigger;
+    o["stones_per_end"] = lp.stones_per_end;
+    o["end_count"] = lp.end_count;
+    o["untimed_ends"] = lp.untimed_ends;
+    o["show_progress_through_end"] = lp.show_progress_through_end;
     JsonArray srs = o.createNestedArray("start_relays");
     for (const auto &r : lp.start_relays) srs.add(r.c_str());
     o["start_duration"] = lp.start_duration;
@@ -1129,6 +1145,10 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
     const char *fmt = item["format"].as<const char *>();
     yaml += "    format: " + curling_engine::yaml_quote(fmt ? fmt : "") + "\n";
     yaml += "    team_size: " + std::to_string(item["team_size"].as<int>()) + "\n";
+    if (item["stones_per_end"].is<int>()) yaml += "    stones_per_end: " + std::to_string(item["stones_per_end"].as<int>()) + "\n";
+    if (item["end_count"].is<int>()) yaml += "    end_count: " + std::to_string(item["end_count"].as<int>()) + "\n";
+    if (item["untimed_ends"].is<int>()) yaml += "    untimed_ends: " + std::to_string(item["untimed_ends"].as<int>()) + "\n";
+    if (item["show_progress_through_end"].is<bool>()) yaml += "    show_progress_through_end: " + std::string(item["show_progress_through_end"].as<bool>() ? "true" : "false") + "\n";
     yaml += "    manual_trigger: " + std::string(item["manual_trigger"].as<bool>() ? "true" : "false") + "\n";
     if (item["start_relays"].is<JsonArrayConst>()) {
       yaml += "    start_relays: [";

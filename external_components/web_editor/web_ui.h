@@ -536,7 +536,7 @@ async function selectTab(id) {
   clearMessage();
   for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== id);
   if (id === 'status') { if (state.status) renderStatus(); loadStatus(); }
-  if (id === 'quickstart') { loadStatus(); renderQuickstart(); }
+  if (id === 'quickstart') { if (!state.configValues) loadConfig(); loadStatus(); renderQuickstart(); }
   if (id === 'schedule') {
     if (!state.model) await loadSettings();
     else renderSchedule();
@@ -581,6 +581,7 @@ function buildQuickForm() {
   const seconds = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Seconds' });
   const name = el('input', { type: 'text', maxlength: 60, placeholder: 'QUICK START' });
   const pregameMin = el('input', { type: 'number', min: 0, max: 60, step: 1, inputmode: 'numeric', value: '5', 'aria-label': 'Pre-game countdown minutes' });
+  const pregameSec = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', value: '0', 'aria-label': 'Pre-game countdown seconds' });
   const expiresMin = el('input', { type: 'number', min: 0, max: 60, step: 1, inputmode: 'numeric', value: '10', 'aria-label': 'Expire minutes' });
   const stonesPerEnd = el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Stones per end' });
   const endCount = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Total number of ends' });
@@ -644,7 +645,7 @@ function buildQuickForm() {
       el('div', { class: 'section-title', style: 'margin:0 0 10px' }, 'Preview — settings that will be applied'),
       previewLine('Game time', gameSecs === 0 ? '—' : durationText(gameSecs)),
       previewLine('Expires at', gameSecs === 0 ? '—' : pad(when.getHours()) + ':' + pad(when.getMinutes())),
-      previewLine('Pre-game countdown', pregame.checked ? (pregameMin.value || 5) + ' min' : 'Off'),
+      previewLine('Pre-game countdown', pregame.checked ? ((Number(pregameMin.value)||0) + 'm ' + (Number(pregameSec.value)||0) + 's') : 'Off'),
       previewLine('Pace of play', pace.checked ? 'On' : 'Off'),
       previewLine('Progress through end', showProgress.checked ? 'On' : 'Off'),
       previewLine('Replace same-time games', replace.checked ? 'On' : 'Off'),
@@ -659,7 +660,7 @@ function buildQuickForm() {
 
   const wire = (input) => { input.addEventListener('input', refreshPreview); input.addEventListener('change', refreshPreview); };
   wire(minutes); wire(seconds); wire(expiresMin);
-  wire(pregameMin);
+  wire(pregameMin); wire(pregameSec);
   [pregame, pace, replace, showProgress].forEach(c => { c.addEventListener('change', refreshPreview); });
   [stonesPerEnd, endCount, untimedEnds].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
   [...startBoxes, ...startDurs, ...endBoxes, ...endDurs].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
@@ -678,7 +679,7 @@ function buildQuickForm() {
         name: timer.name,
         header_hold: (Number(expiresMin.value) || 10) * 60,
         ...options(),
-        pregame_countdown: (pregame.checked ? (Number(pregameMin.value) || 0) * 60 : 0),
+        pregame_countdown: (pregame.checked ? ((Number(pregameMin.value)||0) * 60 + (Number(pregameSec.value)||0)) : 0),
         start_relays: relayValues(startBoxes),
         start_duration: relayMaxDuration(startDurs),
         end_relays: relayValues(endBoxes),
@@ -696,7 +697,7 @@ function buildQuickForm() {
       el('div', { class: 'section-title', style: 'margin-bottom: 8px' }, 'Quick picks'),
       el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px' }, ...presets)),
     el('div', { class: 'grid2' },
-      el('div', { class: 'field', role: 'group', 'aria-label': 'Pre-game countdown duration' }, el('label', {}, 'Pre-game countdown (minutes)'), pregameMin),
+      el('div', { class: 'field', role: 'group', 'aria-label': 'Pre-game countdown duration' }, el('label', {}, 'Pre-game countdown'), el('div', { class: 'duration' }, pregameMin, el('span', {}, 'min'), pregameSec, el('span', {}, 's'))),
       el('div', { class: 'field', role: 'group', 'aria-label': 'Full game time' }, el('label', {}, 'Full game time'),
         el('div', { class: 'duration' }, minutes, el('span', {}, 'min'), seconds, el('span', {}, 's'))),
       el('div', { class: 'field' }, el('label', {}, 'Expire time (minutes)'), expiresMin),
@@ -722,10 +723,26 @@ function buildQuickForm() {
       endRow),
     preview,
     el('div', { class: 'row-actions' }, button, hint));
+  form._defaultsApplied = false;
+  form.applyDefaults = () => {
+    if (form._defaultsApplied) return;
+    const st = state.status || {};
+    const cv = state.configValues || ((state.configOriginal && state.configOriginal.config) || {});
+    const pg = Number((cv && cv['config.pregame_countdown'] != null) ? cv['config.pregame_countdown'] : (st.pregame_countdown_seconds != null ? st.pregame_countdown_seconds : 0)) || 0;
+    pregame.checked = pg > 0;
+    pregameMin.value = String(Math.floor(pg / 60));
+    pregameSec.value = String(pg % 60);
+    const paceEnabled = cv && cv['config.pace_of_play.enabled'] != null ? !!cv['config.pace_of_play.enabled'] : true;
+    pace.checked = !!paceEnabled;
+    showProgress.checked = true;
+    refreshPreview();
+    form._defaultsApplied = true;
+  };
   form.update = (enabled, clockOk = true) => {
     button.disabled = !enabled;
     presets.forEach((b) => { b.disabled = !enabled; });
     hint.textContent = enabled ? '' : (clockOk ? 'Enable the timer first' : 'Waiting for the clock to sync');
+    if (enabled || clockOk || (state.status && state.status.pregame_countdown_seconds != null)) form.applyDefaults();
   };
   refreshPreview();
   return form;
@@ -836,10 +853,11 @@ function renderStatus() {
   const baseTimer5 = Number(sm.font_timer_5 || Math.round(baseTimer4 * 370 / 450));
   const basePace = Number(sm.font_pace);
   const baseFooter = Number(sm.font_footer);
-  const isFiveDigit = !!(sm.show_countdown && sm.seconds_until_buzzer >= 3600);
-  const baseTimer = isFiveDigit ? baseTimer5 : baseTimer4;
-  const pregame = !!(sm.countdown && !String(sm.countdown ?? '').includes('\u02F8'));
-  const baseCountdown = pregame ? Math.round(baseTimer * 0.55) : baseTimer;
+    const isFiveDigit = !!(sm.show_countdown && sm.seconds_until_buzzer >= 3600);
+    const baseTimer = isFiveDigit ? baseTimer5 : baseTimer4;
+    const pregame = !!sm.is_pregame;
+    const pregameBlink = !!sm.pregame_blink;
+    const baseCountdown = pregame ? Math.round(baseTimer * 0.55) : baseTimer;
 
   const fh = px(baseHeader);
   const fcd = px(baseCountdown);
@@ -859,7 +877,9 @@ function renderStatus() {
   }
 
   const showPace = !!(sm.show_pace && sm.pace_text);
-  const showProgress = !!(s.current && s.current.show_progress_through_end && s.current.end_count && s.current.end_count > 0 && s.current.buzzer > s.current.start);
+  const showProgress = !!(sm.show_progress && sm.progress_end_count > 0 && sm.progress_game_duration > 0);
+  const progressEndCount = Number(sm.progress_end_count || (s.current && s.current.end_count) || 0);
+  const progressGameDuration = Number(sm.progress_game_duration || (s.current ? (s.current.buzzer - s.current.start) : 0));
   const centerTop = sm.header_text ? px(20 + baseHeader * 1.4) : px(20);
   const centerBottom = px(20 + baseFooter * 1.4 + (showProgress ? 24 : 0));
   const centerWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; top:${centerTop}px; bottom:${centerBottom}px; display:flex; flex-direction:column; align-items:center; justify-content:center;` });
@@ -867,7 +887,21 @@ function renderStatus() {
   if (sm.show_countdown) {
     const cd = el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` }, sm.countdown || '');
     cd.dataset.maxFont = String(fcd);
+    if (window._mirrorPregameBlinkIv) { clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null; }
+    const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    if (sm.is_pregame && pregameBlink && !reduceMotion) {
+      let visible = true;
+      window._mirrorPregameBlinkIv = setInterval(() => {
+        visible = !visible;
+        const elcd = document.getElementById('mirror-countdown');
+        if (!elcd) { clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null; return; }
+        elcd.style.visibility = visible ? 'visible' : 'hidden';
+      }, 1000);
+      cd.style.visibility = 'visible';
+    }
     centerWrap.append(cd);
+  } else if (window._mirrorPregameBlinkIv) {
+    clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null;
   }
   if (sm.show_status && sm.status_text) {
     const st = el('div', { id: 'mirror-status-text', style: `color:${unswap(sm.status_color) || '#fff'}; font-size:${px(Math.round(basePace*0.8))}px; text-align:center; margin:${px(8)}px 0 0; width:100%; white-space:nowrap; overflow:hidden;` }, sm.status_text);
@@ -879,9 +913,9 @@ function renderStatus() {
   }
   stage.append(centerWrap);
 
-  if (showProgress) {
-    const endCount = s.current.end_count;
-    const gameDur = s.current.buzzer - s.current.start;
+  if (showProgress && progressEndCount > 0 && progressGameDuration > 0) {
+    const endCount = progressEndCount;
+    const gameDur = progressGameDuration;
     const endDur = gameDur / endCount;
     const unitsPerEnd = 4.4;
     const leadPct = (1 / unitsPerEnd * 100).toFixed(1);
@@ -889,13 +923,14 @@ function renderStatus() {
     const vicePct = (1 / unitsPerEnd * 100).toFixed(1);
     const skipPct = (1.4 / unitsPerEnd * 100).toFixed(1);
     const nowSecs = secondsNow();
-    const progWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; bottom:${px(20 + baseFooter * 1.5)}px; display:flex; flex-direction:column; gap:${Math.max(2, px(3))}px;` });
+    const sinceStart = (sm.progress_seconds_since_start != null) ? Number(sm.progress_seconds_since_start) : (s.current && s.current.seconds_since_start != null ? Number(s.current.seconds_since_start) : (s.current ? nowSecs - s.current.start : 0));
+    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(12)}px; right:${px(12)}px; bottom:${px(20 + baseFooter * 1.5)}px; display:flex; flex-direction:column; gap:${Math.max(2, px(3))}px;` });
     for (let e = 0; e < endCount; e++) {
-      const endStart = s.current.start + e * endDur;
+      const endStart = e * endDur;
       const endEnd = endStart + endDur;
       let fillPct = 0;
-      if (nowSecs >= endEnd) fillPct = 100;
-      else if (nowSecs > endStart) fillPct = ((nowSecs - endStart) / endDur * 100);
+      if (sinceStart >= endEnd) fillPct = 100;
+      else if (sinceStart > endStart) fillPct = ((sinceStart - endStart) / endDur * 100);
       const bar = el('div', { class: 'progress-end-bar', style: `width:100%; height:${Math.max(6, px(14))}px;` });
       bar.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct}%` }));
       bar.append(el('div', { class: 'progress-seg second', style: `width:${secondPct}%` }));
@@ -944,7 +979,20 @@ function tick() {
     box.style.color = left <= 0 ? 'var(--bad)' : 'var(--ok)';
   }
   const fills = document.querySelectorAll('.progress-end-fill');
-  if (fills.length && s && s.current && s.current.show_progress_through_end && s.current.end_count && s.current.buzzer > s.current.start) {
+  if (fills.length && s && s.show_progress && s.progress_end_count && s.progress_game_duration) {
+    const endCount = Number(s.progress_end_count);
+    const endDur = Number(s.progress_game_duration) / endCount;
+    const baseSince = (s.progress_seconds_since_start != null) ? Number(s.progress_seconds_since_start) : (s.current && s.current.seconds_since_start != null ? Number(s.current.seconds_since_start) : 0);
+    const sinceStart = baseSince + Math.floor((performance.now() - state.statusAt) / 1000);
+    fills.forEach((fill, e) => {
+      const endStart = e * endDur;
+      const endEnd = endStart + endDur;
+      let pct = 0;
+      if (sinceStart >= endEnd) pct = 100;
+      else if (sinceStart > endStart) pct = (sinceStart - endStart) / endDur * 100;
+      fill.style.width = `${Math.round(pct)}%`;
+    });
+  } else if (fills.length && s && s.current && s.current.show_progress_through_end && s.current.end_count && s.current.buzzer > s.current.start) {
     const endCount = s.current.end_count;
     const gameDur = s.current.buzzer - s.current.start;
     const endDur = gameDur / endCount;
@@ -959,15 +1007,16 @@ function tick() {
     });
   }
   const mc = $('mirror-countdown');
-  if (mc && s && s.current && s.current.seconds_until_buzzer != null) {
-    const snap = (s.countdown || '');
-    if (snap && !String(snap).includes('\u02F8')) {
-      const left = parseInt(snap, 10) - Math.floor((performance.now() - state.statusAt) / 1000);
-      if (left > 0) { mc.textContent = String(left); return; }
+  if (mc && s) {
+    if (s.is_pregame) {
+      if (s.countdown) mc.textContent = s.countdown;
       return;
-    } else {
+    }
+    if (s.current && s.current.seconds_until_buzzer != null) {
       const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
       mc.textContent = countdownText(left);
+    } else if (s.countdown) {
+      mc.textContent = s.countdown;
     }
   }
 }
@@ -1050,7 +1099,8 @@ function setConfigDirty(dirty) {
 function newEntry(previous) {
   const start = previous ? Math.ceil((previous.buzzer + 25 * 60) / 60) * 60 : 9 * 3600;
   return { start: Math.min(start, 86340), buzzer: Math.min(start + 105 * 60, 86340), name: null,
-           game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false, league: null };
+           game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false, league: null,
+           pregame_countdown: null, end_count: null, stones_per_end: null, untimed_ends: null, show_progress_through_end: null };
 }
 
 function entryEditor(entries, index, leagues, rerender) {
@@ -1078,13 +1128,32 @@ function entryEditor(entries, index, leagues, rerender) {
     entry.name = league.name;
     entry.buzzer = Math.min(entry.start + (league.game_duration_minutes || 0) * 60, 86340);
     entry.game_completed = league.header_text || null;
-    entry.header_hold = league.pregame_countdown_seconds || null;
-    entry.pace_of_play = league.pace_enabled ? true : false;
-    entry.pace_unit_duration = (league.pace_minutes_per_end || 0) * 60 || null;
+    if (league.pregame_countdown_seconds != null) entry.pregame_countdown = league.pregame_countdown_seconds;
+    if (league.game_duration_minutes != null && entry.start != null) entry.buzzer = Math.min(entry.start + (league.game_duration_minutes || 0) * 60, 86340);
+    if (league.pace_enabled != null) entry.pace_of_play = league.pace_enabled ? true : false;
+    if (league.pace_minutes_per_end != null) entry.pace_unit_duration = (league.pace_minutes_per_end || 0) * 60 || null;
+    if (league.stones_per_end != null) entry.stones_per_end = league.stones_per_end;
+    if (league.end_count != null) entry.end_count = league.end_count;
+    if (league.untimed_ends != null) entry.untimed_ends = league.untimed_ends;
+    if (league.show_progress_through_end != null) entry.show_progress_through_end = league.show_progress_through_end;
+    if (league.start_relays != null) entry.start_relays = league.start_relays;
+    if (league.start_duration != null) entry.start_duration = league.start_duration;
+    if (league.end_relays != null) entry.end_relays = league.end_relays;
+    if (league.end_duration != null) entry.end_duration = league.end_duration;
     changed(); rerender();
   } },
     el('option', { value: '', selected: !entry.league }, '(none)'),
     ...(leagues || []).map((l) => el('option', { value: l.name, selected: entry.league === l.name }, l.name)));
+  const pgTotal = (entry.pregame_countdown != null) ? Number(entry.pregame_countdown) : null;
+  const pgM = el('input', { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: 'default', value: pgTotal != null ? Math.floor(pgTotal / 60) : '' });
+  const pgS = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', value: pgTotal != null ? (pgTotal % 60) : '' });
+  const syncPg = () => {
+    if (pgM.value === '' && pgS.value === '') { entry.pregame_countdown = null; }
+    else { entry.pregame_countdown = (parseInt(pgM.value || '0', 10) || 0) * 60 + (parseInt(pgS.value || '0', 10) || 0); }
+    changed();
+  };
+  pgM.onchange = syncPg; pgS.onchange = syncPg;
+
   return el('div', { class: 'entry' },
     el('div', { class: 'league' }, el('label', {}, 'League'), leagueSelect),
     el('div', { class: 'start' }, el('label', {}, 'Start'), timeInput('start')),
@@ -1094,10 +1163,16 @@ function entryEditor(entries, index, leagues, rerender) {
     el('div', { class: 'name' }, text('name', 'League name'),
       entry.quick ? el('span', { class: 'pill quick', style: 'align-self: center' }, 'quick') : null),
     el('div', { class: 'more' },
+      el('label', {}, 'Pre-game countdown'),
+      el('div', { class: 'duration', role: 'group', 'aria-label': 'Pre-game countdown duration' }, pgM, el('span', {}, 'min'), pgS, el('span', {}, 's')),
       el('label', {}, 'Header when game completed'), text('game_completed', 'default'),
       el('label', {}, 'Header hold seconds'), hold,
       el('label', {}, 'Pace of play'), pace,
-      el('label', {}, 'Minutes per end'), unit));
+      el('label', {}, 'Minutes per end'), unit,
+      el('label', {}, 'Total ends'), el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.end_count != null ? entry.end_count : '', onchange: (event) => { entry.end_count = event.target.value === '' ? null : Math.max(1, parseInt(event.target.value, 10) || 1); changed(); } }),
+      el('label', {}, 'Stones per end'), el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.stones_per_end != null ? entry.stones_per_end : '', onchange: (event) => { entry.stones_per_end = event.target.value === '' ? null : Math.max(1, parseInt(event.target.value, 10) || 1); changed(); } }),
+      el('label', {}, 'Untimed ends'), el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.untimed_ends != null ? entry.untimed_ends : '', onchange: (event) => { entry.untimed_ends = event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0); changed(); } }),
+      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: entry.show_progress_through_end === true, onchange: (event) => { entry.show_progress_through_end = event.target.checked ? true : null; changed(); } }), 'Show progress through end')));
 }
 
 function entryList(entries, leagues, rerender) {
@@ -1284,7 +1359,8 @@ const CONFIG_SECTIONS = [
       ['config.relay4_function', 'select', 'RELAY4 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom']] },
   { group: 'Display (HDMI output)', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
     fields: [
-      ['config.pregame_countdown', 'int', 'Countdown (seconds)', 0, 60],
+      ['config.pregame_countdown', 'pregame_hms', 'Countdown', 0, 600],
+      ['config.pregame_blink', 'bool', 'Flash/blink pre-game countdown (safe, gentle)'],
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
       ['config.pregame_header_color', 'color', 'Header colour'],
       ['config.pregame_countdown_color', 'color', 'Countdown colour'],
@@ -1441,6 +1517,14 @@ function configField(field) {
   if (type === 'bool') {
     return el('div', { class: 'field' }, el('label', { class: 'check' },
       el('input', { type: 'checkbox', checked: value === true, onchange: (event) => set(event.target.checked) }), label));
+  }
+  if (type === 'pregame_hms') {
+    const total = parseInt(value || '0', 10) || 0;
+    const m = el('input', { type: 'number', min: 0, max: 60, step: 1, inputmode: 'numeric', value: Math.floor(total/60), 'aria-label': label + ' minutes' });
+    const sec = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', value: total % 60, 'aria-label': label + ' seconds' });
+    const sync = () => set((parseInt(m.value||'0',10)||0)*60 + (parseInt(sec.value||'0',10)||0));
+    m.oninput = sync; sec.oninput = sync;
+    return el('div', { class: 'field' }, el('label', {}, label), el('div', { class: 'duration' }, m, el('span', {}, 'min'), sec, el('span', {}, 's')));
   }
   if (type === 'int') {
     let width = '';
@@ -1891,8 +1975,12 @@ async function renderLeagues() {
       oninput: (ev) => { lp.name = ev.target.value.trim(); } });
     const durInput = el('input', { type: 'number', id: prefix + '-dur', value: lp.game_duration_minutes || '', min: 0,
       oninput: (ev) => { lp.game_duration_minutes = parseInt(ev.target.value || '0', 10); } });
-    const pregameInput = el('input', { type: 'number', id: prefix + '-pregame', value: lp.pregame_countdown_seconds || '', min: 0,
-      oninput: (ev) => { lp.pregame_countdown_seconds = parseInt(ev.target.value || '0', 10); } });
+    const pgSecsTotal = parseInt(lp.pregame_countdown_seconds || '0', 10) || 0;
+    const pregameMinIn = el('input', { type: 'number', id: prefix + '-pregame-min', value: Math.floor(pgSecsTotal/60), min: 0, step: 1, inputmode: 'numeric', 'aria-label': 'Pre-game countdown minutes' });
+    const pregameSecIn = el('input', { type: 'number', id: prefix + '-pregame-sec', value: pgSecsTotal % 60, min: 0, max: 59, step: 1, inputmode: 'numeric', 'aria-label': 'Pre-game countdown seconds' });
+    const syncPregame = () => { lp.pregame_countdown_seconds = (parseInt(pregameMinIn.value||'0',10)||0)*60 + (parseInt(pregameSecIn.value||'0',10)||0); };
+    pregameMinIn.oninput = syncPregame; pregameSecIn.oninput = syncPregame;
+    const pregameInput = el('div', { class: 'duration', id: prefix + '-pregame' }, pregameMinIn, el('span', {}, 'min'), pregameSecIn, el('span', {}, 's'));
     const headerInput = el('input', { type: 'text', id: prefix + '-header', value: lp.header_text || '', maxlength: 80,
       oninput: (ev) => { lp.header_text = ev.target.value.trim(); } });
     const paceCheck = el('input', { type: 'checkbox', id: prefix + '-pace', checked: !!lp.pace_enabled,
@@ -1952,7 +2040,7 @@ async function renderLeagues() {
         el('label', {}, 'Name', nameInput),
         el('label', {}, 'Duration (min)', durInput)),
       el('div', { class: 'grid2' },
-        el('label', {}, 'Pre-game countdown (s)', pregameInput),
+        el('label', {}, 'Pre-game countdown', pregameInput),
         el('label', {}, 'Header text', headerInput)),
       el('div', { class: 'grid2' },
         el('label', {}, 'Stones per end', stonesInput),

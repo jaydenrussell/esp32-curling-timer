@@ -241,8 +241,10 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
     const int seconds_left = pregame ? (-since_start) : g.seconds_until_buzzer.value_or(0);
     out.show_countdown = true;
     out.game_completed = !pregame && seconds_left <= 0;
+    out.is_pregame = pregame;
+    out.pregame_blink = pregame && settings.pregame_blink;
     out.seconds_until_buzzer = pregame ? (g.seconds_until_buzzer.value_or(0) + pregame_secs) : seconds_left;
-    out.countdown = pregame ? std::to_string(seconds_left) : format_countdown(seconds_left);
+    out.countdown = pregame ? format_countdown(seconds_left) : format_countdown(seconds_left);
     out.countdown_color = color_to_hex(pregame ? settings.pregame_countdown_color : [&settings](const char *key) {
           auto it = settings.countdown_colors.find(key);
           return it != settings.countdown_colors.end() ? it->second : std::string("white");
@@ -273,6 +275,14 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
     if (g.message.has_value() && settings.game_name) {
       out.show_game_name = true;
       out.game_name = *g.message;
+    }
+
+    const bool progress_on = g.show_progress_through_end.value_or(false);
+    if (progress_on && g.end_count.has_value() && *g.end_count > 0 && g.buzzer > g.start) {
+      out.show_progress = true;
+      out.progress_end_count = *g.end_count;
+      out.progress_seconds_since_start = g.seconds_since_start.value_or(0);
+      out.progress_game_duration = g.buzzer - g.start;
     }
   }
 

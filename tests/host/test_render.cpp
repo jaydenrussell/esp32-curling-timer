@@ -243,3 +243,44 @@ TEST_CASE("render_snapshot: invalid settings yields empty snapshot") {
   CHECK_FALSE(snap.show_countdown);
   CHECK(snap.header_text.empty());
 }
+
+TEST_CASE("render_snapshot: pregame clock countdown and blink flag") {
+  auto s = parse_base();
+  s.pregame_countdown = 300;
+  s.pregame_blink = true;
+  s.pregame_header_text = "GET READY";
+  s.pregame_countdown_color = "yellow";
+  // Monday game starts 36000 in CASE_BASE; 120s before start -> pregame with 120s left
+  auto snap = render_snapshot(s, true, 0, 35880, "2026-09-28");
+  CHECK(snap.valid);
+  CHECK(snap.show_countdown);
+  CHECK(snap.is_pregame);
+  CHECK(snap.pregame_blink);
+  CHECK(snap.header_text == "GET READY");
+  CHECK(snap.countdown == std::string("02") + COLON + "00");
+}
+
+TEST_CASE("render_snapshot: progress fields when enabled") {
+  PiTimerSettings s;
+  s.valid = true;
+  s.enabled = true;
+  s.headers["text"]["when_idle"] = "IDLE";
+  s.headers["text"]["counting_down"] = "COUNTING";
+  s.headers["text"]["game_completed"] = "DONE";
+  s.headers["color"]["when_idle"] = "white";
+  s.headers["color"]["counting_down"] = "yellow";
+  s.headers["color"]["game_completed"] = "yellow";
+  s.countdown_colors["counting_down"] = "green";
+  s.countdown_colors["game_completed"] = "red";
+  PiTimerGame g;
+  g.start = 36000;
+  g.buzzer = 39600; // 60 min
+  g.end_count = 8;
+  g.show_progress_through_end = true;
+  s.schedules["Monday"] = {g};
+  auto snap = render_snapshot(s, true, 0, 36900, "2026-09-28"); // 15 min in
+  CHECK(snap.show_progress);
+  CHECK(snap.progress_end_count == 8);
+  CHECK(snap.progress_game_duration == 3600);
+  CHECK(snap.progress_seconds_since_start == 900);
+}

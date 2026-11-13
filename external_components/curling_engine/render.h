@@ -50,6 +50,8 @@ struct DisplaySnapshot {
 
   bool show_countdown{false};
   bool game_completed{false};  // live state for callers (bell work later)
+  bool is_pregame{false};
+  bool pregame_blink{false};
   int seconds_until_buzzer{0};
   std::string countdown;  // "MM:SS" with raised colons
   std::string countdown_color;
@@ -57,6 +59,11 @@ struct DisplaySnapshot {
   bool show_pace{false};
   std::string pace_text;
   std::string pace_color;
+
+  bool show_progress{false};
+  int progress_end_count{0};
+  int progress_seconds_since_start{0};
+  int progress_game_duration{0};
 
   bool show_game_name{false};
   std::string game_name;  // footer centre (FOOTER_COLOR)
