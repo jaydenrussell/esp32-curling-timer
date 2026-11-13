@@ -166,8 +166,13 @@ static bool session_from_cookie(const std::string &cookie, std::string *value) {
 static std::string session_header(const std::string &value, long max_age) {
   char buf[16];
   std::snprintf(buf, sizeof(buf), "%ld", max_age);
-  return std::string(SESSION_COOKIE_NAME) + "=" + value + "; Max-Age=" + buf +
-         "; Path=/; HttpOnly; SameSite=Strict";
+  std::string header = std::string(SESSION_COOKIE_NAME) + "=" + value + "; Max-Age=" + buf +
+                       "; Path=/; HttpOnly; SameSite=Strict";
+#ifdef ESP_PLATFORM
+  // Correct for HTTPS terminated at a reverse proxy; direct plain HTTP may not persist cookies.
+  header += "; Secure";
+#endif
+  return header;
 }
 
 static bool json_strict_int(JsonVariantConst v, long long *out) {
@@ -1361,7 +1366,17 @@ ApiResponse PiTimerApi::login(const ApiRequest &req, JsonObjectConst data) {
 
 ApiResponse PiTimerApi::logout() {
   ApiResponse resp = ok_json();
+  // Clear current and legacy cookie variants so stale/duplicate cookies don't keep
+  // inflating proxied request headers after logout or auth changes.
   resp.extra_headers.emplace_back("Set-Cookie", session_header("", 0));
+  resp.extra_headers.emplace_back(
+      "Set-Cookie",
+      std::string(SESSION_COOKIE_NAME) + "=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict");
+#ifdef ESP_PLATFORM
+  resp.extra_headers.emplace_back(
+      "Set-Cookie",
+      std::string(SESSION_COOKIE_NAME) + "=; Max-Age=0; Path=/; HttpOnly; SameSite=Strict; Secure");
+#endif
   return resp;
 }
 

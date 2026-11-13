@@ -62,6 +62,11 @@ esp32:
       CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH: y
       CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF: y
       CONFIG_ESP_COREDUMP_CHECKSUM_CRC32: y
+      # Raise HTTP server request limits (ESPHome web_server/port 80 and global
+      # esp_http_server defaults) so reverse-proxy headers/cookies don't trigger
+      # "431 Request Header Fields Too Large" behind Zoraxy.
+      CONFIG_HTTPD_MAX_REQ_HDR_LEN: "4096"
+      CONFIG_HTTPD_MAX_URI_LEN: "1024"
       # Enable mbedtls certificate bundle so esp_http_client can verify
       # HTTPS server certificates (used by server-side league import).
       CONFIG_MBEDTLS_CERTIFICATE_BUNDLE: y
@@ -278,7 +283,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.135
+      ref: v2026.11.136
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]

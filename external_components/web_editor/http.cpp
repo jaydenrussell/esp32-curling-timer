@@ -22,7 +22,7 @@ static const char *const TAG = "web_editor";
 
 // header buffer sizes (larger values truncated to fit)
 static constexpr size_t COOKIE_BUF = 1024;
-static constexpr size_t SMALL_HEADER_BUF = 256;
+static constexpr size_t SMALL_HEADER_BUF = 512;
 
 static WebEditorComponent *s_editor = nullptr;
 static httpd_handle_t s_server = nullptr;
@@ -115,11 +115,10 @@ static const char *status_line(int status) {
 static esp_err_t send_response(httpd_req_t *req, const ApiResponse &resp) {
   httpd_resp_set_status(req, status_line(resp.status));
   httpd_resp_set_type(req, resp.content_type.c_str());
-  // python RequestHandler._send security headers
+  // Keep response headers lean: reverse proxies add their own headers and
+  // some clients/proxies reject oversized response header blocks.
   httpd_resp_set_hdr(req, "Cache-Control", "no-store");
   httpd_resp_set_hdr(req, "X-Content-Type-Options", "nosniff");
-  httpd_resp_set_hdr(req, "X-Frame-Options", "DENY");
-  httpd_resp_set_hdr(req, "Referrer-Policy", "no-referrer");
   for (const auto &header : resp.extra_headers)
     httpd_resp_set_hdr(req, header.first.c_str(), header.second.c_str());
   if (resp.body.empty())
@@ -145,6 +144,8 @@ static esp_err_t api_handler(httpd_req_t *req) {
   if (request.method == "GET" && (request.path == "/" || request.path == "/index.html")) {
     ApiResponse page;
     page.content_type = "text/html; charset=utf-8";
+    page.extra_headers.emplace_back("X-Frame-Options", "DENY");
+    page.extra_headers.emplace_back("Referrer-Policy", "no-referrer");
     page.extra_headers.emplace_back(
         "Content-Security-Policy",
         "default-src 'self'; script-src 'self' 'unsafe-inline'; "
@@ -175,6 +176,13 @@ bool start_web_httpd(WebEditorComponent *editor) {
   config.server_port = editor->port();
   config.ctrl_port = 0;
   config.max_uri_handlers = 4;
+  // Reverse proxies (Zoraxy, nginx, etc.) commonly add X-Forwarded-* /
+  // X-Real-IP / larger Host headers and forward the browser Cookie header.
+  // Raise the accepted request header length above esp_http_server's 1024B
+  // default so proxied requests are not rejected as "431 Request Header
+  // Fields Too Large" before the handler runs.
+  config.max_req_hdr_len = 4096;
+  config.max_uri_len = 1024;
   // A single user (the web editor) needs one or two connections; keeping
   // the defaults costs internal RAM on a device that also runs LVGL, the
   // HDMI driver and the API.
