@@ -985,6 +985,7 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
         path == "config.allow_midnight_wrap" ||
         path == "config.relay2_enabled" || path == "config.relay3_enabled" ||
         path == "config.relay4_enabled" ||
+        path == "config.pregame_blink" ||
         path == "config.addons.rtc" || path == "config.addons.relays" ||
         path == "config.addons.pushbutton" || path == "config.addons.pahub" ||
         path == "config.addons.wifi" || path == "config.addons.uart") {
@@ -1005,7 +1006,7 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
                path == "config.buzzer.end_duration" ||
                 path == "config.relay_count" ||
                 path == "config.log_level" ||
-                path == "config.pregame_countdown" || path == "config.pregame_blink" ||
+                path == "config.pregame_countdown" ||
                 path == "config.pregame_font_size" ||
                path == "config.footer.date_font_size" ||
                path == "config.footer.time_font_size" ||

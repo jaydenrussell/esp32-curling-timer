@@ -283,7 +283,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.137
+      ref: v2026.11.138
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -865,14 +865,62 @@ lvgl:
         long_mode: CLIP
         recolor: true
         text: ""
-    - label:
-        id: lbl_progress
-        align: BOTTOM_MID
-        y: -85
-        text_font: font_footer
-        long_mode: CLIP
-        recolor: true
-        text: ""
+    - obj:
+        id: prog_seg0
+        align: BOTTOM_LEFT
+        x: 90
+        y: -54
+        width: 250
+        height: 16
+        bg_color: 0x38BDF8
+        border_width: 0
+        radius: 8
+        hidden: true
+    - obj:
+        id: prog_seg1
+        align: BOTTOM_LEFT
+        x: 340
+        y: -54
+        width: 250
+        height: 16
+        bg_color: 0x34D399
+        border_width: 0
+        radius: 8
+        hidden: true
+    - obj:
+        id: prog_seg2
+        align: BOTTOM_LEFT
+        x: 590
+        y: -54
+        width: 250
+        height: 16
+        bg_color: 0xFBBF24
+        border_width: 0
+        radius: 8
+        hidden: true
+    - obj:
+        id: prog_seg3
+        align: BOTTOM_LEFT
+        x: 840
+        y: -54
+        width: 350
+        height: 16
+        bg_color: 0xF87171
+        border_width: 0
+        radius: 8
+        hidden: true
+    - obj:
+        id: prog_fill
+        align: BOTTOM_LEFT
+        x: 90
+        y: -54
+        width: 0
+        height: 16
+        bg_color: 0x020A14
+        bg_opa: 55%
+        border_width: 0
+        radius: 8
+        hidden: true
     - label:
         id: lbl_status
         align: CENTER
@@ -1012,26 +1060,36 @@ interval:
             if (!s.show_pace)
               return std::string();
             return ::esphome::curling_engine::recolor(s.pace_color, s.pace_text);
-      - lvgl.label.update:
-          id: lbl_progress
-          text: !lambda |-
-            std::string mode = id(engine)->get_display_test_mode();
-            if (mode != "normal") return std::string();
-            auto &s = id(g_snap);
-            if (!s.show_progress || s.progress_end_count <= 0 || s.progress_game_duration <= 0)
-              return std::string();
-            int since = s.progress_seconds_since_start;
-            int dur = s.progress_game_duration;
-            int ends = s.progress_end_count;
-            if (dur <= 0 || ends <= 0) return std::string();
-            if (since < 0) since = 0;
-            if (since > dur) since = dur;
-            int end_dur = dur / ends;
-            if (end_dur <= 0) end_dur = 1;
-            int current_end = std::min(ends, (since / end_dur) + 1);
-            char buf[48];
-            snprintf(buf, sizeof(buf), "#FFFFFF End %d/%d#", current_end, ends);
-            return std::string(buf);
+      - lambda: |-
+          auto &s = id(g_snap);
+          bool show = (id(engine)->get_display_test_mode() == "normal") &&
+                      s.show_progress && s.progress_end_count > 0 && s.progress_game_duration > 0;
+          lv_obj_t *segs[4] = {id(prog_seg0), id(prog_seg1), id(prog_seg2), id(prog_seg3)};
+          for (int i = 0; i < 4; i++) {
+            if (segs[i] != nullptr) {
+              if (show) lv_obj_clear_flag(segs[i], LV_OBJ_FLAG_HIDDEN);
+              else lv_obj_add_flag(segs[i], LV_OBJ_FLAG_HIDDEN);
+            }
+          }
+          if (id(prog_fill) != nullptr) {
+            if (show) lv_obj_clear_flag(id(prog_fill), LV_OBJ_FLAG_HIDDEN);
+            else lv_obj_add_flag(id(prog_fill), LV_OBJ_FLAG_HIDDEN);
+          }
+          if (!show || id(prog_fill) == nullptr) return;
+          int since = s.progress_seconds_since_start;
+          int dur = s.progress_game_duration;
+          int ends = s.progress_end_count;
+          if (dur <= 0 || ends <= 0) { lv_obj_set_width(id(prog_fill), 0); return; }
+          if (since < 0) since = 0;
+          if (since > dur) since = dur;
+          int end_dur = dur / ends;
+          if (end_dur <= 0) end_dur = 1;
+          int in_end = since % end_dur;
+          // Progress through current end (0..1100)
+          int fill_w = (int)((int64_t)in_end * 1100 / end_dur);
+          if (fill_w < 0) fill_w = 0;
+          if (fill_w > 1100) fill_w = 1100;
+          lv_obj_set_width(id(prog_fill), fill_w);
       - lvgl.label.update:
           id: lbl_status
           text: !lambda |-
