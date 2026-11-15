@@ -263,7 +263,7 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
       if (game_dur > 0)
         pace_unit_duration = game_dur / g.end_count.value();
     }
-    if (show_pace && pace_unit_duration > 0 && g.seconds_since_start.has_value()) {
+    if (!pregame && show_pace && pace_unit_duration > 0 && g.seconds_since_start.has_value()) {
       int unit_number = 1;
       std::string position = pace_position(*g.seconds_since_start, pace_unit_duration, &unit_number);
       out.show_pace = true;

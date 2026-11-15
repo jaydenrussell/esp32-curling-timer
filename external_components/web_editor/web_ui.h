@@ -298,7 +298,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.126</span></h2>
+  <h2>Curling Timer <span class="version">{{version}}</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -325,7 +325,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.126</span>
+    <span class="header-version">{{version}}</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -610,7 +610,7 @@ function buildQuickForm() {
   const endBoxes = relayNames.map(() => el('input', { type: 'checkbox', checked: false }));
   const endDurs = relayNames.map(() => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' }));
   const startRow = relayNames.length ? makeRelayRow('Game Start:', startBoxes, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
-  const endRow = relayNames.length ? makeRelayRow('Game Expires:', endBoxes, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
+  const endRow = relayNames.length ? makeRelayRow('Warning Countdown Ends:', endBoxes, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
 
   const relayValues = (boxes) => boxes.filter((b, i) => b.checked).map((b, i) => relayNames[i] || `RELAY${i + 1}`);
   const relayMaxDuration = (durs) => { let m = 0; for (const d of durs) { const v = Number(d.value) || 0; if (v > m) m = v; } return m || null; };
@@ -718,7 +718,7 @@ function buildQuickForm() {
         el('label', { class: 'check' }, replace, 'Replace same-time games'))),
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 4px' }, 'Outputs'),
-      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Game Start and Game Expires, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
+      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
       startRow,
       endRow),
     preview,
@@ -888,17 +888,6 @@ function renderStatus() {
     const cd = el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` }, sm.countdown || '');
     cd.dataset.maxFont = String(fcd);
     if (window._mirrorPregameBlinkIv) { clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null; }
-    const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    if (sm.is_pregame && pregameBlink && !reduceMotion) {
-      let visible = true;
-      window._mirrorPregameBlinkIv = setInterval(() => {
-        visible = !visible;
-        const elcd = document.getElementById('mirror-countdown');
-        if (!elcd) { clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null; return; }
-        elcd.style.visibility = visible ? 'visible' : 'hidden';
-      }, 1000);
-      cd.style.visibility = 'visible';
-    }
     centerWrap.append(cd);
   } else if (window._mirrorPregameBlinkIv) {
     clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null;
@@ -1107,16 +1096,9 @@ function entryEditor(entries, index, leagues, rerender) {
   const entry = entries[index];
   const changed = () => setDirty(true);
   const timeInput = (key) => el('input', { type: 'time', step: 60, value: hms(entry[key]).slice(0, 5), required: true,
-    onchange: (event) => { const v = parseTime(event.target.value); if (v !== null) { entry[key] = v; changed(); } } });
+    onchange: (event) => { const v = parseTime(event.target.value); if (v !== null) { entry[key] = v; changed(); if (typeof syncPace === 'function') syncPace(); } } });
   const text = (key, placeholder) => el('input', { type: 'text', value: entry[key] || '', placeholder, maxlength: 80,
     oninput: (event) => { entry[key] = event.target.value.trim() || null; changed(); } });
-  const pace = el('select', { onchange: (event) => { entry.pace_of_play = { '': null, on: true, off: false }[event.target.value]; changed(); } },
-    el('option', { value: '', selected: entry.pace_of_play === null }, 'Default'),
-    el('option', { value: 'on', selected: entry.pace_of_play === true }, 'Show'),
-    el('option', { value: 'off', selected: entry.pace_of_play === false }, 'Hide'));
-  const unit = el('input', { type: 'number', min: 0.5, step: 0.5, inputmode: 'decimal', placeholder: 'default',
-    value: entry.pace_unit_duration ? entry.pace_unit_duration / 60 : '',
-    onchange: (event) => { const v = Number(event.target.value); entry.pace_unit_duration = v > 0 ? Math.round(v * 60) : null; changed(); } });
   const hold = el('input', { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: 'default',
     value: entry.header_hold != null ? entry.header_hold : '',
     onchange: (event) => { const v = Number(event.target.value);
@@ -1126,20 +1108,22 @@ function entryEditor(entries, index, leagues, rerender) {
     if (!league) { entry.league = null; entry.name = null; changed(); rerender(); return; }
     entry.league = league.name;
     entry.name = league.name;
-    entry.buzzer = Math.min(entry.start + (league.game_duration_minutes || 0) * 60, 86340);
     entry.game_completed = league.header_text || null;
-    if (league.pregame_countdown_seconds != null) entry.pregame_countdown = league.pregame_countdown_seconds;
     if (league.game_duration_minutes != null && entry.start != null) entry.buzzer = Math.min(entry.start + (league.game_duration_minutes || 0) * 60, 86340);
-    if (league.pace_enabled != null) entry.pace_of_play = league.pace_enabled ? true : false;
-    if (league.pace_minutes_per_end != null) entry.pace_unit_duration = (league.pace_minutes_per_end || 0) * 60 || null;
+    if (league.pregame_countdown_seconds != null) entry.pregame_countdown = league.pregame_countdown_seconds;
+    if (league.pace_enabled != null) entry.pace_of_play = !!league.pace_enabled;
     if (league.stones_per_end != null) entry.stones_per_end = league.stones_per_end;
     if (league.end_count != null) entry.end_count = league.end_count;
     if (league.untimed_ends != null) entry.untimed_ends = league.untimed_ends;
     if (league.show_progress_through_end != null) entry.show_progress_through_end = league.show_progress_through_end;
+    if (league.manual_trigger != null) entry.manual_trigger = !!league.manual_trigger;
     if (league.start_relays != null) entry.start_relays = league.start_relays;
     if (league.start_duration != null) entry.start_duration = league.start_duration;
     if (league.end_relays != null) entry.end_relays = league.end_relays;
     if (league.end_duration != null) entry.end_duration = league.end_duration;
+    if (entry.pace_of_play === true && entry.end_count && entry.buzzer > entry.start) {
+      entry.pace_unit_duration = Math.round((entry.buzzer - entry.start) / entry.end_count);
+    }
     changed(); rerender();
   } },
     el('option', { value: '', selected: !entry.league }, '(none)'),
@@ -1154,10 +1138,71 @@ function entryEditor(entries, index, leagues, rerender) {
   };
   pgM.onchange = syncPg; pgS.onchange = syncPg;
 
+  const endCountInput = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.end_count != null ? entry.end_count : '' });
+  const syncPace = () => {
+    const ends = endCountInput.value === '' ? null : Math.max(1, parseInt(endCountInput.value, 10) || 1);
+    entry.end_count = ends;
+    if (entry.pace_of_play === true && ends && entry.buzzer > entry.start) {
+      entry.pace_unit_duration = Math.round((entry.buzzer - entry.start) / ends);
+    } else if (entry.pace_of_play !== true) {
+      entry.pace_unit_duration = entry.pace_unit_duration ?? null;
+    }
+    changed();
+  };
+  endCountInput.onchange = (event) => { endCountInput.value = event.target.value; syncPace(); };
+  const paceCheck = el('input', { type: 'checkbox', checked: entry.pace_of_play === true, onchange: (event) => {
+    entry.pace_of_play = event.target.checked ? true : (entry.pace_of_play === false ? false : null);
+    if (!event.target.checked) entry.pace_unit_duration = null;
+    syncPace();
+  } });
+  const manualCheck = el('input', { type: 'checkbox', checked: !!entry.manual_trigger, disabled: !isAddonEnabled('pushbutton'),
+    onchange: (event) => { entry.manual_trigger = !!event.target.checked; changed(); } });
+
+  const outputInfos = enabledOutputInfos();
+  const startBoxes = outputInfos.map((info) => el('input', { type: 'checkbox', checked: Array.isArray(entry.start_relays) && entry.start_relays.includes(info.id) }));
+  const startDurs = outputInfos.map((info) => {
+    const i = outputInfos.indexOf(info);
+    const checked = startBoxes[i].checked;
+    return el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
+      value: checked && entry.start_duration != null ? String(entry.start_duration) : '' });
+  });
+  const endBoxes = outputInfos.map((info) => el('input', { type: 'checkbox', checked: Array.isArray(entry.end_relays) && entry.end_relays.includes(info.id) }));
+  const endDurs = outputInfos.map((info, i) => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
+      value: endBoxes[i].checked && entry.end_duration != null ? String(entry.end_duration) : '' }));
+  const updateOutputs = (which) => {
+    if (which === 'start') {
+      entry.start_relays = outputInfos.filter((_, i) => startBoxes[i].checked).map((o) => o.id);
+      const vals = outputInfos.map((_, i) => startBoxes[i].checked ? (parseInt(startDurs[i].value || '0', 10) || 0) : 0);
+      entry.start_duration = vals.length ? Math.max(0, ...vals) : null;
+      if (!entry.start_relays.length) entry.start_duration = null;
+    } else {
+      entry.end_relays = outputInfos.filter((_, i) => endBoxes[i].checked).map((o) => o.id);
+      const vals = outputInfos.map((_, i) => endBoxes[i].checked ? (parseInt(endDurs[i].value || '0', 10) || 0) : 0);
+      entry.end_duration = vals.length ? Math.max(0, ...vals) : null;
+      if (!entry.end_relays.length) entry.end_duration = null;
+    }
+    changed();
+  };
+  outputInfos.forEach((_, i) => {
+    startBoxes[i].addEventListener('change', () => updateOutputs('start'));
+    startDurs[i].addEventListener('input', () => updateOutputs('start'));
+    endBoxes[i].addEventListener('change', () => updateOutputs('end'));
+    endDurs[i].addEventListener('input', () => updateOutputs('end'));
+  });
+  const outputRow = (label, boxes, durs) => el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 10px; align-items: baseline; flex-wrap: wrap' },
+    el('span', { class: 'muted small', style: 'margin-right: 8px' }, label),
+    ...outputInfos.flatMap((info, i) => [el('label', { class: 'check' }, boxes[i], info.label), el('div', { class: 'duration' }, durs[i], el('span', {}, 's'))]));
+  const outputsCard = outputInfos.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
+      el('h3', {}, 'Outputs 🔊'),
+      el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
+      outputRow('Game Start:', startBoxes, startDurs),
+      outputRow('Warning Countdown Ends:', endBoxes, endDurs))
+    : el('div', { class: 'card', style: 'margin: 10px 0 0' }, el('h3', {}, 'Outputs 🔊'), el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
+
   return el('div', { class: 'entry' },
     el('div', { class: 'league' }, el('label', {}, 'League'), leagueSelect),
     el('div', { class: 'start' }, el('label', {}, 'Start'), timeInput('start')),
-    el('div', { class: 'buzzer' }, el('label', {}, 'Buzzer'), timeInput('buzzer')),
+    el('div', { class: 'buzzer' }, el('label', {}, 'Warning Countdown Ends'), timeInput('buzzer')),
     el('div', { class: 'actions' },
       el('button', { class: 'btn icon danger', type: 'button', title: 'Delete game', onclick: () => { entries.splice(index, 1); changed(); rerender(); } }, '✕')),
     el('div', { class: 'name' }, text('name', 'League name'),
@@ -1167,12 +1212,13 @@ function entryEditor(entries, index, leagues, rerender) {
       el('div', { class: 'duration', role: 'group', 'aria-label': 'Pre-game countdown duration' }, pgM, el('span', {}, 'min'), pgS, el('span', {}, 's')),
       el('label', {}, 'Header when game completed'), text('game_completed', 'default'),
       el('label', {}, 'Header hold seconds'), hold,
-      el('label', {}, 'Pace of play'), pace,
-      el('label', {}, 'Minutes per end'), unit,
-      el('label', {}, 'Total ends'), el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.end_count != null ? entry.end_count : '', onchange: (event) => { entry.end_count = event.target.value === '' ? null : Math.max(1, parseInt(event.target.value, 10) || 1); changed(); } }),
+      el('label', {}, 'Total ends'), endCountInput,
       el('label', {}, 'Stones per end'), el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.stones_per_end != null ? entry.stones_per_end : '', onchange: (event) => { entry.stones_per_end = event.target.value === '' ? null : Math.max(1, parseInt(event.target.value, 10) || 1); changed(); } }),
       el('label', {}, 'Untimed ends'), el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.untimed_ends != null ? entry.untimed_ends : '', onchange: (event) => { entry.untimed_ends = event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0); changed(); } }),
-      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: entry.show_progress_through_end === true, onchange: (event) => { entry.show_progress_through_end = event.target.checked ? true : null; changed(); } }), 'Show progress through end')));
+      el('label', { class: 'check' }, paceCheck, 'Pace of play (auto-calculated)'),
+      el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'),
+      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: entry.show_progress_through_end === true, onchange: (event) => { entry.show_progress_through_end = event.target.checked ? true : null; changed(); } }), 'Show progress through end'),
+      outputsCard));
 }
 
 function entryList(entries, leagues, rerender) {
@@ -1439,6 +1485,17 @@ function RELAY_NAMES() {
     if (enabled) names.push(`RELAY${i}`);
   }
   return names;
+}
+function enabledOutputInfos() {
+  const count = (state.configValues && state.configValues['config.relay_count']) || 0;
+  const infos = [];
+  for (let i = 1; i <= count; i++) {
+    if (!(state.configValues && state.configValues[`config.relay${i}_enabled`])) continue;
+    const fn = (state.configValues && state.configValues[`config.relay${i}_function`]) || 'None';
+    const label = fn && fn !== 'None' ? `${fn} (RELAY${i})` : `RELAY${i}`;
+    infos.push({ id: `RELAY${i}`, label, index: i });
+  }
+  return infos;
 }
 const RELAYS_PATHS = new Set(['config.buzzer.relays', 'config.buzzer.ring_at_start',
   'config.buzzer.countdown.relays']);
@@ -1983,8 +2040,6 @@ async function renderLeagues() {
     const pregameInput = el('div', { class: 'duration', id: prefix + '-pregame' }, pregameMinIn, el('span', {}, 'min'), pregameSecIn, el('span', {}, 's'));
     const headerInput = el('input', { type: 'text', id: prefix + '-header', value: lp.header_text || '', maxlength: 80,
       oninput: (ev) => { lp.header_text = ev.target.value.trim(); } });
-    const paceCheck = el('input', { type: 'checkbox', id: prefix + '-pace', checked: !!lp.pace_enabled,
-      onchange: (ev) => { lp.pace_enabled = ev.target.checked; } });
     const stonesInput = el('input', { type: 'number', id: prefix + '-stones', value: lp.stones_per_end || '8', min: 1, max: 10,
       oninput: (ev) => { lp.stones_per_end = parseInt(ev.target.value || '8', 10); } });
     const endsInput = el('input', { type: 'number', id: prefix + '-ends', value: lp.end_count || '8', min: 1, max: 12,
@@ -1995,66 +2050,63 @@ async function renderLeagues() {
       onchange: (ev) => { lp.show_progress_through_end = ev.target.checked; } });
     const cmbInput = el('input', { type: 'number', id: prefix + '-cmb', value: lp.countdown_minutes_before || '', min: 0,
       oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
+    const paceCheck = el('input', { type: 'checkbox', id: prefix + '-pace', checked: !!lp.pace_enabled,
+      onchange: (ev) => { lp.pace_enabled = ev.target.checked; } });
     const manualCheck = el('input', { type: 'checkbox', id: prefix + '-manual', checked: !!lp.manual_trigger,
       disabled: !isAddonEnabled('pushbutton'), onchange: (ev) => { lp.manual_trigger = ev.target.checked; } });
 
-    // Outputs driven from global settings: only enabled relays offered, each with one duration per event.
-    const relayNames = RELAY_NAMES();
-    const startBoxes = relayNames.map(() => el('input', { type: 'checkbox', checked: false }));
-    const startDur = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
-    const endBoxes = relayNames.map(() => el('input', { type: 'checkbox', checked: false }));
-    const endDur = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' });
-    // restore saved values
-    const savedSR = lp.start_relays || [];
-    const savedER = lp.end_relays || [];
-    startBoxes.forEach((b, i) => { b.checked = savedSR.includes(relayNames[i]); });
-    endBoxes.forEach((b, i) => { b.checked = savedER.includes(relayNames[i]); });
-    startDur.value = String(lp.start_duration || '');
-    endDur.value = String(lp.end_duration || '');
-
-    const relayRow = (label, boxes, durInput) => {
-      boxes.forEach((b, i) => b.addEventListener('change', () => {
-        const checked = boxes.filter((bb, j) => bb.checked).map((bb, j) => relayNames[j] || `RELAY${j + 1}`);
-        lp.start_relays = label.startsWith('Game Start') ? checked : lp.start_relays || [];
-        lp.end_relays = label.startsWith('Game Expires') ? checked : lp.end_relays || [];
-      }));
-      durInput.addEventListener('input', () => {
-        const v = parseInt(durInput.value || '0', 10);
-        if (label.startsWith('Game Start')) lp.start_duration = v; else lp.end_duration = v;
-      });
-      return el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 10px; align-items: baseline' },
-        el('span', { class: 'muted small', style: 'margin-right: 8px' }, label),
-        ...boxes.flatMap((b, i) => el('label', { class: 'check' }, b, relayNames[i] || `RELAY${i + 1}`)),
-        el('div', { class: 'duration' }, durInput, el('span', {}, 's')));
+    const outputInfos = enabledOutputInfos();
+    const startBoxes = outputInfos.map((info) => el('input', { type: 'checkbox', checked: Array.isArray(lp.start_relays) && lp.start_relays.includes(info.id) }));
+    const startDurs = outputInfos.map((info, i) => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
+      value: startBoxes[i].checked && lp.start_duration != null ? String(lp.start_duration) : '' }));
+    const endBoxes = outputInfos.map((info) => el('input', { type: 'checkbox', checked: Array.isArray(lp.end_relays) && lp.end_relays.includes(info.id) }));
+    const endDurs = outputInfos.map((info, i) => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
+      value: endBoxes[i].checked && lp.end_duration != null ? String(lp.end_duration) : '' }));
+    const updateOutputs = (which) => {
+      if (which === 'start') {
+        lp.start_relays = outputInfos.filter((_, i) => startBoxes[i].checked).map((o) => o.id);
+        const vals = outputInfos.map((_, i) => startBoxes[i].checked ? (parseInt(startDurs[i].value || '0', 10) || 0) : 0);
+        lp.start_duration = vals.length ? Math.max(0, ...vals) : 0;
+        if (!lp.start_relays.length) lp.start_duration = 0;
+      } else {
+        lp.end_relays = outputInfos.filter((_, i) => endBoxes[i].checked).map((o) => o.id);
+        const vals = outputInfos.map((_, i) => endBoxes[i].checked ? (parseInt(endDurs[i].value || '0', 10) || 0) : 0);
+        lp.end_duration = vals.length ? Math.max(0, ...vals) : 0;
+        if (!lp.end_relays.length) lp.end_duration = 0;
+      }
     };
-    const outputsCard = relayNames.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
-      el('h3', {}, 'Outputs 🔊'),
-      el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which enabled relay outputs ring at Game Start and Game Expires, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
-      relayRow('Game Start:', startBoxes, startDur),
-      relayRow('Game Expires:', endBoxes, endDur)) : el('div', { class: 'card', style: 'margin: 10px 0 0' },
-      el('h3', {}, 'Outputs 🔊'),
-      el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
+    outputInfos.forEach((_, i) => {
+      startBoxes[i].addEventListener('change', () => updateOutputs('start'));
+      startDurs[i].addEventListener('input', () => updateOutputs('start'));
+      endBoxes[i].addEventListener('change', () => updateOutputs('end'));
+      endDurs[i].addEventListener('input', () => updateOutputs('end'));
+    });
+    const outputRow = (label, boxes, durs) => el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 10px; align-items: baseline; flex-wrap: wrap' },
+      el('span', { class: 'muted small', style: 'margin-right: 8px' }, label),
+      ...outputInfos.flatMap((info, i) => [el('label', { class: 'check' }, boxes[i], info.label), el('div', { class: 'duration' }, durs[i], el('span', {}, 's'))]));
+    const outputsCard = outputInfos.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
+        el('h3', {}, 'Outputs 🔊'),
+        el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
+        outputRow('Game Start:', startBoxes, startDurs),
+        outputRow('Warning Countdown Ends:', endBoxes, endDurs))
+      : el('div', { class: 'card', style: 'margin: 10px 0 0' }, el('h3', {}, 'Outputs 🔊'), el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
 
-    return [
-      el('div', { class: 'grid2' },
-        el('label', {}, 'Name', nameInput),
-        el('label', {}, 'Duration (min)', durInput)),
-      el('div', { class: 'grid2' },
-        el('label', {}, 'Pre-game countdown', pregameInput),
-        el('label', {}, 'Header text', headerInput)),
-      el('div', { class: 'grid2' },
-        el('label', {}, 'Stones per end', stonesInput),
-        el('label', {}, 'Total ends', endsInput)),
-      el('div', { class: 'grid2' },
-        el('label', {}, 'Ends after expiration', untimedInput),
-        el('label', { class: 'check' }, progressCheck, 'Show progress through end?')),
-      el('div', { class: 'grid2' },
-        el('label', { class: 'check' }, paceCheck, 'Pace of play (auto: game duration ÷ ends)'),
-        el('label', {}, 'Countdown warning minutes before', cmbInput)),
-      el('div', { class: 'grid2' },
-        el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger')),
-      outputsCard
-    ];
+    return el('div', { class: 'entry' },
+      el('div', { class: 'name' }, nameInput),
+      el('div', { class: 'actions' }),
+      el('div', { class: 'more' },
+        el('label', {}, 'Pre-game countdown'),
+        el('div', { class: 'duration', role: 'group', 'aria-label': 'Pre-game countdown duration' }, pregameMinIn, el('span', {}, 'min'), pregameSecIn, el('span', {}, 's')),
+        el('label', {}, 'Game duration (minutes)'), durInput,
+        el('label', {}, 'Header text when completed'), headerInput,
+        el('label', {}, 'Total ends'), endsInput,
+        el('label', {}, 'Stones per end'), stonesInput,
+        el('label', {}, 'Untimed ends'), untimedInput,
+        el('label', { class: 'check' }, paceCheck, 'Pace of play (auto-calculated)'),
+        el('label', {}, 'Countdown warning minutes before'), cmbInput,
+        el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'),
+        el('label', { class: 'check' }, progressCheck, 'Show progress through end'),
+        outputsCard));
   };
 
   let addLeagueDefaults;
@@ -2062,11 +2114,11 @@ async function renderLeagues() {
     e.preventDefault();
     const name = document.getElementById('lg-add-name').value.trim();
     if (!name) { showMessage('Name required', 'bad'); return; }
-    const entry = {
+      const entry = {
       name,
       game_duration_minutes: addLeagueDefaults.game_duration_minutes,
       pregame_countdown_seconds: addLeagueDefaults.pregame_countdown_seconds,
-      header_text: document.getElementById('lg-add-header').value || addLeagueDefaults.header_text,
+      header_text: addLeagueDefaults.header_text || '',
       stones_per_end: addLeagueDefaults.stones_per_end,
       end_count: addLeagueDefaults.end_count,
       untimed_ends: addLeagueDefaults.untimed_ends,
@@ -2074,10 +2126,10 @@ async function renderLeagues() {
       pace_enabled: addLeagueDefaults.pace_enabled,
       countdown_minutes_before: addLeagueDefaults.countdown_minutes_before,
       manual_trigger: addLeagueDefaults.manual_trigger,
-      start_relays: addLeagueDefaults.start_relays,
-      start_duration: addLeagueDefaults.start_duration,
-      end_relays: addLeagueDefaults.end_relays,
-      end_duration: addLeagueDefaults.end_duration,
+      start_relays: addLeagueDefaults.start_relays || [],
+      start_duration: addLeagueDefaults.start_duration || 0,
+      end_relays: addLeagueDefaults.end_relays || [],
+      end_duration: addLeagueDefaults.end_duration || 0,
     };
     leagues.push(entry);
     if (!(await saveLeagues(leagues))) return;
@@ -2087,7 +2139,7 @@ async function renderLeagues() {
     el('div', { class: 'section-title' }, 'Leagues'),
     el('h3', {}, 'Add league profile'),
     el('p', { class: 'muted small', style: 'margin: 0' }, 'Define reusable league settings (timing, outputs, display options) to apply to scheduled games.'),
-    ...leagueFields(addLeagueDefaults = {
+    leagueFields(addLeagueDefaults = {
       name:'', game_duration_minutes:0, pregame_countdown_seconds:0, header_text:'',
       stones_per_end:8, end_count:8, untimed_ends:0, show_progress_through_end:true,
       pace_enabled:false, countdown_minutes_before:0, manual_trigger:false,
@@ -2110,7 +2162,7 @@ async function renderLeagues() {
         '');
       const note = el('span', { class: 'fold-note muted' }, `${lp.game_duration_minutes ? lp.game_duration_minutes + ' min' : 'no duration set'}`);
       const body = el('div', { class: 'fold-body' },
-        ...leagueFields(lp, 'lg-' + idx),
+        leagueFields(lp, 'lg-' + idx),
         el('div', { class: 'row-actions', style: 'margin-top: 10px' },
           el('button', { class: 'btn primary', onclick: async () => {
             if (!(await saveLeagues(leagues))) return;

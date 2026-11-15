@@ -206,13 +206,16 @@ time:
 
 # ---------------------------------------------------------------------
 # Add-on RTC (HYM8563 / PCF8563-compatible, M5Stack Unit RTC SKU U126).
-# Always compiled in so the firmware can fall back to it at runtime when
+# Keeps wall-clock time across power loss. local_now() reads this when
 # SNTP has no valid time and config.addons.rtc is true in the settings
 # file (toggled live from the web UI Config tab).
 #
-# Wired to GPIO5/GPIO6 here — verify against docs/wiring-U213.md before
-# flashing. If no RTC is present, pcf8563 reads simply fail silently and
-# local_now() keeps returning "no clock" until SNTP syncs.
+# Grove Port B is GPIO53/GPIO54 on U213, but those pins are currently used by
+# relay outputs in this build. With relays in use and RTC addon not active,
+# keep the RTC bus on non-conflicting pins so config validates; move to
+# Grove Port B only when relay pin assignments are changed for RTC use.
+# If no RTC is present, pcf8563 reads simply fail silently and local_now()
+# keeps returning "no clock" until SNTP syncs.
 # ---------------------------------------------------------------------
 i2c:
   - id: rtc_i2c_bus
@@ -283,7 +286,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.138
+      ref: v2026.11.139
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]

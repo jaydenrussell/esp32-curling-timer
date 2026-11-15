@@ -258,6 +258,7 @@ TEST_CASE("render_snapshot: pregame clock countdown and blink flag") {
   CHECK(snap.pregame_blink);
   CHECK(snap.header_text == "GET READY");
   CHECK(snap.countdown == std::string("02") + COLON + "00");
+  CHECK_FALSE(snap.show_pace);
 }
 
 TEST_CASE("render_snapshot: progress fields when enabled") {
