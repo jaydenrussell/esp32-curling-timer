@@ -172,8 +172,22 @@ api:
 # # authenticates the uploader, so no separate password is used (ESPHome
 # # refuses password + encryption together). ESPHome requires the OTA key
 # # to be the API key, so both use the same secret.
+http_request:
+  verify_ssl: true
+
 ota:
   - platform: esphome
+  - platform: web_server
+    id: web_ota
+  - platform: http_request
+    id: http_ota
+
+update:
+  - platform: http_request
+    name: "Firmware Update"
+    id: firmware_update
+    source: https://github.com/jaydenrussell/esp32-curling-timer/releases/latest/download/manifest.json
+    update_interval: 6h
 
 web_server:
   port: 80
@@ -286,7 +300,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.140
+      ref: v2026.11.141
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]

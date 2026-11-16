@@ -71,6 +71,28 @@ jobs:
           find esphome/.esphome/build -type f \( -name "*.bin" -o -name "*.elf" \) 2>/dev/null
           echo "=== top-level build tree ==="
           find esphome/.esphome/build -maxdepth 3 -type d 2>/dev/null
+      - name: Generate OTA manifest
+        run: |
+          OTA_BIN="esphome/.esphome/build/curling-timer/build/firmware.ota.bin"
+          VERSION="${GITHUB_REF_NAME#v}"
+          MD5=$(md5sum "$OTA_BIN" | awk '{print $1}')
+          cat > esphome/.esphome/build/curling-timer/build/manifest.json <<EOF
+          {
+            "name": "Curling Timer",
+            "version": "${VERSION}",
+            "builds": [
+              {
+                "chipFamily": "ESP32-P4",
+                "ota": {
+                  "md5": "${MD5}",
+                  "path": "https://github.com/${GITHUB_REPOSITORY}/releases/download/${GITHUB_REF_NAME}/firmware.ota.bin"
+                }
+              }
+            ]
+          }
+          EOF
+          echo "Generated manifest:"
+          cat esphome/.esphome/build/curling-timer/build/manifest.json
       - name: Create Release
         uses: softprops/action-gh-release@v3
         with:
@@ -80,4 +102,5 @@ jobs:
             esphome/.esphome/build/curling-timer/build/firmware.factory.bin
             esphome/.esphome/build/curling-timer/build/firmware.ota.bin
             esphome/.esphome/build/curling-timer/build/curling-timer.bin
+            esphome/.esphome/build/curling-timer/build/manifest.json
             
