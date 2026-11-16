@@ -1688,7 +1688,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_function"; if((v=cfg->find(key))!=nullptr && v->type==YType::Str){ if(i==1)relay1_function=v->s; if(i==2)relay2_function=v->s; if(i==3)relay3_function=v->s; if(i==4)relay4_function=v->s;} }
   for (int i=1;i<=4;i++){ std::string key="relay"+std::to_string(i)+"_enabled"; if((v=cfg->find(key))!=nullptr && v->type==YType::Bool){ if(i==1)relay1_enabled=v->b; if(i==2)relay2_enabled=v->b; if(i==3)relay3_enabled=v->b; if(i==4)relay4_enabled=v->b;} }
   if ((v = cfg->find("pregame_countdown")) != nullptr && v->type == YType::Int) pregame_countdown = static_cast<int>(v->i);
-  if ((v = cfg->find("progress_skip_multiplier")) != nullptr && (v->type == YType::Float || v->type == YType::Int)) progress_skip_multiplier = static_cast<float>(v->type == YType::Float ? v->f : v->i);
+  if ((v = cfg->find("progress_skip_multiplier")) != nullptr && (v->type == YType::Float || v->type == YType::Int)) progress_skip_multiplier = static_cast<float>(v->type == YType::Float ? v->d : v->i);
   if ((v = cfg->find("pregame_blink")) != nullptr && v->type == YType::Bool) pregame_blink = v->b;
   if ((v = cfg->find("allow_midnight_wrap")) != nullptr && v->type == YType::Bool) allow_midnight_wrap = v->b;
   if ((v = cfg->find("manual_trigger_gpio")) != nullptr && v->type == YType::Int) manual_trigger_gpio = static_cast<int>(v->i);
