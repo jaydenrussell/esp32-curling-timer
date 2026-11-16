@@ -1,20 +1,50 @@
 <script>
-  import { onMount } from 'svelte';
-  import legacyBody from './legacy-body.html?raw';
-  import { initLegacyApp } from './legacy-app.js';
+  import { onMount, onDestroy } from 'svelte';
+  import { state as appState, loadSettings, loadConfig, loadStatus, api, startPolling, stopPolling, auth } from './lib/stores.svelte.js';
+  import Header from './lib/components/Header.svelte';
+  import TabBar from './lib/components/TabBar.svelte';
+  import BottomNav from './lib/components/BottomNav.svelte';
+  import SaveBar from './lib/components/SaveBar.svelte';
+  import StatusView from './lib/components/StatusView.svelte';
+  import QuickStartView from './lib/components/QuickStartView.svelte';
+  import ScheduleView from './lib/components/ScheduleView.svelte';
+  import LeaguesView from './lib/components/LeaguesView.svelte';
+  import ConfigView from './lib/components/ConfigView.svelte';
+  import DiagnosticsView from './lib/components/DiagnosticsView.svelte';
 
-  let container;
+  let statusInterval = $state(null);
 
-  onMount(() => {
-    if (container) container.innerHTML = legacyBody;
-    const cleanup = initLegacyApp();
-    const meta = document.querySelector('meta[name="curling-timer-version"]');
-    const ver = meta?.content || '{{version}}';
-    document.querySelectorAll('.header-version, .version').forEach((el) => {
-      if (el && (el.textContent.trim() === '{{version}}' || el.textContent.trim() === '')) el.textContent = ver;
-    });
-    return () => { try { cleanup && cleanup(); } catch {} };
-  });
+  async function init() {
+    await auth.check();
+    await Promise.all([loadSettings(), loadConfig(), loadStatus()]);
+    startPolling();
+    statusInterval = setInterval(loadStatus, 5000);
+  }
+
+  onMount(() => { init(); });
+  onDestroy(() => { stopPolling(); if (statusInterval) clearInterval(statusInterval); });
 </script>
 
-<div bind:this={container} id="legacy-root"></div>
+<div class="app">
+  <Header />
+  <main class="main-content">
+    <TabBar />
+    <div class="tab-content">
+      {#if state.tab === 'status'}
+        <StatusView />
+      {:else if state.tab === 'quickstart'}
+        <QuickStartView />
+      {:else if state.tab === 'schedule'}
+        <ScheduleView />
+      {:else if state.tab === 'leagues'}
+        <LeaguesView />
+      {:else if state.tab === 'config'}
+        <ConfigView />
+      {:else if state.tab === 'diagnostics'}
+        <DiagnosticsView />
+      {/if}
+    </div>
+    <SaveBar />
+  </main>
+  <BottomNav />
+</div>

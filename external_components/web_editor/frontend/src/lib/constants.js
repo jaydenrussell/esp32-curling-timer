@@ -13,7 +13,7 @@ export const ADDONS = [
 ];
 export const PATH_TO_ADDON = {};
 for (const a of ADDONS) { for (const path of a.configPaths) PATH_TO_ADDON[path] = a.key; }
-for (const key of ['rtc','relays','pushbutton','pahub','wifi','uart']) delete PATH_TO_ADDON[config.addons.];
+for (const key of ['rtc','relays','pushbutton','pahub','wifi','uart']) delete PATH_TO_ADDON[`config.addons.${key}`];
 export const RELAYS_PATHS = new Set(['config.buzzer.relays','config.buzzer.ring_at_start','config.buzzer.countdown.relays']);
 export const CONFIG_SECTIONS = [
   { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.', fields: [['config.enabled','bool','Timer enabled (master on/off)'],['config.allow_midnight_wrap','bool','Allow timers past midnight']] },
