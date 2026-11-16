@@ -152,6 +152,7 @@ class PiTimerSettings {
   int relay_end_duration_3{0};
   int relay_end_duration_4{0};
   int relay_msg_time{0};
+  float progress_skip_multiplier{1.4f};
   int pregame_countdown{0};
   bool pregame_blink{false};
   bool allow_midnight_wrap{false};

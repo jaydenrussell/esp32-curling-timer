@@ -64,6 +64,7 @@ struct DisplaySnapshot {
   int progress_end_count{0};
   int progress_seconds_since_start{0};
   int progress_game_duration{0};
+  float progress_skip_multiplier{1.4f};
 
   bool show_game_name{false};
   std::string game_name;  // footer centre (FOOTER_COLOR)

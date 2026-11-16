@@ -1185,6 +1185,10 @@ function renderExceptions() {
 
 // ---- config tab (every parameter that is not the schedule) ----------------
 const CONFIG_SECTIONS = [
+  { group: 'Hardware & integrations', title: 'Manual trigger (pushbutton)', hint: 'GPIO press rings the start relays for the next manually-triggered game. Only shown when the pushbutton add-on is enabled.',
+    fields: [
+      ['config.manual_trigger_gpio', 'int', 'Manual trigger GPIO (pushbutton add-on)', 0, 40]] },
+
   { group: 'Global defaults & timing', title: 'Timer & schedule behavior', hint: 'Global defaults used across Quick Game, Schedule, and Leagues. Standardized game timing/options can inherit or override these values where supported.',
     fields: [
       ['config.enabled', 'bool', 'Timer enabled (master on/off)'],
@@ -1193,42 +1197,14 @@ const CONFIG_SECTIONS = [
   { group: 'Global defaults & timing', title: 'Pre-Game Countdown (default)', hint: 'Default pre-game countdown used by standardized game forms when not overridden. Set 0 to disable by default.',
     fields: [
       ['config.pregame_countdown', 'pregame_hms', 'Default pre-game countdown', 0, 600]] },
-  { group: 'Global defaults & timing', title: 'Pace of play (default)', hint: 'Default pace-of-play display settings. Pace is auto-calculated from game duration, stones per end, and total ends. Schedule/league/game overrides may inherit these defaults.',
-    fields: [
-      ['config.pace_of_play.unit_name', 'text', 'Unit name, e.g. END'],
-      ['config.pace_of_play.font_size', 'int', 'Pace font size (pixels)', 0, 100000],
-      ['config.pace_of_play.color', 'color', 'Pace color']] },
-  { group: 'Global defaults & timing', title: 'Game progress & club info', hint: 'Progress bar appears below pace of play and above footer on the display/mirror when enabled for a game. Club URLs support league import defaults.',
-    fields: [
-      ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)'],
-      ['config.league_page_url', 'text', 'League page URL (optional override)']] },
-
-  { group: 'Outputs & relays', title: 'Relay outputs & functions', hint: 'Enable outputs and assign relay functions. These function labels/names are shown in standardized Game Start/Game Warning output selectors.',
-    fields: [
-      ['config.relay_count', 'int', 'Number of relays', 0, 4]] },
-  { group: 'Outputs & relays', title: 'Game Start outputs', hint: 'Condensed default outputs for game start. Per-game standardized forms can override selected outputs/durations.',
-    fields: [
-      ['config.buzzer.ring_at_start', 'relays', 'Game Start output'],
-      ['config.buzzer.start_duration', 'output_duration', 'Game Start duration', 'start']] },
-  { group: 'Outputs & relays', title: 'Game Warning outputs (countdown warning before buzzer)', hint: 'Standardized as "Game Warning" in game setup: this global setting controls warning/countdown outputs fired minutes before the buzzer for eligible games. Set minutes to 0 to disable the pre-buzzer warning countdown.',
-    fields: [
-      ['config.buzzer.countdown.minutes_before', 'int', 'Game Warning: minutes before buzzer (0 = off)', 0, 100000],
-      ['config.buzzer.countdown.relays', 'relays', 'Game Warning output'],
-      ['config.buzzer.countdown_duration', 'output_duration', 'Game Warning duration', 'countdown']] },
-  { group: 'Outputs & relays', title: 'Game completion/expiration outputs', hint: 'Outputs fired at buzzer/expiration. Header hold after buzzer is a separate global setting (Quick Game/Schedule can override expired/warning hold via header_hold; leagues map warning timing to countdown-before-buzzer instead).',
-    fields: [
-      ['config.buzzer.relays', 'relays', 'Game completion output'],
-      ['config.buzzer.end_duration', 'output_duration', 'Game completion duration', 'end'],
-      ['config.buzzer.header_hold', 'int', 'Header hold after buzzer / expired state (seconds)', 0, 100000]] },
-
-  { group: 'Display appearance', title: 'Pre-game countdown display', hint: 'Visual styling for pre-game countdown. Default timing is configured in Global defaults & timing.',
+  { group: 'Global defaults & timing', title: 'Pre-game countdown display', hint: 'Visual styling for pre-game countdown. Default timing is configured above.',
     fields: [
       ['config.pregame_blink', 'bool', 'Flash/blink pre-game countdown'],
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
       ['config.pregame_header_color', 'color', 'Header color'],
       ['config.pregame_countdown_color', 'color', 'Countdown color'],
       ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
-  { group: 'Display appearance', title: 'Header text',
+  { group: 'Global defaults & timing', title: 'Header text', hint: 'Header text and colors for each timer state.',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.header.text.when_disabled', 'text', 'Text when disabled'],
@@ -1241,23 +1217,47 @@ const CONFIG_SECTIONS = [
       ['config.header.color.counting_down', 'color', 'Color while counting down'],
       ['config.header.color.game_completed', 'color', 'Color in warning/expired state'],
       ['config.header.color.game_ended', 'color', 'Color when game ends']] },
-  { group: 'Display appearance', title: 'Countdown clock',
+  { group: 'Global defaults & timing', title: 'Countdown clock', hint: 'Timer font sizes and colors for counting down, warning, and ended states.',
     fields: [
       ['config.countdown.font_size_4_digits', 'int', 'Timer font size under an hour', 0, 100000],
       ['config.countdown.font_size_5_digits', 'int', 'Timer font size an hour or more', 0, 100000],
       ['config.countdown.color.counting_down', 'color', 'Color while counting down'],
       ['config.countdown.color.game_completed', 'color', 'Color in warning/expired state'],
       ['config.countdown.color.game_ended', 'color', 'Color when game ends']] },
-  { group: 'Display appearance', title: 'Footer & background',
+  { group: 'Global defaults & timing', title: 'Pace of play (default)', hint: 'Default pace-of-play display settings. Pace is auto-calculated from game duration, stones per end, and total ends. Schedule/league/game overrides may inherit these defaults.',
+    fields: [
+      ['config.pace_of_play.unit_name', 'text', 'Unit name, e.g. END'],
+      ['config.pace_of_play.font_size', 'int', 'Pace font size (pixels)', 0, 100000],
+      ['config.pace_of_play.color', 'color', 'Pace color']] },
+  { group: 'Global defaults & timing', title: 'Game progress & club info', hint: 'Progress bar appears below pace of play and above footer on the display/mirror when enabled for a game. Club URLs support league import defaults.',
+    fields: [
+      ['config.progress_skip_multiplier', 'float', 'Progress bar skip multiplier', 0.1, 5.0, 1.4],
+      ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)'],
+      ['config.league_page_url', 'text', 'League page URL (optional override)']] },
+  { group: 'Global defaults & timing', title: 'Footer & background', hint: 'Footer font, date/time display, colors, and background.',
     fields: [
       ['config.footer.font_size', 'int', 'Footer font size (pixels)', 0, 100000],
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.color', 'color', 'Footer color'],
       ['config.background_color', 'color', 'Background color']] },
 
-  { group: 'Hardware & integrations', title: 'Manual trigger (pushbutton)', hint: 'GPIO press rings the start relays for the next manually-triggered game. Only shown when the pushbutton add-on is enabled.',
+  { group: 'Outputs & relays', title: 'Relay outputs & functions', hint: 'Enable outputs and assign relay functions. These function labels/names are shown in standardized Game Start/Game Warning output selectors.',
     fields: [
-      ['config.manual_trigger_gpio', 'int', 'Manual trigger GPIO (pushbutton add-on)', 0, 40]] },
+      ['config.relay_count', 'int', 'Number of relays', 0, 4]] },
+  { group: 'Outputs & relays', title: 'Game Start output', hint: 'Default outputs and duration for game start. Per-game standardized forms can override.',
+    fields: [
+      ['config.buzzer.ring_at_start', 'relays', 'Game Start output'],
+      ['config.buzzer.start_duration', 'output_duration', 'Game Start duration', 'start']] },
+  { group: 'Outputs & relays', title: 'Game Warning output', hint: 'Warning/countdown outputs fired minutes before the buzzer. Set minutes to 0 to disable.',
+    fields: [
+      ['config.buzzer.countdown.minutes_before', 'int', 'Game Warning: minutes before buzzer (0 = off)', 0, 100000],
+      ['config.buzzer.countdown.relays', 'relays', 'Game Warning output'],
+      ['config.buzzer.countdown_duration', 'output_duration', 'Game Warning duration', 'countdown']] },
+  { group: 'Outputs & relays', title: 'Game completion output', hint: 'Outputs fired at buzzer/expiration. Header hold after buzzer is a separate global setting.',
+    fields: [
+      ['config.buzzer.relays', 'relays', 'Game completion output'],
+      ['config.buzzer.end_duration', 'output_duration', 'Game completion duration', 'end'],
+      ['config.buzzer.header_hold', 'int', 'Header hold after buzzer / expired state (seconds)', 0, 100000]] },
 ];
 
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
@@ -1326,6 +1326,9 @@ function validateConfigDiff(diff) {
     if (path === 'config.mirror_scale') {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 10 || value > 100)
         return 'Display mirror scale must be an integer between 10 and 100 (percentage)';
+    } else if (path === 'config.progress_skip_multiplier') {
+      if (typeof value !== 'number' || !Number.isFinite(value) || value < 0.1 || value > 5.0)
+        return 'Progress bar skip multiplier must be a number between 0.1 and 5.0';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
                 path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
                 path === 'config.buzzer.header_hold' ||

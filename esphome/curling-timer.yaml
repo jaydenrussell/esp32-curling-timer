@@ -300,7 +300,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.146
+      ref: v2026.11.147
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -1096,14 +1096,16 @@ interval:
           int since = s.progress_seconds_since_start;
           int dur = s.progress_game_duration;
           int ends = s.progress_end_count;
+          float skip_mult = s.progress_skip_multiplier;
+          if (skip_mult <= 0) skip_mult = 1.4f;
           if (dur <= 0 || ends <= 0) { lv_obj_set_width(id(prog_fill), 0); return; }
           if (since < 0) since = 0;
           if (since > dur) since = dur;
           int end_dur = dur / ends;
           if (end_dur <= 0) end_dur = 1;
           int in_end = since % end_dur;
-          // Progress through current end (0..1100)
-          int fill_w = (int)((int64_t)in_end * 1100 / end_dur);
+          // Progress through current end (0..1100) with skip multiplier
+          int fill_w = (int)((int64_t)in_end * 1100 * skip_mult / end_dur);
           if (fill_w < 0) fill_w = 0;
           if (fill_w > 1100) fill_w = 1100;
           lv_obj_set_width(id(prog_fill), fill_w);

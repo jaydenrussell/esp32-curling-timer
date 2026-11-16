@@ -283,6 +283,7 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
       out.progress_end_count = *g.end_count;
       out.progress_seconds_since_start = g.seconds_since_start.value_or(0);
       out.progress_game_duration = g.buzzer - g.start;
+      out.progress_skip_multiplier = settings.progress_skip_multiplier;
     }
   }
 
