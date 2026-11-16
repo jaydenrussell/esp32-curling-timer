@@ -1,0 +1,55 @@
+
+<div id="login"><form class="card" id="login-form">
+  <h2>Curling Timer <span class="version">{{version}}</span></h2>
+  <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
+  <label for="password">Password</label>
+  <input id="password" type="password" autocomplete="current-password" required>
+  <div id="login-error" class="banner bad hidden"></div>
+  <button class="btn primary" type="submit">Log in</button>
+</form></div>
+
+<div id="help-modal" class="modal hidden">
+  <div class="modal-backdrop" onclick="const m=document.getElementById('help-modal'); m.classList.add('hidden'); m.classList.remove('show');"></div>
+  <div class="modal-card card">
+    <h2>Help</h2>
+    <p>ESP32-P4 Curling Timer - countdown, schedule, and relay control for curling games.</p>
+    <ul>
+      <li><strong>Status:</strong> live game countdown and bell state.</li>
+      <li><strong>Quick Start:</strong> start a one-off game immediately.</li>
+      <li><strong>Schedule:</strong> weekly game schedule with date exceptions.</li>
+      <li><strong>Settings:</strong> relay durations, buzzer hold, web UI options.</li>
+      <li><strong>Diagnostics:</strong> device info, network, logs.</li>
+    </ul>
+    <button class="btn" onclick="const m=document.getElementById('help-modal'); m.classList.add('hidden'); m.classList.remove('show');">Close</button>
+  </div>
+</div>
+
+<header>
+  <div class="header-brand">
+    <h1>⏱️ Curling Timer</h1>
+    <span class="header-version">{{version}}</span>
+  </div>
+  <span id="header-msg" class="banner hidden"></span>
+  <div class="header-actions">
+    <button class="btn" id="help" title="Help">Help</button>
+    <button class="btn" id="logout" title="Log out">Log out</button>
+  </div>
+</header>
+<nav id="tabs" aria-label="Primary"></nav>
+<nav class="bottom-nav" id="bottom-nav" aria-label="Mobile"></nav>
+<main>
+  <section id="tab-status"></section>
+  <section id="tab-quickstart" class="hidden"></section>
+  <section id="tab-schedule" class="hidden"></section>
+  <section id="tab-exceptions" class="hidden"></section>
+  <section id="tab-history" class="hidden"></section>
+  <section id="tab-raw" class="hidden"></section>
+  <section id="tab-config" class="hidden"></section>
+  <section id="tab-diagnostics" class="hidden"></section>
+  <section id="tab-leagues" class="hidden"></section>
+</main>
+<div class="savebar" id="savebar"><span>Unsaved schedule changes</span>
+  <button class="btn" id="discard">Discard</button><button class="btn primary" id="save">Save &amp; apply</button></div>
+<div class="savebar" id="config-savebar"><span>Unsaved config changes</span>
+  <button class="btn" id="config-discard">Discard</button><button class="btn primary" id="config-save">Save &amp; apply</button></div>
+

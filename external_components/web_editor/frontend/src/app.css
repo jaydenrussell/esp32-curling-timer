@@ -1,0 +1,7 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+@import "./legacy.css";
+
+html, body, #app { min-height: 100%; }
+body { margin: 0; }
