@@ -316,13 +316,14 @@ function createStandardGameForm(opts = {}) {
   const vals = opts.values || {};
   const onChange = () => { opts.onChange && opts.onChange(apiRead()); };
 
+  const isQuick = mode === 'quick';
   const gameDurationMin = el('input', { type: 'number', min: 0, max: 720, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Game duration minutes' });
   const gameDurationSec = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', 'aria-label': 'Game duration seconds' });
   const warningAfterMin = el('input', { type: 'number', min: 0, max: 180, step: 1, inputmode: 'numeric', placeholder: String(Math.floor(g.headerHold/60)||10), 'aria-label': 'Game warning minutes' });
   const warningAfterSec = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: String(g.headerHold%60||0), 'aria-label': 'Game warning seconds' });
-  const stonesPerEnd = el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', placeholder: String(g.stonesPerEnd) });
-  const endCount = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', placeholder: String(g.endCount) });
-  const untimedEnds = el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', placeholder: String(g.untimedEnds) });
+  const stonesPerEnd = el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', placeholder: String(g.stonesPerEnd), value: (vals.stonesPerEnd != null ? String(vals.stonesPerEnd) : (isQuick ? String(g.stonesPerEnd) : '')) });
+  const endCount = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', placeholder: String(g.endCount), value: (vals.endCount != null ? String(vals.endCount) : (isQuick ? String(g.endCount) : '')) });
+  const untimedEnds = el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', placeholder: String(g.untimedEnds), value: (vals.untimedEnds != null ? String(vals.untimedEnds) : (isQuick ? String(g.untimedEnds) : '')) });
 
   const pregame = makePregameToggleControl(vals.pregameSeconds != null ? vals.pregameSeconds : (mode === 'quick' ? g.pregameSeconds : null), {
     defaultSeconds: g.pregameSeconds, defaultEnabled: mode === 'quick' ? g.pregameSeconds > 0 : false,

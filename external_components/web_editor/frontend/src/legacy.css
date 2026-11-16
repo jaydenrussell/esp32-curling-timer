@@ -53,7 +53,7 @@ button:active { transform: scale(0.985); }
 .hidden { display: none !important; }
 .spacer { flex: 1; }
 .muted { color: var(--muted); }
-.small { font-size: 12px; color: var(--text-dim); }
+.small { font-size: 12px; color: var(--text-dim); text-wrap: pretty; }
 
 .glass, .card, .hero, .modal-card, .savebar, .addon-card, .entry, .league-list, details.fold, .today, .backups, .league-row, pre.view, #login form {
   background: var(--surface);
@@ -91,7 +91,7 @@ nav#tabs button {
   flex-shrink: 0; border: 1px solid var(--border); background: rgba(255,255,255,0.04);
   color: var(--muted); border-radius: 999px; padding: 8px 14px; min-height: 38px;
   font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
-  transition: all .15s ease;
+  transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease;
 }
 nav#tabs button:hover { background: rgba(255,255,255,0.08); color: var(--text); border-color: var(--border-strong); }
 nav#tabs button.active {
@@ -138,7 +138,7 @@ main {
 button.btn, .btn-toggle {
   font: inherit; border: 1px solid var(--border); background: rgba(255,255,255,0.05);
   color: var(--text); border-radius: 12px; padding: 10px 16px; min-height: 44px;
-  transition: all .15s ease; font-size: 14px; font-weight: 600;
+  transition: background .15s ease, border-color .15s ease, box-shadow .15s ease, transform .08s ease; font-size: 14px; font-weight: 600;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
 }
 button.btn:hover:not(:disabled), .btn-toggle:hover:not(:disabled) { background: rgba(255,255,255,0.1); border-color: var(--border-strong); }
@@ -285,7 +285,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 /* --- Standardized game forms (Quick/Schedule/Leagues) & modern touch UI --- */
 .page-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:12px; }
 .page-head h3 { margin: 2px 0 0; }
-.section-title { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.section-title { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; text-wrap: balance; }
 .pill { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid var(--border); background: rgba(255,255,255,0.06); color: var(--text); }
 .pill.ok { background: rgba(52,211,153,0.14); border-color: rgba(52,211,153,0.35); color: #d7ffef; }
 .pill.warn { background: rgba(251,191,36,0.14); border-color: rgba(251,191,36,0.35); color: #fff3c4; }
@@ -303,14 +303,15 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 .field input[type="text"], .field input[type="number"], .field input[type="time"], .field input[type="url"], .field select, label input[type="text"], label input[type="number"], label input[type="time"], label input[type="url"], label select, .entry input[type="text"], .entry input[type="time"], .entry input[type="number"], .entry select {
   width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 14px; border:1px solid var(--border); background: rgba(4,14,26,0.45); color: var(--text); font: inherit;
 }
+.field input[type="number"] { font-variant-numeric: tabular-nums; }
 .field input:focus, label input:focus, .entry input:focus, .field select:focus, label select:focus, .entry select:focus { outline: none; border-color: rgba(34,211,238,0.6); box-shadow: 0 0 0 3px rgba(34,211,238,0.14); }
-.check { display:inline-flex; align-items:center; gap:10px; font-weight: 600; cursor:pointer; min-height: 40px; }
+.check { display:inline-flex; align-items:center; gap:10px; font-weight: 600; cursor:pointer; min-height: 44px; }
 .check input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); }
 .duration { display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap; }
-.duration input { width: 92px !important; text-align:center; }
+.duration input { width: 92px !important; text-align:center; font-variant-numeric: tabular-nums; }
 .duration span { color: var(--muted); font-size: 13px; font-weight: 600; }
 .card { border-radius: var(--radius-lg); padding: 16px; margin-bottom: 14px; }
-.game-subcard { margin: 10px 0 0; background: var(--surface-soft); border:1px solid rgba(255,255,255,0.1); box-shadow: none; }
+.game-subcard { margin: 10px 0 0; background: var(--surface-soft); border:1px solid rgba(255,255,255,0.1); box-shadow: none; border-radius: var(--radius-md); }
 .standard-game-form { display:flex; flex-direction:column; gap: 12px; }
 .game-fields-grid { display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; align-items:start; }
 .game-field-span-2 { grid-column: span 2; }
@@ -325,7 +326,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 .outputs-relay-grid { display:grid; grid-template-columns: minmax(0,1.2fr) minmax(140px,0.8fr); gap: 8px 12px; align-items:center; }
 .outputs-relay-check { min-height: 40px; }
 .outputs-dur-field { display:flex; flex-direction:column; gap:4px; font-size: 12px; color: var(--muted); font-weight: 600; }
-.outputs-dur-field input { min-height: 40px; }
+.outputs-dur-field input { min-height: 40px; font-variant-numeric: tabular-nums; }
 .outputs-row-hint { margin-top: 8px; }
 .entry-standardized { display:flex; flex-direction:column; gap: 10px; }
 .entry-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
