@@ -225,7 +225,7 @@ function gameGlobalDefaults() {
   const st = state.status || {};
   return {
     pregameSeconds: Number((cv && cv['config.pregame_countdown'] != null) ? cv['config.pregame_countdown'] : (st.pregame_countdown_seconds != null ? st.pregame_countdown_seconds : 0)) || 0,
-    paceEnabled: cv && cv['config.pace_of_play.enabled'] != null ? !!cv['config.pace_of_play.enabled'] : true,
+    paceEnabled: true,
     stonesPerEnd: 8,
     endCount: 8,
     untimedEnds: 0,
@@ -1193,16 +1193,13 @@ const CONFIG_SECTIONS = [
   { group: 'Global defaults & timing', title: 'Pre-Game Countdown (default)', hint: 'Default pre-game countdown used by standardized game forms when not overridden. Set 0 to disable by default.',
     fields: [
       ['config.pregame_countdown', 'pregame_hms', 'Default pre-game countdown', 0, 600]] },
-  { group: 'Global defaults & timing', title: 'Pace of play (default)', hint: 'Default pace-of-play behavior and display settings. Schedule/league/game overrides may inherit these defaults.',
+  { group: 'Global defaults & timing', title: 'Pace of play (default)', hint: 'Default pace-of-play display settings. Pace is auto-calculated from game duration, stones per end, and total ends. Schedule/league/game overrides may inherit these defaults.',
     fields: [
-      ['config.pace_of_play.enabled', 'bool', 'Default pace of play enabled'],
       ['config.pace_of_play.unit_name', 'text', 'Unit name, e.g. END'],
-      ['config.pace_of_play.unit_duration', 'minutes', 'Minutes per unit', 0.5, 43200],
       ['config.pace_of_play.font_size', 'int', 'Pace font size (pixels)', 0, 100000],
       ['config.pace_of_play.color', 'color', 'Pace color']] },
   { group: 'Global defaults & timing', title: 'Game progress & club info', hint: 'Progress bar appears below pace of play and above footer on the display/mirror when enabled for a game. Club URLs support league import defaults.',
     fields: [
-      ['config.footer.entry_name', 'bool', 'Show game name in footer (supports progress context)'],
       ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)'],
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
 
@@ -1326,10 +1323,7 @@ function configTouched() { setConfigDirty(Object.keys(configDiff()).length > 0);
 
 function validateConfigDiff(diff) {
   for (const [path, value] of Object.entries(diff)) {
-    if (path === 'config.pace_of_play.unit_duration') {
-      if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0)
-        return 'Minutes per unit must be a number greater than 0';
-    } else if (path === 'config.mirror_scale') {
+    if (path === 'config.mirror_scale') {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 10 || value > 100)
         return 'Display mirror scale must be an integer between 10 and 100 (percentage)';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
