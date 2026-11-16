@@ -1208,15 +1208,7 @@ const CONFIG_SECTIONS = [
 
   { group: 'Outputs & relays', title: 'Relay outputs & functions', hint: 'Enable outputs and assign relay functions. These function labels/names are shown in standardized Game Start/Game Warning output selectors.',
     fields: [
-      ['config.relay_count', 'int', 'Number of relays', 0, 4],
-      ['config.relay1_enabled', 'bool', 'RELAY1 enabled'],
-      ['config.relay1_function', 'select', 'RELAY1 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
-      ['config.relay2_enabled', 'bool', 'RELAY2 enabled'],
-      ['config.relay2_function', 'select', 'RELAY2 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
-      ['config.relay3_enabled', 'bool', 'RELAY3 enabled'],
-      ['config.relay3_function', 'select', 'RELAY3 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
-      ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
-      ['config.relay4_function', 'select', 'RELAY4 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom']] },
+      ['config.relay_count', 'int', 'Number of relays', 0, 4]] },
   { group: 'Outputs & relays', title: 'Game Start outputs', hint: 'Condensed default outputs for game start. Per-game standardized forms can override selected outputs/durations.',
     fields: [
       ['config.buzzer.ring_at_start', 'relays', 'Game Start output'],
@@ -1535,7 +1527,7 @@ async function renderConfig() {
        nodes.push(el('div', { class: 'section-title', style: 'margin: 8px 0 0; font-size: 12px' }, currentGroup));
     }
     let fields = section.fields;
-    if (section.title === 'Relays') {
+    if (section.title === 'Relay outputs & functions') {
       const count = state.configValues['config.relay_count'] || 0;
       const relayFields = [];
       for (let i = 1; i <= count; i++) {
