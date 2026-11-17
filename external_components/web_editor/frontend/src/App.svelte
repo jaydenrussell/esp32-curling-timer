@@ -30,17 +30,17 @@
   <main class="main-content">
     <TabBar />
     <div class="tab-content">
-      {#if state.tab === 'status'}
+      {#if appState.tab === 'status'}
         <StatusView />
-      {:else if state.tab === 'quickstart'}
+      {:else if appState.tab === 'quickstart'}
         <QuickStartView />
-      {:else if state.tab === 'schedule'}
+      {:else if appState.tab === 'schedule'}
         <ScheduleView />
-      {:else if state.tab === 'leagues'}
+      {:else if appState.tab === 'leagues'}
         <LeaguesView />
-      {:else if state.tab === 'config'}
+      {:else if appState.tab === 'config'}
         <ConfigView />
-      {:else if state.tab === 'diagnostics'}
+      {:else if appState.tab === 'diagnostics'}
         <DiagnosticsView />
       {/if}
     </div>
