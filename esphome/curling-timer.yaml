@@ -300,7 +300,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.150
+      ref: v2026.11.151
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -855,7 +855,7 @@ lvgl:
     - label:
         id: lbl_header
         align: TOP_MID
-        y: 20
+        y: 5
         text_font: font_header
         long_mode: CLIP
         recolor: true
@@ -887,13 +887,13 @@ lvgl:
     - obj:
         id: prog_pill
         align: BOTTOM_MID
-        y: -64  # Moved up 10px from -54
+        y: -69  # Moved up 5px from -64
         width: 1100
-        height: 30
+        height: 50
         bg_opa: 0
         border_width: 0
         pad_all: 0
-        radius: 15
+        radius: 25
         hidden: true
     # Bottom Layer: 4 static weighted colored bands (Lead, Second, Vice, Skip)
     # Weights: [1, 1, 1, W_skip] where W_skip defaults to 1.4
@@ -902,54 +902,54 @@ lvgl:
         id: prog_band0
         align: BOTTOM_LEFT
         x: 0
-        y: -64
+        y: -69
         width: 250
-        height: 30
+        height: 50
         bg_color: 0xDC3D45  # Lead - Red
         border_width: 0
-        radius: 15
+        radius: 25
         hidden: true
     - obj:
         id: prog_band1
         align: BOTTOM_LEFT
         x: 250
-        y: -64
+        y: -69
         width: 250
-        height: 30
+        height: 50
         bg_color: 0xF9B928  # Second - Yellow
         border_width: 0
-        radius: 15
+        radius: 25
         hidden: true
     - obj:
         id: prog_band2
         align: BOTTOM_LEFT
         x: 500
-        y: -64
+        y: -69
         width: 250
-        height: 30
+        height: 50
         bg_color: 0x49C3ED  # Vice - Light Blue
         border_width: 0
-        radius: 15
+        radius: 25
         hidden: true
     - obj:
         id: prog_band3
         align: BOTTOM_LEFT
         x: 750
-        y: -64
+        y: -69
         width: 350
-        height: 30
+        height: 50
         bg_color: 0x2E7D52  # Skip - Dark Green
         border_width: 0
-        radius: 15
+        radius: 25
         hidden: true
     # Band dividers (black vertical lines, hidden under mask until uncovered)
     - obj:
         id: prog_div0
         align: BOTTOM_LEFT
         x: 250
-        y: -64
+        y: -69
         width: 4
-        height: 30
+        height: 50
         bg_color: 0x000000
         border_width: 0
         radius: 0
@@ -958,9 +958,9 @@ lvgl:
         id: prog_div1
         align: BOTTOM_LEFT
         x: 500
-        y: -64
+        y: -69
         width: 4
-        height: 30
+        height: 50
         bg_color: 0x000000
         border_width: 0
         radius: 0
@@ -969,9 +969,9 @@ lvgl:
         id: prog_div2
         align: BOTTOM_LEFT
         x: 750
-        y: -64
+        y: -69
         width: 4
-        height: 30
+        height: 50
         bg_color: 0x000000
         border_width: 0
         radius: 0
@@ -981,24 +981,24 @@ lvgl:
         id: prog_mask
         align: BOTTOM_RIGHT
         x: 0
-        y: -64
+        y: -69
         width: 1100
-        height: 30
+        height: 50
         bg_color: 0xFFFFFF
         border_width: 0
-        radius: 15
+        radius: 25
         hidden: true
     # Top Layer: Pill frame border (outer black border)
     - obj:
         id: prog_border
         align: BOTTOM_MID
-        y: -64
+        y: -69
         width: 1100
-        height: 30
+        height: 50
         bg_opa: 0
         border_width: 4
         border_color: 0x000000
-        radius: 15
+        radius: 25
         hidden: true
     - label:
         id: lbl_status
@@ -1095,7 +1095,8 @@ interval:
           y: !lambda |-
             // pitimer raises the timer by height/24 only while the pace line
             // is shown; otherwise it sits dead centre.
-            return id(g_snap).show_pace ? -30 : 0;
+            // Moved up 25px.
+            return id(g_snap).show_pace ? -55 : -25;
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
@@ -1109,7 +1110,8 @@ interval:
           id: lbl_cnt5
           align: CENTER
           y: !lambda |-
-            return id(g_snap).show_pace ? -30 : 0;
+            // Moved up 25px.
+            return id(g_snap).show_pace ? -55 : -25;
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
@@ -1127,12 +1129,12 @@ interval:
             // its bottom padding. The timer's box height (LVGL line height)
             // gives the glyph height the digits occupy, so the line follows
             // whichever timer font is in use.
-            // Moved up 10px to make way for progress bar.
+            // Moved up 25px (was 40, now 15) + timer height offset.
             auto &s = id(g_snap);
             const bool five = s.show_countdown && s.seconds_until_buzzer >= 3600;
             lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
-            if (timer == nullptr) return 40;
-            return 40 + (int) (0.3225f * lv_obj_get_height(timer));
+            if (timer == nullptr) return 15;
+            return 15 + (int) (0.3225f * lv_obj_get_height(timer));
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
