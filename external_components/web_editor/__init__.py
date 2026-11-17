@@ -83,7 +83,7 @@ def emit_web_ui_header() -> None:
     html = (here / "web_ui.html").read_text(encoding="utf-8")
     if "{{version}}" not in html:
         raise cv.Invalid("web_ui.html must keep its {{version}} placeholder")
-    html = html.replace("{{version}}", f"v{component_version()}")
+    html = html.replace("{{version}}", component_version())
     gz = gzip.compress(html.encode("utf-8"), compresslevel=9)
     bytes_per_line = 12
     byte_lines = []
