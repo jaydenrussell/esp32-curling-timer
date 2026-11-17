@@ -32,4 +32,4 @@ export const CONFIG_SECTIONS = [
   { group: 'Outputs 🔊', title: 'Game End', hint: 'Header hold: seconds the during-buzzer header text stays after ringing.', fields: [['config.buzzer.relays','relays','Output'],['config.buzzer.end_duration','output_duration','Duration','end'],['config.buzzer.header_hold','int','Header hold after the buzzer (seconds)',0,100000]] },
 ];
 export const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
-for (const ev of ['start','countdown','end']) { for (let n=1;n<=4;n++) CONFIG_PATHS.push(config.buzzer._duration_); }
+for (const ev of ['start','countdown','end']) { for (let n=1;n<=4;n++) CONFIG_PATHS.push(`config.buzzer.${ev}_duration_${n}`); }
