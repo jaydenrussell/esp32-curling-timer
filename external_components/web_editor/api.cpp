@@ -168,10 +168,6 @@ static std::string session_header(const std::string &value, long max_age) {
   std::snprintf(buf, sizeof(buf), "%ld", max_age);
   std::string header = std::string(SESSION_COOKIE_NAME) + "=" + value + "; Max-Age=" + buf +
                        "; Path=/; HttpOnly; SameSite=Strict";
-#ifdef ESP_PLATFORM
-  // Correct for HTTPS terminated at a reverse proxy; direct plain HTTP may not persist cookies.
-  header += "; Secure";
-#endif
   return header;
 }
 
@@ -1421,10 +1417,13 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
   if (get) {
     if (p.rfind("/api/", 0) != 0)
       return error_json(404, "not found");
-    if (!logged_in(req.cookie))
-      return error_json(401, "please log in");
+    // Logs and status are publicly accessible for debugging; all other /api/* endpoints require login
+    if (p == "/api/logs")
+      return get_logs();
     if (p == "/api/status")
       return status();
+    if (!logged_in(req.cookie))
+      return error_json(401, "please log in");
     if (p == "/api/settings")
       return get_settings();
     if (p == "/api/raw")
@@ -1442,8 +1441,6 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
        return ntp_status();
      if (p == "/api/ntp")
        return ntp();
-     if (p == "/api/logs")
-       return get_logs();
     if (p.rfind("/api/backups/", 0) == 0)
       return get_backup(unquote_path(p.substr(13)));
     return error_json(404, "not found");
