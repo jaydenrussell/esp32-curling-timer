@@ -503,6 +503,7 @@ $('login-form').addEventListener('submit', async (event) => {
   if (!result.ok) {
     $('login-error').textContent = result.data.error;
     $('login-error').classList.remove('hidden');
+    $('login').classList.remove('show');
     return;
   }
   $('password').value = '';
