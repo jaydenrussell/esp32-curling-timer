@@ -11,6 +11,7 @@
   import LeaguesView from './lib/components/LeaguesView.svelte';
   import ConfigView from './lib/components/ConfigView.svelte';
   import DiagnosticsView from './lib/components/DiagnosticsView.svelte';
+  import HistoryView from './lib/components/HistoryView.svelte';
 
   let statusInterval = $state(null);
 
@@ -40,6 +41,8 @@
         <LeaguesView />
       {:else if appState.tab === 'config'}
         <ConfigView />
+      {:else if appState.tab === 'history'}
+        <HistoryView />
       {:else if appState.tab === 'diagnostics'}
         <DiagnosticsView />
       {/if}

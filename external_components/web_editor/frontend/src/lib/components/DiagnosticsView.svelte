@@ -1,14 +1,25 @@
 <script>
-  import { state as appState, api, formatBytes, formatUptime, showMessage } from '../stores.svelte.js';
+  import { api, formatBytes, formatUptime, showMessage } from '../stores.svelte.js';
   import { onMount } from 'svelte';
   import Card from './Card.svelte';
   import Button from './Button.svelte';
+  import Checkbox from './Checkbox.svelte';
 
-  let diag = $state(null);
-  let log = $state([]);
-  let refreshing = $state(false);
-  let autoRefresh = $state(true);
-  let interval = $state(null);
+let diag = $state(null);
+let log = $state([]);
+let refreshing = $state(false);
+let autoRefresh = $state(true);
+let interval = $state(null);
+let displayMode = $state('normal');
+
+async function setDisplayMode() {
+  const r = await api('/api/display_test_mode', { mode: displayMode });
+  if (r.ok) {
+    showMessage('Display test mode: ' + displayMode, 'ok');
+  } else {
+    showMessage('Display test mode failed: ' + ((r.data && r.data.error) || r.status), 'bad');
+  }
+}
 
   async function fetchDiag() {
     refreshing = true;
@@ -115,6 +126,16 @@
             <dt>Rotation</dt><dd>{diag.display_rotation || '0'}</dd>
             <dt>Mirror scale</dt><dd>{diag.mirror_scale != null ? diag.mirror_scale + '%' : '100%'}</dd>
           </dl>
+          <div class="display-test-row" style="margin-top: 0.75rem;">
+            <label for="display-test-mode" class="muted" style="display:block; margin-bottom: 0.25rem;">Display test mode</label>
+            <select id="display-test-mode" bind:value={displayMode} onchange={setDisplayMode}>
+              <option value="normal">Normal</option>
+              <option value="smpte">SMPTE color bars</option>
+              <option value="pluge">PLUGE</option>
+              <option value="geometry">Geometry</option>
+              <option value="colorbars">Color bars</option>
+            </select>
+          </div>
         </div>
 
         <div class="diag-section">

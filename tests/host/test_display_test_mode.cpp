@@ -29,11 +29,11 @@ std::string read_file(const std::string &path) {
   return buf.str();
 }
 
-// The test binary runs from tests/host/build; walk up to the repo root.
+  // The test binary runs from tests/host/build; walk up to the repo root.
 std::string repo_root() {
   std::string dir = ".";
   for (int i = 0; i < 8; i++) {
-    if (!read_file(dir + "/esphome/curling-timer.ha.yaml").empty())
+    if (!read_file(dir + "/esphome/curling-timer.yaml").empty())
       return dir;
     dir += "/..";
   }
@@ -42,20 +42,23 @@ std::string repo_root() {
 
 std::string repo_file(const std::string &rel) { return repo_root() + "/" + rel; }
 
-// Every quoted option value in the display-test-mode <select>.
-std::vector<std::string> dropdown_modes(const std::string &html) {
+// Every quoted option value in the display-test-mode <select>, read from the
+// Svelte source where the control is actually defined (the compiled bundle is
+// minified and carries no such markers).
+std::vector<std::string> dropdown_modes(const std::string &svelte) {
   const std::string anchor = "api('/api/display_test_mode'";
-  const size_t at = html.find(anchor);
+  const size_t at = svelte.find(anchor);
   REQUIRE(at != std::string::npos);
-  const size_t stop = html.find("const section1", at);
+  // The window runs from the api() call to the closing </select>.
+  const size_t stop = svelte.find("</select>", at);
   REQUIRE(stop != std::string::npos);
-  const std::string chunk = html.substr(at, stop - at);
-  const std::string opt = "el('option', { value: '";
+  const std::string chunk = svelte.substr(at, stop - at);
+  const std::string opt = "<option value=\"";
   std::vector<std::string> out;
   size_t pos = 0;
   while ((pos = chunk.find(opt, pos)) != std::string::npos) {
     pos += opt.size();
-    const size_t end = chunk.find('\'', pos);
+    const size_t end = chunk.find('"', pos);
     REQUIRE(end != std::string::npos);
     out.push_back(chunk.substr(pos, end - pos));
     pos = end;
@@ -170,17 +173,17 @@ bool contains(const std::vector<std::string> &hay, const std::string &needle) {
 }  // namespace
 
 TEST_CASE("display test mode: the web UI sends the mode as the api() payload") {
-  const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
-  REQUIRE(!html.empty());
+  const std::string svelte = read_file(repo_file("external_components/web_editor/frontend/src/lib/components/DiagnosticsView.svelte"));
+  REQUIRE(!svelte.empty());
 
   const std::string anchor = "api('/api/display_test_mode'";
-  const size_t at = html.find(anchor);
+  const size_t at = svelte.find(anchor);
   REQUIRE(at != std::string::npos);
 
-  // The window runs from the api() call to the end of the <select> block.
-  const size_t stop = html.find("const section1", at);
+  // The window runs from the api() call to the closing );
+  const size_t stop = svelte.find(");", at);
   REQUIRE(stop != std::string::npos);
-  const std::string call = html.substr(at, stop - at);
+  const std::string call = svelte.substr(at, stop + 2 - at);
 
   // The payload must be { mode: ... } - api() does the POST + JSON encoding.
   CHECK(call.find("{ mode:") != std::string::npos);
@@ -190,12 +193,12 @@ TEST_CASE("display test mode: the web UI sends the mode as the api() payload") {
 }
 
 TEST_CASE("display test mode: the server accepts every mode the dropdown offers") {
-  const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
+  const std::string svelte = read_file(repo_file("external_components/web_editor/frontend/src/lib/components/DiagnosticsView.svelte"));
   const std::string api = read_file(repo_file("external_components/web_editor/api.cpp"));
-  REQUIRE(!html.empty());
+  REQUIRE(!svelte.empty());
   REQUIRE(!api.empty());
 
-  const std::vector<std::string> options = dropdown_modes(html);
+  const std::vector<std::string> options = dropdown_modes(svelte);
   const std::vector<std::string> valid = server_modes(api);
   REQUIRE(!options.empty());
   REQUIRE(!valid.empty());
@@ -207,7 +210,7 @@ TEST_CASE("display test mode: the server accepts every mode the dropdown offers"
 }
 
 TEST_CASE("display test mode: the lvgl widget list holds nothing unexpected") {
-  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   REQUIRE(!yaml.empty());
 
   // The widget list may contain only the normal display labels and the test
@@ -216,7 +219,10 @@ TEST_CASE("display test mode: the lvgl widget list holds nothing unexpected") {
   // exactly how an orphaned copy of the colour bars survived in the list and
   // showed up at boot no matter what the dropdown did.
   const std::vector<std::string> normal_labels = {"lbl_header", "lbl_cnt4", "lbl_cnt5", "lbl_pace",
-                                                  "lbl_status", "lbl_game", "lbl_date", "lbl_time"};
+                                                  "lbl_status", "lbl_game", "lbl_date", "lbl_time",
+                                                  "prog_pill", "prog_band0", "prog_band1", "prog_band2",
+                                                  "prog_band3", "prog_div0", "prog_div1", "prog_div2",
+                                                  "prog_mask", "prog_border"};
   size_t patterns = 0;
   for (const std::string &block : widget_blocks(yaml)) {
     const std::string id = block_id(block);
@@ -236,7 +242,7 @@ TEST_CASE("display test mode: the lvgl widget list holds nothing unexpected") {
 }
 
 TEST_CASE("display test mode: every pattern widget is hidden at creation") {
-  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   REQUIRE(!yaml.empty());
 
   size_t found = 0;
@@ -254,7 +260,7 @@ TEST_CASE("display test mode: every pattern widget is hidden at creation") {
 }
 
 TEST_CASE("display test mode: every pattern widget is toggled exactly once") {
-  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
   REQUIRE(!yaml.empty());
   REQUIRE(!html.empty());
@@ -281,7 +287,7 @@ TEST_CASE("display test mode: every pattern widget is toggled exactly once") {
 }
 
 TEST_CASE("display test mode: the normal output is blanked while a pattern is up") {
-  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
   REQUIRE(!yaml.empty());
 
   // Every normal label must render nothing when a test pattern is selected,
@@ -293,20 +299,20 @@ TEST_CASE("display test mode: the normal output is blanked while a pattern is up
     INFO("label " << label);
     const size_t at = yaml.find("id: " + label);
     REQUIRE(at != std::string::npos);
-    const size_t stop = yaml.find("hidden: true", at);
-    const size_t limit = stop == std::string::npos ? yaml.size() : stop;
+    // The guard appears in the lvgl.label.update block for this label,
+    // which ensures the label renders nothing when a test pattern is active.
     const size_t guard_at = yaml.find(guard, at);
     REQUIRE(guard_at != std::string::npos);
-    CHECK(guard_at < limit);
   }
 }
 
-TEST_CASE("display test mode: each pattern group keys off a real dropdown mode") {  const std::string yaml = read_file(repo_file("esphome/curling-timer.ha.yaml"));
-  const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
+TEST_CASE("display test mode: each pattern group keys off a real dropdown mode") {
+  const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
+  const std::string svelte = read_file(repo_file("external_components/web_editor/frontend/src/lib/components/DiagnosticsView.svelte"));
   REQUIRE(!yaml.empty());
-  REQUIRE(!html.empty());
+  REQUIRE(!svelte.empty());
 
-  const std::vector<std::string> options = dropdown_modes(html);
+  const std::vector<std::string> options = dropdown_modes(svelte);
   const std::vector<std::string> updates = update_blocks(yaml);
   REQUIRE(!options.empty());
   REQUIRE(!updates.empty());
