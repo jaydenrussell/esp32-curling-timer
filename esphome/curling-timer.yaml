@@ -300,7 +300,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.157
+      ref: v2026.11.154
       path: external_components   # required: ESPHome only auto-scans
                                    # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -855,7 +855,7 @@ lvgl:
     - label:
         id: lbl_header
         align: TOP_MID
-        y: -5
+        y: 5
         text_font: font_header
         long_mode: CLIP
         recolor: true
@@ -892,7 +892,7 @@ lvgl:
     - obj:
         id: prog_pill
         align: BOTTOM_MID
-        y: -105
+        y: -79
         width: 1240
         height: 75
         bg_opa: 0
@@ -907,7 +907,7 @@ lvgl:
         id: prog_band0
         align: BOTTOM_LEFT
         x: 0
-        y: -105
+        y: -79
         width: 282
         height: 75
         bg_color: 0xDC3D45  # Lead - Red
@@ -918,7 +918,7 @@ lvgl:
         id: prog_band1
         align: BOTTOM_LEFT
         x: 282
-        y: -105
+        y: -79
         width: 282
         height: 75
         bg_color: 0xF9B928  # Second - Yellow
@@ -929,7 +929,7 @@ lvgl:
         id: prog_band2
         align: BOTTOM_LEFT
         x: 564
-        y: -105
+        y: -79
         width: 282
         height: 75
         bg_color: 0x49C3ED  # Vice - Light Blue
@@ -940,7 +940,7 @@ lvgl:
         id: prog_band3
         align: BOTTOM_LEFT
         x: 846
-        y: -105
+        y: -79
         width: 394
         height: 75
         bg_color: 0x2E7D52  # Skip - Dark Green
@@ -952,7 +952,7 @@ lvgl:
         id: prog_div0
         align: BOTTOM_LEFT
         x: 282
-        y: -105
+        y: -79
         width: 6
         height: 75
         bg_color: 0x000000
@@ -963,7 +963,7 @@ lvgl:
         id: prog_div1
         align: BOTTOM_LEFT
         x: 564
-        y: -105
+        y: -79
         width: 6
         height: 75
         bg_color: 0x000000
@@ -974,7 +974,7 @@ lvgl:
         id: prog_div2
         align: BOTTOM_LEFT
         x: 846
-        y: -105
+        y: -79
         width: 6
         height: 75
         bg_color: 0x000000
@@ -986,7 +986,7 @@ lvgl:
         id: prog_mask
         align: BOTTOM_RIGHT
         x: 0
-        y: -105
+        y: -79
         width: 1240
         height: 75
         bg_color: 0xFFFFFF
@@ -997,7 +997,7 @@ lvgl:
     - obj:
         id: prog_border
         align: BOTTOM_MID
-        y: -105
+        y: -79
         width: 1240
         height: 75
         bg_opa: 0
@@ -1100,8 +1100,8 @@ interval:
           y: !lambda |-
             // pitimer raises the timer by height/24 only while the pace line
             // is shown; otherwise it sits dead centre.
-            // Moved up 45px total (header moved up 10px more, countdown follows).
-            return id(g_snap).show_pace ? -75 : -45;
+            // Moved up 35px (was 25, now +10 more).
+            return id(g_snap).show_pace ? -65 : -35;
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
@@ -1115,8 +1115,8 @@ interval:
           id: lbl_cnt5
           align: CENTER
           y: !lambda |-
-            // Moved up 45px total (header moved up 10px more, countdown follows).
-            return id(g_snap).show_pace ? -75 : -45;
+            // Moved up 35px (was 25, now +10 more).
+            return id(g_snap).show_pace ? -65 : -35;
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
@@ -1134,12 +1134,12 @@ interval:
             // its bottom padding. The timer's box height (LVGL line height)
             // gives the glyph height the digits occupy, so the line follows
             // whichever timer font is in use.
-            // Moved up 50px total + timer height offset (countdown moved up 10px more).
+            // Moved up 25px + 15px + 10px = 50px total (was 40, now -10) + timer height offset.
             auto &s = id(g_snap);
             const bool five = s.show_countdown && s.seconds_until_buzzer >= 3600;
             lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
-            if (timer == nullptr) return -20;
-            return -20 + (int) (0.3225f * lv_obj_get_height(timer));
+            if (timer == nullptr) return -10;
+            return -10 + (int) (0.3225f * lv_obj_get_height(timer));
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
