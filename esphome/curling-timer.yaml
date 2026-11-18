@@ -76,6 +76,7 @@ esp32:
       # runs on the ESPHome loop task. A loopTask stack overflow crashed the
       # device ~6 min into a run; max out the loop task stack (default 8192).
       loop_task_stack_size: 32768
+      flash_chip: generic
 
 psram:
   # ESP32-P4 only supports hex mode in ESPHome (2026.9.1)
@@ -174,6 +175,8 @@ api:
 # # to be the API key, so both use the same secret.
 http_request:
   verify_ssl: true
+  buffer_size_rx: 5120
+  buffer_size_tx: 5120
 
 ota:
   - platform: esphome
@@ -212,30 +215,6 @@ time:
     on_time_sync:
       then:
         - logger.log: "Time synchronized"
-  - platform: pcf8563
-    id: rtc_time
-    i2c_id: rtc_i2c_bus
-    address: 0x51
-    update_interval: 60s
-
-# ---------------------------------------------------------------------
-# Add-on RTC (HYM8563 / PCF8563-compatible, M5Stack Unit RTC SKU U126).
-# Keeps wall-clock time across power loss. local_now() reads this when
-# SNTP has no valid time and config.addons.rtc is true in the settings
-# file (toggled live from the web UI Config tab).
-#
-# Grove Port B is GPIO53/GPIO54 on U213, but those pins are currently used by
-# relay outputs in this build. With relays in use and RTC addon not active,
-# keep the RTC bus on non-conflicting pins so config validates; move to
-# Grove Port B only when relay pin assignments are changed for RTC use.
-# If no RTC is present, pcf8563 reads simply fail silently and local_now()
-# keeps returning "no clock" until SNTP syncs.
-# ---------------------------------------------------------------------
-i2c:
-  - id: rtc_i2c_bus
-    sda: GPIO5
-    scl: GPIO6
-    frequency: 100kHz
 
 # ---------------------------------------------------------------------
 # Add-on UART0 on the Hat2-Bus — GPIO37 TX / GPIO38 RX (pins 5 / 4).
@@ -312,7 +291,6 @@ external_components:
 curling_engine:
   id: engine
   store_path: /flash
-  rtc_id: rtc_time
   uart_id: uart_addon
 
 web_editor:

@@ -14,15 +14,13 @@
 #   packages:
 #     rtc_addon: !include addons/rtc_addon.yaml
 #
-# Direct I2C (no PaHub) — default configuration:
+# Then add the RTC reference to the curling_engine config (required):
 #
 #   curling_engine:
-#     time_id: rtc_time
+#     rtc_id: rtc_time
 #
-# Via PaHub — point the RTC at a PaHub child bus instead of the direct
-# bus, and remove the direct i2c block:
-#
-#   i2c_id: pa_hub_ch0   # channel the RTC is plugged into
+# The `config.addons.rtc` setting (default: false) gates runtime use.
+# Enable it from the Web UI Config tab after wiring the hardware.
 # =====================================================================
 
 # Direct I2C bus on Grove Port B (GPIO53/GPIO54).
