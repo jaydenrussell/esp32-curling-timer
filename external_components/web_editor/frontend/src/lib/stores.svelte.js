@@ -96,8 +96,6 @@ export const state = $state({
   messageTimer: 0,
   headerMsg: { text: '', kind: 'bad', visible: false },
   quickFormDefaultsApplied: false,
-  authenticated: null,
-  helpOpen: false,
 });
 
 export const tabs = TABS;
@@ -110,13 +108,17 @@ export const pathToAddon = PATH_TO_ADDON;
 export async function selectTab(id) {
   state.tab = id;
   state.headerMsg = { text: '', kind: 'bad', visible: false };
-  if (id === 'status') { await loadStatus(); }
-  if (id === 'quickstart') { if (!state.configValues) await loadConfig(); await loadStatus(); }
-  if (id === 'schedule') { if (!state.model) await loadSettings(); }
-  if (id === 'leagues') { if (!state.model) await loadSettings(); }
-  if (id === 'config') { if (!state.configOriginal || !state.configDirty) await loadConfig(); await loadRaw(); }
-  if (id === 'history') { await loadHistory(); }
-  if (id === 'diagnostics') { /* DiagnosticsView self-loads on mount */ }
+  for (const [tab] of TABS) {
+    const el = document.getElementById(`tab-${tab}`);
+    if (el) el.classList.toggle('hidden', tab !== id);
+  }
+  if (id === 'status') { if (state.status) renderStatus(); loadStatus(); }
+  if (id === 'quickstart') { if (!state.configValues) loadConfig(); loadStatus(); renderQuickstart(); }
+  if (id === 'schedule') { if (!state.model) loadSettings(); else renderSchedule(); }
+  if (id === 'leagues') { if (!state.model) loadSettings(); renderLeagues(); }
+  if (id === 'config') { if (!state.configOriginal || !state.configDirty) await loadConfig(); else await renderConfig(); await loadRaw(); }
+  if (id === 'history') loadHistory();
+  if (id === 'diagnostics') renderDiagnostics();
 }
 
 export function showMessage(text, kind = 'bad') {
@@ -142,6 +144,8 @@ export async function loadStatus() {
   }
   state.status = result.data;
   state.statusAt = performance.now();
+  renderStatus();
+  if (state.tab === 'quickstart') renderQuickstart();
 }
 
 export async function loadConfig() {
@@ -252,6 +256,7 @@ export function toggleAddon(key, next) {
       showMessage('Saved; reloading configuration', 'ok');
       return loadConfig();
     })
+    .then(() => { if (state.tab === 'config') renderConfig(); })
     .catch(err => showMessage(`Not saved: ${err.message}`));
 }
 
@@ -279,25 +284,43 @@ export function RELAY_NAMES() {
   return names;
 }
 
+let renderStatus = () => {};
+let renderQuickstart = () => {};
+let renderSchedule = () => {};
+let renderLeagues = () => {};
+let renderConfig = () => {};
+let renderDiagnostics = () => {};
+
+export function setRenderers(rs, rq, rsc, rl, rc, rd) {
+  renderStatus = rs;
+  renderQuickstart = rq;
+  renderSchedule = rsc;
+  renderLeagues = rl;
+  renderConfig = rc;
+  renderDiagnostics = rd;
+}
+
 export function start() {
   loadConfig().then(() => {
     if (state.configValues) {
       startPoller(loadStatus, { intervalMs: 5000 });
       selectTab('status');
     } else {
-      state.authenticated = false;
+      showLogin();
     }
   });
 }
 
+function showLogin() {
+  const loginEl = document.getElementById('login');
+  if (loginEl) { loginEl.classList.add('show'); const pw = loginEl.querySelector('#password'); if (pw) pw.focus(); }
+}
+
 export async function handleLogin(password) {
   const result = await api('/api/login', { password });
-  if (!result.ok) {
-    showMessage(result.data.error);
-    return result.data.error;
-  }
-  state.authenticated = true;
-  state.headerMsg = { text: '', kind: 'bad', visible: false };
+  if (!result.ok) return result.data.error;
+  const loginEl = document.getElementById('login');
+  if (loginEl) { loginEl.classList.remove('show'); loginEl.querySelector('#password').value = ''; }
   start();
   return null;
 }
@@ -308,11 +331,13 @@ export async function handleLogout() {
 }
 
 export function handleHelp() {
-  state.helpOpen = true;
+  const modal = document.getElementById('help-modal');
+  if (modal) { modal.classList.remove('hidden'); modal.classList.add('show'); }
 }
 
 export function closeHelp() {
-  state.helpOpen = false;
+  const modal = document.getElementById('help-modal');
+  if (modal) { modal.classList.add('hidden'); modal.classList.remove('show'); }
 }
 
 export function formatBytes(bytes) {
@@ -349,14 +374,13 @@ export const auth = {
   async check() {
     const result = await api('/api/status');
     if (!result.ok && result.status === 401) {
-      state.authenticated = false;
+      showLogin();
       return false;
     }
-    state.authenticated = true;
     return true;
   }
 };
 
 export function renderAddonMarketplace() {
-  // Rendered by AddonMarketplace.svelte component
+  // Rendered by component
 }
