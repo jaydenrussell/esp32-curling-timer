@@ -43,22 +43,21 @@ std::string repo_root() {
 std::string repo_file(const std::string &rel) { return repo_root() + "/" + rel; }
 
 // Every quoted option value in the display-test-mode <select>, read from the
-// Svelte source where the control is actually defined (the compiled bundle is
-// minified and carries no such markers).
-std::vector<std::string> dropdown_modes(const std::string &svelte) {
+// legacy web UI HTML where the control is defined.
+std::vector<std::string> dropdown_modes(const std::string &html) {
   const std::string anchor = "api('/api/display_test_mode'";
-  const size_t at = svelte.find(anchor);
+  const size_t at = html.find(anchor);
   REQUIRE(at != std::string::npos);
-  // The window runs from the api() call to the closing </select>.
-  const size_t stop = svelte.find("</select>", at);
+  // The window runs from the api() call to the closing );
+  const size_t stop = html.find("const section1", at);
   REQUIRE(stop != std::string::npos);
-  const std::string chunk = svelte.substr(at, stop - at);
-  const std::string opt = "<option value=\"";
+  const std::string chunk = html.substr(at, stop - at);
+  const std::string opt = "el('option', { value: '";
   std::vector<std::string> out;
   size_t pos = 0;
   while ((pos = chunk.find(opt, pos)) != std::string::npos) {
     pos += opt.size();
-    const size_t end = chunk.find('"', pos);
+    const size_t end = chunk.find('\'', pos);
     REQUIRE(end != std::string::npos);
     out.push_back(chunk.substr(pos, end - pos));
     pos = end;
@@ -173,17 +172,17 @@ bool contains(const std::vector<std::string> &hay, const std::string &needle) {
 }  // namespace
 
 TEST_CASE("display test mode: the web UI sends the mode as the api() payload") {
-  const std::string svelte = read_file(repo_file("external_components/web_editor/frontend/src/lib/components/DiagnosticsView.svelte"));
-  REQUIRE(!svelte.empty());
+  const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
+  REQUIRE(!html.empty());
 
   const std::string anchor = "api('/api/display_test_mode'";
-  const size_t at = svelte.find(anchor);
+  const size_t at = html.find(anchor);
   REQUIRE(at != std::string::npos);
 
   // The window runs from the api() call to the closing );
-  const size_t stop = svelte.find(");", at);
+  const size_t stop = html.find(");", at);
   REQUIRE(stop != std::string::npos);
-  const std::string call = svelte.substr(at, stop + 2 - at);
+  const std::string call = html.substr(at, stop + 2 - at);
 
   // The payload must be { mode: ... } - api() does the POST + JSON encoding.
   CHECK(call.find("{ mode:") != std::string::npos);
@@ -193,12 +192,12 @@ TEST_CASE("display test mode: the web UI sends the mode as the api() payload") {
 }
 
 TEST_CASE("display test mode: the server accepts every mode the dropdown offers") {
-  const std::string svelte = read_file(repo_file("external_components/web_editor/frontend/src/lib/components/DiagnosticsView.svelte"));
+  const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
   const std::string api = read_file(repo_file("external_components/web_editor/api.cpp"));
-  REQUIRE(!svelte.empty());
+  REQUIRE(!html.empty());
   REQUIRE(!api.empty());
 
-  const std::vector<std::string> options = dropdown_modes(svelte);
+  const std::vector<std::string> options = dropdown_modes(html);
   const std::vector<std::string> valid = server_modes(api);
   REQUIRE(!options.empty());
   REQUIRE(!valid.empty());
@@ -308,11 +307,11 @@ TEST_CASE("display test mode: the normal output is blanked while a pattern is up
 
 TEST_CASE("display test mode: each pattern group keys off a real dropdown mode") {
   const std::string yaml = read_file(repo_file("esphome/curling-timer.yaml"));
-  const std::string svelte = read_file(repo_file("external_components/web_editor/frontend/src/lib/components/DiagnosticsView.svelte"));
+  const std::string html = read_file(repo_file("external_components/web_editor/web_ui.html"));
   REQUIRE(!yaml.empty());
-  REQUIRE(!svelte.empty());
+  REQUIRE(!html.empty());
 
-  const std::vector<std::string> options = dropdown_modes(svelte);
+  const std::vector<std::string> options = dropdown_modes(html);
   const std::vector<std::string> updates = update_blocks(yaml);
   REQUIRE(!options.empty());
   REQUIRE(!updates.empty());

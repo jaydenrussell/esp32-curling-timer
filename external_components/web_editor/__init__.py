@@ -1,5 +1,4 @@
 from pathlib import Path
-import gzip
 import subprocess
 
 import esphome.codegen as cg
@@ -73,33 +72,24 @@ def component_version() -> str:
 
 
 def emit_web_ui_header() -> None:
-    """Read web_ui.html and (re)generate web_ui.h as a gzip-compressed byte array.
+    """Read web_ui.html and (re)generate web_ui.h as a raw string literal.
 
     Runs at codegen time so the {{version}} placeholder always shows the
-    component build version, and only rewrites the header when the emitted
-    content actually changed.
+    ESPHome version of this build, and only rewrites the header when the
+    HTML actually changed (a plain compile-flag define would blow the
+    Windows command line limit for a page this size).
     """
     here = Path(__file__).parent
     html = (here / "web_ui.html").read_text(encoding="utf-8")
     if "{{version}}" not in html:
         raise cv.Invalid("web_ui.html must keep its {{version}} placeholder")
-    html = html.replace("{{version}}", component_version())
-    gz = gzip.compress(html.encode("utf-8"), compresslevel=9)
-    bytes_per_line = 12
-    byte_lines = []
-    for i in range(0, len(gz), bytes_per_line):
-        chunk = gz[i : i + bytes_per_line]
-        byte_lines.append("  " + ", ".join(f"0x{b:02x}" for b in chunk))
+    html = html.replace("{{version}}", f"v{component_version()}")
     content = (
         "// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen"
-        " time — edit web_ui.html (frontend source/artifact), not this file.\n"
+        " time — edit web_ui.html, not this file.\n"
         "#pragma once\n\n"
-        "#include <stddef.h>\n"
-        "#include <stdint.h>\n\n"
-        "static const uint8_t WEB_UI_HTML_GZ[] = {\n"
-        + ",\n".join(byte_lines)
-        + "\n};\n"
-        "static const size_t WEB_UI_HTML_GZ_LEN = sizeof(WEB_UI_HTML_GZ);\n"
+        f'static const char WEB_UI_HTML[] = R"{WEB_UI_DELIMITER}('
+        f"{html}){WEB_UI_DELIMITER}\";\n"
     )
     header = here / "web_ui.h"
     if header.exists() and header.read_text(encoding="utf-8") == content:

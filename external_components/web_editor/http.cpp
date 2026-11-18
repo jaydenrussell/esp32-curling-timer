@@ -150,8 +150,7 @@ static esp_err_t api_handler(httpd_req_t *req) {
         "Content-Security-Policy",
         "default-src 'self'; script-src 'self' 'unsafe-inline'; "
         "style-src 'self' 'unsafe-inline'; frame-ancestors 'none'");
-    page.extra_headers.emplace_back("Content-Encoding", "gzip");
-    page.body.assign(reinterpret_cast<const char *>(WEB_UI_HTML_GZ), WEB_UI_HTML_GZ_LEN);
+    page.body = WEB_UI_HTML;
     return send_response(req, page);
   }
   request.content_type = header_value(req, "Content-Type", SMALL_HEADER_BUF);
