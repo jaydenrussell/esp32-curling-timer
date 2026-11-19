@@ -153,6 +153,42 @@ main {
   .bottom-nav button { min-height: 48px; }
 }
 
+/* Scheduling sub-tabs — shown when tab === 'schedule' */
+.sub-tabs {
+  display: none;
+  position: sticky;
+  top: 64px;
+  z-index: 125;
+  margin: 0 10px;
+  border-radius: 0 0 16px 16px;
+  padding: 6px 8px;
+  background: rgba(7, 24, 42, 0.85);
+  border: 1px solid var(--border);
+  border-top: 0;
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  box-shadow: var(--shadow);
+}
+.sub-tabs.visible {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+}
+.sub-tabs button {
+  flex: 1; border-radius: 12px; padding: 6px 12px; min-height: 32px;
+  border: 1px solid transparent; background: transparent; color: var(--muted);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: all .15s ease;
+  white-space: nowrap;
+}
+.sub-tabs button:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+.sub-tabs button.active { background: var(--primary-soft); color: var(--text-strong); border-color: rgba(34,211,238,0.35); }
+.sub-tabs button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+@media (max-width: 480px) {
+  .sub-tabs button { padding: 4px 8px; font-size: 10px; }
+}
+
 .card, .hero, .addon-card {
   border-radius: var(--radius-lg); padding: 20px; margin: 0 0 14px;
   display: flex; flex-direction: column; gap: 12px;
@@ -348,6 +384,10 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </header>
 <nav id="tabs" aria-label="Primary"></nav>
 <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile"></nav>
+<nav class="sub-tabs" id="sub-tabs" aria-label="Scheduling sub-navigation">
+  <button data-subtab="schedule" class="active">📅 Schedule</button>
+  <button data-subtab="leagues">🏆 Leagues</button>
+</nav>
 <main>
   <section id="tab-status"></section>
   <section id="tab-quickstart" class="hidden"></section>
@@ -370,7 +410,7 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 const NAV_LABELS = {
   status: 'Live',
   quickstart: 'Quick',
-  schedule: 'Schedule',
+  schedule: 'Scheduling',
   history: 'History',
   config: 'Settings'
 };
@@ -384,11 +424,11 @@ const NAV_ICONS = {
 const TABS = [
   ['status', '⏱️', 'Live'],
   ['quickstart', '⚡', 'Quick'],
-  ['schedule', '📅', 'Schedule'],
+  ['schedule', '📅', 'Scheduling'],
   ['history', '📜', 'History'],
   ['config', '⚙️', 'Settings']
 ];
-const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
+const state = { tab: 'status', subTab: 'schedule', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
 
 // Add-on marketplace data model (spec §2). auto = hardware-detected gating.
@@ -561,6 +601,38 @@ function renderTabs() {
     el('button', { class: id === state.tab ? 'active' : '', title, onclick: () => selectTab(id) },
        el('span', { class: 'icon' }, icon),
        el('span', { class: 'label' }, title))));
+  // Scheduling sub-tabs (Schedule | Leagues)
+  const subNav = $('sub-tabs');
+  if (state.tab === 'schedule') {
+    subNav.classList.add('visible');
+    subNav.querySelectorAll('button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.subtab === state.subTab);
+      btn.onclick = () => selectSubTab(btn.dataset.subtab);
+    });
+  } else {
+    subNav.classList.remove('visible');
+  }
+}
+
+function selectSubTab(id) {
+  state.subTab = id;
+  renderTabs();
+  clearMessage();
+  for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== state.tab);
+  // When on Scheduling tab, toggle between Schedule and Leagues sub-views
+  if (state.tab === 'schedule') {
+    const sched = $('tab-schedule');
+    const leagues = $('tab-leagues');
+    if (id === 'schedule') {
+      sched.classList.remove('hidden');
+      leagues.classList.add('hidden');
+    } else if (id === 'leagues') {
+      sched.classList.add('hidden');
+      leagues.classList.remove('hidden');
+    }
+  }
+  if (id === 'schedule') renderSchedule();
+  if (id === 'leagues') renderLeagues();
 }
 window.addEventListener('resize', renderTabs);
 async function selectTab(id) {
@@ -572,12 +644,9 @@ async function selectTab(id) {
   if (id === 'quickstart') { if (!state.configValues) loadConfig(); loadStatus(); renderQuickstart(); }
   if (id === 'schedule') {
     if (!state.model) await loadSettings();
-    else renderSchedule();
+    selectSubTab(state.subTab);
   }
-  if (id === 'leagues') {
-    if (!state.model) await loadSettings();
-    renderLeagues();
-  }
+  if (id === 'leagues') { renderLeagues(); }
   if (id === 'config') {
     if (!state.configOriginal || !state.configDirty) await loadConfig();
     else await renderConfig();
