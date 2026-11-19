@@ -7,6 +7,7 @@
 #include "esp_http_server.h"
 #include "esp_heap_caps.h"
 #include "esp_system.h"
+#include "esp_task_wdt.h"
 #include "lwip/inet.h"
 #include "lwip/sockets.h"
 
@@ -235,6 +236,11 @@ bool start_web_httpd(WebEditorComponent *editor) {
     return false;
   }
   ESP_LOGI(TAG, "web API listening on port %u", editor->port());
+  // Register this task with the task watchdog so long-running LVGL/display
+  // operations don't silently trigger a chip reset. The watchdog is already
+  // configured by ESPHome; we just need to be on its task list.
+  if (esp_task_wdt_status(NULL) != ESP_OK)
+    esp_task_wdt_add(NULL);
   return true;
 }
 

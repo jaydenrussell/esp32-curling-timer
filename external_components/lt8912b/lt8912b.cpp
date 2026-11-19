@@ -4,6 +4,7 @@
 #include "esp_heap_caps.h"
 #include "esp_system.h"
 #include "esphome/core/helpers.h"
+#include <freertos/task.h>
 
 namespace esphome {
 namespace lt8912b {
@@ -213,6 +214,14 @@ void Lt8912b::setup() {
 
   this->hdmi_ready_ = esp_lcd_panel_lt8912b_is_ready(this->panel_);
   ESP_LOGCONFIG(TAG, "LT8912B setup complete, HDMI %s", this->hdmi_ready_ ? "ready" : "not detected");
+
+  // Pre-allocate the framebuffer now (before LVGL starts) to ensure PSRAM
+  // is available. Without this, LVGL/Ethernet consume memory and the
+  // lazy allocation in update() fails with ESP_ERR_NO_MEM.
+  if (!this->check_buffer_()) {
+    ESP_LOGE(TAG, "Pre-allocation of framebuffer failed");
+    return;
+  }
 }
 
 void Lt8912b::update() {
@@ -321,10 +330,12 @@ bool Lt8912b::check_buffer_() {
     return false;
   if (this->buffer_ != nullptr)
     return true;
-  this->bytes_per_pixel_ = static_cast<uint8_t>(3 - static_cast<uint8_t>(this->color_depth_));
+  // COLOR_BITNESS_* values (2=565, 3=888, 4=8888) equal bytes per pixel.
+  this->bytes_per_pixel_ = static_cast<uint8_t>(this->color_depth_);
   // A full screen is 1.8 MB at 1280x720 - far too much for the internal
   // heap, so ask for external (PSRAM) memory.
-  RAMAllocator<uint8_t> allocator(true);
+  // Use ALLOC_EXTERNAL (PSRAM) with fallback to internal
+  RAMAllocator<uint8_t> allocator;
   this->buffer_ = allocator.allocate(this->height_ * this->width_ * this->bytes_per_pixel_);
   if (this->buffer_ == nullptr) {
     this->mark_failed_(LOG_STR("Could not allocate buffer for display!"), ESP_ERR_NO_MEM);
@@ -409,6 +420,10 @@ void Lt8912b::fill(Color color) {
           break;
       }
     }
+    // Yield every 1000 pixels so a full-screen fill doesn't trip the
+    // task watchdog (the LVGL flush path can take >50ms).
+    if ((i & 0x3FF) == 0x3FF)
+      vTaskDelay(0);
   }
   this->x_low_ = 0;
   this->y_low_ = 0;
