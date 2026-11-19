@@ -1461,6 +1461,10 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
     return logout();
   if (!logged_in(req.cookie))
     return error_json(401, "please log in");
+  // CSRF gate for every state-changing call after login. The token is
+  // server-signed (same key as the session) and must arrive as X-XSRF-TOKEN.
+  if (!config_->csrf_valid(req.csrf_token, static_cast<double>(std::time(nullptr))))
+    return error_json(403, "invalid csrf token");
   if (p == "/api/settings")
     return put_settings(data);
   if (p == "/api/enabled")

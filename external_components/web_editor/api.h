@@ -30,6 +30,7 @@ struct ApiRequest {
   std::string host;
   std::string cookie;
   std::string client_address;
+  std::string csrf_token;  // X-XSRF-TOKEN header value for CSRF protection
   bool bad_content_length{false};
   bool body_too_large{false};
 };

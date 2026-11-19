@@ -117,3 +117,31 @@ TEST_CASE ("LoginLimiter tracks addresses independently and evicts old buckets")
   for (int i = 0; i < 16; i++)
     CHECK(limiter.blocked("10.1.0." + std::to_string(i), 110.0));
 }
+
+TEST_CASE ("WebConfig CSRF token make/validate/expiry/tamper") {
+  WebConfig config;
+  // csrf_token/csrf_valid require configured() == true (both hash and secret).
+  CHECK(config.set_password("hurryhard"));
+  const double now = 1780000000.0;
+  const std::string token = config.csrf_token(now);
+  // format: expiry.signature
+  CHECK(token.size() > 10);
+  const size_t dot = token.find('.');
+  CHECK(dot != std::string::npos);
+  CHECK(config.csrf_valid(token, now));
+  CHECK(config.csrf_valid(token, 1782591999.9));  // just before expiry
+  CHECK_FALSE(config.csrf_valid(token, 1782592000.0));  // expired
+  CHECK_FALSE(config.csrf_valid(token, 1782592000.1));
+  CHECK_FALSE(config.csrf_valid("1782592000.deadbeef", now));  // wrong signature
+  CHECK_FALSE(config.csrf_valid("-1.7b56fd9f2961cb55134915d697a37283ba7339bf34db2a5df708143a12e59b26",
+                                now));  // expiry not digits
+  CHECK_FALSE(config.csrf_valid("1782592000", now));  // no dot
+  CHECK_FALSE(config.csrf_valid("", now));
+  // a different secret invalidates everything
+  config.set_secret("other");
+  CHECK_FALSE(config.csrf_valid(token, now));
+  // unconfigured config returns empty token and rejects validation
+  WebConfig empty;
+  CHECK(empty.csrf_token(now).empty());
+  CHECK_FALSE(empty.csrf_valid("anything", now));
+}

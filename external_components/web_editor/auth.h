@@ -46,6 +46,14 @@ class WebConfig {
   // True for an unexpired value made with this secret.
   bool session_valid(const std::string &value, double now) const;
 
+  // CSRF token: `${now}.${hmac_sha256_hex(secret, now)}` with expiry = now + 24h.
+  // Clients must include the token in X-XSRF-TOKEN header or as a form field
+  // for state-changing requests (POST/PUT). Returns empty string if not configured.
+  std::string csrf_token(double now = 0) const;
+
+  // True if the CSRF token is valid (matches the session expiry and secret).
+  bool csrf_valid(const std::string &token, double now) const;
+
  private:
   std::string sign(const std::string &text) const;
 

@@ -6,6 +6,7 @@
 <title>Curling Timer</title>
 <meta name="theme-color" content="#07182a">
 <meta name="color-scheme" content="dark">
+<meta name="csrf-token" content="">
 <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjogIkN1cmxpbmcgVGltZXIiLCAic2hvcnRfbmFtZSI6ICJDdXJsaW5nIFRpbWVyIiwgInN0YXJ0X3VybCI6ICIvIiwgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsICJiYWNrZ3JvdW5kX2NvbG9yIjogIjBCMTEyMCIgfQ==">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%236750A4'/%3E%3Cpath d='M25 35 L45 55 L75 25' stroke='%23FFFFFF' stroke-width='8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <style>
@@ -479,7 +480,13 @@ function clearMessage() { const h = $('header-msg'); if (h) h.classList.add('hid
 
 async function api(path, body) {
   const options = body === undefined ? {} : {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) };
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-XSRF-TOKEN': csrfToken(),
+    },
+    body: JSON.stringify(body),
+  };
   let response;
   try {
     response = await fetch(path, options);
@@ -488,7 +495,18 @@ async function api(path, body) {
   }
   const data = await response.json().catch(() => ({ error: `unexpected response (${response.status})` }));
   if (response.status === 401 && path !== '/api/login') showLogin();
+  if (response.status === 403 && path !== '/api/login') showLogin();
   return { ok: response.ok, status: response.status, data };
+}
+
+let _csrfTokenCache = null;
+function csrfToken() {
+  if (_csrfTokenCache) return _csrfTokenCache;
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  if (meta && meta.content) {
+    _csrfTokenCache = meta.content;
+  }
+  return _csrfTokenCache || '';
 }
 
 // ---- login ----------------------------------------------------------------

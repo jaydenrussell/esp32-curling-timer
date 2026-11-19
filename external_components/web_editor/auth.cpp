@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <random>
 
 #ifdef ESP_PLATFORM
@@ -175,6 +176,42 @@ bool WebConfig::session_valid(const std::string &value, double now) const {
   if (end == nullptr || *end != '\0')
     return false;
   return expires_at > now && hex_equal(signature, sign(expiry));
+}
+
+std::string WebConfig::csrf_token(double now) const {
+  if (!configured())
+    return "";
+  if (now <= 0)
+    now = std::time(nullptr);
+  // Lifetime matches the session so a token minted for a loaded page stays
+  // valid for as long as the login itself can; the page is served with a
+  // fresh token on every reload.
+  const long expires_at = static_cast<long>(now) + SESSION_SECONDS;
+  const std::string expiry = std::to_string(expires_at);
+  return expiry + "." + sign(expiry);
+}
+
+bool WebConfig::csrf_valid(const std::string &token, double now) const {
+  if (!configured())
+    return false;
+  const size_t dot = token.find('.');
+  if (dot == std::string::npos)
+    return false;
+  const std::string expiry = token.substr(0, dot);
+  const std::string signature = token.substr(dot + 1);
+  for (char c : expiry) {
+    if (c < '0' || c > '9')
+      return false;
+  }
+  if (expiry.empty())
+    return false;
+  char *end = nullptr;
+  const long expires_at = std::strtol(expiry.c_str(), &end, 10);
+  if (end == nullptr || *end != '\0')
+    return false;
+  if (expires_at <= now)
+    return false;
+  return hex_equal(signature, sign(expiry));
 }
 
 void LoginLimiter::prune(Bucket &bucket, double now) {

@@ -1,6 +1,7 @@
 #include "http.h"
 
 #include <cstring>
+#include <ctime>
 #include <string>
 
 #include "esp_http_server.h"
@@ -151,12 +152,25 @@ static esp_err_t api_handler(httpd_req_t *req) {
         "default-src 'self'; script-src 'self' 'unsafe-inline'; "
         "style-src 'self' 'unsafe-inline'; frame-ancestors 'none'");
     page.body = WEB_UI_HTML;
+    if (s_editor != nullptr) {
+      const float now = static_cast<float>(std::time(nullptr));
+      std::string csrf_token = s_editor->web_config().csrf_token(now);
+      if (!csrf_token.empty()) {
+        page.extra_headers.emplace_back("X-CSRF-Token", csrf_token);
+        // Inject CSRF token as meta tag for JS to read on page load.
+        const std::string meta = "<meta name=\"csrf-token\" content=\"" + csrf_token + "\">";
+        const size_t head = page.body.find("<head>");
+        if (head != std::string::npos)
+          page.body.insert(head + 6, meta);
+      }
+    }
     return send_response(req, page);
   }
   request.content_type = header_value(req, "Content-Type", SMALL_HEADER_BUF);
   request.origin = header_value(req, "Origin", SMALL_HEADER_BUF);
   request.host = header_value(req, "Host", SMALL_HEADER_BUF);
   request.cookie = header_value(req, "Cookie", COOKIE_BUF);
+  request.csrf_token = header_value(req, "X-XSRF-TOKEN", SMALL_HEADER_BUF);
   request.client_address = client_address(req);
   if (request.method == "POST" && !read_body(req, &request))
     return httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "body read failed");
