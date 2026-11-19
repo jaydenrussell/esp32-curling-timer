@@ -311,7 +311,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.177</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.178</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -338,7 +338,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.177</span>
+    <span class="header-version">v2026.11.178</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -369,30 +369,24 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const NAV_LABELS = {
   status: 'Live',
-  quickstart: 'Quick Start',
+  quickstart: 'Quick',
   schedule: 'Schedule',
-  leagues: 'Leagues',
   history: 'History',
-  config: 'Settings',
-  diagnostics: 'Diagnostics'
+  config: 'Settings'
 };
 const NAV_ICONS = {
   status: '⏱️',
   quickstart: '⚡',
   schedule: '📅',
-  leagues: '🏆',
   history: '📜',
-  config: '⚙️',
-  diagnostics: '🔧'
+  config: '⚙️'
 };
 const TABS = [
   ['status', '⏱️', 'Live'],
-  ['quickstart', '⚡', 'Quick Start'],
+  ['quickstart', '⚡', 'Quick'],
   ['schedule', '📅', 'Schedule'],
-  ['leagues', '🏆', 'Leagues'],
   ['history', '📜', 'History'],
-  ['config', '⚙️', 'Settings'],
-  ['diagnostics', '🔧', 'Diagnostics']
+  ['config', '⚙️', 'Settings']
 ];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
@@ -2311,4 +2305,4 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
-)esphome_web_ui";
+esphome_web_ui";

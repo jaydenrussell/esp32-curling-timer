@@ -364,30 +364,24 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const NAV_LABELS = {
   status: 'Live',
-  quickstart: 'Quick Start',
+  quickstart: 'Quick',
   schedule: 'Schedule',
-  leagues: 'Leagues',
   history: 'History',
-  config: 'Settings',
-  diagnostics: 'Diagnostics'
+  config: 'Settings'
 };
 const NAV_ICONS = {
   status: '⏱️',
   quickstart: '⚡',
   schedule: '📅',
-  leagues: '🏆',
   history: '📜',
-  config: '⚙️',
-  diagnostics: '🔧'
+  config: '⚙️'
 };
 const TABS = [
   ['status', '⏱️', 'Live'],
-  ['quickstart', '⚡', 'Quick Start'],
+  ['quickstart', '⚡', 'Quick'],
   ['schedule', '📅', 'Schedule'],
-  ['leagues', '🏆', 'Leagues'],
   ['history', '📜', 'History'],
-  ['config', '⚙️', 'Settings'],
-  ['diagnostics', '🔧', 'Diagnostics']
+  ['config', '⚙️', 'Settings']
 ];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
