@@ -81,16 +81,16 @@ button:active { transform: scale(0.985); }
 
 header {
   display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px; min-height: 40px;
+  padding: 10px 12px; min-height: 56px;
   position: sticky; top: 0; z-index: 120;
   background: rgba(7, 24, 42, 0.55);
   border-bottom: 1px solid rgba(255,255,255,0.08);
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
 }
-.header-brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.header-brand h1 { font-size: 16px; margin: 0; }
-.header-version { display: none; }
+.header-brand { display: flex; flex-direction: column; align-items: flex-start; gap: 0; flex-shrink: 0; }
+.header-brand h1 { font-size: 20px; margin: 0; line-height: 1.2; }
+.header-version { font-size: 11px; color: var(--text-dim); padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); }
 #header-msg { font-size: 13px; padding: 8px 12px; border-radius: 12px; white-space: pre-wrap; flex: 1; margin: 0; }
 .header-actions { display: flex; gap: 8px; margin-left: auto; }
 
@@ -157,7 +157,7 @@ main {
 .sub-tabs {
   display: none;
   position: sticky;
-  top: 40px;
+  top: 56px;
   z-index: 125;
   margin: 0 10px;
   border-radius: 0 0 14px 14px;
@@ -347,7 +347,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.182</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.183</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -374,7 +374,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.182</span>
+    <span class="header-version">v2026.11.183</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
