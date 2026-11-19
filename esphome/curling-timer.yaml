@@ -76,7 +76,6 @@ esp32:
       # runs on the ESPHome loop task. A loopTask stack overflow crashed the
       # device ~6 min into a run; max out the loop task stack (default 8192).
       loop_task_stack_size: 32768
-      flash_chip: generic
 
 psram:
   # ESP32-P4 only supports hex mode in ESPHome (2026.9.1)
