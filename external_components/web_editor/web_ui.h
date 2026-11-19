@@ -1,7 +1,9 @@
-// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
+// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen
+time — edit web_ui.html, not this file.
 #pragma once
 
-static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
+static const char WEB_UI_HTML[] = R"esphome_web_ui(
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -92,8 +94,20 @@ header {
 #header-msg { font-size: 13px; padding: 8px 12px; border-radius: 12px; white-space: pre-wrap; flex: 1; margin: 0; }
 .header-actions { display: flex; gap: 8px; margin-left: auto; }
 
-/* Top tabs hidden on all viewports - navigation lives in bottom-nav */
-nav#tabs { display: none !important; }
+/* Hamburger menu — visible on mobile, hidden on desktop */
+.header-hamburger {
+  display: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: white;
+  padding: 0 8px;
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 121;
+}
+/* Primary navigation — bottom bar on all viewports */
 .bottom-nav {
   position: fixed; left: 10px; right: 10px; bottom: 10px;
   display: flex; flex-direction: row; gap: 4px; z-index: 130;
@@ -113,7 +127,20 @@ nav#tabs { display: none !important; }
 }
 .bottom-nav button:hover { background: rgba(255,255,255,0.06); color: var(--text); }
 .bottom-nav button.active { background: var(--primary-soft); color: var(--text-strong); border-color: rgba(34,211,238,0.35); }
-.bottom-nav .icon { font-size: 18px; line-height: 1; }
+.bottom-nav .icon { font-size: 20px; line-height: 1; }
+
+/* Top tabs hidden on all viewports - navigation lives in bottom-nav */
+nav#tabs { display: none !important; }
+@media (max-width: 768px) {
+  .header-hamburger { display: block; }
+  nav#tabs { display: none !important; }
+  .bottom-nav { 
+    flex-direction: row; 
+  }
+  .header-actions { 
+    display: none;
+  }
+}
 
 /* Consistent padding for bottom nav on all viewports */
 main {
@@ -121,6 +148,10 @@ main {
   display: flex; flex-direction: column; gap: 18px;
 }
 @media (max-width: 640px) { main { padding: 14px 10px 110px; } }
+@media (max-width: 480px) {
+  .bottom-nav button .label { display: none; }
+  .bottom-nav button { min-height: 48px; }
+}
 
 .card, .hero, .addon-card {
   border-radius: var(--radius-lg); padding: 20px; margin: 0 0 14px;
@@ -280,7 +311,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">vv2026.11.174</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.177</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -307,7 +338,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">vv2026.11.174</span>
+    <span class="header-version">v2026.11.177</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -337,24 +368,32 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 'use strict';
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const NAV_LABELS = {
-  status: 'Status',
-  quickstart: 'Quick Game',
+  status: 'Live',
+  quickstart: 'Quick Start',
   schedule: 'Schedule',
   leagues: 'Leagues',
-  history: 'Report',
+  history: 'History',
   config: 'Settings',
   diagnostics: 'Diagnostics'
 };
 const NAV_ICONS = {
-  status: '📊',
-  quickstart: '▶️',
+  status: '⏱️',
+  quickstart: '⚡',
   schedule: '📅',
-  leagues: '🏉',
-  history: '📋',
+  leagues: '🏆',
+  history: '📜',
   config: '⚙️',
   diagnostics: '🔧'
 };
-const TABS = [['status', 'status', 'Status'], ['quickstart', 'quickstart', 'Quick Game'], ['schedule', 'schedule', 'Schedule'], ['leagues', 'leagues', 'Leagues'], ['history', 'history', 'Report'], ['config', 'config', 'Settings'], ['diagnostics', 'diagnostics', 'Diagnostics']];
+const TABS = [
+  ['status', '⏱️', 'Live'],
+  ['quickstart', '⚡', 'Quick Start'],
+  ['schedule', '📅', 'Schedule'],
+  ['leagues', '🏆', 'Leagues'],
+  ['history', '📜', 'History'],
+  ['config', '⚙️', 'Settings'],
+  ['diagnostics', '🔧', 'Diagnostics']
+];
 const state = { tab: 'status', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
 
@@ -2271,4 +2310,5 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-</html>)esphome_web_ui";
+</html>
+)esphome_web_ui";
