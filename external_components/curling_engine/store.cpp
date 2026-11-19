@@ -336,9 +336,20 @@ StoreStatus SettingsStore::save_locked(const std::string &text,
   }
   ESP_LOGD(TAG, "rename temp -> %s", path_.c_str());
   if (!fs_->rename(tmp_path_, path_)) {
-    if (err)
-      *err = "cannot rename " + path_;
-    return StoreStatus::IO;
+    // FATFS rename can fail when the destination already exists; try
+    // removing the old file first, then rename.  This is safe because
+    // the temp file already has a full CRC trailer — the reader will
+    // see either the old or new version atomically after the rename.
+    if (fs_->remove(path_)) {
+      if (!fs_->rename(tmp_path_, path_)) {
+        if (err)
+          *err = "cannot rename " + path_;
+        return StoreStatus::IO;
+      }
+    } else if (err) {
+      *err = "cannot remove old settings, cannot rename";
+      return StoreStatus::IO;
+    }
   }
   *new_version = file_version(text);
   return StoreStatus::OK;
@@ -487,9 +498,17 @@ bool SettingsStore::restore_latest_backup(std::string *err) {
       continue;
     }
     if (!fs_->rename(path_ + ".tmp", path_)) {
-      if (err)
-        *err = "cannot rename restored settings";
-      continue;
+      // FATFS rename fails when destination exists; try unlink first
+      if (fs_->remove(path_)) {
+        if (!fs_->rename(path_ + ".tmp", path_)) {
+          if (err)
+            *err = "cannot rename restored settings";
+          continue;
+        }
+      } else if (err) {
+        *err = "cannot remove old settings, cannot rename restored";
+        continue;
+      }
     }
     return true;
   }
