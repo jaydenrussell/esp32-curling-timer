@@ -438,7 +438,7 @@ const ADDONS = [
     info: [ 'Current GPIO pins (main config): RELAY1 GPIO53, RELAY2 GPIO54', 'Grove Port B HY2.0-4P wiring: G53/G54 — do not use same pins for I2C RTC/add-ons at the same time', 'Each selected output now pulses for its own configured/test duration', 'I2C addressable 2-relay modules (e.g. 0x25/0x26) are not supported by this firmware' ] },
   { key: 'pushbutton', label: 'Manual trigger button', desc: 'GPIO press rings the start relays for the next manually-triggered game.', auto: false,
     configPaths: ['config.addons.pushbutton', 'config.manual_trigger_gpio'],
-    info: [ 'Pin: GPIO45 (manual trigger input)', 'Setting: Manual trigger GPIO under Global options → Timer' ] },
+    info: [ 'Pin: GPIO45 (manual trigger input)', 'Setting: Manual trigger GPIO under Global Settings → Timer' ] },
   { key: 'pahub', label: 'PaHub I2C hub', desc: 'PCA9548A 8-channel multiplexer — multiple I2C devices on one Grove port.', auto: true,
     configPaths: ['config.addons.pahub'],
     info: [ 'I2C: address 0x70 (PCA9548A)', 'Port: Grove Port A — SDA GPIO5, SCL GPIO6', 'Channels: 0–7 (one per I2C device)' ] },
@@ -1474,21 +1474,21 @@ function renderExceptions() {
 
 // ---- config tab (every parameter that is not the schedule) ----------------
 const CONFIG_SECTIONS = [
-  { group: 'Global options', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
+  { group: 'Global Settings', title: 'Timer', hint: 'Master on/off for the entire timer. When off, the display shows the disabled header text and stops counting down. Changes are written to the settings file only when you press Save & apply.',
     fields: [
       ['config.enabled', 'bool', 'Timer enabled (master on/off)'],
       ['config.allow_midnight_wrap', 'bool', 'Allow timers past midnight']] },
-  { group: 'Global options', title: 'Manual trigger (pushbutton)', hint: 'GPIO press rings the start relays for the next manually-triggered game. Only shown when the pushbutton add-on is enabled.',
+  { group: 'Global Settings', title: 'Manual trigger (pushbutton)', hint: 'GPIO press rings the start relays for the next manually-triggered game. Only shown when the pushbutton add-on is enabled.',
     fields: [
       ['config.manual_trigger_gpio', 'int', 'Manual trigger GPIO (pushbutton add-on)', 0, 40]] },
-  { group: 'Global options', title: 'Curling Club Manager', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
+  { group: 'Global Settings', title: 'Curling Club Manager', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
     fields: [
       ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)'],
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
-  { group: 'Global options', title: 'On the Display Now', hint: 'Text scaling for the on-display mirror card.',
+  { group: 'Global Settings', title: 'Live Display Scaling', hint: 'Text scaling for the on-display mirror card.',
     fields: [
       ['config.mirror_scale', 'slider', '', 10, 100, 5]] },
-  { group: 'Global options', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
+  { group: 'Global Settings', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
       ['config.relay1_enabled', 'bool', 'RELAY1 enabled'],
@@ -1499,7 +1499,8 @@ const CONFIG_SECTIONS = [
       ['config.relay3_function', 'select', 'RELAY3 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
       ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
       ['config.relay4_function', 'select', 'RELAY4 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom']] },
-  { group: 'Display (HDMI output)', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
+  { group: 'Display', title: 'Background', fields: [ ['config.background_color', 'color', 'Background colour'] ] },
+  { group: 'Display', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
     fields: [
       ['config.pregame_countdown', 'pregame_hms', 'Countdown', 0, 600],
       ['config.pregame_blink', 'bool', 'Flash/blink pre-game countdown (safe, gentle)'],
@@ -1507,7 +1508,7 @@ const CONFIG_SECTIONS = [
       ['config.pregame_header_color', 'color', 'Header colour'],
       ['config.pregame_countdown_color', 'color', 'Countdown colour'],
       ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
-  { group: 'Display (HDMI output)', title: 'Header text',
+  { group: 'Display', title: 'Header text',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.header.text.when_disabled', 'text', 'Text when disabled'],
@@ -1520,40 +1521,37 @@ const CONFIG_SECTIONS = [
       ['config.header.color.counting_down', 'color', 'Colour while counting down'],
       ['config.header.color.game_completed', 'color', 'Colour while the buzzer rings'],
       ['config.header.color.game_ended', 'color', 'Colour when game ends']] },
-  { group: 'Display (HDMI output)', title: 'Countdown clock',
+  { group: 'Display', title: 'Countdown clock',
     fields: [
       ['config.countdown.font_size_4_digits', 'int', 'Timer font size under an hour', 0, 100000],
       ['config.countdown.font_size_5_digits', 'int', 'Timer font size an hour or more', 0, 100000],
       ['config.countdown.color.counting_down', 'color', 'Colour while counting down'],
       ['config.countdown.color.game_completed', 'color', 'Colour while the buzzer rings'],
       ['config.countdown.color.game_ended', 'color', 'Colour when game ends']] },
-  { group: 'Display (HDMI output)', title: 'Pace of play',
+  { group: 'Display', title: 'Pace of play',
     fields: [
       ['config.pace_of_play.enabled', 'bool', 'Show pace of play'],
       ['config.pace_of_play.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.pace_of_play.color', 'color', 'Colour'],
       ['config.pace_of_play.unit_name', 'text', 'Unit name, e.g. END'],
       ['config.pace_of_play.unit_duration', 'minutes', 'Minutes per unit', 0.5, 43200]] },
-  { group: 'Display (HDMI output)', title: 'Footer',
+  { group: 'Display', title: 'Footer',
     fields: [
       ['config.footer.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.entry_name', 'bool', 'Show entry name'],
       ['config.footer.color', 'color', 'Colour']] },
-  { group: 'Display (HDMI output)', title: 'Background',
-    fields: [
-      ['config.background_color', 'color', 'Background colour']] },
-  { group: 'Outputs 🔊', title: 'Game Start',
+  { group: 'Output Configuration', title: 'Game Start',
     fields: [
       ['config.buzzer.ring_at_start', 'relays', 'Output'],
       ['config.buzzer.start_duration', 'output_duration', 'Duration', 'start']] },
-  { group: 'Outputs 🔊', title: 'Countdown Warning',
+  { group: 'Output Configuration', title: 'Countdown Warning',
     hint: 'Only applies to games longer than the minutes set here. For 8-end games, typical pace warning is 15-20 min before buzzer (7th end). For 6-end games, 10-12 min.',
     fields: [
       ['config.buzzer.countdown.minutes_before', 'int', 'Countdown warning: minutes before the buzzer (0 = off)', 0, 100000],
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
       ['config.buzzer.countdown_duration', 'output_duration', 'Duration', 'countdown']] },
-  { group: 'Outputs 🔊', title: 'Game End',
+  { group: 'Output Configuration', title: 'Game End',
     hint: 'Header hold: seconds the during-buzzer header text stays after ringing.',
     fields: [
       ['config.buzzer.relays', 'relays', 'Output'],
@@ -1838,7 +1836,7 @@ async function renderConfig() {
       el('h3', {}, section.title),
       section.hint ? el('p', { class: 'muted small', style: 'margin: 0' }, section.hint) : null,
       el('div', { class: 'grid2' }, fields.map(configField)),
-      section.group.startsWith('Outputs') ? isAddonEnabled('relays') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null : null));
+      section.group.startsWith('Output Configuration') ? isAddonEnabled('relays') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null : null));
   }
   $('tab-config').replaceChildren(
     el('div', { class: 'page-head' },
@@ -1855,7 +1853,6 @@ async function renderAddonMarketplace() {
   let market = document.getElementById('addon-marketplace');
   if (!market) {
     market = el('section', { id: 'addon-marketplace', class: 'card' },
-      el('div', { class: 'section-title' }, 'Hardware'),
       el('h3', {}, 'Add-ons 🔧'),
       el('p', { class: 'muted small', style: 'margin: 0' }, 'Hardware add-on drivers are compiled into the firmware. Enable detected hardware with a tap — no manual pin or address config needed. Disabled add-ons hide their related config throughout the UI.'),
       el('div', { class: 'addon-grid' }));
