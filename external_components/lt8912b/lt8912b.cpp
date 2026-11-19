@@ -32,9 +32,57 @@ void Lt8912b::mark_failed_(const LogString *message, esp_err_t err) {
   this->mark_failed(message);
 }
 
+void Lt8912b::deinit() {
+  // Best-effort teardown: release every hardware handle we allocated in setup()
+  // and drive the enable pin low so a subsequent re-init starts clean. The I2C
+  // lock is statically owned (StaticSemaphore_t in the object), so only its
+  // state is reset here; the OS reclaims the storage with the object itself.
+  if (this->io_lock_ != nullptr) {
+    xSemaphoreClear(this->io_lock_);
+    xSemaphoreGive(this->io_lock_);
+  }
+  if (this->buffer_ != nullptr) {
+    free(this->buffer_);
+    this->buffer_ = nullptr;
+  }
+  if (this->panel_ != nullptr) {
+    esp_lcd_panel_delete(this->panel_);
+    this->panel_ = nullptr;
+  }
+  if (this->dsi_bus_ != nullptr) {
+    esp_lcd_dsi_bus_rm(this->dsi_bus_);
+    this->dsi_bus_ = nullptr;
+  }
+  if (this->io_avi_ != nullptr) {
+    esp_lcd_panel_io_del(this->io_avi_);
+    this->io_avi_ = nullptr;
+  }
+  if (this->io_cec_ != nullptr) {
+    esp_lcd_panel_io_del(this->io_cec_);
+    this->io_cec_ = nullptr;
+  }
+  if (this->io_main_ != nullptr) {
+    esp_lcd_panel_io_del(this->io_main_);
+    this->io_main_ = nullptr;
+  }
+  if (this->i2c_bus_ != nullptr) {
+    i2c_del_master_bus(this->i2c_bus_);
+    this->i2c_bus_ = nullptr;
+  }
+  if (this->enable_pin_ != nullptr) {
+    this->enable_pin_->digital_write(false);
+  }
+}
+
 void Lt8912b::setup() {
   ESP_LOGCONFIG(TAG, "Running Setup");
   ESP_LOGD(TAG, "init step: enable pin");
+
+  // Null-pin guard: I2C pins are mandatory; bail cleanly if missing
+  if (this->sda_pin_ == nullptr || this->scl_pin_ == nullptr) {
+    this->mark_failed_(LOG_STR("SDA/SCL pins not configured"), ESP_ERR_INVALID_ARG);
+    return;
+  }
 
   if (this->enable_pin_ != nullptr) {
     this->enable_pin_->setup();
@@ -86,9 +134,9 @@ void Lt8912b::setup() {
       .virtual_channel = 0,
       .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_PLL_F160M,
       .dpi_clock_freq_mhz = 80,
-      // RGB565: the display and LVGL both work in 16-bit colour, so the
-      // driver copies the pixels straight through (an RGB888 driver would
-      // need a 2.8 MB framebuffer and convert every pixel).
+      // RGB888: the LT8912B is fed 24-bit colour over the DSI lanes, matching
+// the panel's 24-bit input format. The driver copies the pixels straight
+// through to the HDMI sink (the DPI interface handles RGB888 natively).
       .in_color_format = LCD_COLOR_FMT_RGB888,
       .num_fbs = 2,
       .video_timing =
@@ -185,6 +233,18 @@ void Lt8912b::update() {
     if (ready != this->hdmi_ready_) {
       this->hdmi_ready_ = ready;
       ESP_LOGI(TAG, "HDMI %s", ready ? "signal detected" : "signal lost");
+      if (ready) {
+        // HDMI sink was reconnected: re-init panel so DSI re-syncs, and force
+        // a full redraw so the first frame after reconnect is valid.
+        esp_lcd_panel_reset(this->panel_);
+        esp_lcd_panel_init(this->panel_);
+        ESP_LOGI(TAG, "LT8912B re-initialised after HDMI re-detect");
+        // Mark the whole framebuffer dirty so the next flush repaints everything.
+        this->x_low_ = 0;
+        this->y_low_ = 0;
+        this->x_high_ = static_cast<uint16_t>(this->width_ - 1);
+        this->y_high_ = static_cast<uint16_t>(this->height_ - 1);
+      }
     }
   }
 
@@ -200,8 +260,9 @@ void Lt8912b::flush_pending_() {
            this->y_high_);
   int w = this->x_high_ - this->x_low_ + 1;
   int h = this->y_high_ - this->y_low_ + 1;
-  this->write_to_display_(this->x_low_, this->y_low_, w, h, this->buffer_, this->x_low_, this->y_low_,
-                          this->width_ - w - this->x_low_);
+  if (!this->write_to_display_(this->x_low_, this->y_low_, w, h, this->buffer_, this->x_low_, this->y_low_,
+                               this->width_ - w - this->x_low_))
+    return;  // transfer failed — keep dirty box so the frame is retried
   this->x_low_ = this->width_;
   this->y_low_ = this->height_;
   this->x_high_ = 0;
@@ -212,7 +273,7 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
                              display::ColorBitness bitness, bool big_endian, int x_offset, int y_offset, int x_pad) {
   if (w <= 0 || h <= 0)
     return;
-  if (bitness != this->color_depth_) {
+  if (bitness != this->color_depth_ || this->rotation_ != display::DISPLAY_ROTATION_0_DEGREES) {
     display::Display::draw_pixels_at(x_start, y_start, w, h, ptr, order, bitness, big_endian, x_offset, y_offset,
                                      x_pad);
     this->flush_pending_();
@@ -221,19 +282,18 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
   this->write_to_display_(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad);
 }
 
-void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
+bool Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
                                 int x_pad) {
   if (this->panel_ == nullptr)
-    return;
+    return false;
   esp_err_t err = ESP_OK;
-  auto bytes_per_pixel = 3 - this->color_depth_;
-  auto stride = (x_offset + w + x_pad) * bytes_per_pixel;
-  ptr += y_offset * stride + x_offset * bytes_per_pixel;
+  auto stride = (x_offset + w + x_pad) * this->bytes_per_pixel_;
+  ptr += y_offset * stride + x_offset * this->bytes_per_pixel_;
   // Wait for the previous transfer to finish (the callback gives the lock
   // when it completes) before handing the driver new pixels.
-  if (this->io_lock_ != nullptr && xSemaphoreTake(this->io_lock_, pdMS_TO_TICKS(1000)) != pdTRUE) {
+  if (this->io_lock_ != nullptr && xSemaphoreTake(this->io_lock_, pdMS_TO_TICKS(100)) != pdTRUE) {
     ESP_LOGW(TAG, "DSI transfer timed out; dropping frame");
-    return;
+    return false;
   }
   ESP_LOGD(TAG, "DSI transfer %d,%d %dx%d", x_start, y_start, w, h);
   if (x_offset == 0 && x_pad == 0) {
@@ -250,7 +310,9 @@ void Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const ui
     ESP_LOGE(TAG, "lcd_panel_draw_bitmap failed: %s", esp_err_to_name(err));
     if (this->io_lock_ != nullptr)
       xSemaphoreGive(this->io_lock_);
+    return false;
   }
+  return true;
 }
 
 bool Lt8912b::check_buffer_() {
@@ -258,11 +320,11 @@ bool Lt8912b::check_buffer_() {
     return false;
   if (this->buffer_ != nullptr)
     return true;
-  auto bytes_per_pixel = 3 - this->color_depth_;
+  this->bytes_per_pixel_ = static_cast<uint8_t>(3 - static_cast<uint8_t>(this->color_depth_));
   // A full screen is 1.8 MB at 1280x720 - far too much for the internal
   // heap, so ask for external (PSRAM) memory.
   RAMAllocator<uint8_t> allocator(true);
-  this->buffer_ = allocator.allocate(this->height_ * this->width_ * bytes_per_pixel);
+  this->buffer_ = allocator.allocate(this->height_ * this->width_ * this->bytes_per_pixel_);
   if (this->buffer_ == nullptr) {
     this->mark_failed_(LOG_STR("Could not allocate buffer for display!"), ESP_ERR_NO_MEM);
     return false;
@@ -296,9 +358,21 @@ void Lt8912b::draw_pixel_at(int x, int y, Color color) {
   if (!this->check_buffer_())
     return;
   size_t pos = (y * this->width_) + x;
-  this->buffer_[pos * 3] = color.r;
-  this->buffer_[pos * 3 + 1] = color.g;
-  this->buffer_[pos * 3 + 2] = color.b;
+  for (uint8_t c = 0; c < this->bytes_per_pixel_; c++) {
+    switch (c) {
+      case 0:
+        this->buffer_[pos * this->bytes_per_pixel_ + c] = color.r;
+        break;
+      case 1:
+        this->buffer_[pos * this->bytes_per_pixel_ + c] = color.g;
+        break;
+      case 2:
+        this->buffer_[pos * this->bytes_per_pixel_ + c] = color.b;
+        break;
+      default:
+        break;
+    }
+  }
   if (x < this->x_low_)
     this->x_low_ = x;
   if (y < this->y_low_)
@@ -319,9 +393,21 @@ void Lt8912b::fill(Color color) {
   }
 
   for (size_t i = 0; i != this->width_ * this->height_; i++) {
-    this->buffer_[i * 3 + 0] = color.r;
-    this->buffer_[i * 3 + 1] = color.g;
-    this->buffer_[i * 3 + 2] = color.b;
+    for (uint8_t c = 0; c < this->bytes_per_pixel_; c++) {
+      switch (c) {
+        case 0:
+          this->buffer_[i * this->bytes_per_pixel_ + c] = color.r;
+          break;
+        case 1:
+          this->buffer_[i * this->bytes_per_pixel_ + c] = color.g;
+          break;
+        case 2:
+          this->buffer_[i * this->bytes_per_pixel_ + c] = color.b;
+          break;
+        default:
+          break;
+      }
+    }
   }
   this->x_low_ = 0;
   this->y_low_ = 0;
@@ -362,8 +448,9 @@ void Lt8912b::dump_config() {
                 "\n  DSI Lanes: 2"
                 "\n  Lane Bit Rate: %.0fMbps"
                 "\n  I2C Frequency: %uHz"
-                "\n  Buffer Color Depth: 24 bit",
-                this->width_, this->height_, this->rotation_, this->lane_bit_rate_, this->i2c_frequency_);
+                "\n  Buffer Color Depth: %u bit",
+                this->width_, this->height_, this->rotation_, this->lane_bit_rate_, this->i2c_frequency_,
+                static_cast<unsigned>(this->bytes_per_pixel_ * 8));
   LOG_PIN("  Reset Pin ", this->reset_pin_);
   LOG_PIN("  Enable Pin ", this->enable_pin_);
   LOG_PIN("  SDA Pin ", this->sda_pin_);

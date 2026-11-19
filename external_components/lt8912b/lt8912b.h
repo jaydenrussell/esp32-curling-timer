@@ -25,10 +25,13 @@ static const char *const TAG = "lt8912b";
 class Lt8912b : public display::Display {
  public:
   Lt8912b(size_t width, size_t height) : width_(width), height_(height) {}
+  ~Lt8912b() override { this->deinit(); }
 
   void setup() override;
   void update() override;
   void dump_config() override;
+
+  void deinit();  // clean up handles before destruction (enable low, PSRAM free)
 
   display::DisplayType get_display_type() override { return display::DisplayType::DISPLAY_TYPE_COLOR; }
   display::ColorOrder get_color_mode() { return display::COLOR_ORDER_RGB; }
@@ -51,7 +54,7 @@ class Lt8912b : public display::Display {
   int get_height() override;
 
  protected:
-  void write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
+  bool write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
                          int x_pad);
   bool check_buffer_();
   void flush_pending_();
@@ -77,6 +80,7 @@ class Lt8912b : public display::Display {
   bool hdmi_ready_{false};
 
   display::ColorBitness color_depth_{display::COLOR_BITNESS_888};
+  uint8_t bytes_per_pixel_{3 - static_cast<uint8_t>(color_depth_)};
   uint8_t *buffer_{nullptr};
   uint16_t x_low_{1};
   uint16_t y_low_{1};

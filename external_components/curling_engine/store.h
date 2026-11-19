@@ -83,6 +83,7 @@ class SettingsStore {
                           std::string *new_version, std::string *err);
   StoreStatus validate_locked(const std::string &text, std::string *err);
   bool backup_locked(std::string *err);
+  bool restore_latest_backup(std::string *err);
   std::string backup_name() const;
 
   StoreFs *fs_;

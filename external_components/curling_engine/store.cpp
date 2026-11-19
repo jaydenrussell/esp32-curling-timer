@@ -71,6 +71,30 @@ int to_int(const std::string &s, size_t pos, size_t n) {
   return v;
 }
 
+// CRC-32 (IEEE 802.3, reflected input, poly 0xEDB88320, init 0xFFFFFFFF, xorout 0xFFFFFFFF)
+static uint32_t crc32_compute(const uint8_t *data, size_t len) {
+  static uint32_t table[256];
+  static bool table_init = false;
+  if (!table_init) {
+    for (uint32_t i = 0; i < 256; i++) {
+      uint32_t crc = i;
+      for (int j = 0; j < 8; j++) {
+        if (crc & 1u)
+          crc = (crc >> 1) ^ 0xEDB88320u;
+        else
+          crc >>= 1;
+      }
+      table[i] = crc;
+    }
+    table_init = true;
+  }
+  uint32_t crc = 0xFFFFFFFFu;
+  for (size_t i = 0; i < len; i++) {
+    crc = table[(crc ^ data[i]) & 0xFFu] ^ (crc >> 8);
+  }
+  return crc ^ 0xFFFFFFFFu;
+}
+
 // mtime epoch seconds from a backup filename stamp (UTC):
 // {stem}-{YYYYmmdd}-{HHMMSS}-{ffffff}.yml — parse the trailing stamp so the
 // value works on SPIFFS, which has no file times.
@@ -121,17 +145,106 @@ SettingsStore::SettingsStore(StoreFs *fs, const std::string &settings_fn, int ba
       backup_dir_(dir_),
       backups_kept_(backups_kept) {}
 
+namespace {
+
+// Trailer appended to the on-disk settings file so partial/corrupt writes can
+// be detected. YAML comment => invisible to the parser and to the web editor
+// (read() strips it). Format: final line "# crc32: <8 hex>".
+constexpr const char *CRC_TRAILER_PREFIX = "# crc32: ";
+
+// Split raw on-disk bytes into the YAML body and an optional stored CRC.
+// Returns false when a CRC trailer is present but malformed (treat as corrupt).
+bool split_crc_trailer(const std::string &raw, std::string *body, uint32_t *stored_crc,
+                       bool *has_crc) {
+  *has_crc = false;
+  // Trailer is the last non-empty line of the file.
+  size_t end = raw.find_last_not_of("\r\n");
+  if (end == std::string::npos) {
+    *body = raw;
+    return true;
+  }
+  size_t line_start = raw.rfind('\n', end);
+  line_start = (line_start == std::string::npos) ? 0 : line_start + 1;
+  std::string last = raw.substr(line_start, end - line_start + 1);
+  const size_t plen = std::char_traits<char>::length(CRC_TRAILER_PREFIX);
+  if (last.size() < plen || last.compare(0, plen, CRC_TRAILER_PREFIX) != 0) {
+    *body = raw;  // legacy file, no checksum
+    return true;
+  }
+  std::string hex = last.substr(plen);
+  if (hex.size() != 8) {
+    return false;
+  }
+  uint32_t v = 0;
+  for (char c : hex) {
+    v <<= 4;
+    if (c >= '0' && c <= '9')
+      v |= static_cast<uint32_t>(c - '0');
+    else if (c >= 'a' && c <= 'f')
+      v |= static_cast<uint32_t>(c - 'a' + 10);
+    else if (c >= 'A' && c <= 'F')
+      v |= static_cast<uint32_t>(c - 'A' + 10);
+    else
+      return false;
+  }
+  *body = raw.substr(0, line_start);
+  // Drop the single trailing newline the writer adds before the trailer so the
+  // body matches exactly what save()/file_version() operate on.
+  if (!body->empty() && body->back() == '\n')
+    body->pop_back();
+  if (!body->empty() && body->back() == '\r')
+    body->pop_back();
+  *stored_crc = v;
+  *has_crc = true;
+  return true;
+}
+
+// Append the CRC trailer to a body for on-disk storage.
+std::string with_crc_trailer(const std::string &body) {
+  char line[32];
+  std::snprintf(line, sizeof(line), "\n%s%08x\n", CRC_TRAILER_PREFIX,
+                static_cast<unsigned>(crc32_compute(
+                    reinterpret_cast<const uint8_t *>(body.data()), body.size())));
+  return body + line;
+}
+
+}  // namespace
+
 StoreStatus SettingsStore::read_unlocked(std::string *text, std::string *version,
                                          std::string *err) {
   ESP_LOGD(TAG, "read %s", path_.c_str());
-  std::string data;
-  if (!fs_->read_bytes(path_, &data)) {
+  std::string raw;
+  if (!fs_->read_bytes(path_, &raw)) {
     if (err)
       *err = "cannot read settings file " + path_;
     return StoreStatus::IO;
   }
-  *text = data;
-  *version = file_version(data);
+  std::string body;
+  uint32_t stored = 0;
+  bool has_crc = false;
+  if (!split_crc_trailer(raw, &body, &stored, &has_crc)) {
+    ESP_LOGW(TAG, "malformed CRC trailer — restoring from backup");
+    if (restore_latest_backup(err))
+      return read_unlocked(text, version, err);
+    if (err)
+      *err = "malformed settings checksum and no valid backup";
+    return StoreStatus::IO;
+  }
+  if (has_crc) {
+    uint32_t computed =
+        crc32_compute(reinterpret_cast<const uint8_t *>(body.data()), body.size());
+    if (stored != computed) {
+      ESP_LOGW(TAG, "settings CRC mismatch (stored=0x%08X computed=0x%08X) — restoring backup",
+               stored, computed);
+      if (restore_latest_backup(err))
+        return read_unlocked(text, version, err);
+      if (err)
+        *err = "settings CRC mismatch and no valid backup";
+      return StoreStatus::IO;
+    }
+  }
+  *text = body;
+  *version = file_version(body);
   return StoreStatus::OK;
 }
 
@@ -201,12 +314,21 @@ StoreStatus SettingsStore::save_locked(const std::string &text,
     return st;
   if (!backup_locked(err))
     return StoreStatus::IO;
-  ESP_LOGD(TAG, "remove %s", path_.c_str());
-  fs_->remove(path_);
-  ESP_LOGD(TAG, "write %s (%u bytes)", path_.c_str(), (unsigned)text.size());
-  if (!fs_->write_bytes(path_, text)) {
+  // ---- atomic write: write to a temporary file, then rename ----
+  // This guarantees that the settings file never disappears mid-write,
+  // even if power is lost between the two operations.
+  std::string payload = with_crc_trailer(text);
+  ESP_LOGD(TAG, "write %s (%u bytes) to temp file %s", path_.c_str(),
+           (unsigned)payload.size(), tmp_path_.c_str());
+  if (!fs_->write_bytes(tmp_path_, payload)) {
     if (err)
-      *err = "cannot write " + path_;
+      *err = "cannot write temp " + tmp_path_;
+    return StoreStatus::IO;
+  }
+  ESP_LOGD(TAG, "rename temp -> %s", path_.c_str());
+  if (!fs_->rename(tmp_path_, path_)) {
+    if (err)
+      *err = "cannot rename " + path_;
     return StoreStatus::IO;
   }
   *new_version = file_version(text);
@@ -295,12 +417,76 @@ StoreStatus SettingsStore::read_backup(const std::string &name, std::string *tex
       *err = "no backup named '" + name + "'";
     return StoreStatus::INVALID;
   }
-  if (!fs_->read_bytes(backup_dir_ + "/" + name, text)) {
+  std::string raw;
+  if (!fs_->read_bytes(backup_dir_ + "/" + name, &raw)) {
     if (err)
       *err = "cannot read backup " + name;
     return StoreStatus::IO;
   }
+  std::string body;
+  uint32_t stored = 0;
+  bool has_crc = false;
+  if (!split_crc_trailer(raw, &body, &stored, &has_crc)) {
+    if (err)
+      *err = "corrupt backup " + name;
+    return StoreStatus::IO;
+  }
+  if (has_crc) {
+    uint32_t computed = crc32_compute(reinterpret_cast<const uint8_t *>(body.data()), body.size());
+    if (stored != computed) {
+      if (err)
+        *err = "backup checksum mismatch";
+      return StoreStatus::IO;
+    }
+  }
+  *text = body;
   return StoreStatus::OK;
+}
+
+bool SettingsStore::restore_latest_backup(std::string *err) {
+  std::vector<BackupInfo> list;
+  StoreStatus st = list_backups(&list, err);
+  if (st != StoreStatus::OK)
+    return false;
+  for (const auto &b : list) {
+    std::string backup_text;
+    std::string local_err;
+    if (!fs_->read_bytes(backup_dir_ + "/" + b.name, &backup_text)) {
+      ESP_LOGW(TAG, "cannot read backup %s, trying next", b.name.c_str());
+      continue;
+    }
+    // Validate the backup's CRC before restoring
+    std::string body;
+    uint32_t stored = 0;
+    bool has_crc = false;
+    if (!split_crc_trailer(backup_text, &body, &stored, &has_crc)) {
+      ESP_LOGW(TAG, "malformed CRC trailer in backup %s, trying next", b.name.c_str());
+      continue;
+    }
+    if (has_crc) {
+      uint32_t computed = crc32_compute(reinterpret_cast<const uint8_t *>(body.data()), body.size());
+      if (stored != computed) {
+        ESP_LOGW(TAG, "backup %s CRC mismatch, skipping", b.name.c_str());
+        continue;
+      }
+    }
+    ESP_LOGI(TAG, "restoring settings from backup %s", b.name.c_str());
+    std::string payload = with_crc_trailer(body);
+    if (!fs_->write_bytes(path_ + ".tmp", payload)) {
+      if (err)
+        *err = "cannot write restored settings to temp";
+      continue;
+    }
+    if (!fs_->rename(path_ + ".tmp", path_)) {
+      if (err)
+        *err = "cannot rename restored settings";
+      continue;
+    }
+    return true;
+  }
+  if (err)
+    *err = "no valid backup found";
+  return false;
 }
 
 std::string SettingsStore::backup_name() const {
