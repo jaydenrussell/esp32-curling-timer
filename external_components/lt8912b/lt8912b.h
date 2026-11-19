@@ -25,7 +25,7 @@ static const char *const TAG = "lt8912b";
 class Lt8912b : public display::Display {
  public:
   Lt8912b(size_t width, size_t height) : width_(width), height_(height) {}
-  ~Lt8912b() override { this->deinit(); }
+  ~Lt8912b() { this->deinit(); }
 
   void setup() override;
   void update() override;
@@ -80,7 +80,7 @@ class Lt8912b : public display::Display {
   bool hdmi_ready_{false};
 
   display::ColorBitness color_depth_{display::COLOR_BITNESS_888};
-  uint8_t bytes_per_pixel_{3 - static_cast<uint8_t>(color_depth_)};
+  uint8_t bytes_per_pixel_{3};
   uint8_t *buffer_{nullptr};
   uint16_t x_low_{1};
   uint16_t y_low_{1};

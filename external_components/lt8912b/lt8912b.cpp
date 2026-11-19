@@ -38,7 +38,8 @@ void Lt8912b::deinit() {
   // lock is statically owned (StaticSemaphore_t in the object), so only its
   // state is reset here; the OS reclaims the storage with the object itself.
   if (this->io_lock_ != nullptr) {
-    xSemaphoreClear(this->io_lock_);
+    // Static binary semaphore: just return it to the "given" state; the
+    // storage lives in the object and is reclaimed with it.
     xSemaphoreGive(this->io_lock_);
   }
   if (this->buffer_ != nullptr) {
@@ -46,11 +47,11 @@ void Lt8912b::deinit() {
     this->buffer_ = nullptr;
   }
   if (this->panel_ != nullptr) {
-    esp_lcd_panel_delete(this->panel_);
+    esp_lcd_panel_del(this->panel_);
     this->panel_ = nullptr;
   }
   if (this->dsi_bus_ != nullptr) {
-    esp_lcd_dsi_bus_rm(this->dsi_bus_);
+    esp_lcd_del_dsi_bus(this->dsi_bus_);
     this->dsi_bus_ = nullptr;
   }
   if (this->io_avi_ != nullptr) {
