@@ -330,13 +330,37 @@ bool Lt8912b::check_buffer_() {
     return false;
   if (this->buffer_ != nullptr)
     return true;
-  // COLOR_BITNESS_* values (2=565, 3=888, 4=8888) equal bytes per pixel.
-  this->bytes_per_pixel_ = static_cast<uint8_t>(this->color_depth_);
-  // A full screen is 1.8 MB at 1280x720 - far too much for the internal
-  // heap, so ask for external (PSRAM) memory.
-  // Use ALLOC_EXTERNAL (PSRAM) with fallback to internal
-  RAMAllocator<uint8_t> allocator;
-  this->buffer_ = allocator.allocate(this->height_ * this->width_ * this->bytes_per_pixel_);
+  // Map ColorBitness enum values to actual bytes per pixel. The ESPHome enum is:
+  //   COLOR_BITNESS_888 = 0 (24-bit RGB, 3 bytes)
+  //   COLOR_BITNESS_565 = 1 (16-bit RGB565, 2 bytes)
+  //   COLOR_BITNESS_332 = 2 (8-bit RGB332, 1 byte)
+  // The previous `3 - color_depth_` and `color_depth_` formulas were both wrong:
+  // the first gave 3-0=3 for 888 (accidentally right) but 3-2=1 for other cases;
+  // the second gave 0 for 888, allocating a 0-byte buffer (ESP_ERR_NO_MEM + heap
+  // corruption). Use an explicit switch so each enum maps to its real size.
+  switch (this->color_depth_) {
+    case display::COLOR_BITNESS_888:
+      this->bytes_per_pixel_ = 3;
+      break;
+    case display::COLOR_BITNESS_565:
+      this->bytes_per_pixel_ = 2;
+      break;
+    case display::COLOR_BITNESS_332:
+      this->bytes_per_pixel_ = 1;
+      break;
+    default:
+      this->bytes_per_pixel_ = 3;
+      break;
+  }
+  // Use ALLOC_EXTERNAL (PSRAM) for the 2.76 MB framebuffer since internal heap is too
+  // fragmented (largest block only ~495 KB). PSRAM provides 16MB of unfragmented space.
+  // Bypass RAMAllocator and directly allocate from PSRAM to avoid any allocator configuration issues
+  uint8_t *ptr = static_cast<uint8_t *>(heap_caps_malloc(this->height_ * this->width_ * this->bytes_per_pixel_, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT));
+  if (ptr == nullptr) {
+    ESP_LOGE(TAG, "PSRAM allocation failed for framebuffer of %zu bytes", this->height_ * this->width_ * this->bytes_per_pixel_);
+    return false;
+  }
+  this->buffer_ = ptr;
   if (this->buffer_ == nullptr) {
     this->mark_failed_(LOG_STR("Could not allocate buffer for display!"), ESP_ERR_NO_MEM);
     return false;

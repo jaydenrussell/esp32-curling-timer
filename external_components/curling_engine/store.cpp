@@ -14,6 +14,15 @@
 #ifndef ESP_LOGD
 #define ESP_LOGD(...) ((void)0)
 #endif
+#ifndef ESP_LOGW
+#define ESP_LOGW(...) ((void)0)
+#endif
+#ifndef ESP_LOGI
+#define ESP_LOGI(...) ((void)0)
+#endif
+#ifndef ESP_LOGE
+#define ESP_LOGE(...) ((void)0)
+#endif
 
 namespace esphome {
 namespace curling_engine {
