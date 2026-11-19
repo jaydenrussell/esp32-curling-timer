@@ -4,6 +4,7 @@
 #include "esp_heap_caps.h"
 #include "esp_system.h"
 #include "esphome/core/helpers.h"
+#include <freertos/task.h>
 
 namespace esphome {
 namespace lt8912b {
@@ -321,7 +322,8 @@ bool Lt8912b::check_buffer_() {
     return false;
   if (this->buffer_ != nullptr)
     return true;
-  this->bytes_per_pixel_ = static_cast<uint8_t>(3 - static_cast<uint8_t>(this->color_depth_));
+  // COLOR_BITNESS_* values (2=565, 3=888, 4=8888) equal bytes per pixel.
+  this->bytes_per_pixel_ = static_cast<uint8_t>(this->color_depth_);
   // A full screen is 1.8 MB at 1280x720 - far too much for the internal
   // heap, so ask for external (PSRAM) memory.
   RAMAllocator<uint8_t> allocator(true);
@@ -409,6 +411,10 @@ void Lt8912b::fill(Color color) {
           break;
       }
     }
+    // Yield every 1000 pixels so a full-screen fill doesn't trip the
+    // task watchdog (the LVGL flush path can take >50ms).
+    if ((i & 0x3FF) == 0x3FF)
+      vTaskDelay(0);
   }
   this->x_low_ = 0;
   this->y_low_ = 0;
