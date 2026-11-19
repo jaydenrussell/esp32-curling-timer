@@ -347,7 +347,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.185</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.187</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -374,7 +374,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.185</span>
+    <span class="header-version">v2026.11.187</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1490,9 +1490,6 @@ const CONFIG_SECTIONS = [
     fields: [
       ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)'],
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
-  { group: 'Global Settings', title: 'Live Display Scaling', hint: 'Text scaling for the on-display mirror card.',
-    fields: [
-      ['config.mirror_scale', 'slider', '', 10, 100, 5]] },
   { group: 'Global Settings', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
       ['config.relay_count', 'int', 'Number of relays', 0, 4],
@@ -1504,6 +1501,9 @@ const CONFIG_SECTIONS = [
       ['config.relay3_function', 'select', 'RELAY3 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom'],
       ['config.relay4_enabled', 'bool', 'RELAY4 enabled'],
       ['config.relay4_function', 'select', 'RELAY4 function', 'None', 'Bell', 'Buzzer', 'Speaker', 'Light', 'Custom']] },
+  { group: 'Global Settings', title: 'Live Display Scaling', hint: 'Text scaling for the on-display mirror card.',
+    fields: [
+      ['config.mirror_scale', 'slider', '', 10, 100, 5]] },
   { group: 'Display', title: 'Background', fields: [ ['config.background_color', 'color', 'Background colour'] ] },
   { group: 'Display', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
     fields: [
