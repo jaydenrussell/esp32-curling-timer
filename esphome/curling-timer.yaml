@@ -272,24 +272,19 @@ sensor:
     name: "Uptime"
 
 # ---------------------------------------------------------------------
-# Schedule engine + web editor (external_components).
+# Schedule engine + web editor + LT8912B (external_components).
 #
-# Two source modes are available — choose the one matching your use case:
-#
-# 1) LOCAL source (repo/CI builds): uses the local external_components/ directory.
-#    Component code changes are picked up automatically — no ref bumps needed.
-#    Path is relative to this YAML file: esphome/../external_components.
-#
-# 2) GIT source (HA Device Builder): fetches from GitHub. The ref tag ensures
-#    consistent component versions across builds. Update the ref when component
-#    code changes and you want to release a new add-on version.
-#
-#   To switch modes: replace the entire "external_components:" block below.
+# Git source works for both repo/CI builds and HA Device Builder.
+# The ref is tracked in component_ref.txt and updated when component
+# code changes (see AGENTS.md for details).
 # ---------------------------------------------------------------------
 external_components:
   - source:
-      type: local
-      path: ../external_components   # relative to esphome/ directory
+      type: git
+      url: https://github.com/jaydenrussell/esp32-curling-timer
+      ref: v2026.11.175
+      path: external_components   # required: ESPHome only auto-scans
+                                  # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
     refresh: 0s
 
