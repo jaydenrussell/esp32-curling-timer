@@ -367,6 +367,10 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </div>
 
 <header>
+  <div class="header-brand">
+    <h1>⏱️ Curling Timer</h1>
+    <span class="header-version">{{version}}</span>
+  </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
     <button class="btn" id="help" title="Help">Help</button>
@@ -783,7 +787,7 @@ function buildQuickForm() {
       });
     } },
     el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Quick Game'), el('h3', {}, 'Start a game now')),
+      el('div', {}, el('div', { class: 'section-title' }, 'Quick Game')),
       el('span', { class: 'pill' }, 'Ad hoc timer')),
     el('p', { class: 'muted small', style: 'margin: 0' }, 'Pick a preset or set the timing, options, and outputs below. The preview shows exactly what will be applied.'),
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
@@ -906,7 +910,7 @@ function renderStatus() {
   }
   const mirrorCard = el('div', { class: 'card', style: 'padding:14px; grid-column: 1 / -1; max-width: 100%' },
     el('div', { class: 'page-head', style: 'margin-bottom:10px' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Live display'), el('h3', {}, 'On-display mirror')),
+      el('div', {}, el('div', { class: 'section-title' }, 'Live display')),
       el('span', { class: 'pill' }, `Scale ${Math.round((s.mirror_scale ?? 100))}%`)),
     mirror);
   $('status-now').replaceChildren(mirrorCard, now);
@@ -917,7 +921,7 @@ function renderStatus() {
   }
   const today = el('div', { class: 'card' },
     el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Today'), el('h3', {}, s.weekday)),
+      el('div', {}, el('div', { class: 'section-title' }, 'Today')),
       s.today.source === 'exception' ? el('span', { class: 'pill warn', style: 'max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap', title: s.today.note ? s.today.note : '' }, `Exception${s.today.note ? ': ' + s.today.note : ''}`)
                                      : el('span', { class: 'pill' }, 'Weekly schedule')));
   const nowSecs = secondsNow();
@@ -1344,13 +1348,12 @@ function renderSchedule() {
   const todayWeekday = m.exceptions.some((d) => d.date === todayIso()) ? null : weekdayOf(todayIso());
   const cards = [
     el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Schedule'), el('h3', {}, 'Weekly games & exceptions')),
+      el('div', {}, el('div', { class: 'section-title' }, 'Schedule')),
       el('span', { class: 'pill' }, `${DAYS.length} days · ${m.exceptions.length} exceptions`))
   ];
   if (m.inner_comments) cards.push(commentWarning(m.inner_comments));
   const calCard = el('div', { class: 'card' },
     el('div', { class: 'section-title' }, 'Import'),
-    el('h3', {}, '📅 Calendar import'),
     el('p', { class: 'muted small', style: 'margin: 0' }, 'Import games from an ICS calendar URL.'),
     el('div', { class: 'grid2' },
       el('label', {}, 'ICS URL', el('input', { type: 'url', placeholder: 'https://example.com/calendar.ics', id: 'ics-url' })),
@@ -1364,7 +1367,7 @@ function renderSchedule() {
   cards.push(calCard);
   cards.push(el('div', { class: 'card' },
     el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Weekly schedule'), el('h3', {}, 'Default games by day')),
+      el('div', {}, el('div', { class: 'section-title' }, 'Weekly schedule')),
       el('div', { class: 'row-actions', style: 'margin:0' }, foldButtons(state.openDays, () => DAYS, renderSchedule))),
     el('p', { class: 'muted small', style: 'margin: 0' }, 'Each day defines the default games. Date exceptions below replace a specific day.')));
   for (const day of DAYS) {
@@ -1394,7 +1397,7 @@ function renderSchedule() {
     el('h3', {}, 'Date-specific overrides'),
     el('p', { class: 'muted small', style: 'margin: 0' }, 'A date exception replaces that day\'s weekly schedule (use an empty day for no buzzers).')),
     excContainer);
-  cards.push(el('div', { class: 'card' }, el('div', { class: 'section-title' }, 'Summary'), el('h3', {}, 'Schedule coverage'),
+  cards.push(el('div', { class: 'card' }, el('div', { class: 'section-title' }, 'Summary'),
     el('p', { class: 'muted small', style: 'margin: 0' }, `${DAYS.length} weekday(s), ${m.exceptions.length} exception(s) configured.`)));
   $('tab-schedule').replaceChildren(...cards);
 }
@@ -1839,7 +1842,7 @@ async function renderConfig() {
   }
   $('tab-config').replaceChildren(
     el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Settings'), el('h3', {}, 'Configuration & add-ons')),
+      el('div', {}, el('div', { class: 'section-title' }, 'Settings')),
       el('span', { class: 'pill' }, 'Device config')));
   renderAddonMarketplace();
   $('tab-config').append(...nodes);
@@ -2014,11 +2017,10 @@ async function loadHistory() {
     } }, 'Restore'))));
   $('tab-history').replaceChildren(
     el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Report'), el('h3', {}, 'History & backups')),
+      el('div', {}, el('div', { class: 'section-title' }, 'Report')),
       el('span', { class: 'pill' }, `${result.data.backups.length} backup${result.data.backups.length === 1 ? '' : 's'}`)),
     el('div', { class: 'card' },
       el('div', { class: 'section-title' }, 'Previous versions'),
-      el('h3', {}, 'Restore or inspect saved settings'),
       el('p', { class: 'muted small', style: 'margin: 0' }, 'A copy is kept automatically before every change (latest 30). Restore creates a backup of the current file first.'),
       result.data.backups.length ? list : el('p', { class: 'muted', style: 'margin:0' }, 'No backups yet.'),
       view));
@@ -2103,7 +2105,7 @@ async function renderDiagnostics() {
       el('label', { style: 'min-width: 180px' }, 'Log level', levelSelect)));
   root.replaceChildren(
     el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Diagnostics'), el('h3', {}, 'Display, time, and logs')),
+      el('div', {}, el('div', { class: 'section-title' }, 'Diagnostics')),
       el('span', { class: 'pill' }, 'Troubleshooting')),
     el('div', { class: 'stack' }, section1, section2, section3));
 }
