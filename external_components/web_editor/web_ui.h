@@ -1,5 +1,4 @@
-// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen
-time — edit web_ui.html, not this file.
+// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen\ntime — edit web_ui.html, not this file.
 #pragma once
 
 static const char WEB_UI_HTML[] = R"esphome_web_ui(
@@ -347,7 +346,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.180</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.181</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -372,10 +371,6 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </div>
 
 <header>
-  <div class="header-brand">
-    <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.180</span>
-  </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
     <button class="btn" id="help" title="Help">Help</button>
