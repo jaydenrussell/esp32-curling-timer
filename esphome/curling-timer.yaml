@@ -186,12 +186,15 @@ ota:
   - platform: http_request
     id: http_ota
 
-update:
-  - platform: http_request
-    name: "Firmware Update"
-    id: firmware_update
-    source: https://github.com/jaydenrussell/esp32-curling-timer/releases/latest/download/manifest.json
-    update_interval: 6h
+# update:
+#   The http_request update platform crashes on ESP32-P4 when HTTPS/TLS fails
+#   (esp_transport_list_clean aborts via unhandled C++ exception).
+#   Use the native ESPHome OTA platform instead (encrypted, same API key).
+#   - platform: http_request
+#     name: "Firmware Update"
+#     id: firmware_update
+#     source: https://github.com/jaydenrussell/esp32-curling-timer/releases/latest/download/manifest.json
+#     update_interval: 6h
 
 web_server:
   port: 80
