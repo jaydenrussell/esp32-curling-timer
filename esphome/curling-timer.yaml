@@ -270,23 +270,24 @@ sensor:
 
 # ---------------------------------------------------------------------
 # Schedule engine + web editor (external_components).
-# PASTE-READY for Home Assistant "ESPHome Device Builder": the source
-# is fetched from GitHub (anonymous, repo is public) — no repo checkout
-# or path mapping needed. Copy this entire file into
-# /config/esphome/curling-timer.yaml and click Install.
-# (Repo/CI builds use curling-timer.yaml with the relative source.)
+#
+# Two source modes are available — choose the one matching your use case:
+#
+# 1) LOCAL source (repo/CI builds): uses the local external_components/ directory.
+#    Component code changes are picked up automatically — no ref bumps needed.
+#    Path is relative to this YAML file: esphome/../external_components.
+#
+# 2) GIT source (HA Device Builder): fetches from GitHub. The ref tag ensures
+#    consistent component versions across builds. Update the ref when component
+#    code changes and you want to release a new add-on version.
+#
+#   To switch modes: replace the entire "external_components:" block below.
 # ---------------------------------------------------------------------
 external_components:
   - source:
-      type: git
-      url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.173
-      path: external_components   # required: ESPHome only auto-scans
-                                   # components/ and esphome/components/
+      type: local
+      path: ../external_components   # relative to esphome/ directory
     components: [curling_engine, web_editor, lt8912b]
-    # The ref is a release tag, so the components always match this
-    # file: a cached checkout of an older "main" can never mismatch the
-    # YAML (which is what broke the add-on builds).
     refresh: 0s
 
 curling_engine:
