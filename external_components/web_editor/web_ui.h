@@ -1,4 +1,5 @@
-// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
+// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen
+ time — edit web_ui.html, not this file.
 #pragma once
 
 static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
@@ -380,7 +381,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.191</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.192</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -407,7 +408,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.191</span>
+    <span class="header-version">v2026.11.192</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1133,11 +1134,13 @@ function renderQuickstart() {
   const root = $('tab-quickstart');
   if (!quickForm) quickForm = buildQuickForm();
   if (!root.contains(quickForm)) root.replaceChildren(quickForm);
+  // Always render the form; disable/enable Start via update() rather than
+  // blanking the page when status is missing or not yet ready.
+  quickForm.classList.remove('hidden');
   const s = state.status;
-  // Always render the form; disable Start rather than blanking the page when
-  // the status payload is missing or the timer is not ready yet.
-  if (quickForm) quickForm.classList.toggle('hidden', !s || !s.valid);
+  // Always call update() so applyDefaults() runs even without a status payload.
   if (s) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
+  else quickForm.update(false, false);
 }
 function secondsNow() {
   const s = state.status;
