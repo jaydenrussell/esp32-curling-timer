@@ -1,8 +1,7 @@
 // AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
 #pragma once
 
-static const char WEB_UI_HTML[] = R"esphome_web_ui(
-<!DOCTYPE html>
+static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -351,7 +350,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.188</span></h2>
+  <h2>Curling Timer <span class="version">vv2026.11.188</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -378,7 +377,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.188</span>
+    <span class="header-version">vv2026.11.188</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -497,6 +496,7 @@ function el(tag, props, ...children) {
   return node;
 }
 const $ = (id) => document.getElementById(id);
+function toggleBtn(on, label) { return el('button', { class: 'btn-toggle ' + (on ? 'primary' : ''), type: 'button' }, label); }
 const pad = (n) => String(n).padStart(2, '0');
 function hms(seconds) {
   const h = Math.floor(seconds / 3600), m = Math.floor(seconds % 3600 / 60), s = seconds % 60;
@@ -781,8 +781,8 @@ function buildQuickForm() {
     const when = new Date(Date.now() + total * 1000);
     const endN = Number(endCount.value) || 8;
     const untimed = Number(untimedEnds.value) || 0;
-    const startRelays = relayValues(startBoxes);
-    const endRelays = relayValues(endBoxes);
+    const startRelays = relayValues(startToggles);
+    const endRelays = relayValues(endToggles);
     const startDur = relayMaxDuration(startDurs);
     const endDur = relayMaxDuration(endDurs);
 
@@ -808,7 +808,7 @@ function buildQuickForm() {
   wire(pregameMin); wire(pregameSec);
   [pregameBtn, paceBtn, showProgressBtn, replaceBtn].forEach(b => { b.addEventListener('click', refreshPreview); });
   [stonesPerEnd, endCount, untimedEnds].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
-  [...startBoxes, ...startDurs, ...endBoxes, ...endDurs].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
+  [...startToggles, ...startDurs, ...endToggles, ...endDurs].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
 
   const presets = QUICK_PRESETS.map((preset) => el('button', { class: 'btn preset', type: 'button',
     title: `${preset.title || preset.name}, ${durationText(preset.seconds)}`,
@@ -824,10 +824,10 @@ function buildQuickForm() {
         name: timer.name,
         header_hold: (Number(expiresMin.value) || 10) * 60,
         ...options(),
-        pregame_countdown: (pregame.checked ? ((Number(pregameMin.value)||0) * 60 + (Number(pregameSec.value)||0)) : 0),
-        start_relays: relayValues(startBoxes),
+        pregame_countdown: (pregameOn ? ((Number(pregameMin.value)||0) * 60 + (Number(pregameSec.value)||0)) : 0),
+        start_relays: relayValues(startToggles),
         start_duration: relayMaxDuration(startDurs),
-        end_relays: relayValues(endBoxes),
+        end_relays: relayValues(endToggles),
         end_duration: relayMaxDuration(endDurs),
         end_count: Number(endCount.value) || 8,
         stones_per_end: Number(stonesPerEnd.value) || 8,
