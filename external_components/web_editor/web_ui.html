@@ -333,6 +333,36 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 .backups li:last-child { border-bottom: 0; }
 .backups li span { flex: 1; min-width: 200px; color: var(--muted); }
 
+/* History page — accordion per-row expand */
+.history-container { margin: 0; }
+.backup-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  margin: 0 0 10px;
+  overflow: hidden;
+  transition: border-color .15s ease;
+}
+.backup-row[open] { border-color: var(--primary-2); }
+.backup-row summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  list-style: none;
+}
+.backup-row summary::-webkit-details-marker { display: none; }
+.backup-row summary::marker { display: none; }
+.summary-date { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 150px; }
+.summary-actions { display: flex; gap: 8px; margin-left: 12px; flex-shrink: 0; }
+.backup-row .btn { min-height: 38px; padding: 6px 12px; font-size: 12px; white-space: nowrap; }
+.backup-row .content { padding: 0 14px 12px; background: rgba(0,0,0,0.2); }
+.backup-row[open] .content { padding-top: 4px; }
+pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: rgba(0,0,0,0.25); }
+.backup-row pre.view { border-radius: 0 0 var(--radius-md) var(--radius-md); margin: 0; }
+
 .addon-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 10px 0; }
 .addon-card h3 { font-size: 16px; }
 .addon-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
@@ -2074,32 +2104,48 @@ async function loadRaw() {
 async function loadHistory() {
   const result = await api('/api/backups');
   if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
-  const view = el('pre', { class: 'view hidden' });
-  const list = el('ul', { class: 'backups' }, result.data.backups.map((b) => el('li', {},
-    el('span', {}, new Date(b.mtime * 1000).toLocaleString()),
-    el('button', { class: 'btn icon', onclick: async () => {
-      const got = await api(`/api/backups/${encodeURIComponent(b.name)}`);
-      if (!got.ok) return showMessage(got.data.error);
-      view.textContent = got.data.text; view.classList.remove('hidden'); view.scrollIntoView({ behavior: 'smooth' });
-    } }, 'View'),
-    el('button', { class: 'btn icon', onclick: async () => {
-      if (!confirm(`Restore the settings from ${new Date(b.mtime * 1000).toLocaleString()}? The current file is backed up first.`)) return;
-      const raw = await api('/api/raw');
-      if (!raw.ok) return showMessage(raw.data.error);
-      const restored = await api('/api/restore', { name: b.name, version: raw.data.version });
-      if (!restored.ok) return showMessage(`Not restored: ${restored.data.error}`);
-      showMessage('Restored; the display updates within a second', 'ok');
-      state.model = null; setDirty(false); loadHistory();
-    } }, 'Restore'))));
+  const backups = result.data.backups;
+  const historyContainer = el('div', { class: 'history-container' });
+  if (backups.length === 0) {
+    historyContainer.append(el('p', { class: 'muted', style: 'margin: 0' }, 'No backups yet.'));
+  } else {
+    const detailsList = backups.map((b, index) => {
+      const date = new Date(b.mtime * 1000).toLocaleString();
+      const content = el('div', { class: 'content hidden' }, el('pre', { class: 'view' }, b.text));
+      const row = el('details', { class: 'backup-row', 'data-index': index, 'data-name': b.name },
+        el('summary', { class: 'summary-header', style: 'display: flex; justify-content: space-between; align-items: center; padding: 0 0 4px 0; cursor: pointer;' },
+          el('div', { class: 'summary-header-left' },
+            el('span', { class: 'summary-date' }, date),
+            el('div', { class: 'summary-actions' },
+              el('button', { class: 'btn icon', onclick: async () => {
+                const got = await api(`/api/backups/${encodeURIComponent(b.name)}`);
+                if (!got.ok) return showMessage(got.data.error);
+                content.textContent = got.data.text;
+                content.classList.remove('hidden');
+                content.scrollIntoView({ behavior: 'smooth' });
+              }}, 'View'),
+              el('button', { class: 'btn icon', onclick: async () => {
+                if (!confirm(`Restore the settings from ${date}? The current file is backed up first.`)) return;
+                const raw = await api('/api/raw');
+                if (!raw.ok) return showMessage(raw.data.error);
+                const restored = await api('/api/restore', { name: b.name, version: raw.data.version });
+                if (!restored.ok) return showMessage(`Not restored: ${restored.data.error}`);
+                showMessage('Restored; the display updates within a second', 'ok');
+                state.model = null; setDirty(false); loadHistory();
+              }}, 'Restore'))),
+        content));
+      return row;
+    });
+    historyContainer.append(...detailsList);
+  }
   $('tab-history').replaceChildren(
     el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Report')),
-      el('span', { class: 'pill' }, `${result.data.backups.length} backup${result.data.backups.length === 1 ? '' : 's'}`)),
+      el('div', {}, el('div', { class: 'section-title' }, 'History')),
+      el('span', { class: 'pill' }, `${backups.length} backup${backups.length === 1 ? '' : 's'}`)),
     el('div', { class: 'card' },
       el('div', { class: 'section-title' }, 'Previous versions'),
       el('p', { class: 'muted small', style: 'margin: 0' }, 'A copy is kept automatically before every change (latest 30). Restore creates a backup of the current file first.'),
-      result.data.backups.length ? list : el('p', { class: 'muted', style: 'margin:0' }, 'No backups yet.'),
-      view));
+      historyContainer));
 }
 
 // ---- diagnostics tab -------------------------------------------------------
