@@ -1,4 +1,5 @@
-// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
+// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen
+ time — edit web_ui.html, not this file.
 #pragma once
 
 static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
@@ -684,7 +685,7 @@ async function selectTab(id) {
   clearMessage();
   for (const [tab] of TABS) $(`tab-${tab}`).classList.toggle('hidden', tab !== id);
   if (id === 'status') { if (state.status) renderStatus(); loadStatus(); }
-  if (id === 'quickstart') { if (!state.configValues) loadConfig(); loadStatus(); renderQuickstart(); }
+  if (id === 'quickstart') { if (!state.configValues) loadConfig(); await loadStatus(); renderQuickstart(); }
   if (id === 'schedule') {
     if (!state.model) await loadSettings();
     selectSubTab(state.subTab);
@@ -2103,29 +2104,50 @@ async function loadRaw() {
         } })))));
 }
 
+// Format raw backup text for display: pretty-print JSON if possible, else pass through.
+function formatBackupText(text) {
+  try { return JSON.stringify(JSON.parse(text), null, 2); } catch { return text; }
+}
+
 // ---- history --------------------------------------------------------------
 async function loadHistory() {
   const result = await api('/api/backups');
   if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
   const backups = result.data.backups;
   const historyContainer = el('div', { class: 'history-container' });
+  let openIndex = -1;
+  const closeOther = (skipIndex) => {
+    if (openIndex !== -1 && openIndex !== skipIndex) {
+      const prevRow = document.querySelector(`.backup-row[data-index="${openIndex}"]`);
+      if (prevRow) prevRow.removeAttribute('open');
+    }
+  };
   if (backups.length === 0) {
     historyContainer.append(el('p', { class: 'muted', style: 'margin: 0' }, 'No backups yet.'));
   } else {
     const detailsList = backups.map((b, index) => {
       const date = new Date(b.mtime * 1000).toLocaleString();
-      const content = el('div', { class: 'content hidden' }, el('pre', { class: 'view' }, b.text));
+      const content = el('div', { class: 'content hidden' }, el('pre', { class: 'view' }, formatBackupText(b.text)));
       const row = el('details', { class: 'backup-row', 'data-index': index, 'data-name': b.name },
         el('summary', { class: 'summary-header', style: 'display: flex; justify-content: space-between; align-items: center; padding: 0 0 4px 0; cursor: pointer;' },
           el('div', { class: 'summary-header-left' },
             el('span', { class: 'summary-date' }, date),
             el('div', { class: 'summary-actions' },
-              el('button', { class: 'btn icon', onclick: async () => {
-                const got = await api(`/api/backups/${encodeURIComponent(b.name)}`);
-                if (!got.ok) return showMessage(got.data.error);
-                content.textContent = got.data.text;
-                content.classList.remove('hidden');
-                content.scrollIntoView({ behavior: 'smooth' });
+              el('button', { class: 'btn icon', onclick: async (e) => {
+                e.stopPropagation();
+                const opening = !row.hasAttribute('open');
+                if (opening) {
+                  closeOther(index);
+                  openIndex = index;
+                  const got = await api(`/api/backups/${encodeURIComponent(b.name)}`);
+                  if (!got.ok) { showMessage(got.data.error); return; }
+                  content.querySelector('pre.view').textContent = formatBackupText(got.data.text);
+                  content.classList.remove('hidden');
+                  content.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  openIndex = -1;
+                }
+                row.toggleAttribute('open');
               }}, 'View'),
               el('button', { class: 'btn icon', onclick: async () => {
                 if (!confirm(`Restore the settings from ${date}? The current file is backed up first.`)) return;
