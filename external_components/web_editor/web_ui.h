@@ -1222,6 +1222,21 @@ function durationText(total) {
   return [m ? `${m} min` : '', s || !m ? `${s} s` : ''].filter(Boolean).join(' ');
 }
 
+// countdownText: formats seconds as mm:ss for wig-wag countdown display
+function countdownText(total) {
+  const m = Math.max(0, Math.floor(total / 60));
+  const s = Math.max(0, total % 60);
+  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+
+// fitMirrorText: adjusts mirror countdown font size to fit container
+function fitMirrorText() {
+  const mc = $('mirror-countdown');
+  if (!mc) return;
+  // Simple responsive scaling; fine-tune if needed
+  mc.style.fontSize = 'clamp(44px, 12vw, 72px)';
+}
+
 function readQuickForm(minutesInput, secondsInput, nameInput) {
   const minutes = minutesInput.value === '' ? 0 : Number(minutesInput.value);
   const secs = secondsInput.value === '' ? 0 : Number(secondsInput.value);
@@ -2115,50 +2130,42 @@ async function loadHistory() {
   if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
   const backups = result.data.backups;
   const historyContainer = el('div', { class: 'history-container' });
-  let openIndex = -1;
-  const closeOther = (skipIndex) => {
-    if (openIndex !== -1 && openIndex !== skipIndex) {
-      const prevRow = document.querySelector(`.backup-row[data-index="${openIndex}"]`);
-      if (prevRow) prevRow.removeAttribute('open');
-    }
-  };
   if (backups.length === 0) {
     historyContainer.append(el('p', { class: 'muted', style: 'margin: 0' }, 'No backups yet.'));
   } else {
     const detailsList = backups.map((b, index) => {
       const date = new Date(b.mtime * 1000).toLocaleString();
-      const content = el('div', { class: 'content hidden' }, el('pre', { class: 'view' }, formatBackupText(b.text)));
+      const pre = el('pre', { class: 'view' }, 'Loading…');
+      const content = el('div', { class: 'content' }, pre);
       const row = el('details', { class: 'backup-row', 'data-index': index, 'data-name': b.name },
-        el('summary', { class: 'summary-header', style: 'display: flex; justify-content: space-between; align-items: center; padding: 0 0 4px 0; cursor: pointer;' },
+        el('summary', { class: 'summary-header' },
           el('div', { class: 'summary-header-left' },
+            el('span', { class: 'chevron' }, '▸'),
             el('span', { class: 'summary-date' }, date),
-            el('div', { class: 'summary-actions' },
-              el('button', { class: 'btn icon', onclick: async (e) => {
-                e.stopPropagation();
-                const opening = !row.hasAttribute('open');
-                if (opening) {
-                  closeOther(index);
-                  openIndex = index;
-                  const got = await api(`/api/backups/${encodeURIComponent(b.name)}`);
-                  if (!got.ok) { showMessage(got.data.error); return; }
-                  content.querySelector('pre.view').textContent = formatBackupText(got.data.text);
-                  content.classList.remove('hidden');
-                  content.scrollIntoView({ behavior: 'smooth' });
-                } else {
-                  openIndex = -1;
-                }
-                row.toggleAttribute('open');
-              }}, 'View'),
-              el('button', { class: 'btn icon', onclick: async () => {
-                if (!confirm(`Restore the settings from ${date}? The current file is backed up first.`)) return;
-                const raw = await api('/api/raw');
-                if (!raw.ok) return showMessage(raw.data.error);
-                const restored = await api('/api/restore', { name: b.name, version: raw.data.version });
-                if (!restored.ok) return showMessage(`Not restored: ${restored.data.error}`);
-                showMessage('Restored; the display updates within a second', 'ok');
-                state.model = null; setDirty(false); loadHistory();
-              }}, 'Restore'))),
-        content));
+            el('span', { class: 'summary-size muted small' }, `${b.size} B`)),
+          el('div', { class: 'summary-actions' },
+            el('button', { class: 'btn icon', onclick: async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!confirm(`Restore the settings from ${date}? The current file is backed up first.`)) return;
+              const raw = await api('/api/raw');
+              if (!raw.ok) return showMessage(raw.data.error);
+              const restored = await api('/api/restore', { name: b.name, version: raw.data.version });
+              if (!restored.ok) return showMessage(`Not restored: ${restored.data.error}`);
+              showMessage('Restored; the display updates within a second', 'ok');
+              state.model = null; setDirty(false); loadHistory();
+            }}, 'Restore'))),
+        content);
+      row.addEventListener('toggle', async () => {
+        if (!row.open) return;
+        document.querySelectorAll('.backup-row[open]').forEach((r) => { if (r !== row) r.removeAttribute('open'); });
+        if (!pre.dataset.loaded) {
+          pre.dataset.loaded = '1';
+          const got = await api(`/api/backups/${encodeURIComponent(b.name)}`);
+          if (got.ok) pre.textContent = formatBackupText(got.data.text);
+          else { delete pre.dataset.loaded; pre.textContent = 'Failed to load: ' + ((got.data && got.data.error) || got.status); }
+        }
+      });
       return row;
     });
     historyContainer.append(...detailsList);
@@ -2169,7 +2176,7 @@ async function loadHistory() {
       el('span', { class: 'pill' }, `${backups.length} backup${backups.length === 1 ? '' : 's'}`)),
     el('div', { class: 'card' },
       el('div', { class: 'section-title' }, 'Previous versions'),
-      el('p', { class: 'muted small', style: 'margin: 0' }, 'A copy is kept automatically before every change (latest 30). Restore creates a backup of the current file first.'),
+      el('p', { class: 'muted small', style: 'margin: 0' }, 'Tap a row to expand and view the formatted settings. Restore creates a backup of the current file first.'),
       historyContainer));
 }
 
