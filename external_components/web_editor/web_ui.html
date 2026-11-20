@@ -442,21 +442,24 @@ const NAV_LABELS = {
   quickstart: 'Quick',
   schedule: 'Scheduling',
   history: 'History',
-  config: 'Settings'
+  config: 'Settings',
+  diagnostics: 'Diagnostics'
 };
 const NAV_ICONS = {
   status: '⏱️',
   quickstart: '⚡',
   schedule: '📅',
   history: '📜',
-  config: '⚙️'
+  config: '⚙️',
+  diagnostics: '🔧'
 };
 const TABS = [
   ['status', '⏱️', 'Live'],
   ['quickstart', '⚡', 'Quick'],
   ['schedule', '📅', 'Scheduling'],
   ['history', '📜', 'History'],
-  ['config', '⚙️', 'Settings']
+  ['config', '⚙️', 'Settings'],
+  ['diagnostics', '🔧', 'Diagnostics']
 ];
 const state = { tab: 'status', subTab: 'schedule', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
@@ -1128,9 +1131,10 @@ function renderQuickstart() {
   if (!quickForm) quickForm = buildQuickForm();
   if (!root.contains(quickForm)) root.replaceChildren(quickForm);
   const s = state.status;
-  if (!s) { quickForm.classList.add('hidden'); return; }
-  if (quickForm) quickForm.classList.toggle('hidden', !s.valid);
-  if (s.valid) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
+  // Always render the form; disable Start rather than blanking the page when
+  // the status payload is missing or the timer is not ready yet.
+  if (quickForm) quickForm.classList.toggle('hidden', !s || !s.valid);
+  if (s) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
 }
 function secondsNow() {
   const s = state.status;

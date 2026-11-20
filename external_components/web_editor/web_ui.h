@@ -1,5 +1,4 @@
-// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen
- time — edit web_ui.html, not this file.
+// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
 #pragma once
 
 static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
@@ -381,7 +380,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.190</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.191</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -408,7 +407,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.190</span>
+    <span class="header-version">v2026.11.191</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -446,21 +445,24 @@ const NAV_LABELS = {
   quickstart: 'Quick',
   schedule: 'Scheduling',
   history: 'History',
-  config: 'Settings'
+  config: 'Settings',
+  diagnostics: 'Diagnostics'
 };
 const NAV_ICONS = {
   status: '⏱️',
   quickstart: '⚡',
   schedule: '📅',
   history: '📜',
-  config: '⚙️'
+  config: '⚙️',
+  diagnostics: '🔧'
 };
 const TABS = [
   ['status', '⏱️', 'Live'],
   ['quickstart', '⚡', 'Quick'],
   ['schedule', '📅', 'Scheduling'],
   ['history', '📜', 'History'],
-  ['config', '⚙️', 'Settings']
+  ['config', '⚙️', 'Settings'],
+  ['diagnostics', '🔧', 'Diagnostics']
 ];
 const state = { tab: 'status', subTab: 'schedule', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
@@ -1132,9 +1134,10 @@ function renderQuickstart() {
   if (!quickForm) quickForm = buildQuickForm();
   if (!root.contains(quickForm)) root.replaceChildren(quickForm);
   const s = state.status;
-  if (!s) { quickForm.classList.add('hidden'); return; }
-  if (quickForm) quickForm.classList.toggle('hidden', !s.valid);
-  if (s.valid) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
+  // Always render the form; disable Start rather than blanking the page when
+  // the status payload is missing or the timer is not ready yet.
+  if (quickForm) quickForm.classList.toggle('hidden', !s || !s.valid);
+  if (s) quickForm.update(s.enabled && s.clock_synced, s.clock_synced);
 }
 function secondsNow() {
   const s = state.status;
