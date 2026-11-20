@@ -263,6 +263,11 @@ label.check input { width: 18px; height: 18px; min-height: 0; margin: 0; accent-
 @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
 
 .countdown { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: clamp(44px, 12vw, 72px); font-weight: 800; color: var(--text-strong); margin: 8px 0; letter-spacing: -0.02em; }
+/* Pre-game countdown wig-wag: colon toggles top/bottom aligned each second */
+#mirror-countdown.cd-wag { display: flex; align-items: center; justify-content: center; }
+#mirror-countdown.cd-wag .cd-colon { display: inline-block; transition: align-self 0.25s ease-in-out; }
+#mirror-countdown.cd-wag .cd-colon.wag-top { align-self: flex-start; }
+#mirror-countdown.cd-wag .cd-colon.wag-bottom { align-self: flex-end; }
 .game-name { font-size: 20px; font-weight: 700; color: var(--text-strong); }
 #status-now { display: grid; gap: 14px; }
 .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; align-items: start; }
@@ -500,10 +505,19 @@ function parseTime(value) {
   const secs = (+match[1]) * 3600 + (+match[2]) * 60 + (+(match[3] || 0));
   return secs < 86400 ? secs : null;
 }
-function countdownText(seconds) {
-  if (seconds <= 0) return '00:00';
-  const h = Math.floor(seconds / 3600), m = Math.floor(seconds % 3600 / 60), s = seconds % 60;
-  return h ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+function buildCountdownContent(text) {
+  const nodes = [];
+  let digitBuf = '';
+  for (const char of Array.from(text || '')) {
+    if (/\d/.test(char)) {
+      digitBuf += char;
+    } else {
+      if (digitBuf) { nodes.push(el('span', { class: 'cd-group' }, digitBuf)); digitBuf = ''; }
+      nodes.push(el('span', { class: 'cd-colon' }, char));
+    }
+  }
+  if (digitBuf) nodes.push(el('span', { class: 'cd-group' }, digitBuf));
+  return nodes;
 }
 function todayIso() {
   const d = new Date();
@@ -683,34 +697,64 @@ function buildQuickForm() {
   const stonesPerEnd = el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Stones per end' });
   const endCount = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Total number of ends' });
   const untimedEnds = el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', value: '0', 'aria-label': 'Ends after expiration' });
-  const showProgress = el('input', { type: 'checkbox', checked: true });
-  const pregame = el('input', { type: 'checkbox', checked: true });
-  const pace = el('input', { type: 'checkbox', checked: true });
-  const replace = el('input', { type: 'checkbox', checked: false });
+  let pregameOn = true;
+  let paceOn = true;
+  let showProgressOn = true;
+  let replaceOn = false;
+  const pregameBtn = toggleBtn(pregameOn, 'Enable pre-game countdown');
+  const paceBtn = toggleBtn(paceOn, 'Pace of play');
+  const showProgressBtn = toggleBtn(showProgressOn, 'Show progress through end');
+  const replaceBtn = toggleBtn(replaceOn, 'Replace same-time games');
+  const pregameRow = el('div', { class: 'row-actions', style: 'margin: 0' },
+    pregameBtn, paceBtn, showProgressBtn, replaceBtn);
+  pregameBtn.onclick = (event) => { pregameOn = !pregameOn; event.target.className = 'btn-toggle ' + (pregameOn ? 'primary' : ''); refreshPreview(); };
+  paceBtn.onclick = (event) => { paceOn = !paceOn; event.target.className = 'btn-toggle ' + (paceOn ? 'primary' : ''); refreshPreview(); };
+  showProgressBtn.onclick = (event) => { showProgressOn = !showProgressOn; event.target.className = 'btn-toggle ' + (showProgressOn ? 'primary' : ''); refreshPreview(); };
+  replaceBtn.onclick = (event) => { replaceOn = !replaceOn; event.target.className = 'btn-toggle ' + (replaceOn ? 'primary' : ''); refreshPreview(); };
 
-  const options = () => ({ pregame: pregame.checked, pace_of_play: pace.checked, replace_conflicts: replace.checked, show_progress_through_end: showProgress.checked });
+  const options = () => ({ pregame: pregameOn, pace_of_play: paceOn, replace_conflicts: replaceOn, show_progress_through_end: showProgressOn });
 
   // Outputs driven from global settings: only enabled relays are offered,
   // each with its own duration field for Game Start and Game Expires.
   const relayNames = RELAY_NAMES();
-  const makeRelayRow = (label, boxes, durs) => {
-    const row = el('div', { class: 'row-actions', style: 'margin-bottom: 10px; gap: 10px; align-items: baseline' },
+  const makeRelayRow = (label, toggles, durs) => {
+    const row = el('div', { class: 'row-actions', style: 'margin-bottom: 10px; gap: 10px; align-items: center' },
       el('span', { class: 'muted small', style: 'margin-right: 8px' }, label));
-    for (let i = 0; i < boxes.length; i++) {
-      row.append(el('label', { class: 'check' }, boxes[i], relayNames[i] || `RELAY${i + 1}`));
-      row.append(el('div', { class: 'duration' }, durs[i], el('span', {}, 's')));
+    for (let i = 0; i < toggles.length; i++) {
+      durs[i].style.display = 'none';
+      row.append(toggles[i]);
+      row.append(el('div', { class: 'duration', gap: 6 }, durs[i], el('span', {}, 's')));
     }
     return row;
   };
-  const startBoxes = relayNames.map(() => el('input', { type: 'checkbox', checked: false }));
+  const startToggles = relayNames.map((name) => toggleBtn(false, name));
   const startDurs = relayNames.map(() => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' }));
-  const endBoxes = relayNames.map(() => el('input', { type: 'checkbox', checked: false }));
+  const endToggles = relayNames.map((name) => toggleBtn(false, name));
   const endDurs = relayNames.map(() => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0' }));
-  const startRow = relayNames.length ? makeRelayRow('Game Start:', startBoxes, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
-  const endRow = relayNames.length ? makeRelayRow('Warning Countdown Ends:', endBoxes, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
+  const startRow = relayNames.length ? makeRelayRow('Game Start:', startToggles, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
+  const endRow = relayNames.length ? makeRelayRow('Warning Countdown Ends:', endToggles, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
 
-  const relayValues = (boxes) => boxes.filter((b, i) => b.checked).map((b, i) => relayNames[i] || `RELAY${i + 1}`);
+  const relayValues = (toggles) => toggles.filter((b, i) => b.className.includes('primary')).map((b, i) => relayNames[i] || `RELAY${i + 1}`);
   const relayMaxDuration = (durs) => { let m = 0; for (const d of durs) { const v = Number(d.value) || 0; if (v > m) m = v; } return m || null; };
+
+  startToggles.forEach((btn, i) => {
+    btn.onclick = (event) => {
+      const next = !btn.className.includes('primary');
+      btn.className = 'btn-toggle ' + (next ? 'primary' : '');
+      btn.nextElementSibling.style.display = next ? '' : 'none';
+      refreshPreview();
+    };
+  });
+  endToggles.forEach((btn, i) => {
+    btn.onclick = (event) => {
+      const next = !btn.className.includes('primary');
+      btn.className = 'btn-toggle ' + (next ? 'primary' : '');
+      btn.nextElementSibling.style.display = next ? '' : 'none';
+      refreshPreview();
+    };
+  });
+  startDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
+  endDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
 
   const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start game');
   const hint = el('span', { class: 'muted small' });
@@ -742,10 +786,10 @@ function buildQuickForm() {
       el('div', { class: 'section-title', style: 'margin:0 0 10px' }, 'Preview — settings that will be applied'),
       previewLine('Game time', gameSecs === 0 ? '—' : durationText(gameSecs)),
       previewLine('Expires at', gameSecs === 0 ? '—' : pad(when.getHours()) + ':' + pad(when.getMinutes())),
-      previewLine('Pre-game countdown', pregame.checked ? ((Number(pregameMin.value)||0) + 'm ' + (Number(pregameSec.value)||0) + 's') : 'Off'),
-      previewLine('Pace of play', pace.checked ? 'On' : 'Off'),
-      previewLine('Progress through end', showProgress.checked ? 'On' : 'Off'),
-      previewLine('Replace same-time games', replace.checked ? 'On' : 'Off'),
+      previewLine('Pre-game countdown', pregameOn ? ((Number(pregameMin.value)||0) + 'm ' + (Number(pregameSec.value)||0) + 's') : 'Off'),
+      previewLine('Pace of play', paceOn ? 'On' : 'Off'),
+      previewLine('Progress through end', showProgressOn ? 'On' : 'Off'),
+      previewLine('Replace same-time games', replaceOn ? 'On' : 'Off'),
       previewLine('Stones per end', stonesPerEnd.value || 8),
       previewLine('Total ends', endCount.value || 8),
       previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
@@ -758,7 +802,7 @@ function buildQuickForm() {
   const wire = (input) => { input.addEventListener('input', refreshPreview); input.addEventListener('change', refreshPreview); };
   wire(minutes); wire(seconds); wire(expiresMin);
   wire(pregameMin); wire(pregameSec);
-  [pregame, pace, replace, showProgress].forEach(c => { c.addEventListener('change', refreshPreview); });
+  [pregameBtn, paceBtn, showProgressBtn, replaceBtn].forEach(b => { b.addEventListener('click', refreshPreview); });
   [stonesPerEnd, endCount, untimedEnds].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
   [...startBoxes, ...startDurs, ...endBoxes, ...endDurs].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
 
@@ -808,11 +852,7 @@ function buildQuickForm() {
       el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends after the buzzer so the game can finish naturally instead of cutting off mid-end.')),
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 8px' }, 'Game options'),
-      el('div', { class: 'row-actions', style: 'margin: 0' },
-        el('label', { class: 'check' }, pregame, 'Enable pre-game countdown'),
-        el('label', { class: 'check' }, pace, 'Pace of play'),
-        el('label', { class: 'check' }, showProgress, 'Show progress through end'),
-        el('label', { class: 'check' }, replace, 'Replace same-time games'))),
+      pregameRow),
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 4px' }, 'Outputs'),
       el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
@@ -826,12 +866,15 @@ function buildQuickForm() {
     const st = state.status || {};
     const cv = state.configValues || ((state.configOriginal && state.configOriginal.config) || {});
     const pg = Number((cv && cv['config.pregame_countdown'] != null) ? cv['config.pregame_countdown'] : (st.pregame_countdown_seconds != null ? st.pregame_countdown_seconds : 0)) || 0;
-    pregame.checked = pg > 0;
+    pregameOn = pg > 0;
+    pregameBtn.className = 'btn-toggle ' + (pregameOn ? 'primary' : '');
     pregameMin.value = String(Math.floor(pg / 60));
     pregameSec.value = String(pg % 60);
     const paceEnabled = cv && cv['config.pace_of_play.enabled'] != null ? !!cv['config.pace_of_play.enabled'] : true;
-    pace.checked = !!paceEnabled;
-    showProgress.checked = true;
+    paceOn = !!paceEnabled;
+    paceBtn.className = 'btn-toggle ' + (paceOn ? 'primary' : '');
+    showProgressOn = true;
+    showProgressBtn.className = 'btn-toggle primary';
     refreshPreview();
     form._defaultsApplied = true;
   };
@@ -982,13 +1025,22 @@ function renderStatus() {
   const centerWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; top:${centerTop}px; bottom:${centerBottom}px; display:flex; flex-direction:column; align-items:center; justify-content:center;` });
 
   if (sm.show_countdown) {
-    const cd = el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` }, sm.countdown || '');
-    cd.dataset.maxFont = String(fcd);
-    if (window._mirrorPregameBlinkIv) { clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null; }
-    centerWrap.append(cd);
-  } else if (window._mirrorPregameBlinkIv) {
-    clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null;
-  }
+     let cd;
+     if (pregame && pregameBlink) {
+       cd = el('div', { id: 'mirror-countdown', class: 'cd-wag', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` });
+       cd.dataset.maxFont = String(fcd);
+       const text = sm.countdown || '';
+       const cdNodes = buildCountdownContent(text);
+       cd.append(...cdNodes);
+     } else {
+       cd = el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` }, sm.countdown || '');
+       cd.dataset.maxFont = String(fcd);
+     }
+     if (window._mirrorPregameBlinkIv) { clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null; }
+     centerWrap.append(cd);
+   } else if (window._mirrorPregameBlinkIv) {
+     clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null;
+   }
   if (sm.show_status && sm.status_text) {
     const st = el('div', { id: 'mirror-status-text', style: `color:${unswap(sm.status_color) || '#fff'}; font-size:${px(Math.round(basePace*0.8))}px; text-align:center; margin:${px(8)}px 0 0; width:100%; white-space:nowrap; overflow:hidden;` }, sm.status_text);
     st.dataset.maxFont = String(px(Math.round(basePace*0.8)));
@@ -1095,7 +1147,21 @@ function tick() {
   const mc = $('mirror-countdown');
   if (mc && s) {
     if (s.is_pregame) {
-      if (s.countdown) mc.textContent = s.countdown;
+      if (s.countdown) {
+        const wagOn = !!(s.pregame_blink && mc.classList.contains('cd-wag'));
+        if (wagOn) {
+          const nodes = buildCountdownContent(s.countdown);
+          mc.replaceChildren(...nodes);
+          const colon = mc.querySelector('.cd-colon');
+          if (colon) {
+            const toggle = Math.floor(performance.now() / 1000) % 2 === 0;
+            colon.classList.toggle('wag-top', toggle);
+            colon.classList.toggle('wag-bottom', !toggle);
+          }
+        } else {
+          mc.textContent = s.countdown;
+        }
+      }
       return;
     }
     if (s.current && s.current.seconds_until_buzzer != null) {
@@ -1193,7 +1259,7 @@ function entryEditor(entries, index, leagues, rerender) {
   const entry = entries[index];
   const changed = () => setDirty(true);
   const timeInput = (key) => el('input', { type: 'time', step: 60, value: hms(entry[key]).slice(0, 5), required: true,
-    onchange: (event) => { const v = parseTime(event.target.value); if (v !== null) { entry[key] = v; changed(); if (typeof syncPace === 'function') syncPace(); } } });
+    onchange: (event) => { const v = parseTime(event.target.value); if (v !== null) { entry[key] = v; changed(); syncPace(); } } });
   const text = (key, placeholder) => el('input', { type: 'text', value: entry[key] || '', placeholder, maxlength: 80,
     oninput: (event) => { entry[key] = event.target.value.trim() || null; changed(); } });
   const hold = el('input', { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: 'default',
@@ -1208,7 +1274,6 @@ function entryEditor(entries, index, leagues, rerender) {
     entry.game_completed = league.header_text || null;
     if (league.game_duration_minutes != null && entry.start != null) entry.buzzer = Math.min(entry.start + (league.game_duration_minutes || 0) * 60, 86340);
     if (league.pregame_countdown_seconds != null) entry.pregame_countdown = league.pregame_countdown_seconds;
-    if (league.pace_enabled != null) entry.pace_of_play = !!league.pace_enabled;
     if (league.stones_per_end != null) entry.stones_per_end = league.stones_per_end;
     if (league.end_count != null) entry.end_count = league.end_count;
     if (league.untimed_ends != null) entry.untimed_ends = league.untimed_ends;
@@ -1218,83 +1283,97 @@ function entryEditor(entries, index, leagues, rerender) {
     if (league.start_duration != null) entry.start_duration = league.start_duration;
     if (league.end_relays != null) entry.end_relays = league.end_relays;
     if (league.end_duration != null) entry.end_duration = league.end_duration;
-    if (entry.pace_of_play === true && entry.end_count && entry.buzzer > entry.start) {
-      entry.pace_unit_duration = Math.round((entry.buzzer - entry.start) / entry.end_count);
-    }
+    syncPace();
     changed(); rerender();
   } },
     el('option', { value: '', selected: !entry.league }, '(none)'),
     ...(leagues || []).map((l) => el('option', { value: l.name, selected: entry.league === l.name }, l.name)));
+
+  // ---- Game option toggles (enabled / disabled buttons instead of checkboxes) ----
+  const toggleBtn = (on, label) => el('button', { class: 'btn-toggle ' + (on ? 'primary' : ''), type: 'button' }, label);
+
+  let pgEnabled = entry.pregame_countdown != null && entry.pregame_countdown > 0;
+  const pgBtn = toggleBtn(pgEnabled, 'Pre-game countdown');
   const pgTotal = (entry.pregame_countdown != null) ? Number(entry.pregame_countdown) : null;
   const pgM = el('input', { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: 'default', value: pgTotal != null ? Math.floor(pgTotal / 60) : '' });
   const pgS = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', value: pgTotal != null ? (pgTotal % 60) : '' });
   const syncPg = () => {
-    if (pgM.value === '' && pgS.value === '') { entry.pregame_countdown = null; }
-    else { entry.pregame_countdown = (parseInt(pgM.value || '0', 10) || 0) * 60 + (parseInt(pgS.value || '0', 10) || 0); }
+    if (pgM.value === '' && pgS.value === '') { entry.pregame_countdown = null; pgEnabled = false; pgBtn.className = 'btn-toggle'; }
+    else { entry.pregame_countdown = (parseInt(pgM.value || '0', 10) || 0) * 60 + (parseInt(pgS.value || '0', 10) || 0); pgEnabled = true; pgBtn.className = 'btn-toggle primary'; }
     changed();
   };
   pgM.onchange = syncPg; pgS.onchange = syncPg;
+  pgBtn.onclick = (event) => { const next = !pgEnabled; pgEnabled = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); pgFields.style.display = next ? 'flex' : 'none'; if (next && entry.pregame_countdown == null) entry.pregame_countdown = 0; else if (!next) entry.pregame_countdown = null; changed(); };
+  const pgFields = el('div', { class: 'duration', role: 'group', 'aria-label': 'Pre-game countdown duration', style: pgEnabled ? '' : 'display:none' }, pgM, el('span', {}, 'min'), pgS, el('span', {}, 's'));
+  pgFields.querySelectorAll('input').forEach((i) => i.oninput = () => { syncPg(); i.onchange(); });
 
   const endCountInput = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.end_count != null ? entry.end_count : '' });
   const syncPace = () => {
     const ends = endCountInput.value === '' ? null : Math.max(1, parseInt(endCountInput.value, 10) || 1);
     entry.end_count = ends;
-    if (entry.pace_of_play === true && ends && entry.buzzer > entry.start) {
+    if (ends && entry.buzzer > entry.start) {
       entry.pace_unit_duration = Math.round((entry.buzzer - entry.start) / ends);
-    } else if (entry.pace_of_play !== true) {
+    } else {
       entry.pace_unit_duration = entry.pace_unit_duration ?? null;
     }
     changed();
   };
   endCountInput.onchange = (event) => { endCountInput.value = event.target.value; syncPace(); };
-  const paceCheck = el('input', { type: 'checkbox', checked: entry.pace_of_play === true, onchange: (event) => {
-    entry.pace_of_play = event.target.checked ? true : (entry.pace_of_play === false ? false : null);
-    if (!event.target.checked) entry.pace_unit_duration = null;
-    syncPace();
-  } });
-  const manualCheck = el('input', { type: 'checkbox', checked: !!entry.manual_trigger, disabled: !isAddonEnabled('pushbutton'),
-    onchange: (event) => { entry.manual_trigger = !!event.target.checked; changed(); } });
 
+  let manualOn = !!entry.manual_trigger && isAddonEnabled('pushbutton');
+  const manualBtn = toggleBtn(manualOn, 'Manual push-button trigger');
+  manualBtn.onclick = (event) => { const next = !manualOn; manualOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); entry.manual_trigger = next; changed(); };
+
+  let progressOn = entry.show_progress_through_end === true;
+  const progressBtn = toggleBtn(progressOn, 'Show progress through end');
+  const skipInput = el('input', { type: 'number', min: 0.1, max: 5, step: 0.1, inputmode: 'decimal', placeholder: '1.4',
+    value: entry.skip_multiplier != null ? String(entry.skip_multiplier) : '1.4',
+    oninput: (event) => { entry.skip_multiplier = Number(event.target.value) || null; changed(); } });
+  const skipRow = el('div', { class: 'duration', style: progressOn ? '' : 'display:none', gap: 6 },
+    el('span', { class: 'muted small' }, 'Skip multiplier'), skipInput, el('span', {}, 'x'));
+  progressBtn.onclick = (event) => { const next = !progressOn; progressOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); skipRow.style.display = next ? '' : 'none'; entry.show_progress_through_end = next; if (next && entry.skip_multiplier == null) entry.skip_multiplier = 1.4; changed(); };
+  skipInput.onchange = () => changed();
+
+  let untimedTotalOn = entry.total_time_includes_untimed_ends === true;
+  const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
+  untimedTotalBtn.onclick = (event) => { const next = !untimedTotalOn; untimedTotalOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); entry.total_time_includes_untimed_ends = next; changed(); };
+
+  // ---- Notifications (relays) as toggle buttons instead of checkboxes ----
   const outputInfos = enabledOutputInfos();
-  const startBoxes = outputInfos.map((info) => el('input', { type: 'checkbox', checked: Array.isArray(entry.start_relays) && entry.start_relays.includes(info.id) }));
-  const startDurs = outputInfos.map((info) => {
-    const i = outputInfos.indexOf(info);
-    const checked = startBoxes[i].checked;
-    return el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
-      value: checked && entry.start_duration != null ? String(entry.start_duration) : '' });
-  });
-  const endBoxes = outputInfos.map((info) => el('input', { type: 'checkbox', checked: Array.isArray(entry.end_relays) && entry.end_relays.includes(info.id) }));
-  const endDurs = outputInfos.map((info, i) => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
-      value: endBoxes[i].checked && entry.end_duration != null ? String(entry.end_duration) : '' }));
-  const updateOutputs = (which) => {
-    if (which === 'start') {
-      entry.start_relays = outputInfos.filter((_, i) => startBoxes[i].checked).map((o) => o.id);
-      const vals = outputInfos.map((_, i) => startBoxes[i].checked ? (parseInt(startDurs[i].value || '0', 10) || 0) : 0);
-      entry.start_duration = vals.length ? Math.max(0, ...vals) : null;
-      if (!entry.start_relays.length) entry.start_duration = null;
-    } else {
-      entry.end_relays = outputInfos.filter((_, i) => endBoxes[i].checked).map((o) => o.id);
-      const vals = outputInfos.map((_, i) => endBoxes[i].checked ? (parseInt(endDurs[i].value || '0', 10) || 0) : 0);
-      entry.end_duration = vals.length ? Math.max(0, ...vals) : null;
-      if (!entry.end_relays.length) entry.end_duration = null;
-    }
-    changed();
+  const buildNotificationRow = (which) => {
+    const on = (r) => Array.isArray(entry[which + '_relays']) && entry[which + '_relays'].includes(r.id);
+    const durField = (info, active) => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
+      value: active && entry[which + '_duration'] != null ? String(entry[which + '_duration']) : '' });
+    const row = el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 8px; align-items: center; flex-wrap: wrap' },
+      el('span', { class: 'muted small', style: 'margin-right: 8px' }, labelOf(which)));
+    outputInfos.forEach((info) => {
+      const active = on(info);
+      const btn = toggleBtn(active, info.label);
+      btn.onclick = (event) => { const next = !active; btn.className = 'btn-toggle ' + (next ? 'primary' : ''); dur.style.display = next ? '' : 'none'; setRelays(which, next ? [...((entry[which + '_relays'] || [])).concat([info.id])] : (entry[which + '_relays'] || []).filter((x) => x !== info.id)); changed(); };
+      const dur = durField(info, active);
+      dur.oninput = (event) => { setDuration(which, event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0)); changed(); };
+      row.append(btn);
+      row.append(el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 's')));
+    });
+    return row;
   };
-  outputInfos.forEach((_, i) => {
-    startBoxes[i].addEventListener('change', () => updateOutputs('start'));
-    startDurs[i].addEventListener('input', () => updateOutputs('start'));
-    endBoxes[i].addEventListener('change', () => updateOutputs('end'));
-    endDurs[i].addEventListener('input', () => updateOutputs('end'));
-  });
-  const outputRow = (label, boxes, durs) => el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 10px; align-items: baseline; flex-wrap: wrap' },
-    el('span', { class: 'muted small', style: 'margin-right: 8px' }, label),
-    ...outputInfos.flatMap((info, i) => [el('label', { class: 'check' }, boxes[i], info.label), el('div', { class: 'duration' }, durs[i], el('span', {}, 's'))]));
+  const setRelays = (which, list) => {
+    const key = which + '_relays';
+    entry[key] = list.length ? list : null;
+    if (!entry[key]) entry[which + '_duration'] = null;
+  };
+  const setDuration = (which, value) => {
+    entry[which + '_duration'] = value;
+    if (!entry[which + '_relays'] || !entry[which + '_relays'].length) entry[which + '_duration'] = null;
+  };
+  const labelOf = (which) => which === 'start' ? 'Notifications — Game Start' : 'Notifications — Warning Countdown Ends';
+
   const outputsCard = outputInfos.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
-      el('h3', {}, 'Outputs 🔊'),
-      el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
-      outputRow('Game Start:', startBoxes, startDurs),
-      outputRow('Warning Countdown Ends:', endBoxes, endDurs))
-    : el('div', { class: 'card', style: 'margin: 10px 0 0' }, el('h3', {}, 'Outputs 🔊'), el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
+      el('h3', {}, 'Notifications 🔔'),
+      el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which relay outputs ring at each event and for how many seconds. Tap a button to enable/disable; leave the duration blank to use the global buzzer duration.'),
+      buildNotificationRow('start'),
+      buildNotificationRow('buzzer'))
+    : el('div', { class: 'card', style: 'margin: 10px 0 0' }, el('h3', {}, 'Notifications 🔔'), el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
 
   return el('div', { class: 'entry' },
     el('div', { class: 'league' }, el('label', {}, 'League'), leagueSelect),
@@ -1305,16 +1384,15 @@ function entryEditor(entries, index, leagues, rerender) {
     el('div', { class: 'name' }, text('name', 'League name'),
       entry.quick ? el('span', { class: 'pill quick', style: 'align-self: center' }, 'quick') : null),
     el('div', { class: 'more' },
-      el('label', {}, 'Pre-game countdown'),
-      el('div', { class: 'duration', role: 'group', 'aria-label': 'Pre-game countdown duration' }, pgM, el('span', {}, 'min'), pgS, el('span', {}, 's')),
+      pgBtn, pgFields,
       el('label', {}, 'Header when game completed'), text('game_completed', 'default'),
       el('label', {}, 'Header hold seconds'), hold,
       el('label', {}, 'Total ends'), endCountInput,
       el('label', {}, 'Stones per end'), el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.stones_per_end != null ? entry.stones_per_end : '', onchange: (event) => { entry.stones_per_end = event.target.value === '' ? null : Math.max(1, parseInt(event.target.value, 10) || 1); changed(); } }),
       el('label', {}, 'Untimed ends'), el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.untimed_ends != null ? entry.untimed_ends : '', onchange: (event) => { entry.untimed_ends = event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0); changed(); } }),
-      el('label', { class: 'check' }, paceCheck, 'Pace of play (auto-calculated)'),
-      el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'),
-      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: entry.show_progress_through_end === true, onchange: (event) => { entry.show_progress_through_end = event.target.checked ? true : null; changed(); } }), 'Show progress through end'),
+      manualBtn,
+      progressBtn, skipRow,
+      untimedTotalBtn,
       outputsCard));
 }
 
@@ -2138,50 +2216,50 @@ async function renderLeagues() {
       oninput: (ev) => { lp.end_count = parseInt(ev.target.value || '8', 10); } });
     const untimedInput = el('input', { type: 'number', id: prefix + '-untimed', value: lp.untimed_ends || '0', min: 0, max: 6,
       oninput: (ev) => { lp.untimed_ends = parseInt(ev.target.value || '0', 10); } });
-    const progressCheck = el('input', { type: 'checkbox', id: prefix + '-progress', checked: lp.show_progress_through_end !== false,
-      onchange: (ev) => { lp.show_progress_through_end = ev.target.checked; } });
+    let progressOn = lp.show_progress_through_end === true;
+    const progressBtn = toggleBtn(progressOn, 'Show progress through end');
+    progressBtn.onclick = (event) => { const next = !progressOn; progressOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); lp.show_progress_through_end = next; refreshLeaguePreview(); };
     const cmbInput = el('input', { type: 'number', id: prefix + '-cmb', value: lp.countdown_minutes_before || '', min: 0,
       oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
-    const paceCheck = el('input', { type: 'checkbox', id: prefix + '-pace', checked: !!lp.pace_enabled,
-      onchange: (ev) => { lp.pace_enabled = ev.target.checked; } });
-    const manualCheck = el('input', { type: 'checkbox', id: prefix + '-manual', checked: !!lp.manual_trigger,
-      disabled: !isAddonEnabled('pushbutton'), onchange: (ev) => { lp.manual_trigger = ev.target.checked; } });
+    let manualOn = !!lp.manual_trigger && isAddonEnabled('pushbutton');
+    const manualBtn = toggleBtn(manualOn, 'Manual push-button trigger');
+    manualBtn.onclick = (event) => { const next = !manualOn; manualOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); lp.manual_trigger = next; refreshLeaguePreview(); };
 
     const outputInfos = enabledOutputInfos();
-    const startBoxes = outputInfos.map((info) => el('input', { type: 'checkbox', checked: Array.isArray(lp.start_relays) && lp.start_relays.includes(info.id) }));
-    const startDurs = outputInfos.map((info, i) => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
-      value: startBoxes[i].checked && lp.start_duration != null ? String(lp.start_duration) : '' }));
-    const endBoxes = outputInfos.map((info) => el('input', { type: 'checkbox', checked: Array.isArray(lp.end_relays) && lp.end_relays.includes(info.id) }));
-    const endDurs = outputInfos.map((info, i) => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
-      value: endBoxes[i].checked && lp.end_duration != null ? String(lp.end_duration) : '' }));
-    const updateOutputs = (which) => {
-      if (which === 'start') {
-        lp.start_relays = outputInfos.filter((_, i) => startBoxes[i].checked).map((o) => o.id);
-        const vals = outputInfos.map((_, i) => startBoxes[i].checked ? (parseInt(startDurs[i].value || '0', 10) || 0) : 0);
-        lp.start_duration = vals.length ? Math.max(0, ...vals) : 0;
-        if (!lp.start_relays.length) lp.start_duration = 0;
-      } else {
-        lp.end_relays = outputInfos.filter((_, i) => endBoxes[i].checked).map((o) => o.id);
-        const vals = outputInfos.map((_, i) => endBoxes[i].checked ? (parseInt(endDurs[i].value || '0', 10) || 0) : 0);
-        lp.end_duration = vals.length ? Math.max(0, ...vals) : 0;
-        if (!lp.end_relays.length) lp.end_duration = 0;
-      }
+    const buildNotificationRow = (which) => {
+      const on = (r) => Array.isArray(lp[which + '_relays']) && lp[which + '_relays'].includes(r.id);
+      const durField = (info, active) => el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric', placeholder: '0',
+        value: active && lp[which + '_duration'] != null ? String(lp[which + '_duration']) : '' });
+      const row = el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 8px; align-items: center; flex-wrap: wrap' },
+        el('span', { class: 'muted small', style: 'margin-right: 8px' }, labelOf(which)));
+      outputInfos.forEach((info) => {
+        const active = on(info);
+        const btn = toggleBtn(active, info.label);
+        btn.onclick = (event) => { const next = !active; btn.className = 'btn-toggle ' + (next ? 'primary' : ''); dur.style.display = next ? '' : 'none'; setRelays(which, next ? [...((lp[which + '_relays'] || [])).concat([info.id])] : (lp[which + '_relays'] || []).filter((x) => x !== info.id)); refreshLeaguePreview(); };
+        const dur = durField(info, active);
+        dur.oninput = (event) => { setDuration(which, event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0)); refreshLeaguePreview(); };
+        row.append(btn);
+        row.append(el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 's')));
+      });
+      return row;
     };
-    outputInfos.forEach((_, i) => {
-      startBoxes[i].addEventListener('change', () => updateOutputs('start'));
-      startDurs[i].addEventListener('input', () => updateOutputs('start'));
-      endBoxes[i].addEventListener('change', () => updateOutputs('end'));
-      endDurs[i].addEventListener('input', () => updateOutputs('end'));
-    });
-    const outputRow = (label, boxes, durs) => el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 10px; align-items: baseline; flex-wrap: wrap' },
-      el('span', { class: 'muted small', style: 'margin-right: 8px' }, label),
-      ...outputInfos.flatMap((info, i) => [el('label', { class: 'check' }, boxes[i], info.label), el('div', { class: 'duration' }, durs[i], el('span', {}, 's'))]));
+    const setRelays = (which, list) => {
+      const key = which + '_relays';
+      lp[key] = list.length ? list : [];
+      if (!lp[key].length) lp[which + '_duration'] = 0;
+    };
+    const setDuration = (which, value) => {
+      lp[which + '_duration'] = value;
+      if (!lp[which + '_relays'] || !lp[which + '_relays'].length) lp[which + '_duration'] = 0;
+    };
+    const labelOf = (which) => which === 'start' ? 'Notifications — Game Start' : 'Notifications — Warning Countdown Ends';
+
     const outputsCard = outputInfos.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
-        el('h3', {}, 'Outputs 🔊'),
-        el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
-        outputRow('Game Start:', startBoxes, startDurs),
-        outputRow('Warning Countdown Ends:', endBoxes, endDurs))
-      : el('div', { class: 'card', style: 'margin: 10px 0 0' }, el('h3', {}, 'Outputs 🔊'), el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
+        el('h3', {}, 'Notifications 🔔'),
+        el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which relay outputs ring at each event and for how many seconds. Tap a button to enable/disable; leave the duration blank to use the global buzzer duration.'),
+        buildNotificationRow('start'),
+        buildNotificationRow('end'))
+      : el('div', { class: 'card', style: 'margin: 10px 0 0' }, el('h3', {}, 'Notifications 🔔'), el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
 
     return el('div', { class: 'entry' },
       el('div', { class: 'name' }, nameInput),
@@ -2194,10 +2272,9 @@ async function renderLeagues() {
         el('label', {}, 'Total ends'), endsInput,
         el('label', {}, 'Stones per end'), stonesInput,
         el('label', {}, 'Untimed ends'), untimedInput,
-        el('label', { class: 'check' }, paceCheck, 'Pace of play (auto-calculated)'),
+        progressBtn,
         el('label', {}, 'Countdown warning minutes before'), cmbInput,
-        el('label', { class: 'check' }, manualCheck, 'Manual push-button trigger'),
-        el('label', { class: 'check' }, progressCheck, 'Show progress through end'),
+        manualBtn,
         outputsCard));
   };
 
