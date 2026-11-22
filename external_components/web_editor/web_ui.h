@@ -1,5 +1,4 @@
-// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen
- time — edit web_ui.html, not this file.
+// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
 #pragma once
 
 static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
@@ -381,7 +380,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.195</span></h2>
+  <h2>Curling Timer <span class="version">vv2026.11.195-1-gd870281</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -408,7 +407,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.195</span>
+    <span class="header-version">vv2026.11.195-1-gd870281</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -791,21 +790,6 @@ function buildQuickForm() {
       refreshPreview();
     };
   });
-  startDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
-  endDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
-
-  const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start game');
-  const hint = el('span', { class: 'muted small' });
-
-  // Preview section: shows what will be applied, styled like the display.
-  const previewLine = (label, value) => el('div', { style: 'display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--text);margin:4px 0' },
-    el('div', { style: 'color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:0.05em' }, label),
-    el('div', { style: 'text-align:right;font-weight:600;color:var(--text-strong)' }, value));
-  const preview = el('div', {
-    class: 'card',
-    style: 'margin: 0 0 14px; background:rgba(2,10,20,0.45); border:1px solid rgba(255,255,255,0.12); padding:16px'
-  });
-
   const refreshPreview = () => {
     const s = Number(minutes.value) || 0;
     const sec = Number(seconds.value) || 0;
@@ -836,6 +820,23 @@ function buildQuickForm() {
       previewLine('Outputs — Game Expires', endRelays.length ? endRelays.map((r, i) => r + ' ' + ((Number(endDurs[i].value) || 0) || 'default') + 's').join(', ') : 'None')
     );
   };
+
+  startDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
+  endDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
+
+  const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start game');
+  const hint = el('span', { class: 'muted small' });
+
+  // Preview section: shows what will be applied, styled like the display.
+  const previewLine = (label, value) => el('div', { style: 'display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--text);margin:4px 0' },
+    el('div', { style: 'color:var(--text-dim);font-size:11px;text-transform:uppercase;letter-spacing:0.05em' }, label),
+    el('div', { style: 'text-align:right;font-weight:600;color:var(--text-strong)' }, value));
+  const preview = el('div', {
+    class: 'card',
+    style: 'margin: 0 0 14px; background:rgba(2,10,20,0.45); border:1px solid rgba(255,255,255,0.12); padding:16px'
+  });
+
+
 
   const wire = (input) => { input.addEventListener('input', refreshPreview); input.addEventListener('change', refreshPreview); };
   wire(minutes); wire(seconds); wire(expiresMin);
