@@ -1377,7 +1377,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
 
   // --- timing ---
   const startIn = el('input', { type: 'time', step: 60, value: '19:00', placeholder: 'HH:MM' });
-  const buzzerIn = el('input', { type: 'time', step: 60, value: '20:45', placeholder: 'HH:MM' });
+  // Buzzer time is computed from start time + duration, no clock input needed
   const nameIn = el('input', { type: 'text', maxlength: 80, placeholder: 'League / event name' });
   // League dropdown from existing leagues
   let selectedLeague = null;
@@ -1407,12 +1407,14 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         if (league.pregame_countdown_seconds != null) {
           pregameOn = league.pregame_countdown_seconds > 0;
           pregameBtn.className = 'check-toggle ' + (pregameOn ? 'on' : 'off');
-          pregameDurationInput.value = league.pregame_countdown_seconds > 0 ? String(league.pregame_countdown_seconds) : '300';
-          pregameDurationInput.style.display = pregameOn ? '' : 'none';
+          pregameMinutesInput.value = league.pregame_countdown_seconds > 0 ? String(Math.floor(league.pregame_countdown_seconds / 60)) : '0';
+          pregameSecondsInput.value = league.pregame_countdown_seconds > 0 ? String(league.pregame_countdown_seconds % 60) : '0';
+          pregameMinutesInput.style.display = pregameOn ? '' : 'none';
+          pregameSecondsInput.style.display = pregameOn ? '' : 'none';
         }
         if (league.game_duration_minutes != null && startIn.value) {
-          const stSec = parseTime(startIn.value) || 9 * 3600;
-          buzzerIn.value = hms(Math.min(stSec + (league.game_duration_minutes || 0) * 60, 86340)).slice(0, 5);
+          durationHoursInput.value = Math.floor(league.game_duration_minutes / 60);
+          durationMinutesInput.value = league.game_duration_minutes % 60;
         }
         if (league.pace_enabled != null) { paceOn = !!league.pace_enabled; paceBtn.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); }
         if (league.total_time_includes_untimed_ends != null) { untimedTotalOn = !!league.total_time_includes_untimed_ends; untimedTotalBtn.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); }
@@ -1434,6 +1436,8 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   const endsIn = el('input', { type: 'number', min: 1, max: 12, value: '8', placeholder: 'ends' });
   const stonesIn = el('input', { type: 'number', min: 1, max: 10, value: '8', placeholder: 'stones' });
   const untimedIn = el('input', { type: 'number', min: 0, max: 6, value: '0', placeholder: 'extra ends' });
+  const durationHoursInput = el('input', { type: 'number', min: 0, max: 24, step: 1, value: '0', style: 'width:50px' });
+  const durationMinutesInput = el('input', { type: 'number', min: 0, max: 60, step: 1, value: '0', style: 'width:50px' });
 
   // --- option toggles ---
   let pregameOn = true, paceOn = false, progressOn = false, untimedTotalOn = false, replaceOn = false, manualOn = false;
@@ -1444,9 +1448,31 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
   const replaceBtn = toggleBtn(replaceOn, 'Replace conflicts');
   const manualBtn = toggleBtn(manualOn, 'Manual push-button trigger');
-  const pregameDurationInput = el('input', { type: 'number', min: 0, max: 3600, step: 1, inputmode: 'numeric', placeholder: 'seconds', value: '300', style: 'display:none; width:80px' });
-  pregameDurationInput.style.display = pregameOn ? '' : 'none';
-  pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); pregameDurationInput.style.display = pregameOn ? '' : 'none'; };
+  const pregameMinutesInput = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: 'minutes', value: '0', style: 'display:none; width:40px' });
+  const pregameSecondsInput = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: 'seconds', value: '0', style: 'display:none; width:40px' });
+  pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); pregameMinutesInput.style.display = pregameOn ? '' : 'none'; pregameSecondsInput.style.display = pregameOn ? '' : 'none'; };
+  paceBtn.onclick = (e) => { paceOn = !paceOn; e.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); };
+  progressBtn.onclick = (e) => { progressOn = !progressOn; e.target.className = 'check-toggle ' + (progressOn ? 'on' : 'off'); };
+  // Duration mode toggle elements (created as refs, used in body below)
+  const durationModeToggle = el('input', { type: 'checkbox', id: 'durationModeToggle', checked: true });
+  const timeRemainingToggle = el('input', { type: 'checkbox', id: 'timeRemainingToggle', checked: false });
+  const durationFields = el('div', { class: 'duration-fields', style: '' },
+    el('span', { class: 'muted small' }, 'Hours:'),
+    durationHoursInput,
+    el('span', { class: 'muted small' }, 'minutes'),
+    durationMinutesInput);
+  durationModeToggle.onchange = () => {
+    const isDurationMode = durationModeToggle.checked;
+    durationFields.style.display = isDurationMode ? '' : 'none';
+    timeRemainingToggle.checked = !isDurationMode;
+  };
+  timeRemainingToggle.onchange = () => {
+    const isTimeRemaining = timeRemainingToggle.checked;
+    durationFields.style.display = isTimeRemaining ? '' : 'none';
+    durationModeToggle.checked = !isTimeRemaining;
+  };
+
+  pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); pregameMinutesInput.style.display = pregameOn ? '' : 'none'; pregameSecondsInput.style.display = pregameOn ? '' : 'none'; };
   paceBtn.onclick = (e) => { paceOn = !paceOn; e.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); };
   progressBtn.onclick = (e) => { progressOn = !progressOn; e.target.className = 'check-toggle ' + (progressOn ? 'on' : 'off'); };
   untimedTotalBtn.onclick = (e) => { untimedTotalOn = !untimedTotalOn; e.target.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); };
@@ -1494,16 +1520,16 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   // --- presets row ---
   const presetRow = el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
     el('button', { class: 'btn preset', type: 'button', onclick: () => {
-      const st = parseTime(startIn.value) || 9 * 3600;
-      buzzerIn.value = hms(Math.min(st + 105 * 60, 86340)).slice(0, 5);
+      durationHoursInput.value = '1'; // 105 min = 1h 45m
+      durationMinutesInput.value = '45';
     } }, '8 ends'),
     el('button', { class: 'btn preset', type: 'button', onclick: () => {
-      const st = parseTime(startIn.value) || 9 * 3600;
-      buzzerIn.value = hms(Math.min(st + 75 * 60, 86340)).slice(0, 5);
+      durationHoursInput.value = '1'; // 75 min = 1h 15m
+      durationMinutesInput.value = '15';
     } }, '6 ends'),
     el('button', { class: 'btn preset', type: 'button', onclick: () => {
-      const st = parseTime(startIn.value) || 9 * 3600;
-      buzzerIn.value = hms(Math.min(st + 7 * 60, 86340)).slice(0, 5);
+      durationHoursInput.value = '0'; // 7 min
+      durationMinutesInput.value = '7';
     } }, 'Practice'));
 
   // --- body ---
@@ -1511,8 +1537,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
     // --- league (first) ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
       el('div', {}, el('label', {}, 'League'), leagueSelect),
-      el('div', {}, customLeagueNameInput),
-      el('div', {}, el('label', {}, 'Ends'), endsIn)),
+      el('div', {}, customLeagueNameInput)),
     // --- presets (hidden when a league is chosen) ---
     presetRow,
     // --- Game option toggles ---
@@ -1520,35 +1545,71 @@ function openScheduleGameModal(dayKey, entries, rerender) {
       pregameBtn, paceBtn, showProgressBtn, untimedTotalBtn, replaceBtn, manualBtn),
     // --- pregame countdown duration (shown when pregame is on) ---
     el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px', id: 'schedulePregameDuration' },
-      el('span', { class: 'muted small' }, 'Pre-game countdown (seconds)'), pregameDurationInput),
+      el('span', { class: 'muted small' }, 'Pre-game countdown'),
+      pregameMinutesInput,
+      el('span', { class: 'muted small' }, 'm'),
+      pregameSecondsInput),
     // --- timing ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
       el('div', {}, el('label', {}, 'Start time'), startIn),
-      el('div', {}, el('label', {}, 'Buzzer / end time'), buzzerIn)),
+      // Duration mode toggle
+      el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 4px' },
+        el('span', { class: 'muted small' }, 'Set duration:'),
+        el('div', { class: 'duration-mode' },
+          durationModeToggle,
+          el('label', { for: 'durationModeToggle' }, 'Gameplay duration'),
+          timeRemainingToggle,
+          el('label', { for: 'timeRemainingToggle' }, 'Time remaining')
+        )
+      ),
+      el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 6px' },
+        durationFields
+      ),
+      // buzzer is computed from start time + duration, no clock input needed
     // --- stones and untimed ends ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 6px' },
       el('div', {}, el('label', {}, 'Stones per end'), stonesIn),
+      el('div', {}, el('label', {}, 'Ends'), endsIn),
       el('div', {}, el('label', {}, 'Ends after expiration'), untimedIn)),
     // --- output rows ---
     el('div', {}, startOut.row),
     el('div', {}, endOut.row),
     el('div', { class: 'row-actions', style: 'margin-top: 20px' },
       el('button', { class: 'btn danger', onclick: () => {
-        const st = parseTime(startIn.value);
-        const bz = parseTime(buzzerIn.value);
-        if (st == null || bz == null) { showMessage('Enter valid times'); return; }
-        if (st >= bz) { showMessage('Buzzer must be after start'); return; }
-        const maxDur = (durs) => { let m = 0; for (const d of durs) { const v = Number(d.value) || 0; if (v > m) m = v; } return m || null; };
+        const stSec = parseTime(startIn.value) || 9 * 3600;
+        
+        // Get duration mode
+        const isDurationMode = document.getElementById('durationModeToggle').checked;
+        const isTimeRemaining = document.getElementById('timeRemainingToggle').checked;
+        
+        let durationHours = 0;
+        let durationMinutes = 0;
+        if (isDurationMode) {
+          const hoursInput = durationHoursInput
+          const minutesInput = durationMinutesInput
+          durationHours = parseInt(hoursInput?.value) || 0;
+          durationMinutes = parseInt(minutesInput?.value) || 0;
+        } else if (isTimeRemaining) {
+          // Time remaining mode not yet implemented; fall back to duration mode
+          const hoursInput = durationHoursInput
+          durationHours = parseInt(hoursInput?.value) || 0;
+          durationMinutes = 0;
+        }
+        
+        const totalDurationSec = (durationHours * 3600) + (durationMinutes * 60);
+        const buzzerSec = stSec + totalDurationSec;
+        
         const league = selectedLeague || null;
         const leagueName = customLeagueMode ? (customLeagueNameInput.value.trim() || null) : (league ? league.name : null);
-        const pregameSecs = pregameOn ? (Number(pregameDurationInput.value) || 300) : null;
-        const startRelays = startOut.toggles.map((b,i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY','')) : null).filter(n => n != null);
-        const startDur = startOut.durs.map(d => Number(d.value) || 0);
-        const endRelays = endOut.toggles.map((b,i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY','')) : null).filter(n => n != null);
-        const endDur = endOut.durs.map(d => Number(d.value) || 0);
+        const pregameSecs = pregameOn ? (Number(pregameMinutesInput.value) * 60 + Number(pregameSecondsInput.value)) : null;
+        const startRelays = startOut.toggles.map((b, i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY', '')) : null).filter(n => n != null);
+        const startDur = startOut.durs.length ? [Number(startOut.durs[0].value) || 0] : [0];
+        const endRelays = endOut.toggles.map((b, i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY', '')) : null).filter(n => n != null);
+        const endDur = endOut.durs.length ? [Number(endOut.durs[0].value) || 0] : [0];
+        
         entries.push({
-          start: st,
-          buzzer: bz,
+          start: stSec,
+          buzzer: buzzerSec,
           name: leagueName,
           game_completed: league ? league.header_text || null : null,
           header_hold: league ? league.header_hold ?? null : null,
