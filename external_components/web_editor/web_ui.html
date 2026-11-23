@@ -211,6 +211,31 @@ button.btn.icon { padding: 0; width: 42px; height: 42px; min-height: 42px; borde
 button.btn.icon svg { width: 18px; height: 18px; fill: currentColor; }
 button.btn.preset { font-size: 13px; padding: 8px 12px; min-height: 38px; }
 
+/* Modern check-toggle pills: small round switches, green=on / red=off.
+   Deliberately NOT the same gradient or sizing as action buttons so they
+   read as settings toggles, not as "Start game" / "Save" buttons. */
+.check-toggle {
+  width: 44px; height: 26px; min-height: 0; min-width: 0;
+  border-radius: 999px; padding: 0;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.06);
+  color: var(--text-dim); font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all .15s ease; cursor: pointer; flex-shrink: 0;
+}
+.check-toggle.on {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #042a0a; border-color: rgba(34,197,94,0.5);
+  box-shadow: 0 4px 12px rgba(34,197,94,0.25);
+}
+.check-toggle.off {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #2a0404; border-color: rgba(239,68,68,0.5);
+  box-shadow: 0 4px 12px rgba(239,68,68,0.25);
+}
+.check-toggle:hover:not(:disabled) { filter: brightness(1.1); }
+.check-toggle:disabled { opacity: 0.4; cursor: default; }
+
 input, select, textarea {
   font: inherit; color: var(--text); background: rgba(255,255,255,0.05);
   border: 1px solid var(--border); border-radius: 12px; padding: 10px 13px;
@@ -526,7 +551,12 @@ function el(tag, props, ...children) {
   return node;
 }
 const $ = (id) => document.getElementById(id);
-function toggleBtn(on, label) { return el('button', { class: 'btn-toggle ' + (on ? 'primary' : ''), type: 'button' }, label); }
+function toggleBtn(on, label) {
+  const btn = el('button', { class: 'check-toggle ' + (on ? 'on' : 'off'), type: 'button', 'aria-pressed': String(on), 'aria-label': label }, on ? 'ON' : 'OFF');
+  btn._on = !!on;
+  btn._label = label;
+  return btn;
+}
 const pad = (n) => String(n).padStart(2, '0');
 function hms(seconds) {
   const h = Math.floor(seconds / 3600), m = Math.floor(seconds % 3600 / 60), s = seconds % 60;
@@ -741,23 +771,26 @@ function buildQuickForm() {
   const replaceBtn = toggleBtn(replaceOn, 'Replace same-time games');
   const pregameRow = el('div', { class: 'row-actions', style: 'margin: 0' },
     pregameBtn, paceBtn, showProgressBtn, replaceBtn);
-  pregameBtn.onclick = (event) => { pregameOn = !pregameOn; event.target.className = 'btn-toggle ' + (pregameOn ? 'primary' : ''); refreshPreview(); };
-  paceBtn.onclick = (event) => { paceOn = !paceOn; event.target.className = 'btn-toggle ' + (paceOn ? 'primary' : ''); refreshPreview(); };
-  showProgressBtn.onclick = (event) => { showProgressOn = !showProgressOn; event.target.className = 'btn-toggle ' + (showProgressOn ? 'primary' : ''); refreshPreview(); };
-  replaceBtn.onclick = (event) => { replaceOn = !replaceOn; event.target.className = 'btn-toggle ' + (replaceOn ? 'primary' : ''); refreshPreview(); };
+  pregameBtn.onclick = (event) => { pregameOn = !pregameOn; event.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); refreshPreview(); };
+  paceBtn.onclick = (event) => { paceOn = !paceOn; event.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); refreshPreview(); };
+  showProgressBtn.onclick = (event) => { showProgressOn = !showProgressOn; event.target.className = 'check-toggle ' + (showProgressOn ? 'on' : 'off'); refreshPreview(); };
+  replaceBtn.onclick = (event) => { replaceOn = !replaceOn; event.target.className = 'check-toggle ' + (replaceOn ? 'on' : 'off'); refreshPreview(); };
 
   const options = () => ({ pregame: pregameOn, pace_of_play: paceOn, replace_conflicts: replaceOn, show_progress_through_end: showProgressOn });
 
   // Outputs driven from global settings: only enabled relays are offered,
   // each with its own duration field for Game Start and Game Expires.
+  // Durations are hidden via the wrapping .duration div (not the input itself)
+  // so toggling on/off reliably shows/hides the field.
   const relayNames = RELAY_NAMES();
   const makeRelayRow = (label, toggles, durs) => {
     const row = el('div', { class: 'row-actions', style: 'margin-bottom: 10px; gap: 10px; align-items: center' },
       el('span', { class: 'muted small', style: 'margin-right: 8px' }, label));
     for (let i = 0; i < toggles.length; i++) {
-      durs[i].style.display = 'none';
+      const durWrap = el('div', { class: 'duration', style: 'display:none', gap: 6 }, durs[i], el('span', {}, 's'));
       row.append(toggles[i]);
-      row.append(el('div', { class: 'duration', gap: 6 }, durs[i], el('span', {}, 's')));
+      row.append(durWrap);
+      toggles[i]._durWrap = durWrap;
     }
     return row;
   };
@@ -768,25 +801,21 @@ function buildQuickForm() {
   const startRow = relayNames.length ? makeRelayRow('Game Start:', startToggles, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
   const endRow = relayNames.length ? makeRelayRow('Warning Countdown Ends:', endToggles, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
 
-  const relayValues = (toggles) => toggles.filter((b, i) => b.className.includes('primary')).map((b, i) => relayNames[i] || `RELAY${i + 1}`);
+  // relayValues: collect names of enabled relays by original index (filter()
+  // reindexes, so we must carry the original position explicitly).
+  const relayValues = (toggles) => toggles.map((b, i) => b.className.includes('on') ? relayNames[i] : null).filter(Boolean);
   const relayMaxDuration = (durs) => { let m = 0; for (const d of durs) { const v = Number(d.value) || 0; if (v > m) m = v; } return m || null; };
 
-  startToggles.forEach((btn, i) => {
+  const wireRelayToggle = (toggles) => toggles.forEach((btn) => {
     btn.onclick = (event) => {
-      const next = !btn.className.includes('primary');
-      btn.className = 'btn-toggle ' + (next ? 'primary' : '');
-      btn.nextElementSibling.style.display = next ? '' : 'none';
+      const next = !btn.className.includes('on');
+      btn.className = 'check-toggle ' + (next ? 'on' : 'off');
+      btn._durWrap.style.display = next ? '' : 'none';
       refreshPreview();
     };
   });
-  endToggles.forEach((btn, i) => {
-    btn.onclick = (event) => {
-      const next = !btn.className.includes('primary');
-      btn.className = 'btn-toggle ' + (next ? 'primary' : '');
-      btn.nextElementSibling.style.display = next ? '' : 'none';
-      refreshPreview();
-    };
-  });
+  wireRelayToggle(startToggles);
+  wireRelayToggle(endToggles);
   const refreshPreview = () => {
     const s = Number(minutes.value) || 0;
     const sec = Number(seconds.value) || 0;
@@ -903,14 +932,14 @@ function buildQuickForm() {
     const cv = state.configValues || ((state.configOriginal && state.configOriginal.config) || {});
     const pg = Number((cv && cv['config.pregame_countdown'] != null) ? cv['config.pregame_countdown'] : (st.pregame_countdown_seconds != null ? st.pregame_countdown_seconds : 0)) || 0;
     pregameOn = pg > 0;
-    pregameBtn.className = 'btn-toggle ' + (pregameOn ? 'primary' : '');
+    pregameBtn.className = 'check-toggle ' + (pregameOn ? 'on' : 'off');
     pregameMin.value = String(Math.floor(pg / 60));
     pregameSec.value = String(pg % 60);
     const paceEnabled = cv && cv['config.pace_of_play.enabled'] != null ? !!cv['config.pace_of_play.enabled'] : true;
     paceOn = !!paceEnabled;
-    paceBtn.className = 'btn-toggle ' + (paceOn ? 'primary' : '');
+    paceBtn.className = 'check-toggle ' + (paceOn ? 'on' : 'off');
     showProgressOn = true;
-    showProgressBtn.className = 'btn-toggle primary';
+    showProgressBtn.className = 'check-toggle on';
     refreshPreview();
     form._defaultsApplied = true;
   };
@@ -1309,6 +1338,89 @@ function newEntry(previous) {
            pregame_countdown: null, end_count: null, stones_per_end: null, untimed_ends: null, show_progress_through_end: null };
 }
 
+// Helper: map toggle buttons to relay names by original index (filter reindexes).
+function relayNamesFromToggles(toggles) { return toggles.map((b,i) => b.className.includes('on') ? RELAY_NAMES()[i] : null).filter(Boolean); }
+
+// ---- Open Quick-Game-style modal for adding a scheduled game ----
+function openScheduleGameModal(dayKey, entries, rerender) {
+  // Build a local helper: collect enabled relay names from toggle buttons
+  function collectRelays(toggles) { return toggles.map((b,i) => b.className.includes('on') ? RELAY_NAMES()[i] : null).filter(Boolean); }
+
+  // --- timing ---
+  const startIn = el('input', { type: 'time', step: 60, value: '19:00', placeholder: 'HH:MM' });
+  const buzzerIn = el('input', { type: 'time', step: 60, value: '20:45', placeholder: 'HH:MM' });
+  const nameIn = el('input', { type: 'text', maxlength: 80, placeholder: 'League / event name' });
+  const endsIn = el('input', { type: 'number', min: 1, max: 12, value: '8', placeholder: 'ends' });
+  const stonesIn = el('input', { type: 'number', min: 1, max: 10, value: '8', placeholder: 'stones' });
+  const untimedIn = el('input', { type: 'number', min: 0, max: 6, value: '0', placeholder: 'extra ends' });
+
+  // --- option toggles ---
+  let pregameOn = true, progressOn = false, untimedTotalOn = false;
+  const pregameBtn = toggleBtn(pregameOn, 'Pre-game countdown');
+  const progressBtn = toggleBtn(progressOn, 'Show progress through end');
+  const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
+  pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); };
+  progressBtn.onclick = (e) => { progressOn = !progressOn; e.target.className = 'check-toggle ' + (progressOn ? 'on' : 'off'); };
+  untimedTotalBtn.onclick = (e) => { untimedTotalOn = !untimedTotalOn; e.target.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); };
+
+  // --- output rows ---
+  function makeOutRow(label) {
+    const toggles = [];
+    const durs = [];
+    const wrapper = el('div', { class: 'row-actions', style: 'margin-bottom: 10px; gap: 10px; align-items: center' },
+      el('span', { class: 'muted small', style: 'margin-right: 8px' }, label));
+    if (RELAY_NAMES().length) {
+      RELAY_NAMES().forEach((rn) => {
+        const btn = toggleBtn(false, rn);
+        const dur = el('input', { type: 'number', min: 0, max: 999, inputmode: 'numeric', placeholder: '0', value: '' });
+        const wrap = el('div', { class: 'duration', style: 'display:none', gap: 6 }, dur, el('span', {}, 's'));
+        btn.onclick = (e) => { const next = !btn.className.includes('on'); btn.className = 'check-toggle ' + (next ? 'on' : 'off'); wrap.style.display = next ? '' : 'none'; };
+        wrapper.append(btn, wrap);
+        toggles.push(btn); durs.push(dur);
+      });
+    } else wrapper.append(el('span', { class: 'muted small' }, '(no relay outputs enabled)'));
+    return { row: wrapper, toggles, durs };
+  }
+  const startOut = makeOutRow('Game Start:');
+  const endOut = makeOutRow('Warning Countdown Ends:');
+
+  // --- presets row ---
+  const presetRow = el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
+    el('button', { class: 'btn preset', type: 'button', onclick: () => {
+      const st = parseTime(startIn.value) || 9 * 3600;
+      buzzerIn.value = hms(Math.min(st + 105 * 60, 86340)).slice(0, 5);
+    } }, '8 ends'),
+    el('button', { class: 'btn preset', type: 'button', onclick: () => {
+      const st = parseTime(startIn.value) || 9 * 3600;
+      buzzerIn.value = hms(Math.min(st + 75 * 60, 86340)).slice(0, 5);
+    } }, '6 ends'),
+    el('button', { class: 'btn preset', type: 'button', onclick: () => {
+      const st = parseTime(startIn.value) || 9 * 3600;
+      buzzerIn.value = hms(Math.min(st + 7 * 60, 86340)).slice(0, 5);
+    } }, 'Practice'));
+
+  // --- body ---
+  const body = el('div', { class: 'modal-card', style: 'max-width:640px;width:100%;padding:20px' }, el('h3', {}, 'Add new game'),
+    el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
+      el('div', {}, el('label', {}, 'Start time'), startIn),
+      el('div', {}, el('label', {}, 'Buzzer / end time'), buzzerIn)),
+    el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
+      el('div', {}, el('label', {}, 'League name'), nameIn),
+      el('div', {}, el('label', {}, 'Ends'), endsIn)),
+    el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 6px' },
+      el('div', {}, el('label', {}, 'Stones per end'), stonesIn),
+      el('div', {}, el('label', {}, 'Ends after expiration'), untimedIn)),
+    el('div', {}, presetRow),
+    el('div', {}, startOut.row),
+    el('div', {}, endOut.row),
+    el('div', { class: 'row-actions', style: 'margin-top: 20px' },
+      el('button', { class: 'btn danger', onclick: () => { const st = parseTime(startIn.value); const bz = parseTime(buzzerIn.value); if (st == null || bz == null) { showMessage('Enter valid times'); return; } if (st >= bz) { showMessage('Buzzer must be after start'); return; } const maxDur = (durs) => { let m = 0; for (const d of durs) { const v = Number(d.value) || 0; if (v > m) m = v; } return m || null; }; entries.push({ start: st, buzzer: bz, name: nameIn.value.trim() || null, game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false, league: null, pregame_countdown: pregameOn ? 300 : null, end_count: Number(endsIn.value) || 8, stones_per_end: Number(stonesIn.value) || 8, untimed_ends: Number(untimedIn.value) || 0, show_progress_through_end: progressOn, total_time_includes_untimed_ends: untimedTotalOn, start_relays: collectRelays(startOut.toggles), start_duration: maxDur(startOut.durs), end_relays: collectRelays(endOut.toggles), end_duration: maxDur(endOut.durs) }); setDirty(true); rerender(); document.body.removeChild(modal); showMessage('Game added to schedule', 'ok'); } }, 'Add game'),
+      el('button', { class: 'btn primary', onclick: () => document.body.removeChild(modal) }, 'Cancel')));
+
+  const modal = el('div', { class: 'modal show' }, el('div', { class: 'modal-backdrop' }), body);
+  document.body.append(modal);
+}
+
 function entryEditor(entries, index, leagues, rerender) {
   const entry = entries[index];
   const changed = () => setDirty(true);
@@ -1343,8 +1455,8 @@ function entryEditor(entries, index, leagues, rerender) {
     el('option', { value: '', selected: !entry.league }, '(none)'),
     ...(leagues || []).map((l) => el('option', { value: l.name, selected: entry.league === l.name }, l.name)));
 
-  // ---- Game option toggles (enabled / disabled buttons instead of checkboxes) ----
-  const toggleBtn = (on, label) => el('button', { class: 'btn-toggle ' + (on ? 'primary' : ''), type: 'button' }, label);
+  // ---- Game option toggles (modern pill switches) ----
+  const toggleBtn = (on, label) => el('button', { class: 'check-toggle ' + (on ? 'on' : 'off'), type: 'button', 'aria-pressed': String(on), 'aria-label': label }, on ? 'ON' : 'OFF');
 
   let pgEnabled = entry.pregame_countdown != null && entry.pregame_countdown > 0;
   const pgBtn = toggleBtn(pgEnabled, 'Pre-game countdown');
@@ -1352,12 +1464,12 @@ function entryEditor(entries, index, leagues, rerender) {
   const pgM = el('input', { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: 'default', value: pgTotal != null ? Math.floor(pgTotal / 60) : '' });
   const pgS = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', value: pgTotal != null ? (pgTotal % 60) : '' });
   const syncPg = () => {
-    if (pgM.value === '' && pgS.value === '') { entry.pregame_countdown = null; pgEnabled = false; pgBtn.className = 'btn-toggle'; }
-    else { entry.pregame_countdown = (parseInt(pgM.value || '0', 10) || 0) * 60 + (parseInt(pgS.value || '0', 10) || 0); pgEnabled = true; pgBtn.className = 'btn-toggle primary'; }
+    if (pgM.value === '' && pgS.value === '') { entry.pregame_countdown = null; pgEnabled = false; pgBtn.className = 'check-toggle off'; }
+    else { entry.pregame_countdown = (parseInt(pgM.value || '0', 10) || 0) * 60 + (parseInt(pgS.value || '0', 10) || 0); pgEnabled = true; pgBtn.className = 'check-toggle on'; }
     changed();
   };
   pgM.onchange = syncPg; pgS.onchange = syncPg;
-  pgBtn.onclick = (event) => { const next = !pgEnabled; pgEnabled = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); pgFields.style.display = next ? 'flex' : 'none'; if (next && entry.pregame_countdown == null) entry.pregame_countdown = 0; else if (!next) entry.pregame_countdown = null; changed(); };
+  pgBtn.onclick = (event) => { const next = !pgEnabled; pgEnabled = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); pgFields.style.display = next ? 'flex' : 'none'; if (next && entry.pregame_countdown == null) entry.pregame_countdown = 0; else if (!next) entry.pregame_countdown = null; changed(); };
   const pgFields = el('div', { class: 'duration', role: 'group', 'aria-label': 'Pre-game countdown duration', style: pgEnabled ? '' : 'display:none' }, pgM, el('span', {}, 'min'), pgS, el('span', {}, 's'));
   pgFields.querySelectorAll('input').forEach((i) => i.oninput = () => { syncPg(); i.onchange(); });
 
@@ -1376,7 +1488,7 @@ function entryEditor(entries, index, leagues, rerender) {
 
   let manualOn = !!entry.manual_trigger && isAddonEnabled('pushbutton');
   const manualBtn = toggleBtn(manualOn, 'Manual push-button trigger');
-  manualBtn.onclick = (event) => { const next = !manualOn; manualOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); entry.manual_trigger = next; changed(); };
+  manualBtn.onclick = (event) => { const next = !manualOn; manualOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); entry.manual_trigger = next; changed(); };
 
   let progressOn = entry.show_progress_through_end === true;
   const progressBtn = toggleBtn(progressOn, 'Show progress through end');
@@ -1385,12 +1497,12 @@ function entryEditor(entries, index, leagues, rerender) {
     oninput: (event) => { entry.skip_multiplier = Number(event.target.value) || null; changed(); } });
   const skipRow = el('div', { class: 'duration', style: progressOn ? '' : 'display:none', gap: 6 },
     el('span', { class: 'muted small' }, 'Skip multiplier'), skipInput, el('span', {}, 'x'));
-  progressBtn.onclick = (event) => { const next = !progressOn; progressOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); skipRow.style.display = next ? '' : 'none'; entry.show_progress_through_end = next; if (next && entry.skip_multiplier == null) entry.skip_multiplier = 1.4; changed(); };
+  progressBtn.onclick = (event) => { const next = !progressOn; progressOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); skipRow.style.display = next ? '' : 'none'; entry.show_progress_through_end = next; if (next && entry.skip_multiplier == null) entry.skip_multiplier = 1.4; changed(); };
   skipInput.onchange = () => changed();
 
   let untimedTotalOn = entry.total_time_includes_untimed_ends === true;
   const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
-  untimedTotalBtn.onclick = (event) => { const next = !untimedTotalOn; untimedTotalOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); entry.total_time_includes_untimed_ends = next; changed(); };
+  untimedTotalBtn.onclick = (event) => { const next = !untimedTotalOn; untimedTotalOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); entry.total_time_includes_untimed_ends = next; changed(); };
 
   // ---- Notifications (relays) as toggle buttons instead of checkboxes ----
   const outputInfos = enabledOutputInfos();
@@ -1403,11 +1515,13 @@ function entryEditor(entries, index, leagues, rerender) {
     outputInfos.forEach((info) => {
       const active = on(info);
       const btn = toggleBtn(active, info.label);
-      btn.onclick = (event) => { const next = !active; btn.className = 'btn-toggle ' + (next ? 'primary' : ''); dur.style.display = next ? '' : 'none'; setRelays(which, next ? [...((entry[which + '_relays'] || [])).concat([info.id])] : (entry[which + '_relays'] || []).filter((x) => x !== info.id)); changed(); };
       const dur = durField(info, active);
+      const durWrap = el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 's'));
+      // Read current state from the DOM, not the captured `active` closure.
+      btn.onclick = (event) => { const next = !btn.className.includes('on'); btn.className = 'check-toggle ' + (next ? 'on' : 'off'); durWrap.style.display = next ? '' : 'none'; setRelays(which, next ? [...((entry[which + '_relays'] || [])).concat([info.id])] : (entry[which + '_relays'] || []).filter((x) => x !== info.id)); changed(); };
       dur.oninput = (event) => { setDuration(which, event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0)); changed(); };
       row.append(btn);
-      row.append(el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 's')));
+      row.append(durWrap);
     });
     return row;
   };
@@ -1516,8 +1630,7 @@ function renderSchedule() {
       badge: day === todayWeekday ? el('span', { class: 'pill ok' }, 'today') : null,
       body: [entryList(entries, state.leagues, renderSchedule),
         el('div', { class: 'row-actions' },
-          el('button', { class: 'btn', onclick: () => {
-            entries.push(newEntry(entries[entries.length - 1])); setDirty(true); renderSchedule(); } }, '+ Add game'),
+          el('button', { class: 'btn', onclick: () => openScheduleGameModal(day, entries, renderSchedule) }, '+ Add game'),
           el('span', { class: 'spacer' }), copyTo)] }));
   }
   const excContainer = el('div', { class: 'stack', style: 'margin-top: 4px' });
@@ -1593,8 +1706,7 @@ function renderExceptions() {
           oninput: (event) => { day.note = event.target.value.trim(); noteText.textContent = day.note; setDirty(true); } }),
         entryList(day.entries, state.leagues, renderExceptions),
         el('div', { class: 'row-actions' },
-          el('button', { class: 'btn', onclick: () => {
-            day.entries.push(newEntry(day.entries[day.entries.length - 1])); setDirty(true); renderExceptions(); } }, '+ Add game'),
+          el('button', { class: 'btn', onclick: () => openScheduleGameModal(day.date, day.entries, renderExceptions) }, '+ Add game'),
           el('span', { class: 'spacer' }),
           el('button', { class: 'btn danger', title: 'Delete this date', onclick: () => {
             if (!confirm(`Delete the exception for ${day.date}? The weekly schedule will apply again.`)) return;
@@ -2301,12 +2413,12 @@ async function renderLeagues() {
       oninput: (ev) => { lp.untimed_ends = parseInt(ev.target.value || '0', 10); } });
     let progressOn = lp.show_progress_through_end === true;
     const progressBtn = toggleBtn(progressOn, 'Show progress through end');
-    progressBtn.onclick = (event) => { const next = !progressOn; progressOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); lp.show_progress_through_end = next; refreshLeaguePreview(); };
+    progressBtn.onclick = (event) => { const next = !progressOn; progressOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); lp.show_progress_through_end = next; refreshLeaguePreview(); };
     const cmbInput = el('input', { type: 'number', id: prefix + '-cmb', value: lp.countdown_minutes_before || '', min: 0,
       oninput: (ev) => { lp.countdown_minutes_before = parseInt(ev.target.value || '0', 10); } });
     let manualOn = !!lp.manual_trigger && isAddonEnabled('pushbutton');
     const manualBtn = toggleBtn(manualOn, 'Manual push-button trigger');
-    manualBtn.onclick = (event) => { const next = !manualOn; manualOn = next; event.target.className = 'btn-toggle ' + (next ? 'primary' : ''); lp.manual_trigger = next; refreshLeaguePreview(); };
+    manualBtn.onclick = (event) => { const next = !manualOn; manualOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); lp.manual_trigger = next; refreshLeaguePreview(); };
 
     const outputInfos = enabledOutputInfos();
     const buildNotificationRow = (which) => {
@@ -2318,11 +2430,13 @@ async function renderLeagues() {
       outputInfos.forEach((info) => {
         const active = on(info);
         const btn = toggleBtn(active, info.label);
-        btn.onclick = (event) => { const next = !active; btn.className = 'btn-toggle ' + (next ? 'primary' : ''); dur.style.display = next ? '' : 'none'; setRelays(which, next ? [...((lp[which + '_relays'] || [])).concat([info.id])] : (lp[which + '_relays'] || []).filter((x) => x !== info.id)); refreshLeaguePreview(); };
         const dur = durField(info, active);
+        const durWrap = el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 's'));
+        // Read current state from DOM, not the captured `active` closure.
+        btn.onclick = (event) => { const next = !btn.className.includes('on'); btn.className = 'check-toggle ' + (next ? 'on' : 'off'); durWrap.style.display = next ? '' : 'none'; setRelays(which, next ? [...((lp[which + '_relays'] || [])).concat([info.id])] : (lp[which + '_relays'] || []).filter((x) => x !== info.id)); refreshLeaguePreview(); };
         dur.oninput = (event) => { setDuration(which, event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0)); refreshLeaguePreview(); };
         row.append(btn);
-        row.append(el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 's')));
+        row.append(durWrap);
       });
       return row;
     };
