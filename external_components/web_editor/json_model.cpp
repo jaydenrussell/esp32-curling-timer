@@ -160,7 +160,10 @@ static void entry_into(JsonObject obj, const Entry &entry) {
     obj["show_progress_through_end"] = *entry.show_progress_through_end;
   else
     obj["show_progress_through_end"] = nullptr;
-  obj["total_time_includes_untimed_ends"] = entry.total_time_includes_untimed_ends.has_value() ? entry.total_time_includes_untimed_ends.value() : nullptr;
+  if (entry.total_time_includes_untimed_ends.has_value())
+    obj["total_time_includes_untimed_ends"] = entry.total_time_includes_untimed_ends.value();
+  else
+    obj["total_time_includes_untimed_ends"] = nullptr;
   obj["replace_conflicts"] = entry.replace_conflicts;
   if (entry.pregame_countdown_override.has_value())
     obj["pregame_countdown"] = *entry.pregame_countdown_override;
