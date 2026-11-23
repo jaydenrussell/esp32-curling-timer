@@ -219,19 +219,19 @@ button.btn.preset { font-size: 13px; padding: 8px 12px; min-height: 38px; }
   border-radius: 999px; padding: 0 12px;
   border: 1px solid var(--border);
   background: rgba(255,255,255,0.05);
-  color: var(--text-dim); font-size: 12px; font-weight: 700;
+  color: var(--text); font-size: 12px; font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center;
   transition: all .15s ease; cursor: pointer; flex-shrink: 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .check-toggle.on {
   background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: #042a0a; border-color: rgba(34,197,94,0.5);
+  color: var(--text); border-color: rgba(34,197,94,0.5);
   box-shadow: 0 4px 12px rgba(34,197,94,0.25);
 }
 .check-toggle.off {
   background: transparent;
-  color: #ef4444; border-color: rgba(239,68,68,0.55);
+  color: var(--text); border-color: rgba(239,68,68,0.55);
   box-shadow: none;
 }
 .check-toggle:hover:not(:disabled) { filter: brightness(1.1); }
@@ -250,6 +250,15 @@ input:focus, select:focus, textarea:focus {
   outline: none; border-color: rgba(34,211,238,0.55);
   box-shadow: 0 0 0 3px rgba(20,184,166,0.18); background: rgba(0,0,0,0.3);
 }
+/* Dark dropdown: select needs explicit dark background + light text so the
+   browser menu matches the rest of the dark theme. */
+select {
+  appearance: none; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%239fb7cf' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+  padding-right: 32px; cursor: pointer;
+}
+select option { background: #0b1a2e; color: var(--text); }
 textarea { width: 100%; min-height: 60vh; font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
 label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px; font-weight: 600; letter-spacing: 0.03em; }
 label.check { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; color: var(--text); font-weight: 500; }
@@ -403,7 +412,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.198</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.199</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -430,7 +439,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.198</span>
+    <span class="header-version">v2026.11.199</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -766,11 +775,11 @@ function buildQuickForm() {
   let paceOn = true;
   let showProgressOn = true;
   let replaceOn = false;
-  const pregameBtn = toggleBtn(pregameOn, 'Enable pre-game countdown');
+  const pregameBtn = toggleBtn(pregameOn, 'Wig Wag Countdown');
   const paceBtn = toggleBtn(paceOn, 'Pace of play');
-  const showProgressBtn = toggleBtn(showProgressOn, 'Show progress through end');
-  const replaceBtn = toggleBtn(replaceOn, 'Replace same-time games');
-  const pregameRow = el('div', { class: 'row-actions', style: 'margin: 0' },
+  const showProgressBtn = toggleBtn(showProgressOn, 'Show progress');
+  const replaceBtn = toggleBtn(replaceOn, 'Replace conflicts');
+  const pregameRow = el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px; flex-wrap: wrap' },
     pregameBtn, paceBtn, showProgressBtn, replaceBtn);
   pregameBtn.onclick = (event) => { pregameOn = !pregameOn; event.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); refreshPreview(); };
   paceBtn.onclick = (event) => { paceOn = !paceOn; event.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); refreshPreview(); };
@@ -835,7 +844,7 @@ function buildQuickForm() {
       el('div', { class: 'section-title', style: 'margin:0 0 10px' }, 'Preview — settings that will be applied'),
       previewLine('Game time', gameSecs === 0 ? '—' : durationText(gameSecs)),
       previewLine('Expires at', gameSecs === 0 ? '—' : pad(when.getHours()) + ':' + pad(when.getMinutes())),
-      previewLine('Pre-game countdown', pregameOn ? ((Number(pregameMin.value)||0) + 'm ' + (Number(pregameSec.value)||0) + 's') : 'Off'),
+      previewLine('Wig Wag Countdown', pregameOn ? ((Number(pregameMin.value)||0) + 'm ' + (Number(pregameSec.value)||0) + 's') : 'Off'),
       previewLine('Pace of play', paceOn ? 'On' : 'Off'),
       previewLine('Progress through end', showProgressOn ? 'On' : 'Off'),
       previewLine('Replace same-time games', replaceOn ? 'On' : 'Off'),
@@ -1263,12 +1272,26 @@ function countdownText(total) {
   return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
 }
 
-// fitMirrorText: adjusts mirror countdown font size to fit container
+// fitMirrorText: adjusts mirror countdown font size to fit container.
+// Respects the configured HDMI font size (set inline as font-size:${fcd}px
+// and stored in dataset.maxFont) and only shrinks it if the text overflows
+// the available width — so the web preview matches the HDMI output scale.
 function fitMirrorText() {
   const mc = $('mirror-countdown');
   if (!mc) return;
-  // Simple responsive scaling; fine-tune if needed
-  mc.style.fontSize = 'clamp(44px, 12vw, 72px)';
+  const maxFont = Number(mc.dataset.maxFont) || 0;
+  if (!maxFont) return;
+  const avail = Math.max(1, mc.clientWidth || 0);
+  const text = (mc.textContent || '').trim();
+  if (!text) return;
+  // Measure at the configured size; shrink proportionally if it overflows.
+  mc.style.fontSize = maxFont + 'px';
+  let tries = 0;
+  while (mc.scrollWidth > avail && tries < 24) {
+    const cur = parseFloat(mc.style.fontSize) || maxFont;
+    mc.style.fontSize = Math.max(24, cur * 0.92) + 'px';
+    tries++;
+  }
 }
 
 function readQuickForm(minutesInput, secondsInput, nameInput) {
@@ -1351,13 +1374,38 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   const startIn = el('input', { type: 'time', step: 60, value: '19:00', placeholder: 'HH:MM' });
   const buzzerIn = el('input', { type: 'time', step: 60, value: '20:45', placeholder: 'HH:MM' });
   const nameIn = el('input', { type: 'text', maxlength: 80, placeholder: 'League / event name' });
+  // League dropdown from existing leagues
+  let selectedLeague = null;
+  const leagueSelect = el('select', { onchange: (event) => {
+    const league = (state.leagues || []).find((l) => l.name === event.target.value);
+    selectedLeague = league || null;
+    if (league) {
+      nameIn.value = league.name || '';
+      if (league.end_count != null) endsIn.value = String(league.end_count);
+      if (league.stones_per_end != null) stonesIn.value = String(league.stones_per_end);
+      if (league.untimed_ends != null) untimedIn.value = String(league.untimed_ends);
+      if (league.show_progress_through_end != null) {
+        progressOn = !!league.show_progress_through_end;
+        progressBtn.className = 'check-toggle ' + (progressOn ? 'on' : 'off');
+      }
+      if (league.pregame_countdown_seconds != null) {
+        pregameOn = league.pregame_countdown_seconds > 0;
+        pregameBtn.className = 'check-toggle ' + (pregameOn ? 'on' : 'off');
+      }
+    } else {
+      nameIn.value = '';
+    }
+  } });
+  const leagueOpts = el('option', { value: '' }, '—');
+  ;(state.leagues || []).forEach((l) => { leagueOpts.append(el('option', { value: l.name }, l.name)); });
+  leagueSelect.append(leagueOpts);
   const endsIn = el('input', { type: 'number', min: 1, max: 12, value: '8', placeholder: 'ends' });
   const stonesIn = el('input', { type: 'number', min: 1, max: 10, value: '8', placeholder: 'stones' });
   const untimedIn = el('input', { type: 'number', min: 0, max: 6, value: '0', placeholder: 'extra ends' });
 
   // --- option toggles ---
   let pregameOn = true, progressOn = false, untimedTotalOn = false;
-  const pregameBtn = toggleBtn(pregameOn, 'Pre-game countdown');
+  const pregameBtn = toggleBtn(pregameOn, 'Wig Wag Countdown');
   const progressBtn = toggleBtn(progressOn, 'Show progress through end');
   const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
   pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); };
@@ -1372,7 +1420,9 @@ function openScheduleGameModal(dayKey, entries, rerender) {
       el('span', { class: 'muted small', style: 'margin-right: 8px' }, label));
     if (RELAY_NAMES().length) {
       RELAY_NAMES().forEach((rn) => {
-        const btn = toggleBtn(false, rn);
+        const i = Number(rn.replace('RELAY', ''));
+        const display = relayDisplayName(i) || rn;
+        const btn = toggleBtn(false, display);
         const dur = el('input', { type: 'number', min: 0, max: 999, inputmode: 'numeric', placeholder: '0', value: '' });
         const wrap = el('div', { class: 'duration', style: 'display:none', gap: 6 }, dur, el('span', {}, 's'));
         btn.onclick = (e) => { const next = !btn.className.includes('on'); btn.className = 'check-toggle ' + (next ? 'on' : 'off'); wrap.style.display = next ? '' : 'none'; };
@@ -1406,7 +1456,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
       el('div', {}, el('label', {}, 'Start time'), startIn),
       el('div', {}, el('label', {}, 'Buzzer / end time'), buzzerIn)),
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
-      el('div', {}, el('label', {}, 'League name'), nameIn),
+      el('div', {}, el('label', {}, 'League'), leagueSelect),
       el('div', {}, el('label', {}, 'Ends'), endsIn)),
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 6px' },
       el('div', {}, el('label', {}, 'Stones per end'), stonesIn),
@@ -1415,7 +1465,40 @@ function openScheduleGameModal(dayKey, entries, rerender) {
     el('div', {}, startOut.row),
     el('div', {}, endOut.row),
     el('div', { class: 'row-actions', style: 'margin-top: 20px' },
-      el('button', { class: 'btn danger', onclick: () => { const st = parseTime(startIn.value); const bz = parseTime(buzzerIn.value); if (st == null || bz == null) { showMessage('Enter valid times'); return; } if (st >= bz) { showMessage('Buzzer must be after start'); return; } const maxDur = (durs) => { let m = 0; for (const d of durs) { const v = Number(d.value) || 0; if (v > m) m = v; } return m || null; }; entries.push({ start: st, buzzer: bz, name: nameIn.value.trim() || null, game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false, league: null, pregame_countdown: pregameOn ? 300 : null, end_count: Number(endsIn.value) || 8, stones_per_end: Number(stonesIn.value) || 8, untimed_ends: Number(untimedIn.value) || 0, show_progress_through_end: progressOn, total_time_includes_untimed_ends: untimedTotalOn, start_relays: collectRelays(startOut.toggles), start_duration: maxDur(startOut.durs), end_relays: collectRelays(endOut.toggles), end_duration: maxDur(endOut.durs) }); setDirty(true); rerender(); document.body.removeChild(modal); showMessage('Game added to schedule', 'ok'); } }, 'Add game'),
+      el('button', { class: 'btn danger', onclick: () => {
+        const st = parseTime(startIn.value);
+        const bz = parseTime(buzzerIn.value);
+        if (st == null || bz == null) { showMessage('Enter valid times'); return; }
+        if (st >= bz) { showMessage('Buzzer must be after start'); return; }
+        const maxDur = (durs) => { let m = 0; for (const d of durs) { const v = Number(d.value) || 0; if (v > m) m = v; } return m || null; };
+        const league = selectedLeague || null;
+        entries.push({
+          start: st,
+          buzzer: bz,
+          name: nameIn.value.trim() || (league ? league.name : null),
+          game_completed: league ? league.header_text || null : null,
+          header_hold: league ? league.header_hold ?? null : null,
+          pace_of_play: null,
+          pace_unit_duration: null,
+          quick: false,
+          league: league ? league.name : null,
+          pregame_countdown: league ? (league.pregame_countdown_seconds ?? (pregameOn ? 300 : null)) : (pregameOn ? 300 : null),
+          end_count: Number(endsIn.value) || (league ? league.end_count : 8),
+          stones_per_end: Number(stonesIn.value) || (league ? league.stones_per_end : 8),
+          untimed_ends: Number(untimedIn.value) || (league ? league.untimed_ends : 0),
+          show_progress_through_end: progressOn,
+          total_time_includes_untimed_ends: untimedTotalOn,
+          start_relays: collectRelays(startOut.toggles),
+          start_duration: maxDur(startOut.durs),
+          end_relays: collectRelays(endOut.toggles),
+          end_duration: maxDur(endOut.durs),
+          manual_trigger: league ? !!league.manual_trigger : undefined
+        });
+        setDirty(true);
+        rerender();
+        document.body.removeChild(modal);
+        showMessage('Game added to schedule', 'ok');
+      } }, 'Add game'),
       el('button', { class: 'btn primary', onclick: () => document.body.removeChild(modal) }, 'Cancel')));
 
   const modal = el('div', { class: 'modal show' }, el('div', { class: 'modal-backdrop' }), body);
@@ -1458,7 +1541,7 @@ function entryEditor(entries, index, leagues, rerender) {
 
   // ---- Game option toggles (modern pill switches) ----
   let pgEnabled = entry.pregame_countdown != null && entry.pregame_countdown > 0;
-  const pgBtn = toggleBtn(pgEnabled, 'Pre-game countdown');
+  const pgBtn = toggleBtn(pgEnabled, 'Wig Wag Countdown');
   const pgTotal = (entry.pregame_countdown != null) ? Number(entry.pregame_countdown) : null;
   const pgM = el('input', { type: 'number', min: 0, step: 1, inputmode: 'numeric', placeholder: 'default', value: pgTotal != null ? Math.floor(pgTotal / 60) : '' });
   const pgS = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: '0', value: pgTotal != null ? (pgTotal % 60) : '' });
