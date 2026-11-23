@@ -415,7 +415,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.199</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.200</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -442,7 +442,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.199</span>
+    <span class="header-version">v2026.11.200</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -791,7 +791,7 @@ function buildQuickForm() {
   showProgressBtn.onclick = (event) => { showProgressOn = !showProgressOn; event.target.className = 'check-toggle ' + (showProgressOn ? 'on' : 'off'); refreshPreview(); };
   replaceBtn.onclick = (event) => { replaceOn = !replaceOn; event.target.className = 'check-toggle ' + (replaceOn ? 'on' : 'off'); refreshPreview(); };
 
-  const options = () => ({ pregame: pregameOn, pace_of_play: paceOn, replace_conflicts: replaceOn, show_progress_through_end: showProgressOn, untimed_total_ends: untimedTotalOn });
+  const options = () => ({ pregame: pregameOn, pace_of_play: paceOn, replace_conflicts: replaceOn, show_progress_through_end: showProgressOn, total_time_includes_untimed_ends: untimedTotalOn });
 
   // Outputs driven from global settings: only enabled relays are offered,
   // each with its own duration field for Game Start and Game Expires.
@@ -883,7 +883,7 @@ function buildQuickForm() {
   const wire = (input) => { input.addEventListener('input', refreshPreview); input.addEventListener('change', refreshPreview); };
   wire(minutes); wire(seconds); wire(expiresMin);
   wire(pregameMin); wire(pregameSec);
-  [pregameBtn, paceBtn, showProgressBtn, replaceBtn].forEach(b => { b.addEventListener('click', refreshPreview); });
+  [pregameBtn, paceBtn, showProgressBtn, untimedTotalBtn, replaceBtn].forEach(b => { b.addEventListener('click', refreshPreview); });
   [stonesPerEnd, endCount, untimedEnds].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
   [...startToggles, ...startDurs, ...endToggles, ...endDurs].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
 
@@ -933,7 +933,7 @@ function buildQuickForm() {
       el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends after the buzzer so the game can finish naturally instead of cutting off mid-end.')),
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 8px' }, 'Game options'),
-      pregameRow),
+      gameOptionsRow),
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 4px' }, 'Outputs'),
       el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
@@ -1415,7 +1415,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   const untimedIn = el('input', { type: 'number', min: 0, max: 6, value: '0', placeholder: 'extra ends' });
 
   // --- option toggles ---
-  let pregameOn = true, paceOn = false, untimedTotalOn = false, replaceOn = false;
+  let pregameOn = true, paceOn = false, progressOn = false, untimedTotalOn = false, replaceOn = false;
   const pregameBtn = toggleBtn(pregameOn, 'Pre-Game Countdown');
   const paceBtn = toggleBtn(paceOn, 'Pace of play');
   const progressBtn = toggleBtn(progressOn, 'Show progress through end');
@@ -2771,4 +2771,4 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-</html>)esphome_web_ui";
+</html>)esphome_web_ui\";
