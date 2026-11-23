@@ -1452,16 +1452,36 @@ function openScheduleGameModal(dayKey, entries, rerender) {
 
   // --- body ---
   const body = el('div', { class: 'modal-card', style: 'max-width:640px;width:100%;padding:20px' }, el('h3', {}, 'Add new game'),
+    // --- Quick picks at top ---
+    el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
+      el('button', { class: 'btn preset', type: 'button', onclick: () => {
+        const st = parseTime(startIn.value) || 9 * 3600;
+        buzzerIn.value = hms(Math.min(st + 105 * 60, 86340)).slice(0, 5);
+      } }, '8 ends'),
+      el('button', { class: 'btn preset', type: 'button', onclick: () => {
+        const st = parseTime(startIn.value) || 9 * 3600;
+        buzzerIn.value = hms(Math.min(st + 75 * 60, 86340)).slice(0, 5);
+      } }, '6 ends'),
+      el('button', { class: 'btn preset', type: 'button', onclick: () => {
+        const st = parseTime(startIn.value) || 9 * 3600;
+        buzzerIn.value = hms(Math.min(st + 7 * 60, 86340)).slice(0, 5);
+      } }, 'Practice')),
+    // --- Game option toggles ---
+    el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px; flex-wrap: wrap' },
+      pregameBtn, progressBtn, untimedTotalBtn),
+    // --- timing ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
       el('div', {}, el('label', {}, 'Start time'), startIn),
       el('div', {}, el('label', {}, 'Buzzer / end time'), buzzerIn)),
+    // --- league and ends ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
       el('div', {}, el('label', {}, 'League'), leagueSelect),
       el('div', {}, el('label', {}, 'Ends'), endsIn)),
+    // --- stones and untimed ends ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 6px' },
       el('div', {}, el('label', {}, 'Stones per end'), stonesIn),
       el('div', {}, el('label', {}, 'Ends after expiration'), untimedIn)),
-    el('div', {}, presetRow),
+    // --- output rows ---
     el('div', {}, startOut.row),
     el('div', {}, endOut.row),
     el('div', { class: 'row-actions', style: 'margin-top: 20px' },
@@ -1481,18 +1501,13 @@ function openScheduleGameModal(dayKey, entries, rerender) {
           pace_of_play: null,
           pace_unit_duration: null,
           quick: false,
-          league: league ? league.name : null,
+          league: league ? league.name: null,
           pregame_countdown: league ? (league.pregame_countdown_seconds ?? (pregameOn ? 300 : null)) : (pregameOn ? 300 : null),
-          end_count: Number(endsIn.value) || (league ? league.end_count : 8),
-          stones_per_end: Number(stonesIn.value) || (league ? league.stones_per_end : 8),
-          untimed_ends: Number(untimedIn.value) || (league ? league.untimed_ends : 0),
+          end_count: Number(endsIn.value) || (league ? league.end_count: 8),
+          stones_per_end: Number(stonesIn.value) || (league ? league.stones_per_end: 8),
+          untimed_ends: Number(untimedIn.value) || (league ? league.untimed_ends: 0),
           show_progress_through_end: progressOn,
           total_time_includes_untimed_ends: untimedTotalOn,
-          start_relays: collectRelays(startOut.toggles),
-          start_duration: maxDur(startOut.durs),
-          end_relays: collectRelays(endOut.toggles),
-          end_duration: maxDur(endOut.durs),
-          manual_trigger: league ? !!league.manual_trigger : undefined
         });
         setDirty(true);
         rerender();
@@ -1830,7 +1845,7 @@ const CONFIG_SECTIONS = [
   { group: 'Display', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
     fields: [
       ['config.pregame_countdown', 'pregame_hms', 'Countdown', 0, 600],
-      ['config.pregame_blink', 'bool', 'Flash/blink pre-game countdown (safe, gentle)'],
+      ['config.pregame_blink', 'bool', 'Wig wag: countdown colon alternates top/bottom each second'],
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
       ['config.pregame_header_color', 'color', 'Header colour'],
       ['config.pregame_countdown_color', 'color', 'Countdown colour'],
