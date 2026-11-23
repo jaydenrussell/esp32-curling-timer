@@ -211,17 +211,18 @@ button.btn.icon { padding: 0; width: 42px; height: 42px; min-height: 42px; borde
 button.btn.icon svg { width: 18px; height: 18px; fill: currentColor; }
 button.btn.preset { font-size: 13px; padding: 8px 12px; min-height: 38px; }
 
-/* Modern check-toggle pills: small round switches, green=on / red=off.
+/* Modern check-toggle pills: green filled ON with label text; red outline OFF.
    Deliberately NOT the same gradient or sizing as action buttons so they
    read as settings toggles, not as "Start game" / "Save" buttons. */
 .check-toggle {
-  width: 44px; height: 26px; min-height: 0; min-width: 0;
-  border-radius: 999px; padding: 0;
+  min-width: 72px; height: 30px; min-height: 0; min-width: 0;
+  border-radius: 999px; padding: 0 12px;
   border: 1px solid var(--border);
-  background: rgba(255,255,255,0.06);
-  color: var(--text-dim); font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-dim); font-size: 12px; font-weight: 700;
   display: inline-flex; align-items: center; justify-content: center;
   transition: all .15s ease; cursor: pointer; flex-shrink: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .check-toggle.on {
   background: linear-gradient(135deg, #22c55e, #16a34a);
@@ -229,15 +230,15 @@ button.btn.preset { font-size: 13px; padding: 8px 12px; min-height: 38px; }
   box-shadow: 0 4px 12px rgba(34,197,94,0.25);
 }
 .check-toggle.off {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: #2a0404; border-color: rgba(239,68,68,0.5);
-  box-shadow: 0 4px 12px rgba(239,68,68,0.25);
+  background: transparent;
+  color: #ef4444; border-color: rgba(239,68,68,0.55);
+  box-shadow: none;
 }
 .check-toggle:hover:not(:disabled) { filter: brightness(1.1); }
 .check-toggle:disabled { opacity: 0.4; cursor: default; }
 
 input, select, textarea {
-  font: inherit; color: var(--text); background: rgba(255,255,255,0.05);
+  font: inherit; color: var(--text); background: rgba(0,0,0,0.2);
   border: 1px solid var(--border); border-radius: 12px; padding: 10px 13px;
   min-height: 44px; min-width: 0; font-size: 14px;
   transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
@@ -247,7 +248,7 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
 input[type="number"] { -moz-appearance: textfield; }
 input:focus, select:focus, textarea:focus {
   outline: none; border-color: rgba(34,211,238,0.55);
-  box-shadow: 0 0 0 3px rgba(20,184,166,0.18); background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 0 3px rgba(20,184,166,0.18); background: rgba(0,0,0,0.3);
 }
 textarea { width: 100%; min-height: 60vh; font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; }
 label { display: block; font-size: 12px; color: var(--muted); margin: 0 0 6px; font-weight: 600; letter-spacing: 0.03em; }
@@ -402,7 +403,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.197</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.198</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -429,7 +430,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.197</span>
+    <span class="header-version">v2026.11.198</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -552,7 +553,7 @@ function el(tag, props, ...children) {
 }
 const $ = (id) => document.getElementById(id);
 function toggleBtn(on, label) {
-  const btn = el('button', { class: 'check-toggle ' + (on ? 'on' : 'off'), type: 'button', 'aria-pressed': String(on), 'aria-label': label }, on ? 'ON' : 'OFF');
+  const btn = el('button', { class: 'check-toggle ' + (on ? 'on' : 'off'), type: 'button', 'aria-pressed': String(on), 'aria-label': label }, label);
   btn._on = !!on;
   btn._label = label;
   return btn;
@@ -1456,8 +1457,6 @@ function entryEditor(entries, index, leagues, rerender) {
     ...(leagues || []).map((l) => el('option', { value: l.name, selected: entry.league === l.name }, l.name)));
 
   // ---- Game option toggles (modern pill switches) ----
-  const toggleBtn = (on, label) => el('button', { class: 'check-toggle ' + (on ? 'on' : 'off'), type: 'button', 'aria-pressed': String(on), 'aria-label': label }, on ? 'ON' : 'OFF');
-
   let pgEnabled = entry.pregame_countdown != null && entry.pregame_countdown > 0;
   const pgBtn = toggleBtn(pgEnabled, 'Pre-game countdown');
   const pgTotal = (entry.pregame_countdown != null) ? Number(entry.pregame_countdown) : null;
@@ -1659,11 +1658,13 @@ function renderExceptions() {
   const today = todayIso();
   const date = el('input', { type: 'date', value: today, required: true });
   const note = el('input', { type: 'text', placeholder: 'Note, e.g. bonspiel name', maxlength: 80 });
-  const prefill = el('input', { type: 'checkbox', checked: true });
+  let prefillOn = true;
+  const prefill = toggleBtn(prefillOn, 'Start from weekly schedule');
+  prefill.onclick = (e) => { prefillOn = !prefillOn; e.target.className = 'check-toggle ' + (prefillOn ? 'on' : 'off'); };
   const add = el('form', { class: 'card', onsubmit: (event) => {
       event.preventDefault();
       if (m.exceptions.some((d) => d.date === date.value)) return showMessage(`${date.value} already has an exception`);
-      const entries = prefill.checked ? structuredClone(m.schedule[weekdayOf(date.value)]) : [];
+      const entries = prefillOn ? structuredClone(m.schedule[weekdayOf(date.value)]) : [];
       const day = { date: date.value, note: note.value.trim(), entries };
       const later = m.exceptions.findIndex((d) => d.date > day.date);
       m.exceptions.splice(later < 0 ? m.exceptions.length : later, 0, day);
@@ -1675,15 +1676,14 @@ function renderExceptions() {
     el('h3', {}, 'Create a date override'),
     el('p', { class: 'muted small', style: 'margin: 0' }, 'Replace one day\'s weekly schedule. Leave it with no games for a day without buzzers.'),
     el('div', { class: 'grid2' }, el('label', {}, 'Date', date), el('label', {}, 'Note', note)),
-    el('div', { class: 'row-actions' }, el('label', { class: 'check' }, prefill, 'Start from the weekly schedule for that day'),
+    el('div', { class: 'row-actions' }, prefill,
       el('button', { class: 'btn primary', type: 'submit' }, 'Add date')));
 
   const past = m.exceptions.filter((d) => d.date < today);
   let shown = [];
   const tools = el('div', { class: 'card', style: 'padding: 14px' },
     el('div', { class: 'row-actions', style: 'margin: 0' },
-      el('label', { class: 'check' }, el('input', { type: 'checkbox', checked: state.showPast,
-        onchange: (event) => { state.showPast = event.target.checked; renderExceptions(); } }), `Show past dates (${past.length})`),
+      (() => { const b = toggleBtn(state.showPast, 'Show past dates'); b.onclick = (e) => { state.showPast = !state.showPast; b.className = 'check-toggle ' + (state.showPast ? 'on' : 'off'); renderExceptions(); }; return b; })(),
       el('button', { class: 'btn danger', disabled: !past.length, onclick: () => {
         if (!confirm(`Remove ${past.length} past date(s)?`)) return;
         m.exceptions = m.exceptions.filter((d) => d.date >= today);
@@ -1910,8 +1910,10 @@ function configField(field) {
   }
 
   if (type === 'bool') {
-    return el('div', { class: 'field' }, el('label', { class: 'check' },
-      el('input', { type: 'checkbox', checked: value === true, onchange: (event) => set(event.target.checked) }), label));
+    let on = value === true;
+    const btn = toggleBtn(on, label);
+    btn.onclick = (e) => { on = !on; btn.className = 'check-toggle ' + (on ? 'on' : 'off'); state.configValues[path] = on; configTouched(); };
+    return el('div', { class: 'field' }, el('label', {}, btn));
   }
   if (type === 'pregame_hms') {
     const total = parseInt(value || '0', 10) || 0;
@@ -1994,22 +1996,26 @@ function configField(field) {
        RELAY_NAMES().map((name) => {
          const i = Number(name.replace('RELAY', ''));
          const display = relayDisplayName(i) || name;
-         return el('label', { class: 'check' },
-        el('input', { type: 'checkbox', checked: selected.includes(name), onchange: (event) => {
-          const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
-          const at = list.indexOf(name);
-          if (event.target.checked && at < 0) list.push(name);
-          if (!event.target.checked && at >= 0) {
-            list.splice(at, 1);
-            // Clearing a relay also drops its per-event duration overrides so
-            // stale values are not saved for an output that is no longer selected.
-            for (const ev of ['start', 'countdown', 'end']) {
-              const dp = `config.buzzer.${ev}_duration_${i}`;
-              if (dp in state.configValues) delete state.configValues[dp];
+         const checked = selected.includes(name);
+          const btn = toggleBtn(checked, display);
+          btn.onclick = () => {
+            const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
+            const at = list.indexOf(name);
+            if (at < 0) {
+              list.push(name);
+            } else {
+              list.splice(at, 1);
+              // Clearing a relay also drops its per-event duration overrides so
+              // stale values are not saved for an output that is no longer selected.
+              for (const ev of ['start', 'countdown', 'end']) {
+                const dp = `config.buzzer.${ev}_duration_${i}`;
+                if (dp in state.configValues) delete state.configValues[dp];
+              }
             }
-          }
-          set(list);
-        } }), display);
+            set(list);
+            btn.className = 'check-toggle ' + (list.includes(name) ? 'on' : 'off');
+          };
+          return btn;
        })));
    }
   return el('div', {}, label);
@@ -2114,7 +2120,7 @@ async function renderAddonMarketplace() {
     const pillText = a.auto ? (detected ? (intent ? 'Enabled' : 'Detected') : 'Not detected') : 'Manual';
     const btnDisabled = a.auto && !detected;
     const btnText = intent ? 'Disable' : 'Enable';
-    const btnCls = intent ? 'btn-toggle danger' : 'btn-toggle primary';
+    const btnCls = intent ? 'btn danger' : 'btn primary';
 
     const infoLines = (a.info || []).map((line) => el('div', { class: 'muted small', style: 'margin: 2px 0' }, line));
     const detail = el('details', { class: 'card fold', open: false },
