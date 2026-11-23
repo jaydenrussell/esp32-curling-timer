@@ -415,7 +415,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.200</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.201</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="password">Password</label>
   <input id="password" type="password" autocomplete="current-password" required>
@@ -442,7 +442,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.200</span>
+    <span class="header-version">v2026.11.201</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1384,49 +1384,77 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   const nameIn = el('input', { type: 'text', maxlength: 80, placeholder: 'League / event name' });
   // League dropdown from existing leagues
   let selectedLeague = null;
+  let customLeagueMode = false;
   const leagueSelect = el('select', { onchange: (event) => {
-    const league = (state.leagues || []).find((l) => l.name === event.target.value);
-    selectedLeague = league || null;
-    if (league) {
-      nameIn.value = league.name || '';
-      if (league.end_count != null) endsIn.value = String(league.end_count);
-      if (league.stones_per_end != null) stonesIn.value = String(league.stones_per_end);
-      if (league.untimed_ends != null) untimedIn.value = String(league.untimed_ends);
-      if (league.show_progress_through_end != null) {
-        progressOn = !!league.show_progress_through_end;
-        progressBtn.className = 'check-toggle ' + (progressOn ? 'on' : 'off');
-      }
-      if (league.pregame_countdown_seconds != null) {
-        pregameOn = league.pregame_countdown_seconds > 0;
-        pregameBtn.className = 'check-toggle ' + (pregameOn ? 'on' : 'off');
-      }
-      if (league.pace_enabled != null) { paceOn = !!league.pace_enabled; paceBtn.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); }
-      if (league.total_time_includes_untimed_ends != null) { untimedTotalOn = !!league.total_time_includes_untimed_ends; untimedTotalBtn.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); }
-      if (league.replace_conflicts != null) { replaceOn = !!league.replace_conflicts; replaceBtn.className = 'check-toggle ' + (replaceOn ? 'on' : 'off'); }
-    } else {
+    const value = event.target.value;
+    if (value === '__custom__') {
+      customLeagueMode = true;
+      selectedLeague = null;
+      customLeagueNameInput.style.display = '';
       nameIn.value = '';
+      presetRow.style.display = '';
+    } else {
+      customLeagueMode = false;
+      customLeagueNameInput.style.display = 'none';
+      const league = (state.leagues || []).find((l) => l.name === value);
+      selectedLeague = league || null;
+      if (league) {
+        nameIn.value = league.name || '';
+        if (league.end_count != null) endsIn.value = String(league.end_count);
+        if (league.stones_per_end != null) stonesIn.value = String(league.stones_per_end);
+        if (league.untimed_ends != null) untimedIn.value = String(league.untimed_ends);
+        if (league.show_progress_through_end != null) {
+          progressOn = !!league.show_progress_through_end;
+          progressBtn.className = 'check-toggle ' + (progressOn ? 'on' : 'off');
+        }
+        if (league.pregame_countdown_seconds != null) {
+          pregameOn = league.pregame_countdown_seconds > 0;
+          pregameBtn.className = 'check-toggle ' + (pregameOn ? 'on' : 'off');
+          pregameDurationInput.value = league.pregame_countdown_seconds > 0 ? String(league.pregame_countdown_seconds) : '300';
+          pregameDurationInput.style.display = pregameOn ? '' : 'none';
+        }
+        if (league.game_duration_minutes != null && startIn.value) {
+          const stSec = parseTime(startIn.value) || 9 * 3600;
+          buzzerIn.value = hms(Math.min(stSec + (league.game_duration_minutes || 0) * 60, 86340)).slice(0, 5);
+        }
+        if (league.pace_enabled != null) { paceOn = !!league.pace_enabled; paceBtn.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); }
+        if (league.total_time_includes_untimed_ends != null) { untimedTotalOn = !!league.total_time_includes_untimed_ends; untimedTotalBtn.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); }
+        if (league.replace_conflicts != null) { replaceOn = !!league.replace_conflicts; replaceBtn.className = 'check-toggle ' + (replaceOn ? 'on' : 'off'); }
+        if (league.manual_trigger != null) { manualOn = !!league.manual_trigger; manualBtn.className = 'check-toggle ' + (manualOn ? 'on' : 'off'); }
+        // populate output rows
+        populateOutputRows(league);
+        presetRow.style.display = 'none';
+      } else {
+        nameIn.value = '';
+        presetRow.style.display = '';
+      }
     }
   } });
-  const leagueOpts = el('option', { value: '' }, '—');
-  ;(state.leagues || []).forEach((l) => { leagueOpts.append(el('option', { value: l.name }, l.name)); });
-  leagueSelect.append(leagueOpts);
+  leagueSelect.append(el('option', { value: '' }, '—'));
+  ;(state.leagues || []).forEach((l) => { leagueSelect.append(el('option', { value: l.name }, l.name)); });
+  leagueSelect.append(el('option', { value: '__custom__' }, 'Custom league…'));
+  const customLeagueNameInput = el('input', { type: 'text', maxlength: 80, placeholder: 'Enter league name', style: 'display:none' });
   const endsIn = el('input', { type: 'number', min: 1, max: 12, value: '8', placeholder: 'ends' });
   const stonesIn = el('input', { type: 'number', min: 1, max: 10, value: '8', placeholder: 'stones' });
   const untimedIn = el('input', { type: 'number', min: 0, max: 6, value: '0', placeholder: 'extra ends' });
 
   // --- option toggles ---
-  let pregameOn = true, paceOn = false, progressOn = false, untimedTotalOn = false, replaceOn = false;
+  let pregameOn = true, paceOn = false, progressOn = false, untimedTotalOn = false, replaceOn = false, manualOn = false;
   const pregameBtn = toggleBtn(pregameOn, 'Pre-Game Countdown');
   const paceBtn = toggleBtn(paceOn, 'Pace of play');
   const progressBtn = toggleBtn(progressOn, 'Show progress through end');
   const showProgressBtn = progressBtn; // alias for body row
   const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
   const replaceBtn = toggleBtn(replaceOn, 'Replace conflicts');
-  pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); };
+  const manualBtn = toggleBtn(manualOn, 'Manual push-button trigger');
+  const pregameDurationInput = el('input', { type: 'number', min: 0, max: 3600, step: 1, inputmode: 'numeric', placeholder: 'seconds', value: '300', style: 'display:none; width:80px' });
+  pregameDurationInput.style.display = pregameOn ? '' : 'none';
+  pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); pregameDurationInput.style.display = pregameOn ? '' : 'none'; };
   paceBtn.onclick = (e) => { paceOn = !paceOn; e.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); };
   progressBtn.onclick = (e) => { progressOn = !progressOn; e.target.className = 'check-toggle ' + (progressOn ? 'on' : 'off'); };
   untimedTotalBtn.onclick = (e) => { untimedTotalOn = !untimedTotalOn; e.target.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); };
   replaceBtn.onclick = (e) => { replaceOn = !replaceOn; e.target.className = 'check-toggle ' + (replaceOn ? 'on' : 'off'); };
+  manualBtn.onclick = (e) => { manualOn = !manualOn; e.target.className = 'check-toggle ' + (manualOn ? 'on' : 'off'); };
 
   // --- output rows ---
   function makeOutRow(label) {
@@ -1450,6 +1478,21 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   }
   const startOut = makeOutRow('Game Start:');
   const endOut = makeOutRow('Warning Countdown Ends:');
+  function populateOutputRows(league) {
+    if (!league) return;
+    const setRow = (row, relays, durations) => {
+      row.toggles.forEach((btn, idx) => {
+        const i = Number(RELAY_NAMES()[idx].replace('RELAY', ''));
+        const on = (relays || []).some((r) => String(r) === String(i) || String(r) === RELAY_NAMES()[idx]);
+        const d = (durations || [])[idx];
+        btn.className = 'check-toggle ' + (on ? 'on' : 'off');
+        row.durs[idx].value = d != null ? String(d) : '';
+        row.durs[idx].parentElement.style.display = on ? '' : 'none';
+      });
+    };
+    setRow(startOut, league.start_relays, [league.start_duration]);
+    setRow(endOut, league.end_relays, [league.end_duration]);
+  }
 
   // --- presets row ---
   const presetRow = el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
@@ -1468,31 +1511,23 @@ function openScheduleGameModal(dayKey, entries, rerender) {
 
   // --- body ---
   const body = el('div', { class: 'modal-card', style: 'max-width:640px;width:100%;padding:20px' }, el('h3', {}, 'Add new game'),
-    // --- Quick picks at top ---
-    el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
-      el('button', { class: 'btn preset', type: 'button', onclick: () => {
-        const st = parseTime(startIn.value) || 9 * 3600;
-        buzzerIn.value = hms(Math.min(st + 105 * 60, 86340)).slice(0, 5);
-      } }, '8 ends'),
-      el('button', { class: 'btn preset', type: 'button', onclick: () => {
-        const st = parseTime(startIn.value) || 9 * 3600;
-        buzzerIn.value = hms(Math.min(st + 75 * 60, 86340)).slice(0, 5);
-      } }, '6 ends'),
-      el('button', { class: 'btn preset', type: 'button', onclick: () => {
-        const st = parseTime(startIn.value) || 9 * 3600;
-        buzzerIn.value = hms(Math.min(st + 7 * 60, 86340)).slice(0, 5);
-      } }, 'Practice')),
+    // --- league (first) ---
+    el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
+      el('div', {}, el('label', {}, 'League'), leagueSelect),
+      el('div', {}, customLeagueNameInput),
+      el('div', {}, el('label', {}, 'Ends'), endsIn)),
+    // --- presets (hidden when a league is chosen) ---
+    presetRow,
     // --- Game option toggles ---
     el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px; flex-wrap: wrap' },
-      pregameBtn, paceBtn, showProgressBtn, untimedTotalBtn, replaceBtn),
+      pregameBtn, paceBtn, showProgressBtn, untimedTotalBtn, replaceBtn, manualBtn),
+    // --- pregame countdown duration (shown when pregame is on) ---
+    el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px', id: 'schedulePregameDuration' },
+      el('span', { class: 'muted small' }, 'Pre-game countdown (seconds)'), pregameDurationInput),
     // --- timing ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
       el('div', {}, el('label', {}, 'Start time'), startIn),
       el('div', {}, el('label', {}, 'Buzzer / end time'), buzzerIn)),
-    // --- league and ends ---
-    el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
-      el('div', {}, el('label', {}, 'League'), leagueSelect),
-      el('div', {}, el('label', {}, 'Ends'), endsIn)),
     // --- stones and untimed ends ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 6px' },
       el('div', {}, el('label', {}, 'Stones per end'), stonesIn),
@@ -1508,23 +1543,34 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         if (st >= bz) { showMessage('Buzzer must be after start'); return; }
         const maxDur = (durs) => { let m = 0; for (const d of durs) { const v = Number(d.value) || 0; if (v > m) m = v; } return m || null; };
         const league = selectedLeague || null;
+        const leagueName = customLeagueMode ? (customLeagueNameInput.value.trim() || null) : (league ? league.name : null);
+        const pregameSecs = pregameOn ? (Number(pregameDurationInput.value) || 300) : null;
+        const startRelays = startOut.toggles.map((b,i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY','')) : null).filter(n => n != null);
+        const startDur = startOut.durs.map(d => Number(d.value) || 0);
+        const endRelays = endOut.toggles.map((b,i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY','')) : null).filter(n => n != null);
+        const endDur = endOut.durs.map(d => Number(d.value) || 0);
         entries.push({
           start: st,
           buzzer: bz,
-          name: nameIn.value.trim() || (league ? league.name : null),
+          name: leagueName,
           game_completed: league ? league.header_text || null : null,
           header_hold: league ? league.header_hold ?? null : null,
           pace_of_play: paceOn ? true : null,
           pace_unit_duration: null,
           quick: false,
-          league: league ? league.name: null,
-          pregame_countdown: league ? (league.pregame_countdown_seconds ?? (pregameOn ? 300 : null)) : (pregameOn ? 300 : null),
+          league: leagueName,
+          pregame_countdown: pregameSecs,
           end_count: Number(endsIn.value) || (league ? league.end_count: 8),
           stones_per_end: Number(stonesIn.value) || (league ? league.stones_per_end: 8),
           untimed_ends: Number(untimedIn.value) || (league ? league.untimed_ends: 0),
           show_progress_through_end: progressOn,
           total_time_includes_untimed_ends: untimedTotalOn,
           replace_conflicts: replaceOn,
+          manual_trigger: manualOn,
+          start_relays: startRelays.length ? startRelays : (league ? league.start_relays : null),
+          start_duration: startDur[0] || (league ? league.start_duration : null),
+          end_relays: endRelays.length ? endRelays : (league ? league.end_relays : null),
+          end_duration: endDur[0] || (league ? league.end_duration : null),
         });
         setDirty(true);
         rerender();
