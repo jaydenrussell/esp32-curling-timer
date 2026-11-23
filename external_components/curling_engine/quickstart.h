@@ -34,6 +34,7 @@ struct QuickStartOptions {
   std::optional<int> stones_per_end;
   std::optional<int> untimed_ends;
   std::optional<bool> show_progress_through_end;
+  bool total_time_includes_untimed_ends{false};
 };
 
 // Add a game starting now lasting duration seconds to today's exception in

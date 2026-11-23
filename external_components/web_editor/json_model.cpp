@@ -160,6 +160,8 @@ static void entry_into(JsonObject obj, const Entry &entry) {
     obj["show_progress_through_end"] = *entry.show_progress_through_end;
   else
     obj["show_progress_through_end"] = nullptr;
+  obj["total_time_includes_untimed_ends"] = entry.total_time_includes_untimed_ends;
+  obj["replace_conflicts"] = entry.replace_conflicts;
   if (entry.pregame_countdown_override.has_value())
     obj["pregame_countdown"] = *entry.pregame_countdown_override;
   else
@@ -253,6 +255,10 @@ static bool entry_from_json(JsonObjectConst data, const std::string &where, Entr
     entry->untimed_ends = static_cast<int>(data["untimed_ends"].as<long long>());
   if (!data["show_progress_through_end"].isNull())
     entry->show_progress_through_end = data["show_progress_through_end"].as<bool>();
+  if (!data["total_time_includes_untimed_ends"].isNull())
+    entry->total_time_includes_untimed_ends = data["total_time_includes_untimed_ends"].as<bool>();
+  if (!data["replace_conflicts"].isNull())
+    entry->replace_conflicts = data["replace_conflicts"].as<bool>();
   if (!data["pregame_countdown"].isNull())
     entry->pregame_countdown_override = static_cast<int>(data["pregame_countdown"].as<long long>());
   return true;

@@ -1854,6 +1854,10 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
           lp.untimed_ends = static_cast<int>(ue->i);
         if (const YamlValue *sp = lv.find("show_progress_through_end"); sp && sp->type == YType::Bool)
           lp.show_progress_through_end = sp->b;
+        if (const YamlValue *tt = lv.find("total_time_includes_untimed_ends"); tt && tt->type == YType::Bool)
+          lp.total_time_includes_untimed_ends = tt->b;
+        if (const YamlValue *rc = lv.find("replace_conflicts"); rc && rc->type == YType::Bool)
+          lp.replace_conflicts = rc->b;
         if (const YamlValue *sr = lv.find("start_relays"); sr && sr->type == YType::Seq)
           parse_relay_seq(*sr, "start_relays", "league", &lp.start_relays, err);
         if (const YamlValue *sd = lv.find("start_duration"); sd && sd->type == YType::Int)
@@ -1893,6 +1897,10 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
               if (!g.untimed_ends.has_value()) g.untimed_ends = lp.untimed_ends;
               if (!g.show_progress_through_end.has_value())
                 g.show_progress_through_end = lp.show_progress_through_end;
+              if (!g.total_time_includes_untimed_ends.has_value())
+                g.total_time_includes_untimed_ends = lp.total_time_includes_untimed_ends;
+              if (!g.replace_conflicts)
+                g.replace_conflicts = lp.replace_conflicts;
               if (!g.start_relays_override.has_value() && !lp.start_relays.empty())
                 g.start_relays_override = lp.start_relays;
               if (!g.start_duration_override.has_value() && lp.start_duration > 0)
@@ -1918,6 +1926,10 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
               if (!g.untimed_ends.has_value()) g.untimed_ends = lp.untimed_ends;
               if (!g.show_progress_through_end.has_value())
                 g.show_progress_through_end = lp.show_progress_through_end;
+              if (!g.total_time_includes_untimed_ends.has_value())
+                g.total_time_includes_untimed_ends = lp.total_time_includes_untimed_ends;
+              if (!g.replace_conflicts)
+                g.replace_conflicts = lp.replace_conflicts;
               if (!g.start_relays_override.has_value() && !lp.start_relays.empty())
                 g.start_relays_override = lp.start_relays;
               if (!g.start_duration_override.has_value() && lp.start_duration > 0)

@@ -639,6 +639,11 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
       return error_json(400, "'show_progress_through_end' must be true or false");
     opts.show_progress_through_end = data["show_progress_through_end"].as<bool>();
   }
+  if (!data["total_time_includes_untimed_ends"].isNull()) {
+    if (!data["total_time_includes_untimed_ends"].is<bool>())
+      return error_json(400, "'total_time_includes_untimed_ends' must be true or false");
+    opts.total_time_includes_untimed_ends = data["total_time_includes_untimed_ends"].as<bool>();
+  }
   Entry added;
   std::string new_version, err;
   SettingsStore *store = engine_->get_store();
@@ -1104,6 +1109,8 @@ ApiResponse PiTimerApi::get_leagues() {
     o["end_count"] = lp.end_count;
     o["untimed_ends"] = lp.untimed_ends;
     o["show_progress_through_end"] = lp.show_progress_through_end;
+    o["total_time_includes_untimed_ends"] = lp.total_time_includes_untimed_ends;
+    o["replace_conflicts"] = lp.replace_conflicts;
     JsonArray srs = o.createNestedArray("start_relays");
     for (const auto &r : lp.start_relays) srs.add(r.c_str());
     o["start_duration"] = lp.start_duration;
@@ -1146,6 +1153,8 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
     if (item["end_count"].is<int>()) yaml += "    end_count: " + std::to_string(item["end_count"].as<int>()) + "\n";
     if (item["untimed_ends"].is<int>()) yaml += "    untimed_ends: " + std::to_string(item["untimed_ends"].as<int>()) + "\n";
     if (item["show_progress_through_end"].is<bool>()) yaml += "    show_progress_through_end: " + std::string(item["show_progress_through_end"].as<bool>() ? "true" : "false") + "\n";
+    if (item["total_time_includes_untimed_ends"].is<bool>()) yaml += "    total_time_includes_untimed_ends: " + std::string(item["total_time_includes_untimed_ends"].as<bool>() ? "true" : "false") + "\n";
+    if (item["replace_conflicts"].is<bool>()) yaml += "    replace_conflicts: " + std::string(item["replace_conflicts"].as<bool>() ? "true" : "false") + "\n";
     yaml += "    manual_trigger: " + std::string(item["manual_trigger"].as<bool>() ? "true" : "false") + "\n";
     if (item["start_relays"].is<JsonArrayConst>()) {
       yaml += "    start_relays: [";

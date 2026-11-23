@@ -359,6 +359,17 @@ bool entry_from_map(const YamlValue &data, const std::string &where, Entry *out,
     }
     out->pregame_countdown_override = static_cast<int>(v->i);
   }
+  v = data.find("total_time_includes_untimed_ends");
+  out->total_time_includes_untimed_ends = std::nullopt;
+  if (v != nullptr && v->type != YType::Null) {
+    if (v->type != YType::Bool) {
+      *err = where + ": total_time_includes_untimed_ends must be true or false";
+      return false;
+    }
+    out->total_time_includes_untimed_ends = v->b;
+  }
+  v = data.find("replace_conflicts");
+  out->replace_conflicts = v != nullptr && v->type == YType::Bool && v->b;
   return true;
 }
 

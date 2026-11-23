@@ -73,6 +73,8 @@ struct LeagueProfile {
   int end_count{8};
   int untimed_ends{0};
   bool show_progress_through_end{true};
+  bool total_time_includes_untimed_ends{false};
+  bool replace_conflicts{false};
   // per-event output override for games in this league
   std::vector<std::string> start_relays;
   int start_duration{0};
@@ -103,6 +105,8 @@ struct PiTimerGame {
   std::optional<bool> show_progress_through_end;
   // per-game pre-game countdown override (seconds; absent = use global)
   std::optional<int> pregame_countdown_override;
+  std::optional<bool> total_time_includes_untimed_ends{false};
+  bool replace_conflicts{false};
   // live state, set on the copy returned by find_current_game
   std::optional<int> seconds_until_buzzer;
   std::optional<int> seconds_since_start;

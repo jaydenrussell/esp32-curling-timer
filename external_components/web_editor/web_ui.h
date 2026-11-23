@@ -1,4 +1,7 @@
-<!DOCTYPE html>
+// AUTO-GENERATED from web_ui.html by web_editor __init__.py at codegen time — edit web_ui.html, not this file.
+#pragma once
+
+static const char WEB_UI_HTML[] = R"esphome_web_ui(<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -774,19 +777,21 @@ function buildQuickForm() {
   let pregameOn = true;
   let paceOn = true;
   let showProgressOn = true;
+  let untimedTotalOn = false;
   let replaceOn = false;
-  const pregameBtn = toggleBtn(pregameOn, 'Wig Wag Countdown');
+  const pregameBtn = toggleBtn(pregameOn, 'Pre-Game Countdown');
   const paceBtn = toggleBtn(paceOn, 'Pace of play');
   const showProgressBtn = toggleBtn(showProgressOn, 'Show progress');
+  const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
   const replaceBtn = toggleBtn(replaceOn, 'Replace conflicts');
-  const pregameRow = el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px; flex-wrap: wrap' },
-    pregameBtn, paceBtn, showProgressBtn, replaceBtn);
+  const gameOptionsRow = el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px; flex-wrap: wrap' },
+    pregameBtn, paceBtn, showProgressBtn, untimedTotalBtn, replaceBtn);
   pregameBtn.onclick = (event) => { pregameOn = !pregameOn; event.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); refreshPreview(); };
   paceBtn.onclick = (event) => { paceOn = !paceOn; event.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); refreshPreview(); };
   showProgressBtn.onclick = (event) => { showProgressOn = !showProgressOn; event.target.className = 'check-toggle ' + (showProgressOn ? 'on' : 'off'); refreshPreview(); };
   replaceBtn.onclick = (event) => { replaceOn = !replaceOn; event.target.className = 'check-toggle ' + (replaceOn ? 'on' : 'off'); refreshPreview(); };
 
-  const options = () => ({ pregame: pregameOn, pace_of_play: paceOn, replace_conflicts: replaceOn, show_progress_through_end: showProgressOn });
+  const options = () => ({ pregame: pregameOn, pace_of_play: paceOn, replace_conflicts: replaceOn, show_progress_through_end: showProgressOn, untimed_total_ends: untimedTotalOn });
 
   // Outputs driven from global settings: only enabled relays are offered,
   // each with its own duration field for Game Start and Game Expires.
@@ -848,6 +853,7 @@ function buildQuickForm() {
       previewLine('Pace of play', paceOn ? 'On' : 'Off'),
       previewLine('Progress through end', showProgressOn ? 'On' : 'Off'),
       previewLine('Replace same-time games', replaceOn ? 'On' : 'Off'),
+      previewLine('Total time includes untimed ends', untimedTotalOn ? 'On' : 'Off'),
       previewLine('Stones per end', stonesPerEnd.value || 8),
       previewLine('Total ends', endCount.value || 8),
       previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
@@ -950,6 +956,8 @@ function buildQuickForm() {
     paceBtn.className = 'check-toggle ' + (paceOn ? 'on' : 'off');
     showProgressOn = true;
     showProgressBtn.className = 'check-toggle on';
+    untimedTotalOn = false;
+    untimedTotalBtn.className = 'check-toggle off';
     refreshPreview();
     form._defaultsApplied = true;
   };
@@ -1392,6 +1400,9 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         pregameOn = league.pregame_countdown_seconds > 0;
         pregameBtn.className = 'check-toggle ' + (pregameOn ? 'on' : 'off');
       }
+      if (league.pace_enabled != null) { paceOn = !!league.pace_enabled; paceBtn.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); }
+      if (league.total_time_includes_untimed_ends != null) { untimedTotalOn = !!league.total_time_includes_untimed_ends; untimedTotalBtn.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); }
+      if (league.replace_conflicts != null) { replaceOn = !!league.replace_conflicts; replaceBtn.className = 'check-toggle ' + (replaceOn ? 'on' : 'off'); }
     } else {
       nameIn.value = '';
     }
@@ -1404,13 +1415,18 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   const untimedIn = el('input', { type: 'number', min: 0, max: 6, value: '0', placeholder: 'extra ends' });
 
   // --- option toggles ---
-  let pregameOn = true, progressOn = false, untimedTotalOn = false;
-  const pregameBtn = toggleBtn(pregameOn, 'Wig Wag Countdown');
+  let pregameOn = true, paceOn = false, untimedTotalOn = false, replaceOn = false;
+  const pregameBtn = toggleBtn(pregameOn, 'Pre-Game Countdown');
+  const paceBtn = toggleBtn(paceOn, 'Pace of play');
   const progressBtn = toggleBtn(progressOn, 'Show progress through end');
+  const showProgressBtn = progressBtn; // alias for body row
   const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
+  const replaceBtn = toggleBtn(replaceOn, 'Replace conflicts');
   pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); };
+  paceBtn.onclick = (e) => { paceOn = !paceOn; e.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); };
   progressBtn.onclick = (e) => { progressOn = !progressOn; e.target.className = 'check-toggle ' + (progressOn ? 'on' : 'off'); };
   untimedTotalBtn.onclick = (e) => { untimedTotalOn = !untimedTotalOn; e.target.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); };
+  replaceBtn.onclick = (e) => { replaceOn = !replaceOn; e.target.className = 'check-toggle ' + (replaceOn ? 'on' : 'off'); };
 
   // --- output rows ---
   function makeOutRow(label) {
@@ -1452,16 +1468,36 @@ function openScheduleGameModal(dayKey, entries, rerender) {
 
   // --- body ---
   const body = el('div', { class: 'modal-card', style: 'max-width:640px;width:100%;padding:20px' }, el('h3', {}, 'Add new game'),
+    // --- Quick picks at top ---
+    el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
+      el('button', { class: 'btn preset', type: 'button', onclick: () => {
+        const st = parseTime(startIn.value) || 9 * 3600;
+        buzzerIn.value = hms(Math.min(st + 105 * 60, 86340)).slice(0, 5);
+      } }, '8 ends'),
+      el('button', { class: 'btn preset', type: 'button', onclick: () => {
+        const st = parseTime(startIn.value) || 9 * 3600;
+        buzzerIn.value = hms(Math.min(st + 75 * 60, 86340)).slice(0, 5);
+      } }, '6 ends'),
+      el('button', { class: 'btn preset', type: 'button', onclick: () => {
+        const st = parseTime(startIn.value) || 9 * 3600;
+        buzzerIn.value = hms(Math.min(st + 7 * 60, 86340)).slice(0, 5);
+      } }, 'Practice')),
+    // --- Game option toggles ---
+    el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px; flex-wrap: wrap' },
+      pregameBtn, paceBtn, showProgressBtn, untimedTotalBtn, replaceBtn),
+    // --- timing ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
       el('div', {}, el('label', {}, 'Start time'), startIn),
       el('div', {}, el('label', {}, 'Buzzer / end time'), buzzerIn)),
+    // --- league and ends ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
       el('div', {}, el('label', {}, 'League'), leagueSelect),
       el('div', {}, el('label', {}, 'Ends'), endsIn)),
+    // --- stones and untimed ends ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 6px' },
       el('div', {}, el('label', {}, 'Stones per end'), stonesIn),
       el('div', {}, el('label', {}, 'Ends after expiration'), untimedIn)),
-    el('div', {}, presetRow),
+    // --- output rows ---
     el('div', {}, startOut.row),
     el('div', {}, endOut.row),
     el('div', { class: 'row-actions', style: 'margin-top: 20px' },
@@ -1478,21 +1514,17 @@ function openScheduleGameModal(dayKey, entries, rerender) {
           name: nameIn.value.trim() || (league ? league.name : null),
           game_completed: league ? league.header_text || null : null,
           header_hold: league ? league.header_hold ?? null : null,
-          pace_of_play: null,
+          pace_of_play: paceOn ? true : null,
           pace_unit_duration: null,
           quick: false,
-          league: league ? league.name : null,
+          league: league ? league.name: null,
           pregame_countdown: league ? (league.pregame_countdown_seconds ?? (pregameOn ? 300 : null)) : (pregameOn ? 300 : null),
-          end_count: Number(endsIn.value) || (league ? league.end_count : 8),
-          stones_per_end: Number(stonesIn.value) || (league ? league.stones_per_end : 8),
-          untimed_ends: Number(untimedIn.value) || (league ? league.untimed_ends : 0),
+          end_count: Number(endsIn.value) || (league ? league.end_count: 8),
+          stones_per_end: Number(stonesIn.value) || (league ? league.stones_per_end: 8),
+          untimed_ends: Number(untimedIn.value) || (league ? league.untimed_ends: 0),
           show_progress_through_end: progressOn,
           total_time_includes_untimed_ends: untimedTotalOn,
-          start_relays: collectRelays(startOut.toggles),
-          start_duration: maxDur(startOut.durs),
-          end_relays: collectRelays(endOut.toggles),
-          end_duration: maxDur(endOut.durs),
-          manual_trigger: league ? !!league.manual_trigger : undefined
+          replace_conflicts: replaceOn,
         });
         setDirty(true);
         rerender();
@@ -1830,7 +1862,7 @@ const CONFIG_SECTIONS = [
   { group: 'Display', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
     fields: [
       ['config.pregame_countdown', 'pregame_hms', 'Countdown', 0, 600],
-      ['config.pregame_blink', 'bool', 'Flash/blink pre-game countdown (safe, gentle)'],
+      ['config.pregame_blink', 'bool', 'Wig wag: countdown colon alternates top/bottom each second'],
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
       ['config.pregame_header_color', 'color', 'Header colour'],
       ['config.pregame_countdown_color', 'color', 'Countdown colour'],
@@ -2508,6 +2540,15 @@ async function renderLeagues() {
     let manualOn = !!lp.manual_trigger && isAddonEnabled('pushbutton');
     const manualBtn = toggleBtn(manualOn, 'Manual push-button trigger');
     manualBtn.onclick = (event) => { const next = !manualOn; manualOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); lp.manual_trigger = next; refreshLeaguePreview(); };
+    let paceOn = !!lp.pace_enabled;
+    const paceBtn = toggleBtn(paceOn, 'Pace of play');
+    paceBtn.onclick = (event) => { const next = !paceOn; paceOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); lp.pace_enabled = next; refreshLeaguePreview(); };
+    let untimedTotalOn = !!lp.total_time_includes_untimed_ends;
+    const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
+    untimedTotalBtn.onclick = (event) => { const next = !untimedTotalOn; untimedTotalOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); lp.total_time_includes_untimed_ends = next; refreshLeaguePreview(); };
+    let replaceOn = !!lp.replace_conflicts;
+    const replaceBtn = toggleBtn(replaceOn, 'Replace conflicts');
+    replaceBtn.onclick = (event) => { const next = !replaceOn; replaceOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); lp.replace_conflicts = next; refreshLeaguePreview(); };
 
     const outputInfos = enabledOutputInfos();
     const buildNotificationRow = (which) => {
@@ -2559,7 +2600,10 @@ async function renderLeagues() {
         el('label', {}, 'Stones per end'), stonesInput,
         el('label', {}, 'Untimed ends'), untimedInput,
         progressBtn,
+        paceBtn,
+        untimedTotalBtn,
         el('label', {}, 'Countdown warning minutes before'), cmbInput,
+        replaceBtn,
         manualBtn,
         outputsCard));
   };
@@ -2597,7 +2641,8 @@ async function renderLeagues() {
     leagueFields(addLeagueDefaults = {
       name:'', game_duration_minutes:0, pregame_countdown_seconds:0, header_text:'',
       stones_per_end:8, end_count:8, untimed_ends:0, show_progress_through_end:true,
-      pace_enabled:false, countdown_minutes_before:0, manual_trigger:false,
+      pace_enabled:false, total_time_includes_untimed_ends:false, replace_conflicts:false,
+      countdown_minutes_before:0, manual_trigger:false,
       start_relays:[], start_duration:0, end_relays:[], end_duration:0
     }, 'lg-add'),
     el('div', { class: 'row-actions' }, el('button', { class: 'btn primary', type: 'submit' }, 'Add League')));
@@ -2726,4 +2771,4 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 </body>
-</html>
+</html>)esphome_web_ui";
