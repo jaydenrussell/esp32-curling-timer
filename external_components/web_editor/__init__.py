@@ -65,7 +65,9 @@ def component_version() -> str:
             timeout=5,
         ).decode().strip()
         if desc:
-            return desc
+            # `git describe --tags` already includes the leading "v" on this
+            # repo's tags; the callers prepend it when rendering the UI version.
+            return desc[1:] if desc.startswith("v") else desc
     except (subprocess.SubprocessError, OSError, FileNotFoundError):
         pass
     return (here / "VERSION").read_text(encoding="utf-8").strip()

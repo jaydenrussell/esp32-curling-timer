@@ -430,7 +430,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">vv2026.11.213</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.215</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -460,7 +460,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">vv2026.11.213</span>
+    <span class="header-version">v2026.11.215</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -656,8 +656,9 @@ function parseTime(value) {
   const secs = (+match[1]) * 3600 + (+match[2]) * 60 + (+(match[3] || 0));
   return secs < 86400 ? secs : null;
 }
-// Duration fields are minutes-only in the UI. Backend fields stay in whole
-// seconds; convert at the boundary so decimal minutes still work.
+// Game/countdown/hold durations are minutes-only in the UI; relay output
+// durations are entered in seconds. Backend fields always stay in whole
+// seconds, so convert at the boundary.
 function formatMinutes(seconds) {
   if (seconds == null || seconds === '') return '';
   return String(Number((Number(seconds) / 60).toFixed(3)));
@@ -669,6 +670,18 @@ function minutesToSeconds(minutes) {
 }
 function minuteInput(props) {
   return el('input', Object.assign({ type: 'number', min: 0, step: 0.05, inputmode: 'decimal' }, props || {}));
+}
+function formatSeconds(seconds) {
+  if (seconds == null || seconds === '') return '';
+  return String(Number(seconds));
+}
+function secondsValue(value) {
+  if (value === '' || value == null) return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.round(n) : null;
+}
+function secondInput(props) {
+  return el('input', Object.assign({ type: 'number', min: 0, step: 1, inputmode: 'numeric' }, props || {}));
 }
 const COUNTDOWN_MODE_DURATION = 'Duration before warning';
 const COUNTDOWN_MODE_BUZZER = 'Time before buzzer';
@@ -912,7 +925,7 @@ function buildQuickForm() {
     const row = el('div', { class: 'row-actions', style: 'margin-bottom: 10px; gap: 10px; align-items: center' },
       el('span', { class: 'muted small', style: 'margin-right: 8px' }, label));
     for (let i = 0; i < toggles.length; i++) {
-      const durWrap = el('div', { class: 'duration', style: 'display:none', gap: 6 }, durs[i], el('span', {}, 'min'));
+      const durWrap = el('div', { class: 'duration', style: 'display:none', gap: 6 }, durs[i], el('span', {}, 's'));
       row.append(toggles[i]);
       row.append(durWrap);
       toggles[i]._durWrap = durWrap;
@@ -920,9 +933,9 @@ function buildQuickForm() {
     return row;
   };
   const startToggles = relayNames.map((name) => toggleBtn(false, name));
-  const startDurs = relayNames.map(() => minuteInput({ max: 999, placeholder: '0', 'aria-label': 'Game start relay duration in minutes' }));
+  const startDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Game start relay duration in seconds' }));
   const endToggles = relayNames.map((name) => toggleBtn(false, name));
-  const endDurs = relayNames.map(() => minuteInput({ max: 999, placeholder: '0', 'aria-label': 'Game expires relay duration in minutes' }));
+  const endDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Game expires relay duration in seconds' }));
   const startRow = relayNames.length ? makeRelayRow('Game Start:', startToggles, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
   const endRow = relayNames.length ? makeRelayRow('Warning Countdown Ends:', endToggles, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
 
@@ -931,10 +944,10 @@ function buildQuickForm() {
   const relayValues = (toggles) => toggles.map((b, i) => b.className.includes('on') ? relayNames[i] : null).filter(Boolean);
   const relayPreview = (toggles, durs) => toggles
     .map((b, i) => b.className.includes('on')
-      ? { name: relayNames[i], seconds: minutesToSeconds(durs[i].value) }
+      ? { name: relayNames[i], seconds: secondsValue(durs[i].value) }
       : null)
     .filter(Boolean);
-  const relayMaxDuration = (durs) => { let m = 0; for (const d of durs) { const v = minutesToSeconds(d.value) || 0; if (v > m) m = v; } return m || null; };
+  const relayMaxDuration = (durs) => { let m = 0; for (const d of durs) { const v = secondsValue(d.value) || 0; if (v > m) m = v; } return m || null; };
 
   const wireRelayToggle = (toggles) => toggles.forEach((btn) => {
     btn.onclick = (event) => {
@@ -969,8 +982,8 @@ function buildQuickForm() {
       previewLine('Total ends', endCount.value || 8),
       previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
       el('div', { style: 'margin-top:10px;border-top:1px solid rgba(255,255,255,0.10);padding-top:10px' }),
-      previewLine('Outputs — Game Start', startOutputs.length ? startOutputs.map((o) => o.name + ' ' + (o.seconds ? formatMinutes(o.seconds) + ' min' : 'default')).join(', ') : 'None'),
-      previewLine('Outputs — Game Expires', endOutputs.length ? endOutputs.map((o) => o.name + ' ' + (o.seconds ? formatMinutes(o.seconds) + ' min' : 'default')).join(', ') : 'None')
+      previewLine('Outputs — Game Start', startOutputs.length ? startOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None'),
+      previewLine('Outputs — Game Expires', endOutputs.length ? endOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None')
     );
   };
 
@@ -1045,7 +1058,7 @@ function buildQuickForm() {
       gameOptionsRow),
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 4px' }, 'Outputs'),
-      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many minutes. Leave a duration blank to use the global buzzer duration.'),
+      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
       startRow,
       endRow),
     preview,
@@ -1585,8 +1598,8 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         const i = Number(rn.replace('RELAY', ''));
         const display = relayDisplayName(i) || rn;
         const btn = toggleBtn(false, display);
-        const dur = minuteInput({ max: 999, placeholder: '0', value: '', 'aria-label': label + ' relay duration in minutes' });
-        const wrap = el('div', { class: 'duration', style: 'display:none', gap: 6 }, dur, el('span', {}, 'min'));
+        const dur = secondInput({ max: 100000, placeholder: '0', value: '', 'aria-label': label + ' relay duration in seconds' });
+        const wrap = el('div', { class: 'duration', style: 'display:none', gap: 6 }, dur, el('span', {}, 's'));
         btn.onclick = (e) => { const next = !btn.className.includes('on'); btn.className = 'check-toggle ' + (next ? 'on' : 'off'); wrap.style.display = next ? '' : 'none'; };
         wrapper.append(btn, wrap);
         toggles.push(btn); durs.push(dur);
@@ -1604,7 +1617,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         const on = (relays || []).some((r) => String(r) === String(i) || String(r) === RELAY_NAMES()[idx]);
         const d = (durations || [])[idx];
         btn.className = 'check-toggle ' + (on ? 'on' : 'off');
-        row.durs[idx].value = d != null ? formatMinutes(d) : '';
+        row.durs[idx].value = d != null ? formatSeconds(d) : '';
         // The input's direct parent is the +/- stepper wrapper; the outer
         // .duration row is what hides the whole field including its unit.
         row.durs[idx].closest('.duration').style.display = on ? '' : 'none';
@@ -1669,9 +1682,9 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         const leagueName = customLeagueMode ? (customLeagueNameInput.value.trim() || null) : (league ? league.name : null);
         const pregameSecs = pregameOn ? minutesToSeconds(pregameMinutesInput.value) : null;
         const startRelays = startOut.toggles.map((b, i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY', '')) : null).filter(n => n != null);
-        const startDur = startOut.durs.length ? [minutesToSeconds(startOut.durs[0].value) || 0] : [0];
+        const startDur = startOut.durs.length ? [secondsValue(startOut.durs[0].value) || 0] : [0];
         const endRelays = endOut.toggles.map((b, i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY', '')) : null).filter(n => n != null);
-        const endDur = endOut.durs.length ? [minutesToSeconds(endOut.durs[0].value) || 0] : [0];
+        const endDur = endOut.durs.length ? [secondsValue(endOut.durs[0].value) || 0] : [0];
         entries.push({
           start: stSec,
           buzzer: buzzerSec,
@@ -1791,19 +1804,19 @@ function entryEditor(entries, index, leagues, rerender) {
   const outputInfos = enabledOutputInfos();
   const buildNotificationRow = (which) => {
     const on = (r) => Array.isArray(entry[which + '_relays']) && entry[which + '_relays'].includes(r.id);
-    const durField = (info, active) => minuteInput({ max: 999, placeholder: '0',
-      'aria-label': `${labelOf(which)} relay duration in minutes`,
-      value: active && entry[which + '_duration'] != null ? formatMinutes(entry[which + '_duration']) : '' });
+    const durField = (info, active) => secondInput({ max: 100000, placeholder: '0',
+      'aria-label': `${labelOf(which)} relay duration in seconds`,
+      value: active && entry[which + '_duration'] != null ? formatSeconds(entry[which + '_duration']) : '' });
     const row = el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 8px; align-items: center; flex-wrap: wrap' },
       el('span', { class: 'muted small', style: 'margin-right: 8px' }, labelOf(which)));
     outputInfos.forEach((info) => {
       const active = on(info);
       const btn = toggleBtn(active, info.label);
       const dur = durField(info, active);
-      const durWrap = el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 'min'));
+      const durWrap = el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 's'));
       // Read current state from the DOM, not the captured `active` closure.
       btn.onclick = (event) => { const next = !btn.className.includes('on'); btn.className = 'check-toggle ' + (next ? 'on' : 'off'); durWrap.style.display = next ? '' : 'none'; setRelays(which, next ? [...((entry[which + '_relays'] || [])).concat([info.id])] : (entry[which + '_relays'] || []).filter((x) => x !== info.id)); changed(); };
-      dur.oninput = (event) => { setDuration(which, minutesToSeconds(event.target.value)); changed(); };
+      dur.oninput = (event) => { setDuration(which, secondsValue(event.target.value)); changed(); };
       row.append(btn);
       row.append(durWrap);
     });
@@ -1822,7 +1835,7 @@ function entryEditor(entries, index, leagues, rerender) {
 
   const outputsCard = outputInfos.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
       el('h3', {}, 'Notifications 🔔'),
-      el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which relay outputs ring at each event and for how many minutes. Tap a button to enable/disable; leave the duration blank to use the global buzzer duration.'),
+      el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which relay outputs ring at each event and for how many seconds. Tap a button to enable/disable; leave the duration blank to use the global buzzer duration.'),
       buildNotificationRow('start'),
       buildNotificationRow('buzzer'))
     : el('div', { class: 'card', style: 'margin: 10px 0 0' }, el('h3', {}, 'Notifications 🔔'), el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
@@ -2072,18 +2085,19 @@ const CONFIG_SECTIONS = [
       ['config.footer.entry_name', 'bool', 'Show entry name'],
       ['config.footer.color', 'color', 'Colour']] },
   { group: 'Output Configuration', title: 'Game Start',
+    hint: 'Relay output durations are in seconds.',
     fields: [
       ['config.buzzer.ring_at_start', 'relays', 'Output'],
       ['config.buzzer.start_duration', 'output_duration', 'Duration', 'start']] },
   { group: 'Output Configuration', title: 'Countdown Warning',
-    hint: 'Duration before warning fires this many minutes after game start. Time before buzzer counts backwards from game end. 0 disables the warning.',
+    hint: 'Duration before warning fires this many minutes after game start. Time before buzzer counts backwards from game end. 0 disables the warning. Relay output durations are in seconds.',
     fields: [
       ['config.buzzer.countdown.mode', 'select', 'Countdown mode', COUNTDOWN_MODE_DURATION, COUNTDOWN_MODE_BUZZER],
       ['config.buzzer.countdown.seconds_before', 'minutes', 'Countdown warning time (minutes)', 0, 1666],
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
       ['config.buzzer.countdown_duration', 'output_duration', 'Duration', 'countdown']] },
   { group: 'Output Configuration', title: 'Game End',
-    hint: 'Warning wording hold controls how long the warning stays after the buzzer rings. The wording itself is set under Display → Header text → Text when Warning Countdown Ends/Output.',
+    hint: 'Warning wording hold controls how long the warning stays after the buzzer rings. The wording itself is set under Display → Header text → Text when Warning Countdown Ends/Output. Relay output durations are in seconds.',
     fields: [
       ['config.buzzer.header_hold', 'minutes', 'Warning wording hold after buzzer (minutes)', 0, 1666],
       ['config.buzzer.relays', 'relays', 'Output'],
@@ -2225,10 +2239,10 @@ function configField(field) {
       const path = `config.buzzer.${event}_duration_${i}`;
       const val = state.configValues[path];
       return el('div', { class: 'field' },
-        el('label', {}, `${display} duration (minutes)`,
-          minuteInput({ max: 999, placeholder: '0', 'aria-label': `${display} duration in minutes`,
-            value: val == null ? '' : formatMinutes(val),
-            oninput: (event) => { state.configValues[path] = minutesToSeconds(event.target.value); configTouched(); } })));
+        el('label', {}, `${display} duration (seconds)`,
+          secondInput({ max: 100000, placeholder: '0', 'aria-label': `${display} duration in seconds`,
+            value: val == null ? '' : formatSeconds(val),
+            oninput: (event) => { state.configValues[path] = secondsValue(event.target.value); configTouched(); } })));
     });
     if (selected.length === 0) inputs.push(el('p', { class: 'muted small' }, 'No outputs selected.'));
     return el('div', {}, inputs);
@@ -2431,12 +2445,12 @@ async function renderConfig() {
           if (event) {
             const dp = `config.buzzer.${event}_duration_${info.index}`;
             const dv = state.configValues[dp];
-            dur = minuteInput({ max: 999, 'aria-label': `${info.label} duration in minutes`,
-              value: dv == null ? '' : formatMinutes(dv),
-              oninput: (e) => { state.configValues[dp] = minutesToSeconds(e.target.value); configTouched(); } });
+            dur = secondInput({ max: 100000, 'aria-label': `${info.label} duration in seconds`,
+              value: dv == null ? '' : formatSeconds(dv),
+              oninput: (e) => { state.configValues[dp] = secondsValue(e.target.value); configTouched(); } });
           }
           rows.push(el('div', { style: 'display:inline-grid; grid-template-columns:auto auto; align-items:center; gap:8px; margin:4px 8px 4px 0' },
-            btn, dur ? el('span', { class: 'muted small', style: 'display:inline-flex; align-items:center; gap:4px' }, dur, 'min') : null));
+            btn, dur ? el('span', { class: 'muted small', style: 'display:inline-flex; align-items:center; gap:4px' }, dur, 's') : null));
         }
         if (selected.length === 0) rows.push(el('p', { class: 'muted small' }, 'No outputs selected.'));
         const groupLabelId = 'relay-group-' + f[0].replace(/[^a-zA-Z0-9]/g, '-');
@@ -2808,19 +2822,19 @@ async function renderLeagues() {
     const outputInfos = enabledOutputInfos();
     const buildNotificationRow = (which) => {
       const on = (r) => Array.isArray(lp[which + '_relays']) && lp[which + '_relays'].includes(r.id);
-      const durField = (info, active) => minuteInput({ max: 999, placeholder: '0',
-        'aria-label': `${labelOf(which)} relay duration in minutes`,
-        value: active && lp[which + '_duration'] != null ? formatMinutes(lp[which + '_duration']) : '' });
+      const durField = (info, active) => secondInput({ max: 100000, placeholder: '0',
+        'aria-label': `${labelOf(which)} relay duration in seconds`,
+        value: active && lp[which + '_duration'] != null ? formatSeconds(lp[which + '_duration']) : '' });
       const row = el('div', { class: 'row-actions', style: 'margin-bottom: 8px; gap: 8px; align-items: center; flex-wrap: wrap' },
         el('span', { class: 'muted small', style: 'margin-right: 8px' }, labelOf(which)));
       outputInfos.forEach((info) => {
         const active = on(info);
         const btn = toggleBtn(active, info.label);
         const dur = durField(info, active);
-        const durWrap = el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 'min'));
+        const durWrap = el('div', { class: 'duration', style: active ? '' : 'display:none', gap: 6 }, dur, el('span', {}, 's'));
         // Read current state from DOM, not the captured `active` closure.
         btn.onclick = (event) => { const next = !btn.className.includes('on'); btn.className = 'check-toggle ' + (next ? 'on' : 'off'); durWrap.style.display = next ? '' : 'none'; setRelays(which, next ? [...((lp[which + '_relays'] || [])).concat([info.id])] : (lp[which + '_relays'] || []).filter((x) => x !== info.id)); refreshLeaguePreview(); };
-        dur.oninput = (event) => { setDuration(which, minutesToSeconds(event.target.value)); refreshLeaguePreview(); };
+        dur.oninput = (event) => { setDuration(which, secondsValue(event.target.value)); refreshLeaguePreview(); };
         row.append(btn);
         row.append(durWrap);
       });
@@ -2839,7 +2853,7 @@ async function renderLeagues() {
 
     const outputsCard = outputInfos.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
         el('h3', {}, 'Notifications 🔔'),
-        el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which relay outputs ring at each event and for how many minutes. Tap a button to enable/disable; leave the duration blank to use the global buzzer duration.'),
+        el('p', { class: 'muted small', style: 'margin: 0 0 8px' }, 'Choose which relay outputs ring at each event and for how many seconds. Tap a button to enable/disable; leave the duration blank to use the global buzzer duration.'),
         buildNotificationRow('start'),
         buildNotificationRow('end'))
       : el('div', { class: 'card', style: 'margin: 10px 0 0' }, el('h3', {}, 'Notifications 🔔'), el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.'));
