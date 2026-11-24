@@ -2000,8 +2000,8 @@ const CONFIG_SECTIONS = [
       ['config.pregame_header_color', 'color', 'Header colour'],
       ['config.pregame_countdown', 'pregame_hms', 'Countdown', 0, 600],
       ['config.pregame_countdown_color', 'color', 'Countdown colour'],
-      ['config.pregame_blink', 'bool', 'Wig wag: countdown colon alternates top/bottom each second'],
-      ['config.pregame_font_size', 'int', 'Font size', 0, 100000]] },
+      ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
+      ['config.pregame_blink', 'bool', 'Wig wag: countdown colon alternates top/bottom each second']] },
   { group: 'Display', title: 'Header text',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
@@ -2333,11 +2333,23 @@ async function renderConfig() {
       }
       fields = [['config.relay_count', 'int', 'Number of relays', 0, 4]].concat(relayFields);
     }
+    const isPregameSection = section.title === 'Pre-game countdown';
+    const fieldNodes = isPregameSection ? [
+      // Row 1: header text + header color
+      el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' },
+        ...[fields[0], fields[1]].map(configField)),
+      // Row 2: countdown + countdown color + font size
+      el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
+        ...[fields[2], fields[3], fields[4]].map(configField)),
+      // Row 3: pillbox only
+      el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px; align-items:center' },
+        configField(fields[5]))
+    ] : fields.map(configField);
     nodes.push(el('div', { class: 'card' },
       el('div', { class: 'section-title' }, section.group),
       el('h3', {}, section.title),
       section.hint ? el('p', { class: 'muted small', style: 'margin: 0' }, section.hint) : null,
-      el('div', { class: 'grid2' }, fields.map(configField)),
+      el('div', { class: isPregameSection ? '' : 'grid2' }, fieldNodes),
       section.group.startsWith('Output Configuration') ? isAddonEnabled('relays') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null : null));
   }
   $('tab-config').replaceChildren(
