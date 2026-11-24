@@ -1973,9 +1973,11 @@ const CONFIG_SECTIONS = [
   { group: 'Global Settings', title: 'Manual trigger (pushbutton)', hint: 'GPIO press rings the start relays for the next manually-triggered game. Only shown when the pushbutton add-on is enabled.',
     fields: [
       ['config.manual_trigger_gpio', 'int', 'Manual trigger GPIO (pushbutton add-on)', 0, 40]] },
-  { group: 'Global Settings', title: 'Curling Club Manager', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
+  { group: 'Global Settings', title: 'Club Website URL', hint: 'Base website URL of the club (Curling Club Manager). Used to build league/import paths.',
     fields: [
-      ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)'],
+      ['config.club_website_url', 'text', 'Club website URL (Curling Club Manager)']] },
+{ group: 'Global Settings', title: 'League Page URL', hint: 'Optional override URL for the league page.',
+    fields: [
       ['config.league_page_url', 'text', 'League page URL (optional override)']] },
   { group: 'Global Settings', title: 'Relays', hint: 'How many relays are active and what each is mapped to.',
     fields: [
@@ -1994,12 +1996,12 @@ const CONFIG_SECTIONS = [
   { group: 'Display', title: 'Background', fields: [ ['config.background_color', 'color', 'Background colour'] ] },
   { group: 'Display', title: 'Pre-game countdown', hint: 'Countdown displayed before the game starts. Set seconds to 0 to disable.',
     fields: [
-      ['config.pregame_countdown', 'pregame_hms', 'Countdown', 0, 600],
-      ['config.pregame_blink', 'bool', 'Wig wag: countdown colon alternates top/bottom each second'],
-      ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
+      ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)'],
       ['config.pregame_header_color', 'color', 'Header colour'],
+      ['config.pregame_countdown', 'pregame_hms', 'Countdown', 0, 600],
       ['config.pregame_countdown_color', 'color', 'Countdown colour'],
-      ['config.pregame_header_text', 'text', 'Header text (e.g. Get ready)']] },
+      ['config.pregame_blink', 'bool', 'Wig wag: countdown colon alternates top/bottom each second'],
+      ['config.pregame_font_size', 'int', 'Font size', 0, 100000]] },
   { group: 'Display', title: 'Header text',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
@@ -2025,8 +2027,7 @@ const CONFIG_SECTIONS = [
       ['config.pace_of_play.enabled', 'bool', 'Show pace of play'],
       ['config.pace_of_play.font_size', 'int', 'Font size (pixels)', 0, 100000],
       ['config.pace_of_play.color', 'color', 'Colour'],
-      ['config.pace_of_play.unit_name', 'text', 'Unit name, e.g. END'],
-      ['config.pace_of_play.unit_duration', 'minutes', 'Minutes per unit', 0.5, 43200]] },
+      ['config.pace_of_play.unit_name', 'text', 'Unit name, e.g. END']] },
   { group: 'Display', title: 'Footer',
     fields: [
       ['config.footer.font_size', 'int', 'Font size (pixels)', 0, 100000],
@@ -2040,15 +2041,16 @@ const CONFIG_SECTIONS = [
   { group: 'Output Configuration', title: 'Countdown Warning',
     hint: 'Only applies to games longer than the minutes set here. For 8-end games, typical pace warning is 15-20 min before buzzer (7th end). For 6-end games, 10-12 min.',
     fields: [
-      ['config.buzzer.countdown.minutes_before', 'int', 'Countdown warning: minutes before the buzzer (0 = off)', 0, 100000],
+      ['config.buzzer.countdown.mode', 'text', 'Countdown mode: time until warning (default) or time before buzzer', 'Time until warning', 'Time before buzzer'],
+      ['config.buzzer.countdown.minutes_before', 'int', 'Countdown time (hours and minutes)', 0, 100000],
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
       ['config.buzzer.countdown_duration', 'output_duration', 'Duration', 'countdown']] },
   { group: 'Output Configuration', title: 'Game End',
-    hint: 'Header hold: seconds the during-buzzer header text stays after ringing.',
+    hint: 'Header hold replaces buzzer with warning. Header hold seconds the during-buzzer header text stays after ringing.',
     fields: [
+      ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000],
       ['config.buzzer.relays', 'relays', 'Output'],
-      ['config.buzzer.end_duration', 'output_duration', 'Duration', 'end'],
-      ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000]] },
+      ['config.buzzer.end_duration', 'output_duration', 'Duration', 'end']] },
 ];
 const CONFIG_PATHS = CONFIG_SECTIONS.flatMap((section) => section.fields.map((field) => field[0]));
 // Per-output durations are rendered dynamically (one per selected relay) under
@@ -2201,8 +2203,10 @@ function configField(field) {
     return el('div', {}, inputs);
   }
   if (type === 'text') {
-    return el('label', {}, label, el('input', { type: 'text', maxlength: 80, value: value == null ? '' : value,
-      placeholder: 'not set', oninput: (event) => set(event.target.value) }));
+    const isUrl = path === 'config.club_website_url' || path === 'config.league_page_url';
+    return el('label', {}, label, el('input', { type: 'text', maxlength: isUrl ? 200 : 80, value: value == null ? '' : value,
+      placeholder: isUrl ? 'https://example.com/club' : 'not set', style: isUrl ? 'width:100%; box-sizing:border-box;' : '',
+      oninput: (event) => set(event.target.value) }));
   }
   if (type === 'select') {
     const options = field.slice(3).filter((x) => typeof x === 'string');
