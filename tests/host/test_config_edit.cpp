@@ -91,6 +91,27 @@ TEST_CASE ("apply_config_values keeps trailing comments and indentation") {
         "    Monday: []\n");
 }
 
+TEST_CASE ("apply_config_values replaces an existing multi-relay flow value") {
+  // A second save must not leave stray text after the closing bracket:
+  // ['RELAY1', 'RELAY2'] was previously cut at the space after the comma.
+  std::string text(TEXT_SETTINGS_TEXT);
+  const std::string old_relays = "      relays:\n      - RELAY1\n";
+  const size_t at = text.find(old_relays);
+  REQUIRE(at != std::string::npos);
+  text.replace(at, old_relays.size(), "      relays: ['RELAY1', 'RELAY2']  # outputs\n");
+  std::string expected = text;
+  expected.replace(at, std::string("      relays: ['RELAY1', 'RELAY2']  # outputs\n").size(),
+                   "      relays: ['RELAY3', 'RELAY4']  # outputs\n");
+  std::string out, err;
+  REQUIRE(apply_config_values(text, {{"config.buzzer.relays", yaml_relays({"RELAY3", "RELAY4"})}},
+                              &out, &err));
+  CHECK(out == expected);
+  PiTimerSettings s;
+  REQUIRE(s.parse_settings_text(out, "pitimer_settings.yml", &err));
+  REQUIRE(s.relays.has_value());
+  CHECK(*s.relays == std::vector<std::string>{"RELAY3", "RELAY4"});
+}
+
 TEST_CASE ("apply_config_values scopes keys by parent (pace enabled vs config enabled)") {
   const std::string text =
       "config:\n"

@@ -402,8 +402,10 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 .addon-card h3 { font-size: 16px; }
 .addon-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
 
-.progress-end-bar { position: relative; height: 18px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); width: 100%; }
-.progress-seg.lead { background: #38bdf8; } .progress-seg.second { background: #34d399; } .progress-seg.vice { background: #fbbf24; } .progress-seg.skip { background: #f87171; }
+.progress-end-bar { position: relative; display: flex; min-height: 64px; border-radius: 24px; overflow: hidden; background: #fff; border: 8px solid #000; width: 100%; box-sizing: border-box; }
+.progress-seg { box-sizing: border-box; height: 100%; }
+.progress-seg.lead { background: #DC3545; } .progress-seg.second { background: #FFC107; } .progress-seg.vice { background: #0DCaf0; } .progress-seg.skip { background: #198754; }
+.progress-seg.lead, .progress-seg.second, .progress-seg.vice { border-right: 4px solid #000; }
 .progress-end-fill { position: absolute; top:0; left:0; height:100%; background: rgba(2,10,20,0.55); pointer-events:none; z-index:1; transition: width .5s ease; }
 .version-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background: var(--warn); margin-left:6px; vertical-align:middle; cursor:pointer; }
 
@@ -1152,7 +1154,7 @@ function renderStatus() {
       let fillPct = 0;
       if (sinceStart >= endEnd) fillPct = 100;
       else if (sinceStart > endStart) fillPct = ((sinceStart - endStart) / endDur * 100);
-      const bar = el('div', { class: 'progress-end-bar', style: `width:100%; height:${Math.max(6, px(14))}px;` });
+      const bar = el('div', { class: 'progress-end-bar', style: `width:100%; height:${px(64)}px; min-height:${px(64)}px; border-width:${px(8)}px; border-radius:${px(24)}px;` });
       bar.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct}%` }));
       bar.append(el('div', { class: 'progress-seg second', style: `width:${secondPct}%` }));
       bar.append(el('div', { class: 'progress-seg vice', style: `width:${vicePct}%` }));
@@ -2258,17 +2260,13 @@ function configField(field) {
           btn.onclick = () => {
             const list = Array.isArray(state.configValues[path]) ? [...state.configValues[path]] : [];
             const at = list.indexOf(name);
-            if (at < 0) {
-              list.push(name);
-            } else {
-              list.splice(at, 1);
-              // Clearing a relay also drops its per-event duration overrides so
-              // stale values are not saved for an output that is no longer selected.
-              for (const ev of ['start', 'countdown', 'end']) {
-                const dp = `config.buzzer.${ev}_duration_${i}`;
-                if (dp in state.configValues) delete state.configValues[dp];
-              }
-            }
+            if (at < 0) list.push(name);
+            else list.splice(at, 1);
+            // Keep per-event duration values when a relay is unchecked:
+            // deleting them makes configDiff emit `undefined`, which fails
+            // numeric validation and blocks the whole save. Unused durations
+            // are ignored by the engine and restored if the relay is selected
+            // again.
             set(list);
             btn.className = 'check-toggle ' + (list.includes(name) ? 'on' : 'off');
           };
@@ -2343,13 +2341,13 @@ async function renderConfig() {
     if (isPregameSection) {
       fieldNodes = [
         // Row 1: header text + header color
-        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' },
+        el('div', { style: 'display:flex; flex-wrap:wrap; gap:8px; margin:6px 0' },
           ...[fields[0], fields[1]].map(configField)),
         // Row 2: countdown + countdown color + font size
-        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
+        el('div', { style: 'display:flex; flex-wrap:wrap; gap:6px; margin:6px 0' },
           ...[fields[2], fields[3], fields[4]].map(configField)),
         // Row 3: pillbox only
-        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px; align-items:center' },
+        el('div', { style: 'display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:6px 0' },
           configField(fields[5]))
       ];
     } else if (section.title === 'Pace of play') {
@@ -2365,15 +2363,23 @@ async function renderConfig() {
         el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' }, configField(fields[0]), configField(fields[3])),
         el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' }, configField(fields[1]), configField(fields[2]))
       ];
-    } else if (section.title.startsWith('Output Configuration')) {
-      // Output sections: each pillbox + duration on its own row
+    } else if (section.group.startsWith('Output Configuration')) {
+      // Output sections: each relay pillbox + its duration on one inline grid row
       fieldNodes = [];
       for (const f of fields) {
         if (f[1] === 'relays') {
-          // Relay pillbox + its duration on the same row
+          const addonKey = PATH_TO_ADDON[f[0]];
+          if (addonKey && !isAddonEnabled(addonKey)) {
+            fieldNodes.push(el('div', { class: 'field' }, el('label', {}, f[2],
+              el('span', { class: 'pill notdetected', style: 'margin-left: 8px; font-size: 10px' }, 'add-on disabled'))));
+            continue;
+          }
           const relaysPath = f[0].startsWith('config.buzzer.countdown') ? 'config.buzzer.countdown.relays' :
             f[0].startsWith('config.buzzer.ring_at_start') ? 'config.buzzer.ring_at_start' : 'config.buzzer.relays';
           const selected = Array.isArray(state.configValues[relaysPath]) ? state.configValues[relaysPath] : [];
+          // Find the matching output_duration field to derive its per-relay path prefix
+          const durField = fields.find((d) => d[1] === 'output_duration');
+          const event = durField ? durField[3] : null;
           const rows = [];
           for (const info of enabledOutputInfos()) {
             const checked = selected.includes(info.id);
@@ -2383,15 +2389,27 @@ async function renderConfig() {
               const at = list.indexOf(info.id);
               if (at < 0) list.push(info.id);
               else list.splice(at, 1);
-              for (const ev of ['start', 'countdown', 'end']) {
-                const dp = `config.buzzer.${ev}_duration_${info.index}`;
-                if (dp in state.configValues) delete state.configValues[dp];
-              }
-              set(list);
+              // Keep per-event duration values when a relay is unchecked:
+              // deleting them would make configDiff emit `undefined`, which
+              // fails numeric validation and blocks the whole save. Unused
+              // durations are ignored by the engine, and are restored if the
+              // relay is selected again.
+              state.configValues[f[0]] = list;
+              configTouched();
               btn.className = 'check-toggle ' + (list.includes(info.id) ? 'on' : 'off');
             };
-            rows.push(el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 8px; align-items:center' },
-              btn));
+            // Duration input for this specific relay (same row as the pillbox)
+            let dur = null;
+            if (event) {
+              const dp = `config.buzzer.${event}_duration_${info.index}`;
+              const dv = state.configValues[dp];
+              dur = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric',
+                style: 'width:7ch', 'aria-label': `${info.label} duration (seconds)`,
+                value: dv == null ? '' : String(dv),
+                oninput: (e) => { state.configValues[dp] = e.target.value === '' ? null : Number(e.target.value); configTouched(); } });
+            }
+            rows.push(el('div', { style: 'display:inline-grid; grid-template-columns:auto auto; align-items:center; gap:8px; margin:4px 8px 4px 0' },
+              btn, dur ? el('span', { class: 'muted small', style: 'display:inline-flex; align-items:center; gap:4px' }, dur, 's') : null));
           }
           if (selected.length === 0) rows.push(el('p', { class: 'muted small' }, 'No outputs selected.'));
           fieldNodes.push(...rows);
@@ -2399,18 +2417,20 @@ async function renderConfig() {
           // Per-relay duration handled inline via relays rows above
         }
       }
-      // Add standalone duration fields not part of relays
+      // Add standalone (non-output) fields not part of relays/durations
       for (const f of fields) {
         if (f[1] !== 'relays' && f[1] !== 'output_duration') fieldNodes.push(configField(f));
       }
     } else {
       fieldNodes = fields.map(configField);
     }
+    const noGrid = isPregameSection || section.title === 'Live Display Scaling' ||
+      section.group.startsWith('Output Configuration');
     nodes.push(el('div', { class: 'card' },
       el('div', { class: 'section-title' }, section.group),
       el('h3', {}, section.title),
       section.hint ? el('p', { class: 'muted small', style: 'margin: 0' }, section.hint) : null,
-      el('div', { class: isPregameSection ? '' : 'grid2' }, fieldNodes),
+      el('div', { class: noGrid ? '' : 'grid2' }, fieldNodes),
       section.group.startsWith('Output Configuration') ? isAddonEnabled('relays') ? el('button', { class: 'btn primary', onclick: (e) => testRelay(section.title, e.target) }, 'Test') : null : null));
   }
   $('tab-config').replaceChildren(

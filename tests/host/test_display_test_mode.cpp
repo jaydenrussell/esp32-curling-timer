@@ -221,7 +221,7 @@ TEST_CASE("display test mode: the lvgl widget list holds nothing unexpected") {
                                                   "lbl_status", "lbl_game", "lbl_date", "lbl_time",
                                                   "prog_pill", "prog_band0", "prog_band1", "prog_band2",
                                                   "prog_band3", "prog_div0", "prog_div1", "prog_div2",
-                                                  "prog_mask", "prog_border"};
+                                                  "prog_border"};
   size_t patterns = 0;
   for (const std::string &block : widget_blocks(yaml)) {
     const std::string id = block_id(block);

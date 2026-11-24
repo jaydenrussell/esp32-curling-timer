@@ -124,6 +124,41 @@ static bool replace_line_value(std::vector<std::string> *lines, size_t index, co
       }
       if (value_end > line.size() || (value_end == line.size() && line[value_end - 1] != '\''))
         return false;  // unterminated quote — leave the file alone
+    } else if (line[value_start] == '[' || line[value_start] == '{') {
+      // Flow collections may contain spaces (yaml_relays writes
+      // ['RELAY1', 'RELAY2']), so scan to the matching closer instead of
+      // stopping at the first space and leaving 'RELAY2'] as stray content.
+      int depth = 0;
+      char quote = 0;
+      for (; value_end < line.size(); value_end++) {
+        const char c = line[value_end];
+        if (quote != 0) {
+          if (quote == '"' && c == '\\' && value_end + 1 < line.size()) {
+            value_end++;
+            continue;
+          }
+          if (c == quote) {
+            if (quote == '\'' && value_end + 1 < line.size() && line[value_end + 1] == '\'') {
+              value_end++;
+              continue;
+            }
+            quote = 0;
+          }
+          continue;
+        }
+        if (c == '\'' || c == '"') {
+          quote = c;
+        } else if (c == '[' || c == '{') {
+          depth++;
+        } else if (c == ']' || c == '}') {
+          if (--depth == 0) {
+            value_end++;  // include the closing bracket/brace
+            break;
+          }
+        }
+      }
+      if (depth != 0 || quote != 0)
+        return false;  // unterminated flow collection — leave the file alone
     } else {
       while (value_end < line.size() && line[value_end] != ' ' && line[value_end] != '\t' &&
              line[value_end] != '#')

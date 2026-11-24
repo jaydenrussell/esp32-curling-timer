@@ -860,79 +860,85 @@ lvgl:
         long_mode: CLIP
         recolor: true
         text: ""
-    # ─── Progress Bar: 3-Layer Inverse Mask Model ───
+    # ─── Progress Bar: black frame, white track, weighted colored bands ───
     # Screen is 1280x720. Progress bar fits width minus 20px padding each side = 1240px.
-    # Height: 75px. Border radius: 1.5rem = 24px (not pill).
-    # White border 8px. Segment dividers black 6px.
+    # Height: 85px. Border radius: 1.5rem = 24px (rounded, clipped).
+    # Outer frame: 8px BLACK border, WHITE track. Segment dividers: 4px BLACK.
+    # Pill is centered: outer x=20..1260, inner x=28..1252 (1224px usable).
     # Weights: [1, 1, 1, W_skip] where W_skip defaults to 1.4
-    # Total = 3 + 1.4 = 4.4 → Band widths: 282, 282, 282, 394 (out of 1240)
-    # Container (outer white border + overflow hidden)
+    # Total = 3 + 1.4 = 4.4 → Band widths: 282, 282, 282, 378 (out of 1224)
+    # Container (white track + black frame + rounded/clipped corners)
     - obj:
         id: prog_pill
         align: BOTTOM_MID
         y: -79
         width: 1240
-        height: 75
-        bg_opa: 0
+        height: 85
+        bg_color: 0xFFFFFF
+        bg_opa: cover
         border_width: 8
-        border_color: 0xFFFFFF
+        border_color: 0x000000
         pad_all: 0
         radius: 24
+        clip_corner: true
         hidden: true
-    # Bottom Layer: 4 static weighted colored bands (Lead, Second, Vice, Skip)
-    # Bands have NO radius (straight edges), only container/mask/border have radius
+    # Bottom Layer: 4 weighted colored bands (Lead, Second, Vice, Skip)
+    # These are declared as top-level widgets but reparented into prog_pill at
+    # runtime so LVGL's clip_corner trims them to the rounded frame. Bands have
+    # NO radius (straight edges); their widths grow with progress and the white
+    # pill shows through the remainder.
     - obj:
         id: prog_band0
         align: BOTTOM_LEFT
-        x: 0
+        x: 28
         y: -79
         width: 282
-        height: 75
-        bg_color: 0xDC3D45  # Lead - Red
+        height: 85
+        bg_color: 0xDC3545  # Lead - Bootstrap red rgb(220,53,69)
         border_width: 0
         radius: 0
         hidden: true
     - obj:
         id: prog_band1
         align: BOTTOM_LEFT
-        x: 282
+        x: 310
         y: -79
         width: 282
-        height: 75
-        bg_color: 0xF9B928  # Second - Yellow
+        height: 85
+        bg_color: 0xFFC107  # Second - Bootstrap yellow rgb(255,193,7)
         border_width: 0
         radius: 0
         hidden: true
     - obj:
         id: prog_band2
         align: BOTTOM_LEFT
-        x: 564
+        x: 592
         y: -79
         width: 282
-        height: 75
-        bg_color: 0x49C3ED  # Vice - Light Blue
+        height: 85
+        bg_color: 0x0DCAF0  # Vice - Bootstrap cyan rgb(13,202,240)
         border_width: 0
         radius: 0
         hidden: true
     - obj:
         id: prog_band3
         align: BOTTOM_LEFT
-        x: 846
+        x: 874
         y: -79
-        width: 394
-        height: 75
-        bg_color: 0x2E7D52  # Skip - Dark Green
+        width: 378
+        height: 85
+        bg_color: 0x198754  # Skip - Bootstrap green rgb(25,135,84)
         border_width: 0
         radius: 0
         hidden: true
-    # Band dividers: straight black vertical lines, 6px wide (no radius)
+    # Band dividers: 4px BLACK right edges (border-r-4), straight, no radius
     - obj:
         id: prog_div0
         align: BOTTOM_LEFT
-        x: 282
+        x: 306
         y: -79
-        width: 6
-        height: 75
+        width: 4
+        height: 85
         bg_color: 0x000000
         border_width: 0
         radius: 0
@@ -940,10 +946,10 @@ lvgl:
     - obj:
         id: prog_div1
         align: BOTTOM_LEFT
-        x: 564
+        x: 588
         y: -79
-        width: 6
-        height: 75
+        width: 4
+        height: 85
         bg_color: 0x000000
         border_width: 0
         radius: 0
@@ -951,36 +957,27 @@ lvgl:
     - obj:
         id: prog_div2
         align: BOTTOM_LEFT
-        x: 846
+        x: 870
         y: -79
-        width: 6
-        height: 75
+        width: 4
+        height: 85
         bg_color: 0x000000
         border_width: 0
         radius: 0
         hidden: true
-    # Middle Layer: Inverse white mask (anchored right, shrinks left)
-    - obj:
-        id: prog_mask
-        align: BOTTOM_RIGHT
-        x: 0
-        y: -79
-        width: 1240
-        height: 75
-        bg_color: 0xFFFFFF
-        border_width: 0
-        radius: 24
-        hidden: true
-    # Top Layer: Frame border (outer white border, 8px)
+    # No inverse white mask: the pill's white track is visible through the
+    # unwritten remainder of each band, so there is no square playhead edge.
+    # Top Layer: 8px BLACK frame, drawn last over the clipped children so the
+    # rounded outer edge stays crisp.
     - obj:
         id: prog_border
         align: BOTTOM_MID
         y: -79
         width: 1240
-        height: 75
+        height: 85
         bg_opa: 0
         border_width: 8
-        border_color: 0xFFFFFF
+        border_color: 0x000000
         radius: 24
         hidden: true
     - label:
@@ -1010,7 +1007,7 @@ lvgl:
         id: lbl_time
         align: BOTTOM_RIGHT
         x: -10
-        y: -4
+        y: -14
         text_font: font_footer
         recolor: true
         text: ""
@@ -1078,8 +1075,8 @@ interval:
           y: !lambda |-
             // pitimer raises the timer by height/24 only while the pace line
             // is shown; otherwise it sits dead centre.
-            // Moved up 35px (was 25, now +10 more).
-            return id(g_snap).show_pace ? -65 : -35;
+            // Moved up 45px (was 25, now +10 more, now +10 again).
+            return id(g_snap).show_pace ? -75 : -45;
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
@@ -1105,8 +1102,8 @@ interval:
           id: lbl_cnt5
           align: CENTER
           y: !lambda |-
-            // Moved up 35px (was 25, now +10 more).
-            return id(g_snap).show_pace ? -65 : -35;
+            // Moved up 45px (was 25, now +10 more, now +10 again).
+            return id(g_snap).show_pace ? -75 : -45;
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
@@ -1136,8 +1133,8 @@ interval:
             auto &s = id(g_snap);
             const bool five = s.show_countdown && s.seconds_until_buzzer >= 3600;
             lv_obj_t *timer = five ? id(lbl_cnt5) : id(lbl_cnt4);
-            if (timer == nullptr) return -10;
-            return -10 + (int) (0.3225f * lv_obj_get_height(timer));
+            if (timer == nullptr) return -20;
+            return -20 + (int) (0.3225f * lv_obj_get_height(timer));
           text: !lambda |-
             std::string mode = id(engine)->get_display_test_mode();
             if (mode != "normal") return std::string();
@@ -1149,24 +1146,36 @@ interval:
           auto &s = id(g_snap);
           bool show = (id(engine)->get_display_test_mode() == "normal") &&
                       s.show_progress && s.progress_end_count > 0 && s.progress_game_duration > 0;
-          // Show/hide all progress bar layers
+          // Show/hide the frame, track and colored bands.
           lv_obj_t *bands[4] = {id(prog_band0), id(prog_band1), id(prog_band2), id(prog_band3)};
           lv_obj_t *divs[3] = {id(prog_div0), id(prog_div1), id(prog_div2)};
+          // Parent the bands and dividers to the pill once. The pill's
+          // clip_corner style then trims their square corners to the rounded
+          // frame, matching the reference's overflow-clip. Coordinates below
+          // are relative to the pill's content area (inside its 8px border).
+          static bool progress_parented = false;
+          if (!progress_parented && id(prog_pill) != nullptr) {
+            const int band_x[4] = {0, 282, 564, 846};
+            const int div_x[3] = {278, 560, 842};
+            for (int i = 0; i < 4; i++) {
+              if (bands[i] == nullptr) continue;
+              lv_obj_set_parent(bands[i], id(prog_pill));
+              lv_obj_set_pos(bands[i], band_x[i], 0);
+              lv_obj_set_height(bands[i], 69);
+            }
+            for (int i = 0; i < 3; i++) {
+              if (divs[i] == nullptr) continue;
+              lv_obj_set_parent(divs[i], id(prog_pill));
+              lv_obj_set_pos(divs[i], div_x[i], 0);
+              lv_obj_set_height(divs[i], 69);
+            }
+            progress_parented = true;
+          }
           for (int i = 0; i < 4; i++) {
             if (bands[i] != nullptr) {
               if (show) lv_obj_clear_flag(bands[i], LV_OBJ_FLAG_HIDDEN);
               else lv_obj_add_flag(bands[i], LV_OBJ_FLAG_HIDDEN);
             }
-          }
-          for (int i = 0; i < 3; i++) {
-            if (divs[i] != nullptr) {
-              if (show) lv_obj_clear_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
-              else lv_obj_add_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
-            }
-          }
-          if (id(prog_mask) != nullptr) {
-            if (show) lv_obj_clear_flag(id(prog_mask), LV_OBJ_FLAG_HIDDEN);
-            else lv_obj_add_flag(id(prog_mask), LV_OBJ_FLAG_HIDDEN);
           }
           if (id(prog_border) != nullptr) {
             if (show) lv_obj_clear_flag(id(prog_border), LV_OBJ_FLAG_HIDDEN);
@@ -1176,26 +1185,58 @@ interval:
             if (show) lv_obj_clear_flag(id(prog_pill), LV_OBJ_FLAG_HIDDEN);
             else lv_obj_add_flag(id(prog_pill), LV_OBJ_FLAG_HIDDEN);
           }
-          if (!show || id(prog_mask) == nullptr) return;
+          // Widths of the four allotted band slots (weights 1,1,1,1.4).
+          const int full_w[4] = {282, 282, 282, 378};
+          if (!show) {
+            for (int i = 0; i < 3; i++)
+              if (divs[i] != nullptr) lv_obj_add_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
+            return;
+          }
           int since = s.progress_seconds_since_start;
           int dur = s.progress_game_duration;
           int ends = s.progress_end_count;
           float skip_mult = s.progress_skip_multiplier;
           if (skip_mult <= 0) skip_mult = 1.4f;
-          if (dur <= 0 || ends <= 0) { lv_obj_set_width(id(prog_mask), 1240); return; }
+          if (dur <= 0 || ends <= 0) {
+            for (int i = 0; i < 4; i++)
+              if (bands[i] != nullptr) lv_obj_set_width(bands[i], full_w[i]);
+            for (int i = 0; i < 3; i++)
+              if (divs[i] != nullptr) lv_obj_clear_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
+            return;
+          }
           if (since < 0) since = 0;
           if (since > dur) since = dur;
           int end_dur = dur / ends;
           if (end_dur <= 0) end_dur = 1;
           int in_end = since % end_dur;
-          // Progress through current end (0..1): inverse mask width = (1 - progress) * 1240
+          // Progress through the current end resets at every end boundary;
+          // the engine still sounds the buzzer at the end of each end.
           float progress = (float)in_end * skip_mult / (float)end_dur;
           if (progress < 0) progress = 0;
           if (progress > 1) progress = 1;
-          int mask_w = (int)((1.0f - progress) * 1240);
-          if (mask_w < 0) mask_w = 0;
-          if (mask_w > 1240) mask_w = 1240;
-          lv_obj_set_width(id(prog_mask), mask_w);
+          // Map progress onto weights [1, 1, 1, skip_mult]. Each band grows
+          // from its fixed left edge; the white track shows the remainder.
+          const float weights[4] = {1.0f, 1.0f, 1.0f, skip_mult};
+          const float total = 3.0f + skip_mult;
+          // progress is 0..1 across the whole bar; scale it to the weight sum
+          // so all four bands can fill by the end of an end.
+          const float scaled = progress * total;
+          float before = 0.0f;
+          for (int i = 0; i < 4; i++) {
+            float frac = (scaled - before) / weights[i];
+            if (frac < 0) frac = 0;
+            if (frac > 1) frac = 1;
+            before += weights[i];
+            if (bands[i] != nullptr)
+              lv_obj_set_width(bands[i], (int) (frac * full_w[i] + 0.5f));
+            // A divider is the 4px black right edge of a completed band.
+            if (i < 3 && divs[i] != nullptr) {
+              if (scaled >= before)
+                lv_obj_clear_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
+              else
+                lv_obj_add_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
+            }
+          }
       - lvgl.label.update:
           id: lbl_status
           text: !lambda |-
