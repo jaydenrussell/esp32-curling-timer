@@ -1566,6 +1566,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         durationFields
       ),
       // buzzer is computed from start time + duration, no clock input needed
+    ),
     // --- stones and untimed ends ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 6px' },
       el('div', {}, el('label', {}, 'Stones per end'), stonesIn),
@@ -1635,7 +1636,9 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         document.body.removeChild(modal);
         showMessage('Game added to schedule', 'ok');
       } }, 'Add game'),
-      el('button', { class: 'btn primary', onclick: () => document.body.removeChild(modal) }, 'Cancel')));
+      el('button', { class: 'btn primary', onclick: () => document.body.removeChild(modal) }, 'Cancel')
+    )
+  );
 
   const modal = el('div', { class: 'modal show' }, el('div', { class: 'modal-backdrop' }), body);
   document.body.append(modal);
