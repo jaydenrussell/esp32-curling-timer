@@ -703,10 +703,16 @@ function normalizeLeaguePayload(league) {
   }
   return league;
 }
+// The engine uses U+02F8 (raised colon) on HDMI, but browser monospace fonts
+// usually lack it and render a placeholder box. Normalize every browser-mirror
+// countdown to ASCII ':' and let CSS supply the wig-wag vertical alignment.
+function browserCountdown(text) {
+  return Array.from(text || '').map(ch => (ch === ':' || ch === '\u02F8') ? ':' : ch).join('');
+}
 function buildCountdownContent(text) {
   const nodes = [];
   let digitBuf = '';
-  for (const char of Array.from(text || '')) {
+  for (const char of Array.from(browserCountdown(text))) {
     if (/\d/.test(char)) {
       digitBuf += char;
     } else {
@@ -1234,7 +1240,7 @@ function renderStatus() {
        const cdNodes = buildCountdownContent(text);
        cd.append(...cdNodes);
      } else {
-       cd = el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` }, sm.countdown || '');
+       cd = el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` }, browserCountdown(sm.countdown));
        cd.dataset.maxFont = String(fcd);
      }
      if (window._mirrorPregameBlinkIv) { clearInterval(window._mirrorPregameBlinkIv); window._mirrorPregameBlinkIv = null; }
@@ -1365,14 +1371,20 @@ function tick() {
             const nodes = buildCountdownContent(s.countdown);
             mc.replaceChildren(...nodes);
           }
-          const colon = mc.querySelector('.cd-colon');
-          if (colon) {
+          const colons = mc.querySelectorAll('.cd-colon');
+          if (colons.length) {
             const toggle = Math.floor(performance.now() / 1000) % 2 === 0;
-            colon.classList.toggle('wag-top', toggle);
-            colon.classList.toggle('wag-bottom', !toggle);
+            for (const colon of colons) {
+              colon.classList.toggle('wag-top', toggle);
+              colon.classList.toggle('wag-bottom', !toggle);
+              // Set inline alignment too: classList is enough normally, but
+              // an inline value guarantees the bottom phase never falls back
+              // to the centered default if another rule wins the cascade.
+              colon.style.alignSelf = toggle ? 'flex-start' : 'flex-end';
+            }
           }
         } else {
-          mc.textContent = s.countdown;
+          mc.textContent = browserCountdown(s.countdown);
         }
       }
       return;
@@ -1381,7 +1393,7 @@ function tick() {
       const left = s.current.seconds_until_buzzer - Math.floor((performance.now() - state.statusAt) / 1000);
       mc.textContent = countdownText(left);
     } else if (s.countdown) {
-      mc.textContent = s.countdown;
+      mc.textContent = browserCountdown(s.countdown);
     }
   }
 }
@@ -1400,14 +1412,15 @@ function durationText(total) {
   return [m ? `${m} min` : '', s || !m ? `${s} s` : ''].filter(Boolean).join(' ');
 }
 
-// countdownText: mirrors the engine's format_countdown() — raised colon,
-// H:MM:SS at >=1h, otherwise MM:SS.
+// countdownText: mirrors the engine's H:MM:SS shape for the browser mirror.
+// The engine uses U+02F8 on HDMI; the mirror uses ASCII ':' because browser
+// monospace fonts do not include the raised-colon glyph.
 function countdownText(total) {
   const t = Math.max(0, Math.floor(total));
   const h = Math.floor(t / 3600);
   const m = Math.floor((t % 3600) / 60);
   const s = t % 60;
-  const colon = '\u02F8';
+  const colon = ':';
   if (h > 0)
     return h + colon + String(m).padStart(2, '0') + colon + String(s).padStart(2, '0');
   return String(m).padStart(2, '0') + colon + String(s).padStart(2, '0');

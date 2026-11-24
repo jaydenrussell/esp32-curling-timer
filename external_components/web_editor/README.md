@@ -18,10 +18,10 @@ ESPHome's own `web_server` UI (stock UI on :80, this one on
 ## Web UI source
 
 The page source is `web_ui.html`. At codegen time `__init__.py`
-regenerates `web_ui.h` (a raw-string literal, plus the running
-ESPHome version in place of `{{version}}`) and only rewrites it when
-the HTML changed — a define would blow the Windows command-line limit
-at this size. After editing `web_ui.html`, just re-run
+regenerates `web_ui.h` (a raw-string literal, plus the release version
+from `VERSION` in place of `{{version}}`) and only rewrites it when
+the generated content changed — a define would blow the Windows
+command-line limit at this size. After editing `web_ui.html`, just re-run
 `esphome compile` (or `esphome config`) to refresh `web_ui.h`; commit
 both files together.
 

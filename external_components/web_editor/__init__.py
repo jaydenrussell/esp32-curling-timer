@@ -1,5 +1,4 @@
 from pathlib import Path
-import subprocess
 
 import esphome.codegen as cg
 import esphome.config_validation as cv
@@ -49,27 +48,15 @@ WEB_UI_DELIMITER = "esphome_web_ui"
 
 
 def component_version() -> str:
-    """Build stamp of the component.
+    """Release stamp of the component.
 
-    When fetched as a git external_component, prefers `git describe
-    --tags --always` so the version reflects the actual compiled commit
-    (and updates automatically on `ref: main` pulls). Falls back to the
-    VERSION file (bumped on releases) when git isn't available.
+    VERSION is the source of truth. A release commit must be able to
+    regenerate web_ui.h before the new tag exists; `git describe` would
+    still report the previous tag at that point and check in a stale
+    version stamp. The VERSION file is bumped with every release, so it
+    is also correct for git-cloned external components.
     """
     here = Path(__file__).parent
-    try:
-        desc = subprocess.check_output(
-            ["git", "describe", "--tags", "--always"],
-            cwd=here,
-            stderr=subprocess.DEVNULL,
-            timeout=5,
-        ).decode().strip()
-        if desc:
-            # `git describe --tags` already includes the leading "v" on this
-            # repo's tags; the callers prepend it when rendering the UI version.
-            return desc[1:] if desc.startswith("v") else desc
-    except (subprocess.SubprocessError, OSError, FileNotFoundError):
-        pass
     return (here / "VERSION").read_text(encoding="utf-8").strip()
 
 
@@ -77,9 +64,9 @@ def emit_web_ui_header() -> None:
     """Read web_ui.html and (re)generate web_ui.h as a raw string literal.
 
     Runs at codegen time so the {{version}} placeholder always shows the
-    ESPHome version of this build, and only rewrites the header when the
-    HTML actually changed (a plain compile-flag define would blow the
-    Windows command line limit for a page this size).
+    component release version from VERSION, and only rewrites the header
+    when the generated content changed (a plain compile-flag define would
+    blow the Windows command line limit for a page this size).
     """
     here = Path(__file__).parent
     html = (here / "web_ui.html").read_text(encoding="utf-8")
