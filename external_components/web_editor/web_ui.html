@@ -287,8 +287,8 @@ label.check input { width: 18px; height: 18px; min-height: 0; margin: 0; accent-
 .banner.warn { background: rgba(251,191,36,0.12); border-color: rgba(251,191,36,0.35); color: #fde68a; }
 .state { font-weight: 700; letter-spacing: 0.04em; font-size: 13px; }
 
-.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
-.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.grid2 { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+.grid3 { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 2px; }
 .page-head h1, .page-head h2 { margin: 0; }
 .section-title { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 2px 0 1px; }
@@ -2041,8 +2041,8 @@ const CONFIG_SECTIONS = [
   { group: 'Output Configuration', title: 'Countdown Warning',
     hint: 'Only applies to games longer than the minutes set here. For 8-end games, typical pace warning is 15-20 min before buzzer (7th end). For 6-end games, 10-12 min.',
     fields: [
-      ['config.buzzer.countdown.mode', 'text', 'Countdown mode: time until warning (default) or time before buzzer', 'Time until warning', 'Time before buzzer'],
-      ['config.buzzer.countdown.minutes_before', 'int', 'Countdown time (hours and minutes)', 0, 100000],
+      ['config.buzzer.countdown.mode', 'select', 'Countdown mode: time until warning (default) or time before buzzer', 'Time until warning', 'Time before buzzer'],
+      ['config.buzzer.countdown.minutes_before', 'hms', 'Countdown time (hours and minutes)', 0, 100000],
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
       ['config.buzzer.countdown_duration', 'output_duration', 'Duration', 'countdown']] },
   { group: 'Output Configuration', title: 'Game End',
@@ -2172,6 +2172,11 @@ function configField(field) {
     const sync = () => set((parseInt(m.value||'0',10)||0)*60 + (parseInt(sec.value||'0',10)||0));
     m.oninput = sync; sec.oninput = sync;
     return el('div', { class: 'field' }, el('label', {}, label), el('div', { class: 'duration' }, m, el('span', {}, 'min'), sec, el('span', {}, 's')));
+  }
+  if (type === 'hms') {
+    const hours = el('input', { type: 'number', min: 0, max: 24, step: 1, inputmode: 'numeric', value: value == null ? '' : String(value), 'aria-label': label + ' hours' });
+    const minutes = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', value: value == null ? '' : String(value), 'aria-label': label + ' minutes' });
+    return el('div', { class: 'field' }, el('label', {}, label), el('div', { class: 'duration' }, hours, el('span', {}, 'h'), minutes, el('span', {}, 'm')) );
   }
   if (type === 'int') {
     let width = '';
@@ -2334,17 +2339,73 @@ async function renderConfig() {
       fields = [['config.relay_count', 'int', 'Number of relays', 0, 4]].concat(relayFields);
     }
     const isPregameSection = section.title === 'Pre-game countdown';
-    const fieldNodes = isPregameSection ? [
-      // Row 1: header text + header color
-      el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' },
-        ...[fields[0], fields[1]].map(configField)),
-      // Row 2: countdown + countdown color + font size
-      el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
-        ...[fields[2], fields[3], fields[4]].map(configField)),
-      // Row 3: pillbox only
-      el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px; align-items:center' },
-        configField(fields[5]))
-    ] : fields.map(configField);
+    let fieldNodes;
+    if (isPregameSection) {
+      fieldNodes = [
+        // Row 1: header text + header color
+        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' },
+          ...[fields[0], fields[1]].map(configField)),
+        // Row 2: countdown + countdown color + font size
+        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px' },
+          ...[fields[2], fields[3], fields[4]].map(configField)),
+        // Row 3: pillbox only
+        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 6px; align-items:center' },
+          configField(fields[5]))
+      ];
+    } else if (section.title === 'Pace of play') {
+      // Pace of play: enabled (row1), font size + color (row2), unit name (row3)
+      fieldNodes = [
+        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' }, configField(fields[0])),
+        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' }, configField(fields[1]), configField(fields[2])),
+        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' }, configField(fields[3]))
+      ];
+    } else if (section.title === 'Footer') {
+      // Footer: font size + color (row1), datetime + entry name (row2)
+      fieldNodes = [
+        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' }, configField(fields[0]), configField(fields[3])),
+        el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' }, configField(fields[1]), configField(fields[2]))
+      ];
+    } else if (section.title.startsWith('Output Configuration')) {
+      // Output sections: each pillbox + duration on its own row
+      fieldNodes = [];
+      for (const f of fields) {
+        if (f[1] === 'relays') {
+          // Relay pillbox + its duration on the same row
+          const relaysPath = f[0].startsWith('config.buzzer.countdown') ? 'config.buzzer.countdown.relays' :
+            f[0].startsWith('config.buzzer.ring_at_start') ? 'config.buzzer.ring_at_start' : 'config.buzzer.relays';
+          const selected = Array.isArray(state.configValues[relaysPath]) ? state.configValues[relaysPath] : [];
+          const rows = [];
+          for (const info of enabledOutputInfos()) {
+            const checked = selected.includes(info.id);
+            const btn = toggleBtn(checked, info.label);
+            btn.onclick = () => {
+              const list = Array.isArray(state.configValues[f[0]]) ? [...state.configValues[f[0]]] : [];
+              const at = list.indexOf(info.id);
+              if (at < 0) list.push(info.id);
+              else list.splice(at, 1);
+              for (const ev of ['start', 'countdown', 'end']) {
+                const dp = `config.buzzer.${ev}_duration_${info.index}`;
+                if (dp in state.configValues) delete state.configValues[dp];
+              }
+              set(list);
+              btn.className = 'check-toggle ' + (list.includes(info.id) ? 'on' : 'off');
+            };
+            rows.push(el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 8px; align-items:center' },
+              btn));
+          }
+          if (selected.length === 0) rows.push(el('p', { class: 'muted small' }, 'No outputs selected.'));
+          fieldNodes.push(...rows);
+        } else if (f[1] === 'output_duration') {
+          // Per-relay duration handled inline via relays rows above
+        }
+      }
+      // Add standalone duration fields not part of relays
+      for (const f of fields) {
+        if (f[1] !== 'relays' && f[1] !== 'output_duration') fieldNodes.push(configField(f));
+      }
+    } else {
+      fieldNodes = fields.map(configField);
+    }
     nodes.push(el('div', { class: 'card' },
       el('div', { class: 'section-title' }, section.group),
       el('h3', {}, section.title),
