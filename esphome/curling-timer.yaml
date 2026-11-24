@@ -1086,9 +1086,21 @@ interval:
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer >= 3600)
               return std::string();
-            if (s.is_pregame && s.pregame_blink && !id(pregame_blink_on))
-              return std::string();
-            return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+            std::string text = ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+            // Wig wag: during pregame with blink enabled, alternate the colon
+            // between raised (U+02F8) and regular (:) each second so it appears
+            // to move vertically. Do NOT blank the entire countdown.
+            if (s.is_pregame && s.pregame_blink && !id(pregame_blink_on)) {
+              // Replace raised colon (UTF-8 0xCB 0xB8) with regular colon
+              for (size_t i = 0; i + 1 < text.size(); ++i) {
+                if (static_cast<unsigned char>(text[i]) == 0xCB &&
+                    static_cast<unsigned char>(text[i+1]) == 0xB8) {
+                  text[i] = ':';
+                  text.erase(i+1, 1);
+                }
+              }
+            }
+            return text;
       - lvgl.label.update:
           id: lbl_cnt5
           align: CENTER
@@ -1101,9 +1113,17 @@ interval:
             auto &s = id(g_snap);
             if (!s.show_countdown || s.seconds_until_buzzer < 3600)
               return std::string();
-            if (s.is_pregame && s.pregame_blink && !id(pregame_blink_on))
-              return std::string();
-            return ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+            std::string text = ::esphome::curling_engine::recolor(s.countdown_color, s.countdown);
+            if (s.is_pregame && s.pregame_blink && !id(pregame_blink_on)) {
+              for (size_t i = 0; i + 1 < text.size(); ++i) {
+                if (static_cast<unsigned char>(text[i]) == 0xCB &&
+                    static_cast<unsigned char>(text[i+1]) == 0xB8) {
+                  text[i] = ':';
+                  text.erase(i+1, 1);
+                }
+              }
+            }
+            return text;
       - lvgl.label.update:
           id: lbl_pace
           align: CENTER

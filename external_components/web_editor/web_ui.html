@@ -1233,8 +1233,17 @@ function tick() {
       if (s.countdown) {
         const wagOn = !!(s.pregame_blink && mc.classList.contains('cd-wag'));
         if (wagOn) {
-          const nodes = buildCountdownContent(s.countdown);
-          mc.replaceChildren(...nodes);
+          // Wig wag: do NOT rebuild DOM (causes flicker). Just toggle the
+          // colon's vertical position. The countdown text itself only
+          // changes when the seconds tick; renderMirror() already built
+          // the initial structure, so update text in-place if needed.
+          const digits = (s.countdown || '').replace(/[^0-9]/g, '');
+          const oldDigits = Array.from(mc.querySelectorAll('.cd-group')).map(g => g.textContent).join('');
+          if (digits && digits !== oldDigits) {
+            // Only rebuild when the numeric part changes (once per second max)
+            const nodes = buildCountdownContent(s.countdown);
+            mc.replaceChildren(...nodes);
+          }
           const colon = mc.querySelector('.cd-colon');
           if (colon) {
             const toggle = Math.floor(performance.now() / 1000) % 2 === 0;
@@ -1450,6 +1459,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   const manualBtn = toggleBtn(manualOn, 'Manual push-button trigger');
   const pregameMinutesInput = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: 'minutes', value: '0', style: 'display:none; width:40px' });
   const pregameSecondsInput = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', placeholder: 'seconds', value: '0', style: 'display:none; width:40px' });
+  const warningIn = el('input', { type: 'number', min: 0, max: 60, step: 1, inputmode: 'numeric', placeholder: 'minutes', value: '0', style: 'width:60px' });
   pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); pregameMinutesInput.style.display = pregameOn ? '' : 'none'; pregameSecondsInput.style.display = pregameOn ? '' : 'none'; };
   paceBtn.onclick = (e) => { paceOn = !paceOn; e.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); };
   progressBtn.onclick = (e) => { progressOn = !progressOn; e.target.className = 'check-toggle ' + (progressOn ? 'on' : 'off'); };
@@ -1549,10 +1559,9 @@ function openScheduleGameModal(dayKey, entries, rerender) {
       pregameMinutesInput,
       el('span', { class: 'muted small' }, 'm'),
       pregameSecondsInput),
+    
     // --- timing ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 12px' },
-      el('div', {}, el('label', {}, 'Start time'), startIn),
-      // Duration mode toggle
       el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 4px' },
         el('span', { class: 'muted small' }, 'Set duration:'),
         el('div', { class: 'duration-mode' },
@@ -1565,7 +1574,21 @@ function openScheduleGameModal(dayKey, entries, rerender) {
       el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 6px' },
         durationFields
       ),
-      // buzzer is computed from start time + duration, no clock input needed
+      el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 6px' },
+        el('span', { class: 'muted small' }, 'Start time'),
+        startIn
+      ),
+      el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 6px' },
+        el('span', { class: 'muted small' }, 'Game Duration'),
+        durationHoursInput,
+        el('span', { class: 'muted small' }, 'h'),
+        durationMinutesInput,
+        el('span', { class: 'muted small' }, 'm')
+      ),
+      el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 6px' },
+        el('span', { class: 'muted small' }, 'Warning Countdown/Expiration'),
+        warningIn
+      ),
     ),
     // --- stones and untimed ends ---
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 6px' },
@@ -1613,7 +1636,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
           buzzer: buzzerSec,
           name: leagueName,
           game_completed: league ? league.header_text || null : null,
-          header_hold: league ? league.header_hold ?? null : null,
+          header_hold: Number(warningIn.value) || (league ? league.header_hold ?? null : null),
           pace_of_play: paceOn ? true : null,
           pace_unit_duration: null,
           quick: false,
