@@ -2043,14 +2043,14 @@ const CONFIG_SECTIONS = [
   { group: 'Output Configuration', title: 'Countdown Warning',
     hint: 'Only applies to games longer than the minutes set here. For 8-end games, typical pace warning is 15-20 min before buzzer (7th end). For 6-end games, 10-12 min.',
     fields: [
-      ['config.buzzer.countdown.mode', 'select', 'Countdown mode: time until warning (default) or time before buzzer', 'Time until warning', 'Time before buzzer'],
-      ['config.buzzer.countdown.minutes_before', 'hms', 'Countdown time (hours and minutes)', 0, 100000],
+      ['config.buzzer.countdown.mode', 'select', 'Countdown mode', 'Time until warning', 'Time before buzzer'],
+      ['config.buzzer.countdown.minutes_before', 'hms', 'Countdown warning time (hours and minutes)', 0, 100000],
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
       ['config.buzzer.countdown_duration', 'output_duration', 'Duration', 'countdown']] },
   { group: 'Output Configuration', title: 'Game End',
-    hint: 'Header hold replaces buzzer with warning. Header hold seconds the during-buzzer header text stays after ringing.',
+    hint: 'Warning wording hold controls how long the warning stays after the buzzer rings. The wording itself is set under Display → Header text → Text when Warning Countdown Ends/Output.',
     fields: [
-      ['config.buzzer.header_hold', 'int', 'Header hold after the buzzer (seconds)', 0, 100000],
+      ['config.buzzer.header_hold', 'int', 'Warning wording hold after buzzer (seconds)', 0, 100000],
       ['config.buzzer.relays', 'relays', 'Output'],
       ['config.buzzer.end_duration', 'output_duration', 'Duration', 'end']] },
 ];
@@ -2123,10 +2123,12 @@ function validateConfigDiff(diff) {
     } else if (path === 'config.mirror_scale') {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 10 || value > 100)
         return 'Display mirror scale must be an integer between 10 and 100 (percentage)';
+    } else if (path === 'config.buzzer.countdown.minutes_before') {
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 100000)
+        return 'Countdown warning time must be a whole number of minutes (0 or more)';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
                 path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
                 path === 'config.buzzer.header_hold' ||
-                path === 'config.buzzer.countdown.minutes_before' ||
                 /config\.buzzer\.(start|countdown|end)_duration_[1-4]$/.test(path)) {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 100000)
         return `${path} must be a whole number of seconds or pixels (0 or more)`;
@@ -2176,8 +2178,33 @@ function configField(field) {
     return el('div', { class: 'field' }, el('label', {}, label), el('div', { class: 'duration' }, m, el('span', {}, 'min'), sec, el('span', {}, 's')));
   }
   if (type === 'hms') {
-    const hours = el('input', { type: 'number', min: 0, max: 24, step: 1, inputmode: 'numeric', value: value == null ? '' : String(value), 'aria-label': label + ' hours' });
-    const minutes = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric', value: value == null ? '' : String(value), 'aria-label': label + ' minutes' });
+    // Stored value is whole minutes (the engine multiplies by 60), so split
+    // it for display and write hours*60+minutes back on every input event.
+    const hi = Number.isFinite(max) ? max : 100000;
+    const total = Math.max(0, Math.min(hi, parseInt(value || '0', 10) || 0));
+    const baseLabel = label.replace(/\s*\([^)]*\)\s*$/, '');
+    const hours = el('input', { type: 'number', min: 0, max: Math.floor(hi / 60), step: 1, inputmode: 'numeric',
+      value: String(Math.floor(total / 60)), 'aria-label': baseLabel + ' (hours)' });
+    const minutes = el('input', { type: 'number', min: 0, max: 59, step: 1, inputmode: 'numeric',
+      value: String(total % 60), 'aria-label': baseLabel + ' (minutes)' });
+    // Write on input but do not rewrite the boxes mid-typing (that would
+    // fight multi-digit entry). Normalize both boxes on change so a clamped
+    // value is never displayed differently from what was saved.
+    const read = () => {
+      const h = Math.max(0, parseInt(hours.value || '0', 10) || 0);
+      const m = Math.min(59, Math.max(0, parseInt(minutes.value || '0', 10) || 0));
+      return Math.max(0, Math.min(hi, h * 60 + m));
+    };
+    hours.oninput = () => set(read());
+    minutes.oninput = () => set(read());
+    const normalize = () => {
+      const next = read();
+      hours.value = String(Math.floor(next / 60));
+      minutes.value = String(next % 60);
+      set(next);
+    };
+    hours.onchange = normalize;
+    minutes.onchange = normalize;
     return el('div', { class: 'field' }, el('label', {}, label), el('div', { class: 'duration' }, hours, el('span', {}, 'h'), minutes, el('span', {}, 'm')) );
   }
   if (type === 'int') {
@@ -2364,62 +2391,63 @@ async function renderConfig() {
         el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' }, configField(fields[1]), configField(fields[2]))
       ];
     } else if (section.group.startsWith('Output Configuration')) {
-      // Output sections: each relay pillbox + its duration on one inline grid row
+      // Non-relay settings first (mode, warning time, header hold, ...).
+      // Relay options and their per-output durations always come last.
       fieldNodes = [];
       for (const f of fields) {
-        if (f[1] === 'relays') {
-          const addonKey = PATH_TO_ADDON[f[0]];
-          if (addonKey && !isAddonEnabled(addonKey)) {
-            fieldNodes.push(el('div', { class: 'field' }, el('label', {}, f[2],
-              el('span', { class: 'pill notdetected', style: 'margin-left: 8px; font-size: 10px' }, 'add-on disabled'))));
-            continue;
-          }
-          const relaysPath = f[0].startsWith('config.buzzer.countdown') ? 'config.buzzer.countdown.relays' :
-            f[0].startsWith('config.buzzer.ring_at_start') ? 'config.buzzer.ring_at_start' : 'config.buzzer.relays';
-          const selected = Array.isArray(state.configValues[relaysPath]) ? state.configValues[relaysPath] : [];
-          // Find the matching output_duration field to derive its per-relay path prefix
-          const durField = fields.find((d) => d[1] === 'output_duration');
-          const event = durField ? durField[3] : null;
-          const rows = [];
-          for (const info of enabledOutputInfos()) {
-            const checked = selected.includes(info.id);
-            const btn = toggleBtn(checked, info.label);
-            btn.onclick = () => {
-              const list = Array.isArray(state.configValues[f[0]]) ? [...state.configValues[f[0]]] : [];
-              const at = list.indexOf(info.id);
-              if (at < 0) list.push(info.id);
-              else list.splice(at, 1);
-              // Keep per-event duration values when a relay is unchecked:
-              // deleting them would make configDiff emit `undefined`, which
-              // fails numeric validation and blocks the whole save. Unused
-              // durations are ignored by the engine, and are restored if the
-              // relay is selected again.
-              state.configValues[f[0]] = list;
-              configTouched();
-              btn.className = 'check-toggle ' + (list.includes(info.id) ? 'on' : 'off');
-            };
-            // Duration input for this specific relay (same row as the pillbox)
-            let dur = null;
-            if (event) {
-              const dp = `config.buzzer.${event}_duration_${info.index}`;
-              const dv = state.configValues[dp];
-              dur = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric',
-                style: 'width:7ch', 'aria-label': `${info.label} duration (seconds)`,
-                value: dv == null ? '' : String(dv),
-                oninput: (e) => { state.configValues[dp] = e.target.value === '' ? null : Number(e.target.value); configTouched(); } });
-            }
-            rows.push(el('div', { style: 'display:inline-grid; grid-template-columns:auto auto; align-items:center; gap:8px; margin:4px 8px 4px 0' },
-              btn, dur ? el('span', { class: 'muted small', style: 'display:inline-flex; align-items:center; gap:4px' }, dur, 's') : null));
-          }
-          if (selected.length === 0) rows.push(el('p', { class: 'muted small' }, 'No outputs selected.'));
-          fieldNodes.push(...rows);
-        } else if (f[1] === 'output_duration') {
-          // Per-relay duration handled inline via relays rows above
-        }
-      }
-      // Add standalone (non-output) fields not part of relays/durations
-      for (const f of fields) {
         if (f[1] !== 'relays' && f[1] !== 'output_duration') fieldNodes.push(configField(f));
+      }
+      for (const f of fields) {
+        if (f[1] !== 'relays') continue;
+        const addonKey = PATH_TO_ADDON[f[0]];
+        if (addonKey && !isAddonEnabled(addonKey)) {
+          fieldNodes.push(el('div', { class: 'field' }, el('label', {}, f[2],
+            el('span', { class: 'pill notdetected', style: 'margin-left: 8px; font-size: 10px' }, 'add-on disabled'))));
+          continue;
+        }
+        const relaysPath = f[0].startsWith('config.buzzer.countdown') ? 'config.buzzer.countdown.relays' :
+          f[0].startsWith('config.buzzer.ring_at_start') ? 'config.buzzer.ring_at_start' : 'config.buzzer.relays';
+        const selected = Array.isArray(state.configValues[relaysPath]) ? state.configValues[relaysPath] : [];
+        // Find the matching output_duration field to derive its per-relay path prefix
+        const durField = fields.find((d) => d[1] === 'output_duration');
+        const event = durField ? durField[3] : null;
+        const rows = [];
+        for (const info of enabledOutputInfos()) {
+          const checked = selected.includes(info.id);
+          const btn = toggleBtn(checked, info.label);
+          btn.onclick = () => {
+            const list = Array.isArray(state.configValues[f[0]]) ? [...state.configValues[f[0]]] : [];
+            const at = list.indexOf(info.id);
+            if (at < 0) list.push(info.id);
+            else list.splice(at, 1);
+            // Keep per-event duration values when a relay is unchecked:
+            // deleting them would make configDiff emit `undefined`, which
+            // fails numeric validation and blocks the whole save. Unused
+            // durations are ignored by the engine, and are restored if the
+            // relay is selected again.
+            state.configValues[f[0]] = list;
+            configTouched();
+            btn.className = 'check-toggle ' + (list.includes(info.id) ? 'on' : 'off');
+          };
+          // Duration input for this specific relay (same row as the pillbox)
+          let dur = null;
+          if (event) {
+            const dp = `config.buzzer.${event}_duration_${info.index}`;
+            const dv = state.configValues[dp];
+            dur = el('input', { type: 'number', min: 0, max: 999, step: 1, inputmode: 'numeric',
+              style: 'width:7ch', 'aria-label': `${info.label} duration (seconds)`,
+              value: dv == null ? '' : String(dv),
+              oninput: (e) => { state.configValues[dp] = e.target.value === '' ? null : Number(e.target.value); configTouched(); } });
+          }
+          rows.push(el('div', { style: 'display:inline-grid; grid-template-columns:auto auto; align-items:center; gap:8px; margin:4px 8px 4px 0' },
+            btn, dur ? el('span', { class: 'muted small', style: 'display:inline-flex; align-items:center; gap:4px' }, dur, 's') : null));
+        }
+        if (selected.length === 0) rows.push(el('p', { class: 'muted small' }, 'No outputs selected.'));
+        const groupLabelId = 'relay-group-' + f[0].replace(/[^a-zA-Z0-9]/g, '-');
+        fieldNodes.push(el('div', { class: 'field', style: 'margin-top: 8px' },
+          el('div', { id: groupLabelId, style: 'font-weight:600' }, f[2]),
+          el('div', { role: 'group', 'aria-labelledby': groupLabelId,
+            style: 'display:flex; flex-wrap:wrap; gap:4px' }, rows)));
       }
     } else {
       fieldNodes = fields.map(configField);
