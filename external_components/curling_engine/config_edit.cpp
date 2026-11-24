@@ -206,6 +206,7 @@ static bool insertable_config_path(const std::string &path) {
       path.rfind("config.countdown.color.", 0) == 0)
     return true;
   return path == "config.buzzer.ring_at_start" || path == "config.buzzer.countdown.minutes_before" ||
+         path == "config.buzzer.countdown.mode" ||
          path == "config.buzzer.countdown.relays" ||
           path == "config.relays_enabled" || path == "config.relay_count" ||
           path == "config.log_level" ||
@@ -244,26 +245,33 @@ static bool insertable_config_path(const std::string &path) {
 static void complete_countdown_values(std::vector<ConfigValue> *values, const std::string &text) {
   bool has_minutes = false;
   bool has_relays = false;
+  bool has_mode = false;
   for (const ConfigValue &value : *values) {
     if (value.path == "config.buzzer.countdown.minutes_before")
       has_minutes = true;
     else if (value.path == "config.buzzer.countdown.relays")
       has_relays = true;
+    else if (value.path == "config.buzzer.countdown.mode")
+      has_mode = true;
   }
-  if (!has_minutes && !has_relays)
+  if (!has_minutes && !has_relays && !has_mode)
     return;  // no countdown edit: leave the section untouched
   int minutes = 0;
   std::vector<std::string> relays;
+  std::string mode = "Time until warning";
   PiTimerSettings settings;
   std::string err;
   if (settings.parse_settings_text(text, "settings.yml", &err)) {
     minutes = settings.countdown_minutes_before;
     relays = settings.countdown_relays;
+    mode = settings.countdown_mode;
   }
   if (!has_minutes)
     values->push_back(ConfigValue{"config.buzzer.countdown.minutes_before", yaml_int(minutes)});
   if (!has_relays)
     values->push_back(ConfigValue{"config.buzzer.countdown.relays", yaml_relays(relays)});
+  if (!has_mode)
+    values->push_back(ConfigValue{"config.buzzer.countdown.mode", yaml_quote(mode)});
 }
 
 bool apply_config_values(const std::string &text, const std::vector<ConfigValue> &values,

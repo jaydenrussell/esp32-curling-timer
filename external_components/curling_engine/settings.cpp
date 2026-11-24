@@ -1486,6 +1486,7 @@ void PiTimerSettings::reset() {
   ring_at_start = std::nullopt;
   countdown_minutes_before = 0;
   countdown_relays.clear();
+  countdown_mode = "Time until warning";
   relay_duration = 0;
   relay_start_duration = 0;
   relay_countdown_duration = 0;
@@ -1743,6 +1744,7 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   }
   countdown_minutes_before = 0;
   countdown_relays.clear();
+  countdown_mode = "time_until_warning";
   if ((v = buzzer->find("countdown")) != nullptr) {
     if (v->type != YType::Map) {
       *err = std::string("'countdown' in ") + where + " is not a valid section (" + yaml_repr(*v) +
@@ -1763,6 +1765,18 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
       return false;
     if (!parse_relay_seq(*cd_relays, "relays", cd_where, &countdown_relays, err))
       return false;
+    const YamlValue *mode = v->find("mode");
+    if (mode != nullptr && mode->type == YType::Str) {
+      const std::string m = mode->s;
+      if (m == "Time until warning" || m == "time_until_warning") {
+        countdown_mode = "Time until warning";
+      } else if (m == "Time before buzzer" || m == "time_before_buzzer") {
+        countdown_mode = "Time before buzzer";
+      } else {
+        *err = "'mode' in config buzzer countdown section must be 'Time until warning' or 'Time before buzzer'";
+        return false;
+      }
+    }
   }
   if ((v = require_(buzzer, "duration", YType::Int, where, err)) == nullptr)
     return false;

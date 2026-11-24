@@ -873,6 +873,7 @@ ApiResponse PiTimerApi::get_config() {
     cfg["config.buzzer.ring_at_start"] = nullptr;
   }
   cfg["config.buzzer.countdown.minutes_before"] = s.countdown_minutes_before;
+  cfg["config.buzzer.countdown.mode"] = s.countdown_mode.c_str();
   {
     JsonArray relays = cfg["config.buzzer.countdown.relays"].to<JsonArray>();
     for (const std::string &relay : s.countdown_relays)
@@ -1039,6 +1040,13 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
         relays.push_back(name);
       }
       yaml = curling_engine::yaml_relays(relays);
+    } else if (path == "config.buzzer.countdown.mode") {
+      if (!v.is<const char *>())
+        return error_json(422, path + " must be 'Time until warning' or 'Time before buzzer'");
+      const std::string mode = v.as<const char *>();
+      if (mode != "Time until warning" && mode != "Time before buzzer")
+        return error_json(422, path + " must be 'Time until warning' or 'Time before buzzer'");
+      yaml = curling_engine::yaml_quote(mode);
     } else if (path.rfind("config.header.text.", 0) == 0 ||
                path.rfind("config.header.color.", 0) == 0 ||
                path.rfind("config.countdown.color.", 0) == 0 ||
