@@ -282,7 +282,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.217
+      ref: v2026.11.218
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -866,8 +866,12 @@ lvgl:
     # Height: 85px. Border radius: 1.5rem = 24px (rounded, clipped).
     # Outer frame: 8px BLACK border, WHITE track. Segment dividers: 4px BLACK.
     # Pill is centered: outer x=20..1260, inner x=28..1252 (1224px usable).
-    # Weights: [1, 1, 1, W_skip] where W_skip defaults to 1.4
-    # Total = 3 + 1.4 = 4.4 → Band widths: 282, 282, 282, 378 (out of 1224)
+    # Fixed geometry inside the 1224px inner track: bands at x=0/282/564/846,
+    # widths 282/282/282/378, with 4px dividers at 278/560/842. The skip
+    # multiplier changes fill rate, not these slot widths.
+    # Static YAML colors bypass render.cpp's hex6(), which swaps R/B for every
+    # engine-supplied text color before LVGL draws it. Pre-swap here so the
+    # HDMI bands land on the same RGB values as the WebUI CSS palette.
     # Container (white track + black frame + rounded/clipped corners)
     - obj:
         id: prog_pill
@@ -895,7 +899,7 @@ lvgl:
         y: -79
         width: 282
         height: 85
-        bg_color: 0xDC3545  # Lead - Bootstrap red rgb(220,53,69)
+        bg_color: 0x4535DC  # Lead - #DC3545, pre-swapped for hex6() parity
         border_width: 0
         radius: 0
         hidden: true
@@ -906,7 +910,7 @@ lvgl:
         y: -79
         width: 282
         height: 85
-        bg_color: 0xFFC107  # Second - Bootstrap yellow rgb(255,193,7)
+        bg_color: 0x07C1FF  # Second - #FFC107, pre-swapped for hex6() parity
         border_width: 0
         radius: 0
         hidden: true
@@ -917,7 +921,7 @@ lvgl:
         y: -79
         width: 282
         height: 85
-        bg_color: 0x0DCAF0  # Vice - Bootstrap cyan rgb(13,202,240)
+        bg_color: 0xF0CA0D  # Vice - #0DCAF0, pre-swapped for hex6() parity
         border_width: 0
         radius: 0
         hidden: true
@@ -928,7 +932,7 @@ lvgl:
         y: -79
         width: 378
         height: 85
-        bg_color: 0x198754  # Skip - Bootstrap green rgb(25,135,84)
+        bg_color: 0x548719  # Skip - #198754, pre-swapped for hex6() parity
         border_width: 0
         radius: 0
         hidden: true

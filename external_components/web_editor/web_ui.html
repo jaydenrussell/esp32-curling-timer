@@ -415,11 +415,10 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 .addon-card h3 { font-size: 16px; }
 .addon-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
 
-.progress-end-bar { position: relative; display: flex; min-height: 64px; border-radius: 24px; overflow: hidden; background: #fff; border: 8px solid #000; width: 100%; box-sizing: border-box; }
-.progress-seg { box-sizing: border-box; height: 100%; }
-.progress-seg.lead { background: #DC3545; } .progress-seg.second { background: #FFC107; } .progress-seg.vice { background: #0DCaf0; } .progress-seg.skip { background: #198754; }
-.progress-seg.lead, .progress-seg.second, .progress-seg.vice { border-right: 4px solid #000; }
-.progress-end-fill { position: absolute; top:0; left:0; height:100%; background: rgba(2,10,20,0.55); pointer-events:none; z-index:1; transition: width .5s ease; }
+.progress-end-bar { position: relative; height: 85px; border-radius: 24px; overflow: hidden; background: #fff; border: 8px solid #000; width: 100%; box-sizing: border-box; }
+.progress-band { position: absolute; top: 0; height: 100%; }
+.progress-band.lead { background: #DC3545; } .progress-band.second { background: #FFC107; } .progress-band.vice { background: #0DCaf0; } .progress-band.skip { background: #198754; }
+.progress-divider { position: absolute; top: 0; height: 100%; background: #000; }
 .version-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background: var(--warn); margin-left:6px; vertical-align:middle; cursor:pointer; }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
@@ -516,6 +515,12 @@ const TABS = [
 ];
 const state = { tab: 'status', subTab: 'schedule', status: null, statusAt: 0, model: null, dirty: false, showPast: false, openDays: new Set(), openDates: new Set(), raw: null,
                 configOriginal: null, configValues: null, configVersion: null, configDirty: false, editingLeagueIdx: null, leagues: null };
+
+// HDMI progress geometry: 1224px inner track, fixed band x/width pairs and
+// 4px divider x positions. Shared by the mirror builder and the 1 Hz fill.
+const PROGRESS_TRACK_PX = 1224;
+const PROGRESS_BAND_GEOM = [[0, 282], [282, 282], [564, 282], [846, 378]];
+const PROGRESS_DIV_X = [278, 560, 842];
 
 // Add-on marketplace data model (spec §2). auto = hardware-detected gating.
 // configPaths = settings fields that belong to this addon (gated by enablement).
@@ -1228,7 +1233,9 @@ function renderStatus() {
   const progressEndCount = Number(sm.progress_end_count || (s.current && s.current.end_count) || 0);
   const progressGameDuration = Number(sm.progress_game_duration || (s.current ? (s.current.buzzer - s.current.start) : 0));
   const centerTop = sm.header_text ? px(20 + baseHeader * 1.4) : px(20);
-  const centerBottom = px(20 + baseFooter * 1.4 + (showProgress ? 24 : 0));
+  // HDMI pill: y=-79, height 85. Reserve that block plus a small gap so the
+  // centre content never overlaps the single progress bar.
+  const centerBottom = showProgress ? px(79 + 85 + 8) : px(20 + baseFooter * 1.4);
   const centerWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; top:${centerTop}px; bottom:${centerBottom}px; display:flex; flex-direction:column; align-items:center; justify-content:center;` });
 
   if (sm.show_countdown) {
@@ -1259,31 +1266,20 @@ function renderStatus() {
   stage.append(centerWrap);
 
   if (showProgress && progressEndCount > 0 && progressGameDuration > 0) {
-    const endCount = progressEndCount;
-    const gameDur = progressGameDuration;
-    const endDur = gameDur / endCount;
-    const unitsPerEnd = 4.4;
-    const leadPct = (1 / unitsPerEnd * 100).toFixed(1);
-    const secondPct = (1 / unitsPerEnd * 100).toFixed(1);
-    const vicePct = (1 / unitsPerEnd * 100).toFixed(1);
-    const skipPct = (1.4 / unitsPerEnd * 100).toFixed(1);
-    const nowSecs = secondsNow();
-    const sinceStart = (sm.progress_seconds_since_start != null) ? Number(sm.progress_seconds_since_start) : (s.current && s.current.seconds_since_start != null ? Number(s.current.seconds_since_start) : (s.current ? nowSecs - s.current.start : 0));
-    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(12)}px; right:${px(12)}px; bottom:${px(20 + baseFooter * 1.5)}px; display:flex; flex-direction:column; gap:${Math.max(2, px(3))}px;` });
-    for (let e = 0; e < endCount; e++) {
-      const endStart = e * endDur;
-      const endEnd = endStart + endDur;
-      let fillPct = 0;
-      if (sinceStart >= endEnd) fillPct = 100;
-      else if (sinceStart > endStart) fillPct = ((sinceStart - endStart) / endDur * 100);
-      const bar = el('div', { class: 'progress-end-bar', style: `width:100%; height:${px(64)}px; min-height:${px(64)}px; border-width:${px(8)}px; border-radius:${px(24)}px;` });
-      bar.append(el('div', { class: 'progress-seg lead', style: `width:${leadPct}%` }));
-      bar.append(el('div', { class: 'progress-seg second', style: `width:${secondPct}%` }));
-      bar.append(el('div', { class: 'progress-seg vice', style: `width:${vicePct}%` }));
-      bar.append(el('div', { class: 'progress-seg skip', style: `width:${skipPct}%` }));
-      bar.append(el('div', { class: 'progress-end-fill', style: `width:${fillPct}%` }));
-      progWrap.append(bar);
+    // One pill, exactly like HDMI: fixed slot geometry inside the 1224px
+    // inner track, a white background, and bands that grow from their left
+    // edges. No dark overlay and no per-end bar stack.
+    const pct = (v) => v / PROGRESS_TRACK_PX * 100;
+    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(20)}px; right:${px(20)}px; bottom:${px(79)}px;` });
+    const bar = el('div', { id: 'mirror-progress-bar', class: 'progress-end-bar', style: `width:100%; height:${px(85)}px; border-width:${px(8)}px; border-radius:${px(24)}px;` });
+    const bandNames = ['lead', 'second', 'vice', 'skip'];
+    for (let i = 0; i < 4; i++) {
+      bar.append(el('div', { class: `progress-band ${bandNames[i]}`, 'data-band': String(i), style: `left:${pct(PROGRESS_BAND_GEOM[i][0])}%; width:0%;` }));
     }
+    for (let i = 0; i < 3; i++) {
+      bar.append(el('div', { class: 'progress-divider', 'data-div': String(i), style: `left:${pct(PROGRESS_DIV_X[i])}%; width:${pct(4)}%; display:none;` }));
+    }
+    progWrap.append(bar);
     stage.append(progWrap);
   }
 
@@ -1326,33 +1322,37 @@ function tick() {
     box.textContent = countdownText(left);
     box.style.color = left <= 0 ? 'var(--bad)' : 'var(--ok)';
   }
-  const fills = document.querySelectorAll('.progress-end-fill');
-  if (fills.length && s && s.show_progress && s.progress_end_count && s.progress_game_duration) {
+  const bar = $('mirror-progress-bar');
+  if (bar && s && s.show_progress && s.progress_end_count && s.progress_game_duration) {
+    // Mirror the HDMI lambda exactly: integer end duration, reset per end,
+    // fixed slot widths, skip multiplier applied to the fill rate.
+    const dur = Number(s.progress_game_duration);
     const endCount = Number(s.progress_end_count);
-    const endDur = Number(s.progress_game_duration) / endCount;
+    const endDur = Math.max(1, Math.floor(dur / endCount));
+    const skipRaw = Number(s.progress_skip_multiplier);
+    const skipMult = skipRaw > 0 ? skipRaw : 1.4;
+    const totalW = 3 + skipMult;
+    const weights = [1, 1, 1, skipMult];
+    const slotPct = PROGRESS_BAND_GEOM.map((g) => g[1] / PROGRESS_TRACK_PX * 100);
     const baseSince = (s.progress_seconds_since_start != null) ? Number(s.progress_seconds_since_start) : (s.current && s.current.seconds_since_start != null ? Number(s.current.seconds_since_start) : 0);
     const sinceStart = baseSince + Math.floor((performance.now() - state.statusAt) / 1000);
-    fills.forEach((fill, e) => {
-      const endStart = e * endDur;
-      const endEnd = endStart + endDur;
-      let pct = 0;
-      if (sinceStart >= endEnd) pct = 100;
-      else if (sinceStart > endStart) pct = (sinceStart - endStart) / endDur * 100;
-      fill.style.width = `${Math.round(pct)}%`;
-    });
-  } else if (fills.length && s && s.current && s.current.show_progress_through_end && s.current.end_count && s.current.buzzer > s.current.start) {
-    const endCount = s.current.end_count;
-    const gameDur = s.current.buzzer - s.current.start;
-    const endDur = gameDur / endCount;
-    const nowSecs = secondsNow();
-    fills.forEach((fill, e) => {
-      const endStart = s.current.start + e * endDur;
-      const endEnd = endStart + endDur;
-      let pct = 0;
-      if (nowSecs >= endEnd) pct = 100;
-      else if (nowSecs > endStart) pct = (nowSecs - endStart) / endDur * 100;
-      fill.style.width = `${Math.round(pct)}%`;
-    });
+    const since = Math.max(0, Math.min(dur, sinceStart));
+    const inEnd = since % endDur;
+    let progress = inEnd * skipMult / endDur;
+    progress = Math.max(0, Math.min(1, progress));
+    const scaled = progress * totalW;
+    let before = 0;
+    for (let i = 0; i < 4; i++) {
+      let frac = (scaled - before) / weights[i];
+      frac = Math.max(0, Math.min(1, frac));
+      before += weights[i];
+      const band = bar.querySelector(`.progress-band[data-band="${i}"]`);
+      if (band) band.style.width = `${frac * slotPct[i]}%`;
+      if (i < 3) {
+        const div = bar.querySelector(`.progress-divider[data-div="${i}"]`);
+        if (div) div.style.display = scaled >= before ? '' : 'none';
+      }
+    }
   }
   const mc = $('mirror-countdown');
   if (mc && s) {

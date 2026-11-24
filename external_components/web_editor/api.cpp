@@ -363,6 +363,7 @@ ApiResponse PiTimerApi::status() {
     doc["progress_end_count"] = snap.progress_end_count;
     doc["progress_seconds_since_start"] = snap.progress_seconds_since_start;
     doc["progress_game_duration"] = snap.progress_game_duration;
+    doc["progress_skip_multiplier"] = snap.progress_skip_multiplier;
   }
   return from_document(doc);
 }
