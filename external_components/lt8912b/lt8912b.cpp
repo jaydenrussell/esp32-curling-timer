@@ -279,6 +279,21 @@ void Lt8912b::flush_pending_() {
   this->y_high_ = 0;
 }
 
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 11, 0)
+void Lt8912b::draw_pixels_internal(int x_start, int y_start, int w, int h, const uint8_t *ptr,
+                                   display::ColorBitness bitness, bool big_endian, int x_offset, int y_offset,
+                                   int x_pad) {
+  if (w <= 0 || h <= 0)
+    return;
+  if (bitness != this->color_depth_ || this->rotation_ != display::DISPLAY_ROTATION_0_DEGREES) {
+    display::Display::draw_pixels_internal(x_start, y_start, w, h, ptr, bitness, big_endian, x_offset, y_offset,
+                                           x_pad);
+    this->flush_pending_();
+    return;
+  }
+  this->write_to_display_(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad);
+}
+#else
 void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8_t *ptr, display::ColorOrder order,
                              display::ColorBitness bitness, bool big_endian, int x_offset, int y_offset, int x_pad) {
   if (w <= 0 || h <= 0)
@@ -291,6 +306,7 @@ void Lt8912b::draw_pixels_at(int x_start, int y_start, int w, int h, const uint8
   }
   this->write_to_display_(x_start, y_start, w, h, ptr, x_offset, y_offset, x_pad);
 }
+#endif
 
 bool Lt8912b::write_to_display_(int x_start, int y_start, int w, int h, const uint8_t *ptr, int x_offset, int y_offset,
                                 int x_pad) {

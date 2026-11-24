@@ -244,7 +244,7 @@ StoreStatus SettingsStore::read_unlocked(std::string *text, std::string *version
         crc32_compute(reinterpret_cast<const uint8_t *>(body.data()), body.size());
     if (stored != computed) {
       ESP_LOGW(TAG, "settings CRC mismatch (stored=0x%08X computed=0x%08X) — restoring backup",
-               stored, computed);
+               static_cast<unsigned int>(stored), static_cast<unsigned int>(computed));
       if (restore_latest_backup(err))
         return read_unlocked(text, version, err);
       if (err)

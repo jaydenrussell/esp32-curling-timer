@@ -125,13 +125,13 @@ static void entry_into(JsonObject obj, const Entry &entry) {
   obj["quick"] = entry.quick;
   obj["manual_trigger"] = entry.manual_trigger;
   if (entry.start_relays.has_value()) {
-    JsonArray arr = obj.createNestedArray("start_relays");
+    JsonArray arr = obj["start_relays"].to<JsonArray>();
     for (const auto &r : *entry.start_relays) arr.add(r.c_str());
   } else {
     obj["start_relays"] = nullptr;
   }
   if (entry.end_relays.has_value()) {
-    JsonArray arr = obj.createNestedArray("end_relays");
+    JsonArray arr = obj["end_relays"].to<JsonArray>();
     for (const auto &r : *entry.end_relays) arr.add(r.c_str());
   } else {
     obj["end_relays"] = nullptr;

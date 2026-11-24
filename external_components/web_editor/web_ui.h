@@ -430,7 +430,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.215</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.216</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -460,7 +460,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.215</span>
+    <span class="header-version">v2026.11.216</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1403,11 +1403,17 @@ function durationText(total) {
   return [m ? `${m} min` : '', s || !m ? `${s} s` : ''].filter(Boolean).join(' ');
 }
 
-// countdownText: formats seconds as mm:ss for wig-wag countdown display
+// countdownText: mirrors the engine's format_countdown() — raised colon,
+// H:MM:SS at >=1h, otherwise MM:SS.
 function countdownText(total) {
-  const m = Math.max(0, Math.floor(total / 60));
-  const s = Math.max(0, total % 60);
-  return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  const t = Math.max(0, Math.floor(total));
+  const h = Math.floor(t / 3600);
+  const m = Math.floor((t % 3600) / 60);
+  const s = t % 60;
+  const colon = '\u02F8';
+  if (h > 0)
+    return h + colon + String(m).padStart(2, '0') + colon + String(s).padStart(2, '0');
+  return String(m).padStart(2, '0') + colon + String(s).padStart(2, '0');
 }
 
 // fitMirrorText: adjusts mirror countdown font size to fit container.
@@ -1440,13 +1446,16 @@ function readQuickForm(minutesInput, nameInput) {
   return { seconds, name: nameInput.value.trim() || null };
 }
 
-async function launchQuick({ seconds, name, title, game_completed, header_hold }, options) {
+async function launchQuick(payload, options = {}) {
+  const { seconds, name, title } = payload;
   const ends = new Date(Date.now() + seconds * 1000);
   const called = title || name;
   const what = called ? `"${called}" (${durationText(seconds)})` : `a ${durationText(seconds)} timer`;
   if (!confirm(`Start ${what} now? Bell/buzzer at about ${pad(ends.getHours())}:${pad(ends.getMinutes())}:${pad(ends.getSeconds())}.`)) return;
   if (!state.configVersion) await loadConfig();
-  const result = await api('/api/quickstart', { seconds, name, game_completed, header_hold, version: state.configVersion, ...options });
+  const request = { ...payload, ...options, version: state.configVersion };
+  delete request.title;  // display-only label for the confirmation dialog
+  const result = await api('/api/quickstart', request);
   if (!result.ok) return showMessage(result.data.error);
   showMessage(`Quick start timer running, bell/buzzer at ${result.data.buzzer_time}`, 'ok');
   quickForm.reset();

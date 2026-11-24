@@ -328,9 +328,10 @@ ApiResponse PiTimerApi::status() {
   today["source"] = exception != nullptr ? "exception" : "weekday";
   today["note"] = exception != nullptr ? exception->note : "";
   JsonArray today_entries = today["entries"].to<JsonArray>();
-  for (const Entry &entry : entries)
+  for (const Entry &entry : entries) {
     add_entry_json(today_entries, entry);
-    if (clock_ok && live.valid && live.model_ok) {
+  }
+  if (clock_ok && live.valid && live.model_ok) {
     const DisplaySnapshot snap = curling_engine::render_snapshot(live.settings, clock_ok, weekday, sec, date_iso);
     doc["header_text"] = snap.header_text;
     doc["header_color"] = snap.header_color;
@@ -1124,10 +1125,10 @@ ApiResponse PiTimerApi::get_leagues() {
     o["show_progress_through_end"] = lp.show_progress_through_end;
     o["total_time_includes_untimed_ends"] = lp.total_time_includes_untimed_ends;
     o["replace_conflicts"] = lp.replace_conflicts;
-    JsonArray srs = o.createNestedArray("start_relays");
+    JsonArray srs = o["start_relays"].to<JsonArray>();
     for (const auto &r : lp.start_relays) srs.add(r.c_str());
     o["start_duration"] = lp.start_duration;
-    JsonArray ers = o.createNestedArray("end_relays");
+    JsonArray ers = o["end_relays"].to<JsonArray>();
     for (const auto &r : lp.end_relays) ers.add(r.c_str());
     o["end_duration"] = lp.end_duration;
   }

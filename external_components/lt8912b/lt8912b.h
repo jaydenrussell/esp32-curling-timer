@@ -7,6 +7,7 @@
 #include "esphome/core/gpio.h"
 
 #include "esphome/components/display/display.h"
+#include "esphome/core/version.h"
 
 #include <esp_lcd_panel_ops.h>
 #include <esp_lcd_panel_io.h>
@@ -46,8 +47,13 @@ class Lt8912b : public display::Display {
   int get_width_internal() override { return this->width_; }
   int get_height_internal() override { return this->height_; }
 
+#if ESPHOME_VERSION_CODE >= VERSION_CODE(2026, 11, 0)
+  void draw_pixels_internal(int x_start, int y_start, int w, int h, const uint8_t *ptr, display::ColorBitness bitness,
+                            bool big_endian, int x_offset, int y_offset, int x_pad) override;
+#else
   void draw_pixels_at(int x_start, int y_start, int w, int h, const uint8_t *ptr, display::ColorOrder order,
                       display::ColorBitness bitness, bool big_endian, int x_offset, int y_offset, int x_pad) override;
+#endif
   void draw_pixel_at(int x, int y, Color color) override;
   void fill(Color color) override;
   int get_width() override;

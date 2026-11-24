@@ -282,7 +282,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.215
+      ref: v2026.11.216
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -336,15 +336,16 @@ font:
   - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_timer_4
     size: 450
-    glyphs: ["0123456789", "\u02F8"]
+    glyphs: ["0123456789", ":", "\u02F8"]
   - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_timer_5
     size: 370
-    glyphs: ["0123456789", "\u02F8"]
+    glyphs: ["0123456789", ":", "\u02F8"]
   - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_header
     size: 96
     glyphsets: [GF_Latin_Kernel]
+    glyphs: ["\u02F8"]
   - file: "https://raw.githubusercontent.com/google/fonts/main/ofl/lato/Lato-Bold.ttf"
     id: font_pace
     size: 85
@@ -1143,6 +1144,16 @@ interval:
               return std::string();
             return ::esphome::curling_engine::recolor(s.pace_color, s.pace_text);
       - lambda: |-
+          auto set_hidden = [](lv_obj_t *obj, bool hidden) {
+          #if LVGL_VERSION_MAJOR > 9 || (LVGL_VERSION_MAJOR == 9 && LVGL_VERSION_MINOR >= 6)
+            lv_obj_set_hidden(obj, hidden);
+          #else
+            if (hidden)
+              lv_obj_add_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            else
+              lv_obj_remove_flag(obj, LV_OBJ_FLAG_HIDDEN);
+          #endif
+          };
           auto &s = id(g_snap);
           bool show = (id(engine)->get_display_test_mode() == "normal") &&
                       s.show_progress && s.progress_end_count > 0 && s.progress_game_duration > 0;
@@ -1173,23 +1184,23 @@ interval:
           }
           for (int i = 0; i < 4; i++) {
             if (bands[i] != nullptr) {
-              if (show) lv_obj_clear_flag(bands[i], LV_OBJ_FLAG_HIDDEN);
-              else lv_obj_add_flag(bands[i], LV_OBJ_FLAG_HIDDEN);
+              if (show) set_hidden(bands[i], false);
+              else set_hidden(bands[i], true);
             }
           }
           if (id(prog_border) != nullptr) {
-            if (show) lv_obj_clear_flag(id(prog_border), LV_OBJ_FLAG_HIDDEN);
-            else lv_obj_add_flag(id(prog_border), LV_OBJ_FLAG_HIDDEN);
+            if (show) set_hidden(id(prog_border), false);
+            else set_hidden(id(prog_border), true);
           }
           if (id(prog_pill) != nullptr) {
-            if (show) lv_obj_clear_flag(id(prog_pill), LV_OBJ_FLAG_HIDDEN);
-            else lv_obj_add_flag(id(prog_pill), LV_OBJ_FLAG_HIDDEN);
+            if (show) set_hidden(id(prog_pill), false);
+            else set_hidden(id(prog_pill), true);
           }
           // Widths of the four allotted band slots (weights 1,1,1,1.4).
           const int full_w[4] = {282, 282, 282, 378};
           if (!show) {
             for (int i = 0; i < 3; i++)
-              if (divs[i] != nullptr) lv_obj_add_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
+              if (divs[i] != nullptr) set_hidden(divs[i], true);
             return;
           }
           int since = s.progress_seconds_since_start;
@@ -1201,7 +1212,7 @@ interval:
             for (int i = 0; i < 4; i++)
               if (bands[i] != nullptr) lv_obj_set_width(bands[i], full_w[i]);
             for (int i = 0; i < 3; i++)
-              if (divs[i] != nullptr) lv_obj_clear_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
+              if (divs[i] != nullptr) set_hidden(divs[i], false);
             return;
           }
           if (since < 0) since = 0;
@@ -1232,9 +1243,9 @@ interval:
             // A divider is the 4px black right edge of a completed band.
             if (i < 3 && divs[i] != nullptr) {
               if (scaled >= before)
-                lv_obj_clear_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
+                set_hidden(divs[i], false);
               else
-                lv_obj_add_flag(divs[i], LV_OBJ_FLAG_HIDDEN);
+                set_hidden(divs[i], true);
             }
           }
       - lvgl.label.update:
