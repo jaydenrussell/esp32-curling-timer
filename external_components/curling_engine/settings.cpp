@@ -1460,6 +1460,21 @@ bool settings_filename_ok(const std::string &path, std::string *err) {
   return ok;
 }
 
+bool normalize_countdown_mode(const std::string &value, std::string *mode) {
+  if (mode == nullptr)
+    return false;
+  if (value == COUNTDOWN_MODE_DURATION || value == "duration_before_warning" ||
+      value == "Time until warning" || value == "time_until_warning") {
+    *mode = COUNTDOWN_MODE_DURATION;
+    return true;
+  }
+  if (value == COUNTDOWN_MODE_TIME_BEFORE_BUZZER || value == "time_before_buzzer") {
+    *mode = COUNTDOWN_MODE_TIME_BEFORE_BUZZER;
+    return true;
+  }
+  return false;
+}
+
 void PiTimerSettings::reset() {
   settings_fn.clear();
   enabled = false;
@@ -1484,9 +1499,9 @@ void PiTimerSettings::reset() {
   game_name = false;
   relays = std::nullopt;
   ring_at_start = std::nullopt;
-  countdown_minutes_before = 0;
+  countdown_seconds_before = 0;
   countdown_relays.clear();
-  countdown_mode = "Time until warning";
+  countdown_mode = COUNTDOWN_MODE_DURATION;
   relay_duration = 0;
   relay_start_duration = 0;
   relay_countdown_duration = 0;
@@ -1742,40 +1757,53 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
     if (!parse_relay_seq(*v, "ring_at_start", where, &*ring_at_start, err))
       return false;
   }
-  countdown_minutes_before = 0;
+  countdown_seconds_before = 0;
   countdown_relays.clear();
-  countdown_mode = "time_until_warning";
+  countdown_mode = COUNTDOWN_MODE_DURATION;
   if ((v = buzzer->find("countdown")) != nullptr) {
     if (v->type != YType::Map) {
       *err = std::string("'countdown' in ") + where + " is not a valid section (" + yaml_repr(*v) +
              ")";
       return false;
     }
+    const YamlValue *cd = v;
     const char *cd_where = "config buzzer countdown section";
-    const YamlValue *minutes = require_(v, "minutes_before", YType::Int, cd_where, err);
-    if (minutes == nullptr)
-      return false;
-    if (minutes->i < 0) {
-      *err = "'minutes_before' in config buzzer countdown section cannot be negative";
+    bool legacy_minutes = false;
+    const YamlValue *seconds = cd->find("seconds_before");
+    if (seconds != nullptr && seconds->type != YType::Int) {
+      *err = "'seconds_before' in config buzzer countdown section must be an integer number of seconds";
       return false;
     }
-    countdown_minutes_before = static_cast<int>(minutes->i);
-    const YamlValue *cd_relays = require_(v, "relays", YType::Seq, cd_where, err);
+    if (seconds != nullptr) {
+      if (seconds->i < 0) {
+        *err = "'seconds_before' in config buzzer countdown section cannot be negative";
+        return false;
+      }
+      countdown_seconds_before = static_cast<int>(seconds->i);
+    } else if (const YamlValue *minutes = cd->find("minutes_before")) {
+      if (minutes->type != YType::Int || minutes->i < 0) {
+        *err = "'minutes_before' in config buzzer countdown section must be a non-negative integer";
+        return false;
+      }
+      countdown_seconds_before = static_cast<int>(minutes->i) * 60;
+      legacy_minutes = true;
+    }
+    const YamlValue *cd_relays = require_(cd, "relays", YType::Seq, cd_where, err);
     if (cd_relays == nullptr)
       return false;
     if (!parse_relay_seq(*cd_relays, "relays", cd_where, &countdown_relays, err))
       return false;
-    const YamlValue *mode = v->find("mode");
-    if (mode != nullptr && mode->type == YType::Str) {
-      const std::string m = mode->s;
-      if (m == "Time until warning" || m == "time_until_warning") {
-        countdown_mode = "Time until warning";
-      } else if (m == "Time before buzzer" || m == "time_before_buzzer") {
-        countdown_mode = "Time before buzzer";
-      } else {
-        *err = "'mode' in config buzzer countdown section must be 'Time until warning' or 'Time before buzzer'";
+    const YamlValue *mode = cd->find("mode");
+    if (mode != nullptr) {
+      if (mode->type != YType::Str || !normalize_countdown_mode(mode->s, &countdown_mode)) {
+        *err = "'mode' in config buzzer countdown section must be 'Duration before warning' or 'Time before buzzer'";
         return false;
       }
+    } else if (legacy_minutes) {
+      // Old YAML had a single interpretation: N minutes before the buzzer.
+      // Keep that timing when the file has no explicit mode so upgrading the
+      // component never moves an existing warning to game start.
+      countdown_mode = COUNTDOWN_MODE_TIME_BEFORE_BUZZER;
     }
   }
   if ((v = require_(buzzer, "duration", YType::Int, where, err)) == nullptr)
@@ -1855,8 +1883,10 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
          lp.pregame_countdown_seconds = static_cast<int>(p->i);
        if (const YamlValue *h = lv.find("header_text"); h && h->type == YType::Str) lp.header_text = h->s;
         if (const YamlValue *pe = lv.find("pace_enabled"); pe && pe->type == YType::Bool) lp.pace_enabled = pe->b;
-        if (const YamlValue *cm = lv.find("countdown_minutes_before"); cm && cm->type == YType::Int)
-          lp.countdown_minutes_before = static_cast<int>(cm->i);
+        if (const YamlValue *cs = lv.find("countdown_seconds_before"); cs && cs->type == YType::Int)
+          lp.countdown_seconds_before = static_cast<int>(cs->i);
+        else if (const YamlValue *cm = lv.find("countdown_minutes_before"); cm && cm->type == YType::Int)
+          lp.countdown_seconds_before = static_cast<int>(cm->i) * 60;
         if (const YamlValue *f = lv.find("format"); f && f->type == YType::Str) lp.format = f->s;
          if (const YamlValue *ts = lv.find("team_size"); ts && ts->type == YType::Int)
           lp.team_size = static_cast<int>(ts->i);

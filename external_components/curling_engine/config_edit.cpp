@@ -240,7 +240,7 @@ static bool insertable_config_path(const std::string &path) {
   if (path.rfind("config.header.text.", 0) == 0 || path.rfind("config.header.color.", 0) == 0 ||
       path.rfind("config.countdown.color.", 0) == 0)
     return true;
-  return path == "config.buzzer.ring_at_start" || path == "config.buzzer.countdown.minutes_before" ||
+  return path == "config.buzzer.ring_at_start" || path == "config.buzzer.countdown.seconds_before" ||
          path == "config.buzzer.countdown.mode" ||
          path == "config.buzzer.countdown.relays" ||
           path == "config.relays_enabled" || path == "config.relay_count" ||
@@ -273,36 +273,36 @@ static bool insertable_config_path(const std::string &path) {
          path.rfind("config.addons.", 0) == 0;
 }
 
-// The countdown section needs both keys (minutes_before and relays), so a
-// partial edit is completed from the current file: an unchanged key keeps its
-// stored value, a section that does not exist yet starts at 0 minutes and no
-// relays (event off).
+// The countdown section needs all three keys (seconds_before, relays and
+// mode), so a partial edit is completed from the current file: an unchanged
+// key keeps its stored value, a section that does not exist yet starts at 0
+// seconds, no relays and the default mode (event off).
 static void complete_countdown_values(std::vector<ConfigValue> *values, const std::string &text) {
-  bool has_minutes = false;
+  bool has_seconds = false;
   bool has_relays = false;
   bool has_mode = false;
   for (const ConfigValue &value : *values) {
-    if (value.path == "config.buzzer.countdown.minutes_before")
-      has_minutes = true;
+    if (value.path == "config.buzzer.countdown.seconds_before")
+      has_seconds = true;
     else if (value.path == "config.buzzer.countdown.relays")
       has_relays = true;
     else if (value.path == "config.buzzer.countdown.mode")
       has_mode = true;
   }
-  if (!has_minutes && !has_relays && !has_mode)
+  if (!has_seconds && !has_relays && !has_mode)
     return;  // no countdown edit: leave the section untouched
-  int minutes = 0;
+  int seconds = 0;
   std::vector<std::string> relays;
-  std::string mode = "Time until warning";
+  std::string mode = COUNTDOWN_MODE_DURATION;
   PiTimerSettings settings;
   std::string err;
   if (settings.parse_settings_text(text, "settings.yml", &err)) {
-    minutes = settings.countdown_minutes_before;
+    seconds = settings.countdown_seconds_before;
     relays = settings.countdown_relays;
     mode = settings.countdown_mode;
   }
-  if (!has_minutes)
-    values->push_back(ConfigValue{"config.buzzer.countdown.minutes_before", yaml_int(minutes)});
+  if (!has_seconds)
+    values->push_back(ConfigValue{"config.buzzer.countdown.seconds_before", yaml_int(seconds)});
   if (!has_relays)
     values->push_back(ConfigValue{"config.buzzer.countdown.relays", yaml_relays(relays)});
   if (!has_mode)

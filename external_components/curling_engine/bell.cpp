@@ -152,10 +152,16 @@ bool bell_tick(const PiTimerSettings &settings, const std::optional<PiTimerGame>
       apply_relay_durations(settings, "start", *start_relays, out, override_d);
     }
   }
-  // Countdown warning: seconds_until_buzzer descending into [target-grace, target].
-  if (settings.countdown_minutes_before > 0 && !settings.countdown_relays.empty()) {
-    const int target = settings.countdown_minutes_before * 60;
-    if (until <= target && until >= target - BUZZER_GRACE_SECONDS && fires("countdown")) {
+  // Countdown warning: either seconds since game start enter [target, target+grace]
+  // (the default "Duration before warning" mode), or seconds until the buzzer
+  // descend into [target-grace, target] ("Time before buzzer" mode).
+  if (settings.countdown_seconds_before > 0 && !settings.countdown_relays.empty()) {
+    const int target = settings.countdown_seconds_before;
+    const bool due =
+        settings.countdown_mode == COUNTDOWN_MODE_TIME_BEFORE_BUZZER
+            ? (until <= target && until >= target - BUZZER_GRACE_SECONDS)
+            : (since_start >= target && since_start <= target + BUZZER_GRACE_SECONDS);
+    if (due && fires("countdown")) {
       mask |= relays_mask(settings.countdown_relays);
       apply_relay_durations(settings, "countdown", settings.countdown_relays, out);
     }

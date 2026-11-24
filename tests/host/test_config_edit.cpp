@@ -178,7 +178,7 @@ TEST_CASE("apply_config_values inserts newer keys missing from older files") {
   std::string out, err;
   const std::vector<ConfigValue> values = {
       {"config.buzzer.ring_at_start", yaml_relays({"RELAY2"})},
-      {"config.buzzer.countdown.minutes_before", yaml_int(2)},
+      {"config.buzzer.countdown.seconds_before", yaml_int(120)},
       {"config.buzzer.countdown.relays", yaml_relays({"RELAY1", "RELAY2"})},
       {"config.buzzer.duration", yaml_int(3)},
   };
@@ -187,16 +187,16 @@ TEST_CASE("apply_config_values inserts newer keys missing from older files") {
   // New keys must sit inside the buzzer block, before the schedule section.
   const size_t buzzer = out.find("buzzer:");
   const size_t start = out.find("ring_at_start: ['RELAY2']");
-  const size_t minutes = out.find("minutes_before: 2");
+  const size_t seconds = out.find("seconds_before: 120");
   const size_t relays = out.find("relays: ['RELAY1', 'RELAY2']");
   const size_t schedule = out.find("schedule:");
   REQUIRE(buzzer != std::string::npos);
   CHECK(start > buzzer);
-  CHECK(minutes > buzzer);
+  CHECK(seconds > buzzer);
   CHECK(relays > buzzer);
   REQUIRE(schedule != std::string::npos);
   CHECK(start < schedule);
-  CHECK(minutes < schedule);
+  CHECK(seconds < schedule);
   CHECK(relays < schedule);
 
   PiTimerSettings s;
@@ -206,7 +206,7 @@ TEST_CASE("apply_config_values inserts newer keys missing from older files") {
   }
   REQUIRE(s.ring_at_start.has_value());
   CHECK(*s.ring_at_start == std::vector<std::string>{"RELAY2"});
-  CHECK(s.countdown_minutes_before == 2);
+  CHECK(s.countdown_seconds_before == 120);
   CHECK(s.countdown_relays == std::vector<std::string>({"RELAY1", "RELAY2"}));
   CHECK(s.relay_duration == 3);
   // Existing keys still editable in the same save.
@@ -222,18 +222,18 @@ TEST_CASE("apply_config_values inserts into a buzzer block with a trailing comme
   text.insert(sched, "# ---- schedule below ----\n");
   std::string out, err;
   REQUIRE(apply_config_values(text, {{"config.buzzer.ring_at_start", yaml_relays({"RELAY2"})},
-                                     {"config.buzzer.countdown.minutes_before", yaml_int(1)}},
+                                     {"config.buzzer.countdown.seconds_before", yaml_int(60)}},
                               &out, &err));
   const size_t hold = out.find("header_hold: 300");
   const size_t start = out.find("ring_at_start: ['RELAY2']");
-  const size_t minutes = out.find("minutes_before: 1");
+  const size_t seconds = out.find("seconds_before: 60");
   REQUIRE(hold != std::string::npos);
   REQUIRE(start != std::string::npos);
-  REQUIRE(minutes != std::string::npos);
+  REQUIRE(seconds != std::string::npos);
   // Inserted after the block's last real key, before the outdented comment.
   CHECK(start > hold);
-  CHECK(minutes > hold);
-  CHECK(out.find("# ---- schedule below ----") > minutes);
+  CHECK(seconds > hold);
+  CHECK(out.find("# ---- schedule below ----") > seconds);
   // Indentation matches the buzzer block's existing children (4-space style).
   const size_t line_start = out.rfind('\n', start) + 1;
   CHECK(out.compare(line_start, 4, "    ") == 0);
@@ -243,8 +243,9 @@ TEST_CASE("apply_config_values inserts into a buzzer block with a trailing comme
     FAIL("parse failed");
   }
   REQUIRE(s.ring_at_start.has_value());
-  CHECK(s.countdown_minutes_before == 1);
-  // The countdown section needs both keys: the missing one is completed from
-  // the current file (no countdown section yet -> 0 minutes, no relays).
+  CHECK(s.countdown_seconds_before == 60);
+  // The countdown section needs all three keys: the missing ones are completed
+  // from the current file (no countdown section yet -> default mode, no relays).
+  CHECK(s.countdown_mode == "Duration before warning");
   CHECK(s.countdown_relays.empty());
 }

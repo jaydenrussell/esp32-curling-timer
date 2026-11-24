@@ -57,6 +57,12 @@ static constexpr const char *DAY_NAMES[7] = {"Monday",   "Tuesday", "Wednesday",
                                              "Sunday"};
 static constexpr const char *VALID_RELAYS_REPR =
     "('RELAY1', 'RELAY2', 'RELAY3', 'RELAY4')";
+static constexpr const char *COUNTDOWN_MODE_DURATION = "Duration before warning";
+static constexpr const char *COUNTDOWN_MODE_TIME_BEFORE_BUZZER = "Time before buzzer";
+
+// Normalize accepted countdown-mode spellings (including legacy aliases) to
+// the two canonical strings above. Returns false for an unknown mode.
+bool normalize_countdown_mode(const std::string &value, std::string *mode);
 
 struct LeagueProfile {
   std::string name;
@@ -65,7 +71,7 @@ struct LeagueProfile {
   std::string header_text;
   bool pace_enabled{false};
   std::vector<std::string> buzzer_relays;
-  int countdown_minutes_before{0};
+  int countdown_seconds_before{0};
   std::string format;
   int team_size{0};
   // per-end game configuration for progress bar display
@@ -133,11 +139,11 @@ class PiTimerSettings {
   bool game_name{false};
   std::optional<std::vector<std::string>> relays;
   // Optional ring events (config.buzzer): absent/empty lists and a zero
-  // countdown minutes_before disable each event — see default_settings.h.
+  // countdown seconds_before disable each event — see default_settings.h.
   std::optional<std::vector<std::string>> ring_at_start; // relays pulsed at game start
-  int countdown_minutes_before{0};       // minutes before buzzer (0 = off)
+  int countdown_seconds_before{0};       // seconds (0 = off)
   std::vector<std::string> countdown_relays;            // relays pulsed at that moment
-  std::string countdown_mode{"Time until warning"};  // countdown warning mode
+  std::string countdown_mode{COUNTDOWN_MODE_DURATION};  // countdown warning mode
   int relay_duration{0};
   int relay_start_duration{0};
   int relay_countdown_duration{0};

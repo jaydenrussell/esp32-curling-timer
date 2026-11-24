@@ -126,6 +126,8 @@ TEST_CASE("bell rings once per game for back-to-back games on the same day") {
 
 using esphome::curling_engine::bell_tick;
 using esphome::curling_engine::BellRing;
+using esphome::curling_engine::COUNTDOWN_MODE_DURATION;
+using esphome::curling_engine::COUNTDOWN_MODE_TIME_BEFORE_BUZZER;
 
 namespace {
 
@@ -134,7 +136,7 @@ PiTimerSettings tick_settings() {
   s.enabled = true;
   s.relays = std::vector<std::string>{"RELAY1"};
   s.ring_at_start = std::vector<std::string>{"RELAY2"};
-  s.countdown_minutes_before = 2;  // target = 120s before buzzer
+  s.countdown_seconds_before = 120;  // target = 120s from game start (default mode)
   s.countdown_relays = {"RELAY1", "RELAY2"};
   s.relay_duration = 3;
   s.relay_start_duration = 3;
@@ -172,11 +174,28 @@ TEST_CASE("bell_tick start event rings its own relays once per game") {
   CHECK_FALSE(bell_tick(s, live_game(6, 3594), "2026-10-19", &fired, &r));
 }
 
-TEST_CASE("bell_tick countdown event fires in its grace window only once") {
+TEST_CASE("bell_tick duration countdown fires in its grace window only once") {
   const PiTimerSettings s = tick_settings();
   std::set<std::string> fired;
   BellRing r;
-  // target = 120: not yet due before the window.
+  // Default mode measures from game start: the old "until 120" window is not due.
+  CHECK_FALSE(bell_tick(s, live_game(3480, 120), "2026-10-19", &fired, &r));
+  CHECK_FALSE(bell_tick(s, live_game(119, 3481), "2026-10-19", &fired, &r));
+  REQUIRE(bell_tick(s, live_game(120, 3480), "2026-10-19", &fired, &r));
+  CHECK(r.mask == (BELL_RELAY_1 | BELL_RELAY_2));
+  CHECK(r.duration_ms == 3000);
+  // Remaining grace seconds and later: consumed.
+  CHECK_FALSE(bell_tick(s, live_game(125, 3475), "2026-10-19", &fired, &r));
+  CHECK_FALSE(bell_tick(s, live_game(500, 3100), "2026-10-19", &fired, &r));
+}
+
+TEST_CASE("bell_tick time-before-buzzer countdown keeps the until-based window") {
+  PiTimerSettings s = tick_settings();
+  s.countdown_mode = COUNTDOWN_MODE_TIME_BEFORE_BUZZER;
+  std::set<std::string> fired;
+  BellRing r;
+  // Elapsed time alone is not due in this mode.
+  CHECK_FALSE(bell_tick(s, live_game(120, 3480), "2026-10-19", &fired, &r));
   CHECK_FALSE(bell_tick(s, live_game(3481, 121), "2026-10-19", &fired, &r));
   REQUIRE(bell_tick(s, live_game(3480, 120), "2026-10-19", &fired, &r));
   CHECK(r.mask == (BELL_RELAY_1 | BELL_RELAY_2));
@@ -184,6 +203,12 @@ TEST_CASE("bell_tick countdown event fires in its grace window only once") {
   // Remaining grace seconds and later: consumed.
   CHECK_FALSE(bell_tick(s, live_game(3485, 115), "2026-10-19", &fired, &r));
   CHECK_FALSE(bell_tick(s, live_game(3500, 100), "2026-10-19", &fired, &r));
+}
+
+TEST_CASE("bell_tick canonical duration mode constant matches the default") {
+  CHECK(COUNTDOWN_MODE_DURATION == std::string("Duration before warning"));
+  CHECK(COUNTDOWN_MODE_TIME_BEFORE_BUZZER == std::string("Time before buzzer"));
+  CHECK(tick_settings().countdown_mode == COUNTDOWN_MODE_DURATION);
 }
 
 TEST_CASE("bell_tick buzzer event rings pitimer-style on its own relays") {
@@ -201,21 +226,22 @@ TEST_CASE("bell_tick buzzer event rings pitimer-style on its own relays") {
 
 TEST_CASE("bell_tick merges simultaneous events and rings their relays together") {
   PiTimerSettings s = tick_settings();
-  // Short game: countdown target (120s) equals the whole game — start and
-  // countdown windows coincide.
+  // Countdown target moved into the start-event grace window so both fire together.
+  s.countdown_seconds_before = BUZZER_GRACE_SECONDS;
   std::set<std::string> fired;
   BellRing r;
-  REQUIRE(bell_tick(s, live_game(0, 120), "2026-10-19", &fired, &r));
+  REQUIRE(bell_tick(s, live_game(BUZZER_GRACE_SECONDS, 3600 - BUZZER_GRACE_SECONDS),
+                    "2026-10-19", &fired, &r));
   CHECK(r.mask == (BELL_RELAY_1 | BELL_RELAY_2));
   CHECK(r.duration_ms == 3000);
   // Both events consumed: nothing left for the rest of the game.
-  CHECK_FALSE(bell_tick(s, live_game(60, 60), "2026-10-19", &fired, &r));
+  CHECK_FALSE(bell_tick(s, live_game(60, 3540), "2026-10-19", &fired, &r));
   // The buzzer event is separate and still fires at its own time.
   REQUIRE(bell_tick(s, live_game(120, 0), "2026-10-19", &fired, &r));
   CHECK(r.mask == BELL_RELAY_1);
 }
 
-TEST_CASE("bell_tick events are off when disabled, unmapped, or zero minutes") {
+TEST_CASE("bell_tick events are off when disabled, unmapped, or zero seconds") {
   std::set<std::string> fired;
   BellRing r;
   {
@@ -232,9 +258,8 @@ TEST_CASE("bell_tick events are off when disabled, unmapped, or zero minutes") {
   }
   {
     PiTimerSettings s = tick_settings();
-    s.countdown_minutes_before = 0;  // countdown off
-    s.countdown_relays.clear();
-    CHECK_FALSE(bell_tick(s, live_game(3480, 120), "2026-10-19", &fired, &r));
+    s.countdown_seconds_before = 0;  // countdown off even with relays configured
+    CHECK_FALSE(bell_tick(s, live_game(120, 3480), "2026-10-19", &fired, &r));
   }
   {
     // Buzzer event with no relays configured: silent (pitimer allows []).

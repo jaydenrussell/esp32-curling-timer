@@ -872,8 +872,11 @@ ApiResponse PiTimerApi::get_config() {
   } else {
     cfg["config.buzzer.ring_at_start"] = nullptr;
   }
-  cfg["config.buzzer.countdown.minutes_before"] = s.countdown_minutes_before;
-  cfg["config.buzzer.countdown.mode"] = s.countdown_mode.c_str();
+  std::string countdown_mode;
+  if (!curling_engine::normalize_countdown_mode(s.countdown_mode, &countdown_mode))
+    countdown_mode = curling_engine::COUNTDOWN_MODE_DURATION;
+  cfg["config.buzzer.countdown.seconds_before"] = s.countdown_seconds_before;
+  cfg["config.buzzer.countdown.mode"] = countdown_mode;
   {
     JsonArray relays = cfg["config.buzzer.countdown.relays"].to<JsonArray>();
     for (const std::string &relay : s.countdown_relays)
@@ -998,11 +1001,14 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
       if (!json_strict_int(v, &number) || number <= 0)
         return error_json(422, path + " must be a positive whole number of seconds");
       yaml = curling_engine::yaml_int(number);
+    } else if (path == "config.buzzer.countdown.seconds_before") {
+      if (!json_strict_int(v, &number) || number < 0 || number > 100000)
+        return error_json(422, path + " must be a whole number of seconds (0 or more)");
+      yaml = curling_engine::yaml_int(number);
     } else if (path == "config.header.font_size" || path == "config.countdown.font_size_4_digits" ||
                path == "config.countdown.font_size_5_digits" ||
                path == "config.pace_of_play.font_size" || path == "config.footer.font_size" ||
                path == "config.buzzer.duration" || path == "config.buzzer.header_hold" ||
-               path == "config.buzzer.countdown.minutes_before" ||
                path == "config.buzzer.start_duration" ||
                path == "config.buzzer.countdown_duration" ||
                path == "config.buzzer.end_duration" ||
@@ -1041,11 +1047,10 @@ ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
       }
       yaml = curling_engine::yaml_relays(relays);
     } else if (path == "config.buzzer.countdown.mode") {
-      if (!v.is<const char *>())
-        return error_json(422, path + " must be 'Time until warning' or 'Time before buzzer'");
-      const std::string mode = v.as<const char *>();
-      if (mode != "Time until warning" && mode != "Time before buzzer")
-        return error_json(422, path + " must be 'Time until warning' or 'Time before buzzer'");
+      const char *raw_mode = v.is<const char *>() ? v.as<const char *>() : nullptr;
+      std::string mode;
+      if (raw_mode == nullptr || !curling_engine::normalize_countdown_mode(raw_mode, &mode))
+        return error_json(422, path + " must be 'Duration before warning' or 'Time before buzzer'");
       yaml = curling_engine::yaml_quote(mode);
     } else if (path.rfind("config.header.text.", 0) == 0 ||
                path.rfind("config.header.color.", 0) == 0 ||
@@ -1109,7 +1114,7 @@ ApiResponse PiTimerApi::get_leagues() {
     o["pregame_countdown_seconds"] = lp.pregame_countdown_seconds;
     o["header_text"] = lp.header_text;
     o["pace_enabled"] = lp.pace_enabled;
-    o["countdown_minutes_before"] = lp.countdown_minutes_before;
+    o["countdown_seconds_before"] = lp.countdown_seconds_before;
     o["format"] = lp.format;
     o["team_size"] = lp.team_size;
     o["manual_trigger"] = lp.manual_trigger;
@@ -1153,7 +1158,13 @@ ApiResponse PiTimerApi::post_leagues(JsonObjectConst data) {
     const char *ht = item["header_text"].as<const char *>();
     yaml += "    header_text: " + curling_engine::yaml_quote(ht ? ht : "") + "\n";
     yaml += "    pace_enabled: " + std::string(item["pace_enabled"].as<bool>() ? "true" : "false") + "\n";
-    yaml += "    countdown_minutes_before: " + std::to_string(item["countdown_minutes_before"].as<int>()) + "\n";
+    const int countdown_seconds =
+        item["countdown_seconds_before"].is<int>()
+            ? item["countdown_seconds_before"].as<int>()
+            : (item["countdown_minutes_before"].is<int>()
+                   ? item["countdown_minutes_before"].as<int>() * 60
+                   : 0);
+    yaml += "    countdown_seconds_before: " + std::to_string(countdown_seconds) + "\n";
     const char *fmt = item["format"].as<const char *>();
     yaml += "    format: " + curling_engine::yaml_quote(fmt ? fmt : "") + "\n";
     yaml += "    team_size: " + std::to_string(item["team_size"].as<int>()) + "\n";

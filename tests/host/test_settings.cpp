@@ -338,10 +338,24 @@ constexpr const char *BUZZER_EVENTS_BLOCK =
     "    ring_at_start:\n"
     "    - RELAY2\n"
     "    countdown:\n"
-    "      minutes_before: 2\n"
+    "      seconds_before: 120\n"
     "      relays: ['RELAY1', 'RELAY2']\n"
     "    duration: 2\n"
     "    header_hold: 300\n";
+
+ParseResult parse_with_countdown_mode(const char *mode) {
+  const std::string block =
+      std::string("  buzzer:\n"
+                  "    relays: ['RELAY1']\n"
+                  "    countdown:\n"
+                  "      seconds_before: 120\n"
+                  "      relays: ['RELAY2']\n"
+                  "      mode: '") +
+      mode + "'\n"
+             "    duration: 2\n"
+             "    header_hold: 300\n";
+  return parse_text(with_ring_events(block).c_str());
+}
 
 }  // namespace
 
@@ -350,7 +364,8 @@ TEST_CASE("ring event keys parse with their relay lists") {
   REQUIRE(r.ok);
   REQUIRE(r.s.ring_at_start.has_value());
   CHECK(*r.s.ring_at_start == std::vector<std::string>{"RELAY2"});
-  CHECK(r.s.countdown_minutes_before == 2);
+  CHECK(r.s.countdown_seconds_before == 120);
+  CHECK(r.s.countdown_mode == "Duration before warning");
   CHECK(r.s.countdown_relays == std::vector<std::string>({"RELAY1", "RELAY2"}));
 }
 
@@ -358,7 +373,7 @@ TEST_CASE("older files without ring event keys parse as each event off") {
   auto r = parse_text(CASE_BASE);
   REQUIRE(r.ok);
   CHECK_FALSE(r.s.ring_at_start.has_value());
-  CHECK(r.s.countdown_minutes_before == 0);
+  CHECK(r.s.countdown_seconds_before == 0);
   CHECK(r.s.countdown_relays.empty());
 }
 
@@ -375,19 +390,58 @@ TEST_CASE("invalid ring event relays are rejected like buzzer.relays") {
   CHECK(r.err.find("not one of") != std::string::npos);
 }
 
-TEST_CASE("negative countdown minutes_before is rejected") {
+TEST_CASE("legacy countdown minutes_before converts to seconds") {
   auto r = parse_text(with_ring_events(
       "  buzzer:\n"
       "    relays: ['RELAY1']\n"
       "    countdown:\n"
-      "      minutes_before: -1\n"
+      "      minutes_before: 2\n"
+      "      relays: ['RELAY2']\n"
+      "    duration: 2\n"
+      "    header_hold: 300\n")
+                          .c_str());
+  REQUIRE(r.ok);
+  CHECK(r.s.countdown_seconds_before == 120);
+  // Legacy files predate the mode field and always counted back from the buzzer.
+  CHECK(r.s.countdown_mode == "Time before buzzer");
+}
+
+TEST_CASE("negative countdown seconds_before is rejected") {
+  auto r = parse_text(with_ring_events(
+      "  buzzer:\n"
+      "    relays: ['RELAY1']\n"
+      "    countdown:\n"
+      "      seconds_before: -1\n"
       "      relays: ['RELAY2']\n"
       "    duration: 2\n"
       "    header_hold: 300\n")
                           .c_str());
   CHECK_FALSE(r.ok);
-  CHECK(r.err.find("minutes_before") != std::string::npos);
+  CHECK(r.err.find("seconds_before") != std::string::npos);
   CHECK(r.err.find("cannot be negative") != std::string::npos);
+}
+
+TEST_CASE("countdown mode aliases normalize to canonical strings") {
+  auto legacy = parse_with_countdown_mode("Time until warning");
+  REQUIRE(legacy.ok);
+  CHECK(legacy.s.countdown_mode == "Duration before warning");
+
+  auto legacy_snake = parse_with_countdown_mode("time_until_warning");
+  REQUIRE(legacy_snake.ok);
+  CHECK(legacy_snake.s.countdown_mode == "Duration before warning");
+
+  auto duration_snake = parse_with_countdown_mode("duration_before_warning");
+  REQUIRE(duration_snake.ok);
+  CHECK(duration_snake.s.countdown_mode == "Duration before warning");
+
+  auto time_snake = parse_with_countdown_mode("time_before_buzzer");
+  REQUIRE(time_snake.ok);
+  CHECK(time_snake.s.countdown_mode == "Time before buzzer");
+
+  auto invalid = parse_with_countdown_mode("Something else");
+  CHECK_FALSE(invalid.ok);
+  CHECK(invalid.err.find("'Duration before warning'") != std::string::npos);
+  CHECK(invalid.err.find("'Time before buzzer'") != std::string::npos);
 }
 
 TEST_CASE("countdown block without relays key is rejected") {
@@ -395,7 +449,7 @@ TEST_CASE("countdown block without relays key is rejected") {
       "  buzzer:\n"
       "    relays: ['RELAY1']\n"
       "    countdown:\n"
-      "      minutes_before: 3\n"
+      "      seconds_before: 180\n"
       "    duration: 2\n"
       "    header_hold: 300\n")
                           .c_str());
@@ -403,7 +457,7 @@ TEST_CASE("countdown block without relays key is rejected") {
   CHECK(r.err.find("relays") != std::string::npos);
 }
 
-TEST_CASE("countdown block with only relays is rejected") {
+TEST_CASE("countdown block with only relays defaults to zero seconds") {
   auto r = parse_text(with_ring_events(
       "  buzzer:\n"
       "    relays: ['RELAY1']\n"
@@ -412,6 +466,8 @@ TEST_CASE("countdown block with only relays is rejected") {
       "    duration: 2\n"
       "    header_hold: 300\n")
                           .c_str());
-  CHECK_FALSE(r.ok);
-  CHECK(r.err.find("minutes_before") != std::string::npos);
+  REQUIRE(r.ok);
+  CHECK(r.s.countdown_seconds_before == 0);
+  CHECK(r.s.countdown_mode == "Duration before warning");
+  CHECK(r.s.countdown_relays == std::vector<std::string>({"RELAY2"}));
 }

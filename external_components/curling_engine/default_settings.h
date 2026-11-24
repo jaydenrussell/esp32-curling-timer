@@ -117,10 +117,14 @@ config:
         # ring_at_start - Optional: relays to also ring for 'duration' seconds when a
         #                 game STARTS (use empty list [] for no start ring).
         ring_at_start: []
-        # countdown - Optional: ring relays a warning 'minutes_before' minutes before
-        #             the buzzer time (minutes_before: 0 turns the warning off).
+        # countdown - Optional warning bell. The web UI shows minutes while YAML
+        #             stores seconds (seconds_before: 0 turns the warning off).
+        #             mode: 'Duration before warning' fires seconds_before seconds
+        #             after game start; 'Time before buzzer' fires that many
+        #             seconds before the buzzer.
         countdown:
-            minutes_before: 0
+            seconds_before: 0
+            mode: 'Duration before warning'
             relays: []
         # duration - How long to keep relays on (i.e. operating) in integer seconds
         duration: 2
