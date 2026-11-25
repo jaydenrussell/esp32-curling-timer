@@ -1096,19 +1096,8 @@ function buildQuickForm() {
       startRow,
       endRow),
 
-    // Preview card (styled like schedule display preview)
-    el('div', { class: 'card', style: 'margin: 0 0 14px; background:rgba(2,10,20,0.45); border:1px solid rgba(255,255,255,0.12); padding:16px' },
-      el('div', { class: 'section-title', style: 'margin:0 0 10px' }, 'Preview — settings that will be applied'),
-      previewLine('Game time', gameSecs === 0 ? '—' : durationText(gameSecs)),
-      previewLine('Expires at', gameSecs === 0 ? '—' : pad(when.getHours()) + ':' + pad(when.getMinutes())),
-      previewLine('Wig Wag Countdown', pregameOn ? (formatMinutes(minutesToSeconds(pregameMin.value) || 0) + ' min') : 'Off'),
-      previewLine('Pace of play', paceOn ? 'On' : 'Off'),
-      previewLine('Progress through end', showProgressOn ? 'On' : 'Off'),
-      previewLine('Replace same-time games', replaceOn ? 'On' : 'Off'),
-      previewLine('Total time includes untimed ends', untimedTotalOn ? 'On' : 'Off'),
-      previewLine('Stones per end', stonesPerEnd.value || 8),
-      previewLine('Total ends', endCount.value || 8),
-      previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
+    // Preview card (styled like schedule display preview) — populated by refreshPreview()
+    preview,
 
     // Action row (button and hint)
     el('div', { class: 'row-actions' }, button, hint));
