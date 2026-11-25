@@ -111,7 +111,9 @@ struct PiTimerGame {
   std::optional<bool> show_progress_through_end;
   // per-game pre-game countdown override (seconds; absent = use global)
   std::optional<int> pregame_countdown_override;
-  std::optional<bool> total_time_includes_untimed_ends{false};
+  // countdown display mode (absent = default/league value; false shows the
+  // countdown to the warning, true runs the full time including untimed ends)
+  std::optional<bool> total_time_includes_untimed_ends;
   bool replace_conflicts{false};
   // live state, set on the copy returned by find_current_game
   std::optional<int> seconds_until_buzzer;
@@ -246,6 +248,12 @@ class PiTimerSettings {
 
 // Filename rule from settings.py (both parsers/stores rely on it).
 bool settings_filename_ok(const std::string &path, std::string *err);
+
+// Extra seconds the displayed countdown adds for the untimed ends when the
+// game's total time includes them. Zero when the option is off, or when the
+// per-end length cannot be estimated (no end count / no regulation time).
+// Uses the same per-end unit pace already uses: (buzzer - start) / end_count.
+int untimed_end_seconds(const PiTimerGame &game);
 
 }  // namespace curling_engine
 }  // namespace esphome

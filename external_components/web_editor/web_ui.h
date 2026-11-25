@@ -426,7 +426,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.225</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.226</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -456,7 +456,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.225</span>
+    <span class="header-version">v2026.11.226</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -890,15 +890,275 @@ async function loadStatus() {
 // the quick start form is built once so the 5 second status refresh never wipes what is being typed
 let quickForm = null;
 const QUICK_PRESETS = [
-  { label: 'Practice (7m)', name: 'PRACTICE', title: 'Practice', seconds: 7 * 60, game_completed: '--- PRACTICE DONE ---', header_hold: 60 },
-  { label: 'Game (6 ends)', name: 'Game (6 ends)', seconds: 75 * 60 },
-  { label: 'Game (8 ends)', name: 'Game (8 ends)', seconds: 105 * 60 },
-  { label: 'Doubles (8 ends)', name: 'Doubles (8 ends)', seconds: 105 * 60 },
+  {
+    id: 'practice',
+    label: 'Practice (7m)',
+    name: 'PRACTICE',
+    game_completed: '--- PRACTICE DONE ---',
+    minutes: 7,
+    pregame_minutes: 5,
+    header_hold_minutes: 1,
+    stones_per_end: 8,
+    end_count: 8,
+    untimed_ends: 0,
+    options: {
+      pregame: true,
+      pace_of_play: false,
+      show_progress_through_end: false,
+      total_time_includes_untimed_ends: false,
+      replace_conflicts: false,
+    },
+    start_relays: [],
+    start_duration: null,
+    end_relays: [],
+    end_duration: null,
+  },
+  {
+    id: 'game-6',
+    label: 'Game (6 ends)',
+    name: 'Game (6 ends)',
+    game_completed: null,
+    minutes: 75,
+    pregame_minutes: 5,
+    header_hold_minutes: 10,
+    stones_per_end: 8,
+    end_count: 6,
+    untimed_ends: 0,
+    options: {
+      pregame: true,
+      pace_of_play: true,
+      show_progress_through_end: true,
+      total_time_includes_untimed_ends: false,
+      replace_conflicts: false,
+    },
+    start_relays: [],
+    start_duration: null,
+    end_relays: [],
+    end_duration: null,
+  },
+  {
+    id: 'game-8',
+    label: 'Game (8 ends)',
+    name: 'Game (8 ends)',
+    game_completed: null,
+    minutes: 105,
+    pregame_minutes: 5,
+    header_hold_minutes: 10,
+    stones_per_end: 8,
+    end_count: 8,
+    untimed_ends: 0,
+    options: {
+      pregame: true,
+      pace_of_play: true,
+      show_progress_through_end: true,
+      total_time_includes_untimed_ends: false,
+      replace_conflicts: false,
+    },
+    start_relays: [],
+    start_duration: null,
+    end_relays: [],
+    end_duration: null,
+  },
+  {
+    id: 'doubles-8',
+    label: 'Doubles (8 ends)',
+    name: 'Doubles (8 ends)',
+    game_completed: null,
+    minutes: 105,
+    pregame_minutes: 5,
+    header_hold_minutes: 10,
+    stones_per_end: 5,
+    end_count: 8,
+    untimed_ends: 0,
+    options: {
+      pregame: true,
+      pace_of_play: true,
+      show_progress_through_end: true,
+      total_time_includes_untimed_ends: false,
+      replace_conflicts: false,
+    },
+    start_relays: [],
+    start_duration: null,
+    end_relays: [],
+    end_duration: null,
+  },
 ];
+
+const QUICK_PRESET_STORAGE_KEY = 'curling_timer.quick_presets.v1';
+const QUICK_PRESET_DELETED_STORAGE_KEY = 'curling_timer.quick_presets.deleted.v1';
+
+function quickPresetNumber(value, fallback, min, max) {
+  if (value === '' || value == null) return fallback;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, number));
+}
+
+function quickPresetInteger(value, fallback, min, max) {
+  const number = quickPresetNumber(value, fallback, min, max);
+  return number == null ? null : Math.round(number);
+}
+
+function quickPresetBoolean(value, fallback) {
+  if (typeof value === 'boolean') return value;
+  if (value === true || value === 1 || value === '1' || value === 'true') return true;
+  if (value === false || value === 0 || value === '0' || value === 'false') return false;
+  return fallback;
+}
+
+function quickPresetText(value, fallback) {
+  if (typeof value !== 'string') return fallback;
+  const text = value.trim();
+  return text || fallback;
+}
+
+function quickPresetRelays(value, fallback) {
+  const source = Array.isArray(value) ? value : fallback;
+  if (!Array.isArray(source)) return [];
+  const seen = new Set();
+  const relays = [];
+  for (const item of source) {
+    if (typeof item !== 'string') continue;
+    const relay = item.trim();
+    if (!relay || seen.has(relay)) continue;
+    seen.add(relay);
+    relays.push(relay);
+  }
+  return relays;
+}
+
+function normalizeQuickPreset(raw, fallback = null) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const id = typeof raw.id === 'string' ? raw.id.trim() : '';
+  if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(id)) return null;
+
+  const base = fallback || {
+    id,
+    label: id,
+    name: id,
+    game_completed: null,
+    minutes: 0,
+    pregame_minutes: 0,
+    header_hold_minutes: 0,
+    stones_per_end: 8,
+    end_count: 8,
+    untimed_ends: 0,
+    options: {
+      pregame: false,
+      pace_of_play: false,
+      show_progress_through_end: false,
+      total_time_includes_untimed_ends: false,
+      replace_conflicts: false,
+    },
+    start_relays: [],
+    start_duration: null,
+    end_relays: [],
+    end_duration: null,
+  };
+  const rawOptions = raw.options && typeof raw.options === 'object' && !Array.isArray(raw.options) ? raw.options : {};
+  const baseOptions = base.options || {};
+  const hasCompleted = Object.prototype.hasOwnProperty.call(raw, 'game_completed');
+  const gameCompleted = hasCompleted
+    ? (typeof raw.game_completed === 'string' ? raw.game_completed.trim() || null : null)
+    : (typeof base.game_completed === 'string' && base.game_completed.trim() ? base.game_completed.trim() : null);
+
+  return {
+    id,
+    label: quickPresetText(raw.label, base.label || id),
+    name: quickPresetText(raw.name, base.name || id),
+    game_completed: gameCompleted,
+    minutes: quickPresetNumber(raw.minutes, base.minutes, 0, 179),
+    pregame_minutes: quickPresetNumber(raw.pregame_minutes, base.pregame_minutes, 0, 60),
+    header_hold_minutes: quickPresetNumber(raw.header_hold_minutes, base.header_hold_minutes, 0, 60),
+    stones_per_end: quickPresetInteger(raw.stones_per_end, base.stones_per_end, 1, 10),
+    end_count: quickPresetInteger(raw.end_count, base.end_count, 1, 12),
+    untimed_ends: quickPresetInteger(raw.untimed_ends, base.untimed_ends, 0, 6),
+    options: {
+      pregame: quickPresetBoolean(rawOptions.pregame, !!baseOptions.pregame),
+      pace_of_play: quickPresetBoolean(rawOptions.pace_of_play, !!baseOptions.pace_of_play),
+      show_progress_through_end: quickPresetBoolean(rawOptions.show_progress_through_end, !!baseOptions.show_progress_through_end),
+      total_time_includes_untimed_ends: quickPresetBoolean(rawOptions.total_time_includes_untimed_ends, !!baseOptions.total_time_includes_untimed_ends),
+      replace_conflicts: quickPresetBoolean(rawOptions.replace_conflicts, !!baseOptions.replace_conflicts),
+    },
+    start_relays: quickPresetRelays(raw.start_relays, base.start_relays || []),
+    start_duration: quickPresetInteger(raw.start_duration, base.start_duration, 0, 100000),
+    end_relays: quickPresetRelays(raw.end_relays, base.end_relays || []),
+    end_duration: quickPresetInteger(raw.end_duration, base.end_duration, 0, 100000),
+  };
+}
+
+function readStoredQuickPresetObjects() {
+  try {
+    const raw = localStorage.getItem(QUICK_PRESET_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item) => item && typeof item === 'object' && !Array.isArray(item)
+      && typeof item.id === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(item.id.trim()));
+  } catch (err) {
+    return [];
+  }
+}
+
+function readDeletedQuickPresetIds() {
+  try {
+    const raw = localStorage.getItem(QUICK_PRESET_DELETED_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((id) => typeof id === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(id));
+  } catch (err) {
+    return [];
+  }
+}
+
+function mergeQuickPresets(builtins, stored, deletedIds) {
+  const result = [];
+  const positions = new Map();
+  const deleted = deletedIds instanceof Set ? deletedIds : new Set(deletedIds || []);
+  for (const builtin of builtins) {
+    if (deleted.has(builtin.id)) continue;
+    const preset = normalizeQuickPreset(builtin, builtin);
+    if (!preset) continue;
+    result.push(preset);
+    positions.set(preset.id, result.length - 1);
+  }
+  for (const raw of stored) {
+    const fallback = builtins.find((preset) => preset.id === raw.id) || null;
+    const preset = normalizeQuickPreset(raw, fallback);
+    if (!preset || deleted.has(preset.id)) continue;
+    if (positions.has(preset.id)) {
+      result[positions.get(preset.id)] = preset;
+    } else {
+      positions.set(preset.id, result.length);
+      result.push(preset);
+    }
+  }
+  return result;
+}
+
+function writeStoredQuickPresets(presets) {
+  try {
+    localStorage.setItem(QUICK_PRESET_STORAGE_KEY, JSON.stringify(presets));
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function writeDeletedQuickPresetIds(ids) {
+  try {
+    localStorage.setItem(QUICK_PRESET_DELETED_STORAGE_KEY, JSON.stringify(Array.from(ids)));
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
 
 function buildQuickForm() {
   const minutes = minuteInput({ max: 179, value: '0', 'aria-label': 'Full game time in minutes' });
-  const name = el('input', { type: 'text', maxlength: 60, placeholder: 'QUICK START' });
+  const name = el('input', { type: 'text', maxlength: 60, placeholder: 'QUICK START', 'aria-label': 'Name shown on display' });
+  const completed = el('input', { type: 'text', maxlength: 120, placeholder: 'Default completion message', 'aria-label': 'Completed message' });
   const pregameMin = minuteInput({ max: 60, value: '5', 'aria-label': 'Pre-game countdown in minutes' });
   const expiresMin = minuteInput({ max: 60, value: '10', 'aria-label': 'Warning wording hold in minutes' });
   const stonesPerEnd = el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Stones per end' });
@@ -912,7 +1172,7 @@ function buildQuickForm() {
   const pregameBtn = toggleBtn(pregameOn, 'Pre-Game Countdown');
   const paceBtn = toggleBtn(paceOn, 'Pace of play');
   const showProgressBtn = toggleBtn(showProgressOn, 'Show progress');
-  const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
+  const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Full game countdown (incl. extra ends)');
   const replaceBtn = toggleBtn(replaceOn, 'Replace conflicts');
   const gameOptionsRow = el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px; flex-wrap: wrap' },
     pregameBtn, paceBtn, showProgressBtn, untimedTotalBtn, replaceBtn);
@@ -981,11 +1241,12 @@ function buildQuickForm() {
       el('div', { class: 'section-title', style: 'margin:0 0 10px' }, 'Preview — settings that will be applied'),
       previewLine('Game time', gameSecs === 0 ? '—' : durationText(gameSecs)),
       previewLine('Expires at', gameSecs === 0 ? '—' : pad(when.getHours()) + ':' + pad(when.getMinutes())),
-      previewLine('Wig Wag Countdown', pregameOn ? (formatMinutes(minutesToSeconds(pregameMin.value) || 0) + ' min') : 'Off'),
+      previewLine('Pre-Game Countdown', pregameOn ? (formatMinutes(minutesToSeconds(pregameMin.value) || 0) + ' min') : 'Off'),
+      previewLine('Completed message', completed.value.trim() || 'Default'),
       previewLine('Pace of play', paceOn ? 'On' : 'Off'),
       previewLine('Progress through end', showProgressOn ? 'On' : 'Off'),
       previewLine('Replace same-time games', replaceOn ? 'On' : 'Off'),
-      previewLine('Total time includes untimed ends', untimedTotalOn ? 'On' : 'Off'),
+      previewLine('Countdown', untimedTotalOn ? 'Full game (extra ends included)' : 'Stops at the warning'),
       previewLine('Stones per end', stonesPerEnd.value || 8),
       previewLine('Total ends', endCount.value || 8),
       previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
@@ -1013,20 +1274,186 @@ function buildQuickForm() {
 
 
   const wire = (input) => { input.addEventListener('input', refreshPreview); input.addEventListener('change', refreshPreview); };
-  wire(minutes); wire(expiresMin); wire(pregameMin);
+  wire(minutes); wire(expiresMin); wire(pregameMin); wire(completed);
   [pregameBtn, paceBtn, showProgressBtn, replaceBtn].forEach(b => { b.addEventListener('click', refreshPreview); });
   [stonesPerEnd, endCount, untimedEnds].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
   [...startToggles, ...startDurs, ...endToggles, ...endDurs].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
 
-  const presets = QUICK_PRESETS.map((preset) => el('button', { class: 'btn preset', type: 'button',
-    title: `${preset.title || preset.name}, ${durationText(preset.seconds)}`,
-    onclick: () => launchQuick({ seconds: preset.seconds, name: preset.name, title: preset.title,
-                                 game_completed: preset.game_completed, header_hold: preset.header_hold },
-                               options()) }, preset.label));
-  const form = el('form', { class: 'card', onsubmit: (event) => {
+  let storedQuickPresets = readStoredQuickPresetObjects()
+    .map((item) => normalizeQuickPreset(item, QUICK_PRESETS.find((preset) => preset.id === item.id) || null))
+    .filter(Boolean);
+  let deletedQuickPresetIds = new Set(readDeletedQuickPresetIds());
+  let activePresets = mergeQuickPresets(QUICK_PRESETS, storedQuickPresets, deletedQuickPresetIds);
+  let presets = [];
+  let quickPicksEnabled = false;
+  let editingPresetId = null;
+  const presetRow = el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px' });
+  let form = null;
+
+  const captureQuickPreset = (id, label) => ({
+    id,
+    label,
+    name: name.value.trim() || label,
+    game_completed: completed.value.trim() || null,
+    minutes: quickPresetNumber(minutes.value, 0, 0, 179),
+    pregame_minutes: quickPresetNumber(pregameMin.value, 0, 0, 60),
+    header_hold_minutes: quickPresetNumber(expiresMin.value, 0, 0, 60),
+    stones_per_end: quickPresetInteger(stonesPerEnd.value, 8, 1, 10),
+    end_count: quickPresetInteger(endCount.value, 8, 1, 12),
+    untimed_ends: quickPresetInteger(untimedEnds.value, 0, 0, 6),
+    options: options(),
+    start_relays: relayValues(startToggles),
+    start_duration: relayMaxDuration(startDurs),
+    end_relays: relayValues(endToggles),
+    end_duration: relayMaxDuration(endDurs),
+  });
+
+  const setToggleState = (button, on) => {
+    button.className = 'check-toggle ' + (on ? 'on' : 'off');
+    button.setAttribute('aria-pressed', String(on));
+  };
+
+  const applyRelayPreset = (toggles, durations, selectedRelays, duration) => {
+    const names = Array.isArray(selectedRelays) ? selectedRelays : [];
+    toggles.forEach((button, index) => {
+      const on = names.includes(relayNames[index]);
+      setToggleState(button, on);
+      button._durWrap.style.display = on ? '' : 'none';
+      durations[index].value = on && duration != null ? formatSeconds(duration) : '';
+    });
+  };
+
+  const applyQuickPreset = (preset) => {
+    if (!preset) return;
+    minutes.value = String(preset.minutes);
+    name.value = preset.name || '';
+    completed.value = preset.game_completed || '';
+    pregameMin.value = String(preset.pregame_minutes);
+    expiresMin.value = String(preset.header_hold_minutes);
+    stonesPerEnd.value = String(preset.stones_per_end);
+    endCount.value = String(preset.end_count);
+    untimedEnds.value = String(preset.untimed_ends);
+
+    pregameOn = !!preset.options.pregame;
+    paceOn = !!preset.options.pace_of_play;
+    showProgressOn = !!preset.options.show_progress_through_end;
+    untimedTotalOn = !!preset.options.total_time_includes_untimed_ends;
+    replaceOn = !!preset.options.replace_conflicts;
+    setToggleState(pregameBtn, pregameOn);
+    setToggleState(paceBtn, paceOn);
+    setToggleState(showProgressBtn, showProgressOn);
+    setToggleState(untimedTotalBtn, untimedTotalOn);
+    setToggleState(replaceBtn, replaceOn);
+
+    applyRelayPreset(startToggles, startDurs, preset.start_relays, preset.start_duration);
+    applyRelayPreset(endToggles, endDurs, preset.end_relays, preset.end_duration);
+    refreshPreview();
+    if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    showMessage(`Loaded quick pick "${preset.label}" — review and press Start game.`, 'ok');
+  };
+
+  const renderQuickPicks = () => {
+    const rows = [];
+    presets = [];
+    for (const preset of activePresets) {
+      const pickButton = el('button', { class: 'btn preset', type: 'button',
+        title: `${preset.name}, ${durationText(preset.minutes * 60)}`,
+        onclick: () => applyQuickPreset(preset) }, preset.label);
+      const editButton = el('button', { class: 'btn preset', type: 'button',
+        'aria-label': `Edit quick pick ${preset.label}`,
+        onclick: () => {
+          editingPresetId = preset.id;
+          applyQuickPreset(preset);
+          name.focus();
+          name.select();
+          showMessage(`Editing quick pick "${preset.label}" — change the name and save.`, 'ok');
+        } }, 'Edit');
+      const deleteButton = el('button', { class: 'btn preset', type: 'button',
+        'aria-label': `Delete quick pick ${preset.label}`,
+        onclick: () => {
+          if (!confirm(`Delete quick pick "${preset.label}"?`)) return;
+          storedQuickPresets = storedQuickPresets.filter((item) => item.id !== preset.id);
+          if (QUICK_PRESETS.some((item) => item.id === preset.id)) deletedQuickPresetIds.add(preset.id);
+          activePresets = mergeQuickPresets(QUICK_PRESETS, storedQuickPresets, deletedQuickPresetIds);
+          const storedSaved = writeStoredQuickPresets(storedQuickPresets);
+          const deletedSaved = writeDeletedQuickPresetIds(deletedQuickPresetIds);
+          if (editingPresetId === preset.id) editingPresetId = null;
+          renderQuickPicks();
+          if (storedSaved && deletedSaved) {
+            showMessage(`Deleted quick pick "${preset.label}".`, 'ok');
+          } else {
+            showMessage(`Deleted "${preset.label}" for this session, but browser storage could not be updated.`, 'bad');
+          }
+        } }, 'Delete');
+      presets.push(pickButton);
+      rows.push(el('div', { class: 'row-actions', style: 'margin: 0; gap: 4px' }, pickButton, editButton, deleteButton));
+    }
+    presetRow.replaceChildren(...rows);
+    presets.forEach((b) => { b.disabled = !quickPicksEnabled; });
+  };
+
+  const saveAsQuickPick = () => {
+    const editingPreset = editingPresetId ? activePresets.find((preset) => preset.id === editingPresetId) : null;
+    const defaultLabel = (editingPreset && editingPreset.label) || name.value.trim() || 'Quick pick';
+    const enteredLabel = prompt('Quick pick label', defaultLabel);
+    if (enteredLabel === null) return;
+    const label = enteredLabel.trim() || name.value.trim() || 'Quick pick';
+    const matchingPreset = activePresets.find((preset) =>
+      preset.label.toLowerCase() === label.toLowerCase() || preset.id.toLowerCase() === label.toLowerCase()) || editingPreset;
+
+    let id = matchingPreset ? matchingPreset.id : '';
+    if (!id) {
+      const usedIds = new Set(QUICK_PRESETS.map((preset) => preset.id)
+        .concat(activePresets.map((preset) => preset.id), storedQuickPresets.map((preset) => preset.id), Array.from(deletedQuickPresetIds)));
+      const base = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'quick-pick';
+      id = base;
+      let suffix = 2;
+      while (usedIds.has(id)) id = `${base}-${suffix++}`;
+    }
+
+    const preset = captureQuickPreset(id, label);
+    preset.label = label;
+    const storedIndex = storedQuickPresets.findIndex((item) => item.id === id);
+    if (storedIndex >= 0) storedQuickPresets[storedIndex] = preset;
+    else storedQuickPresets.push(preset);
+    deletedQuickPresetIds.delete(id);
+    activePresets = mergeQuickPresets(QUICK_PRESETS, storedQuickPresets, deletedQuickPresetIds);
+    const storedSaved = writeStoredQuickPresets(storedQuickPresets);
+    const deletedSaved = writeDeletedQuickPresetIds(deletedQuickPresetIds);
+    editingPresetId = null;
+    renderQuickPicks();
+    if (storedSaved && deletedSaved) {
+      showMessage(`Saved quick pick "${label}".`, 'ok');
+    } else {
+      showMessage(`Saved "${label}" for this session, but browser storage could not be updated.`, 'bad');
+    }
+  };
+
+  const resetQuickPicks = () => {
+    storedQuickPresets = [];
+    deletedQuickPresetIds.clear();
+    activePresets = mergeQuickPresets(QUICK_PRESETS, storedQuickPresets, deletedQuickPresetIds);
+    let cleared = true;
+    try {
+      localStorage.removeItem(QUICK_PRESET_STORAGE_KEY);
+      localStorage.removeItem(QUICK_PRESET_DELETED_STORAGE_KEY);
+    } catch (err) {
+      cleared = false;
+    }
+    editingPresetId = null;
+    renderQuickPicks();
+    if (cleared) showMessage('Quick picks reset to the four built-in presets.', 'ok');
+    else showMessage('Quick picks reset for this session, but browser storage could not be cleared.', 'bad');
+  };
+
+  const savePresetButton = el('button', { class: 'btn', type: 'button', onclick: saveAsQuickPick }, 'Save as quick pick');
+  const resetPresetButton = el('button', { class: 'btn', type: 'button', onclick: resetQuickPicks }, 'Reset quick picks');
+
+  form = el('form', { class: 'card', onsubmit: (event) => {
       event.preventDefault();
       const timer = readQuickForm(minutes, name);
       if (!timer) return;
+      const completedMessage = completed.value.trim();
       launchQuick({
         seconds: timer.seconds,
         name: timer.name,
@@ -1040,16 +1467,19 @@ function buildQuickForm() {
         end_count: Number(endCount.value) || 8,
         stones_per_end: Number(stonesPerEnd.value) || 8,
         untimed_ends: Number(untimedEnds.value) || 0,
+        ...(completedMessage ? { game_completed: completedMessage } : {}),
       });
     } },
     el('div', { class: 'page-head' },
       el('div', {}, el('div', { class: 'section-title' }, 'Quick Game')),
       el('span', { class: 'pill' }, 'Ad hoc timer')),
-    el('p', { class: 'muted small', style: 'margin: 0' }, 'Pick a preset or set the timing in minutes, options, and outputs below. The preview shows exactly what will be applied.'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Click a quick pick to fill the form, then review and press Start game. The preview shows exactly what will be applied.'),
     // Presets section - keep at the very top per requirements
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 8px' }, 'Quick picks'),
-      el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px' }, ...presets)),
+      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Quick picks fill the form below — nothing starts until you press Start game.'),
+      presetRow,
+      el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px' }, savePresetButton, resetPresetButton)),
     // Main game settings — inline layout matching schedule entryEditor
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
       el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Full game time (minutes)'),
@@ -1060,9 +1490,13 @@ function buildQuickForm() {
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
       el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Warning wording hold after buzzer (minutes)'),
       expiresMin),
-    el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Name shown on display'),
-      name),
+    el('div', { class: 'grid2', style: 'gap: 12px' },
+      el('div', { class: 'field' },
+        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Name shown on display'),
+        name),
+      el('div', { class: 'field' },
+        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Completed message (optional)'),
+        completed)),
 
     // Secondary settings in grid2 for wider layout
     el('div', { class: 'grid2', style: 'gap: 12px' },
@@ -1119,10 +1553,12 @@ function buildQuickForm() {
   };
   form.update = (enabled, clockOk = true) => {
     button.disabled = !enabled;
+    quickPicksEnabled = enabled;
     presets.forEach((b) => { b.disabled = !enabled; });
     hint.textContent = enabled ? '' : (clockOk ? 'Enable the timer first' : 'Waiting for the clock to sync');
     if (enabled || clockOk || (state.status && state.status.pregame_countdown_seconds != null)) form.applyDefaults();
   };
+  renderQuickPicks();
   refreshPreview();
   return form;
 }
@@ -1610,7 +2046,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   const paceBtn = toggleBtn(paceOn, 'Pace of play');
   const progressBtn = toggleBtn(progressOn, 'Show progress through end');
   const showProgressBtn = progressBtn; // alias for body row
-  const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
+  const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Full game countdown (incl. extra ends)');
   const replaceBtn = toggleBtn(replaceOn, 'Replace conflicts');
   const manualBtn = toggleBtn(manualOn, 'Manual push-button trigger');
   const pregameMinutesInput = minuteInput({ max: 60, value: '0', placeholder: 'minutes', 'aria-label': 'Pre-game countdown in minutes' });
@@ -1794,7 +2230,7 @@ function entryEditor(entries, index, leagues, rerender) {
 
   // ---- Game option toggles (modern pill switches) ----
   let pgEnabled = entry.pregame_countdown != null && entry.pregame_countdown > 0;
-  const pgBtn = toggleBtn(pgEnabled, 'Wig Wag Countdown');
+  const pgBtn = toggleBtn(pgEnabled, 'Pre-Game Countdown');
   const pgTotal = (entry.pregame_countdown != null) ? Number(entry.pregame_countdown) : null;
   const pgMin = minuteInput({ max: 60, placeholder: 'default', 'aria-label': 'Pre-game countdown in minutes',
     value: pgTotal != null ? formatMinutes(pgTotal) : '' });
@@ -1835,7 +2271,7 @@ function entryEditor(entries, index, leagues, rerender) {
   skipInput.onchange = () => changed();
 
   let untimedTotalOn = entry.total_time_includes_untimed_ends === true;
-  const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Total time includes untimed ends?');
+  const untimedTotalBtn = toggleBtn(untimedTotalOn, 'Full game countdown (incl. extra ends)');
   untimedTotalBtn.onclick = (event) => { const next = !untimedTotalOn; untimedTotalOn = next; event.target.className = 'check-toggle ' + (next ? 'on' : 'off'); entry.total_time_includes_untimed_ends = next; changed(); };
 
   // ---- Notifications (relays) as toggle buttons instead of checkboxes ----
@@ -1892,7 +2328,7 @@ function entryEditor(entries, index, leagues, rerender) {
       el('label', {}, 'Warning wording hold after buzzer (minutes)'), hold,
       el('label', {}, 'Total ends'), endCountInput,
       el('label', {}, 'Stones per end'), el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.stones_per_end != null ? entry.stones_per_end : '', onchange: (event) => { entry.stones_per_end = event.target.value === '' ? null : Math.max(1, parseInt(event.target.value, 10) || 1); changed(); } }),
-      el('label', {}, 'Untimed ends'), el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.untimed_ends != null ? entry.untimed_ends : '', onchange: (event) => { entry.untimed_ends = event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0); changed(); } }),
+      el('label', {}, 'Ends after expiration'), el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.untimed_ends != null ? entry.untimed_ends : '', onchange: (event) => { entry.untimed_ends = event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0); changed(); } }),
       manualBtn,
       progressBtn, skipRow,
       untimedTotalBtn,
@@ -2891,6 +3327,8 @@ function openLeagueModal(league, leagues, onSaved) {
   paceBtn.onclick = (e) => { editLeague.pace_enabled = !editLeague.pace_enabled; e.target.className = 'check-toggle ' + (editLeague.pace_enabled ? 'on' : 'off'); };
   const progressBtn = toggleBtn(editLeague.show_progress_through_end, 'Progress through end');
   progressBtn.onclick = (e) => { editLeague.show_progress_through_end = !editLeague.show_progress_through_end; e.target.className = 'check-toggle ' + (editLeague.show_progress_through_end ? 'on' : 'off'); };
+  const untimedTotalBtn = toggleBtn(editLeague.total_time_includes_untimed_ends, 'Full game countdown (incl. extra ends)');
+  untimedTotalBtn.onclick = (e) => { editLeague.total_time_includes_untimed_ends = !editLeague.total_time_includes_untimed_ends; e.target.className = 'check-toggle ' + (editLeague.total_time_includes_untimed_ends ? 'on' : 'off'); };
   const warningHoldIn = el('input', { 
     type: 'number', 
     min: 0, 
@@ -2957,8 +3395,10 @@ function openLeagueModal(league, leagues, onSaved) {
         endsIn)),
     
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', {}, 'Untimed ends'),
+      el('label', {}, 'Ends after expiration'),
       untimedIn),
+
+    el('div', { class: 'field', style: 'margin-bottom: 10px' }, untimedTotalBtn),
     
     el('div', { class: 'row-actions' },
       el('button', { class: 'btn primary', type: 'button', onclick: async () => {

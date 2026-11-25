@@ -120,6 +120,28 @@ TEST_CASE("crlf line endings kept") {
         std::string::npos);
 }
 
+TEST_CASE("total_time_includes_untimed_ends round trips") {
+  auto model = load(SETTINGS_TEXT);
+  REQUIRE(model.ok);
+  Entry entry;
+  entry.start = 36000;
+  entry.buzzer = 39600;
+  entry.name = "NEW";
+  entry.end_count = 8;
+  entry.untimed_ends = 2;
+  entry.total_time_includes_untimed_ends = true;
+  model.model.schedule["Tuesday"].push_back(entry);
+  auto r = do_splice(SETTINGS_TEXT, model.model);
+  REQUIRE(r.ok);
+  CHECK(r.out.find("total_time_includes_untimed_ends: True") != std::string::npos);
+
+  auto again = load(r.out);
+  REQUIRE(again.ok);
+  const Entry &saved = again.model.schedule.at("Tuesday").at(0);
+  REQUIRE(saved.total_time_includes_untimed_ends.has_value());
+  CHECK(*saved.total_time_includes_untimed_ends == true);
+}
+
 TEST_CASE("notes and empty dates loaded") {
   auto model = load(SETTINGS_TEXT);
   REQUIRE(model.ok);

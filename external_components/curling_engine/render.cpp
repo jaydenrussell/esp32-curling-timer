@@ -239,12 +239,27 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
         : settings.pregame_countdown;
     const bool pregame = since_start < 0 && pregame_secs > 0;
     const int seconds_left = pregame ? (-since_start) : g.seconds_until_buzzer.value_or(0);
+    // Display-only option: when the total time includes the untimed ends the
+    // countdown runs the whole game and reaches zero at the true end (the
+    // buzzer plus the extra ends). Otherwise it shows the countdown to the
+    // warning, so the warning is the zero point (unchanged behaviour). Pace,
+    // the progress bar and every bell keep using the real game values; only the
+    // displayed seconds are extended. The length of the untimed ends is
+    // estimated with the same per-end unit pace already uses.
+    int display_left = seconds_left;
+    if (!pregame && g.total_time_includes_untimed_ends.value_or(false)) {
+      const int untimed = g.untimed_ends.value_or(0);
+      const int ends = g.end_count.value_or(0);
+      const int regulation = g.buzzer - g.start;
+      if (untimed > 0 && ends > 0 && regulation > 0)
+        display_left += untimed * (regulation / ends);
+    }
     out.show_countdown = true;
-    out.game_completed = !pregame && seconds_left <= 0;
+    out.game_completed = !pregame && display_left <= 0;
     out.is_pregame = pregame;
     out.pregame_blink = pregame && settings.pregame_blink;
-    out.seconds_until_buzzer = pregame ? (g.seconds_until_buzzer.value_or(0) + pregame_secs) : seconds_left;
-    out.countdown = pregame ? format_countdown(seconds_left) : format_countdown(seconds_left);
+    out.seconds_until_buzzer = pregame ? (g.seconds_until_buzzer.value_or(0) + pregame_secs) : display_left;
+    out.countdown = pregame ? format_countdown(seconds_left) : format_countdown(display_left);
     out.countdown_color = color_to_hex(pregame ? settings.pregame_countdown_color : [&settings](const char *key) {
           auto it = settings.countdown_colors.find(key);
           return it != settings.countdown_colors.end() ? it->second : std::string("white");

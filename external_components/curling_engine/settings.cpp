@@ -1377,6 +1377,13 @@ static bool parse_schedules_into(const YamlValue &src,
           return false;
         g.show_progress_through_end = v->b;
       }
+      if (entry_v.has("total_time_includes_untimed_ends")) {
+        const YamlValue *v = require_(&entry_v, "total_time_includes_untimed_ends", YType::Bool,
+                                      where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.total_time_includes_untimed_ends = v->b;
+      }
       if (entry_v.has("pregame_countdown")) {
         const YamlValue *v = require_(&entry_v, "pregame_countdown", YType::Int, where.c_str(), err);
         if (v == nullptr)
@@ -1989,6 +1996,17 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
   return true;
 }
 
+int untimed_end_seconds(const PiTimerGame &game) {
+  if (!game.total_time_includes_untimed_ends.value_or(false))
+    return 0;
+  const int untimed = game.untimed_ends.value_or(0);
+  const int ends = game.end_count.value_or(0);
+  const int regulation = game.buzzer - game.start;
+  if (untimed <= 0 || ends <= 0 || regulation <= 0)
+    return 0;
+  return untimed * (regulation / ends);
+}
+
 std::optional<PiTimerGame> PiTimerSettings::find_current_game(int weekday,
                                                                int seconds_since_midnight,
                                                                const std::string &date_iso) const {
@@ -2012,7 +2030,7 @@ std::optional<PiTimerGame> PiTimerSettings::find_current_game(int weekday,
         ? *entry.pregame_countdown_override
         : pregame_countdown;
     if (seconds_since_midnight >= entry.start - pregame &&
-        seconds_since_midnight <= entry.buzzer + header_hold(entry)) {
+        seconds_since_midnight <= entry.buzzer + untimed_end_seconds(entry) + header_hold(entry)) {
       PiTimerGame copy = entry;
       copy.seconds_until_buzzer = copy.buzzer - seconds_since_midnight;
       copy.seconds_since_start = seconds_since_midnight - copy.start;

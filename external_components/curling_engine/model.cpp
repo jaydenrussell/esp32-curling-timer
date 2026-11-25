@@ -394,7 +394,8 @@ bool entries_from_yaml(const YamlValue *raw, const std::string &where, std::vect
                                    "game_completed", "header_hold",      "pace_of_play",
                                    "pace_unit_duration", "manual_trigger",
                                    "start_relays", "end_relays", "start_duration", "end_duration",
-                                   "end_count", "stones_per_end", "untimed_ends", "show_progress_through_end", "pregame_countdown"};
+                                   "end_count", "stones_per_end", "untimed_ends", "show_progress_through_end",
+                                   "total_time_includes_untimed_ends", "pregame_countdown"};
     std::set<std::string> unknown;
     for (const auto &kv : item->map) {
       bool known = false;
@@ -706,6 +707,9 @@ std::string render_entry(const Entry &entry) {
     line += ", untimed_ends: " + std::to_string(*entry.untimed_ends);
   if (entry.show_progress_through_end.has_value())
     line += std::string(", show_progress_through_end: ") + (*entry.show_progress_through_end ? "True" : "False");
+  if (entry.total_time_includes_untimed_ends.has_value())
+    line += std::string(", total_time_includes_untimed_ends: ") +
+            (*entry.total_time_includes_untimed_ends ? "True" : "False");
   if (entry.pregame_countdown_override.has_value())
     line += ", pregame_countdown: " + std::to_string(*entry.pregame_countdown_override);
   line += "}";

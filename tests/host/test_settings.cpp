@@ -152,6 +152,43 @@ TEST_CASE("optional fields parsed") {
   CHECK(r.s.header_hold(game) == 30);
 }
 
+TEST_CASE("entry total_time_includes_untimed_ends parses") {
+  std::string text(CASE_BASE);
+  const std::string needle = "    name: MONDAY GAME\n";
+  const size_t at = text.find(needle);
+  REQUIRE(at != std::string::npos);
+  text.insert(at + needle.size(), "    total_time_includes_untimed_ends: true\n");
+  auto r = parse_text(text.c_str());
+  REQUIRE(r.ok);
+  const PiTimerGame &game = r.s.schedules.at("Monday").at(0);
+  REQUIRE(game.total_time_includes_untimed_ends.has_value());
+  CHECK(*game.total_time_includes_untimed_ends == true);
+}
+
+TEST_CASE("league total_time_includes_untimed_ends reaches entries") {
+  std::string text(CASE_BASE);
+  text += "leagues:\n  - name: MONDAY GAME\n    total_time_includes_untimed_ends: true\n";
+  auto r = parse_text(text.c_str());
+  REQUIRE(r.ok);
+  const PiTimerGame &game = r.s.schedules.at("Monday").at(0);
+  REQUIRE(game.total_time_includes_untimed_ends.has_value());
+  CHECK(*game.total_time_includes_untimed_ends == true);
+}
+
+TEST_CASE("entry total_time_includes_untimed_ends overrides league") {
+  std::string text(CASE_BASE);
+  const std::string needle = "    name: MONDAY GAME\n";
+  const size_t at = text.find(needle);
+  REQUIRE(at != std::string::npos);
+  text.insert(at + needle.size(), "    total_time_includes_untimed_ends: false\n");
+  text += "leagues:\n  - name: MONDAY GAME\n    total_time_includes_untimed_ends: true\n";
+  auto r = parse_text(text.c_str());
+  REQUIRE(r.ok);
+  const PiTimerGame &game = r.s.schedules.at("Monday").at(0);
+  REQUIRE(game.total_time_includes_untimed_ends.has_value());
+  CHECK(*game.total_time_includes_untimed_ends == false);
+}
+
 TEST_CASE("header hold defaults to config") {
   auto r = parse_text(CASE_SUN_DEFAULT_HOLD);
   REQUIRE(r.ok);

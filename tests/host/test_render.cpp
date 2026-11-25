@@ -285,3 +285,53 @@ TEST_CASE("render_snapshot: progress fields when enabled") {
   CHECK(snap.progress_game_duration == 3600);
   CHECK(snap.progress_seconds_since_start == 900);
 }
+
+TEST_CASE("render_snapshot: full game countdown includes untimed ends") {
+  PiTimerSettings s;
+  s.valid = true;
+  s.enabled = true;
+  s.headers["text"]["when_idle"] = "IDLE";
+  s.headers["text"]["counting_down"] = "COUNTING";
+  s.headers["text"]["game_completed"] = "DONE";
+  s.headers["color"]["when_idle"] = "white";
+  s.headers["color"]["counting_down"] = "yellow";
+  s.headers["color"]["game_completed"] = "yellow";
+  s.countdown_colors["counting_down"] = "green";
+  s.countdown_colors["game_completed"] = "red";
+  PiTimerGame g;
+  g.start = 36000;
+  g.buzzer = 39600;   // 3600s regulation
+  g.end_count = 8;    // 450s per end
+  g.untimed_ends = 2; // +900s when included
+  g.total_time_includes_untimed_ends = false;
+  s.schedules["Monday"] = {g};
+
+  // OFF: countdown stops at the warning (15 min in -> 2700s left).
+  auto off = render_snapshot(s, true, 0, 36900, "2026-09-28");
+  CHECK(off.seconds_until_buzzer == 2700);
+  CHECK(off.countdown == std::string("45") + COLON + "00");
+  CHECK_FALSE(off.game_completed);
+
+  // ON: clock runs the full duration (3600 + 900 - 900 = 3600s left).
+  s.schedules["Monday"][0].total_time_includes_untimed_ends = true;
+  auto on = render_snapshot(s, true, 0, 36900, "2026-09-28");
+  CHECK(on.seconds_until_buzzer == 3600);
+  CHECK(on.countdown == std::string("1") + COLON + "00" + COLON + "00");
+  CHECK_FALSE(on.game_completed);
+
+  // ON keeps counting through the untimed ends after the warning.
+  auto during = render_snapshot(s, true, 0, 39900, "2026-09-28"); // 5 min past buzzer
+  CHECK(during.seconds_until_buzzer == 600);
+  CHECK_FALSE(during.game_completed);
+
+  // ON with no untimed ends is identical to OFF.
+  s.schedules["Monday"][0].untimed_ends = 0;
+  auto none = render_snapshot(s, true, 0, 36900, "2026-09-28");
+  CHECK(none.seconds_until_buzzer == 2700);
+
+  // ON without an end count cannot estimate the extra time -> unchanged.
+  s.schedules["Monday"][0].untimed_ends = 2;
+  s.schedules["Monday"][0].end_count = std::nullopt;
+  auto no_ends = render_snapshot(s, true, 0, 36900, "2026-09-28");
+  CHECK(no_ends.seconds_until_buzzer == 2700);
+}

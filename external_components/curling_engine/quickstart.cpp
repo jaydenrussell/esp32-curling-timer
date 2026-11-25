@@ -108,7 +108,11 @@ bool quick_entry(const QuickStartOptions &opts, Entry *out, std::string *err) {
     entry.untimed_ends = opts.untimed_ends;
   if (opts.show_progress_through_end.has_value())
     entry.show_progress_through_end = opts.show_progress_through_end;
-  entry.total_time_includes_untimed_ends = opts.total_time_includes_untimed_ends;
+  // Only propagate when the user explicitly opted in; absent keeps the
+  // default (countdown stops at the warning) and avoids writing noisy
+  // ': False' to every quick-start entry.
+  if (opts.total_time_includes_untimed_ends)
+    entry.total_time_includes_untimed_ends = true;
   if (opts.pregame_countdown > 0)
     entry.pregame_countdown_override = opts.pregame_countdown;
   *out = std::move(entry);
