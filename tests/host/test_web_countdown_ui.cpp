@@ -3,7 +3,7 @@
 // The engine emits U+02F8 (raised colon) for HDMI. Browser monospace fonts do
 // not normally include that codepoint, so feeding it straight into a WebUI
 // span renders a placeholder box. The mirror must normalize it to ASCII ':'
-// and force the wig-wag alignment on every colon span.
+// and toggle colon opacity when pregame blink is enabled (simple flash).
 
 #include "doctest.h"
 
@@ -87,7 +87,7 @@ TEST_CASE("web mirror: countdown colons use a browser-safe glyph") {
   CHECK(formatter.find("const colon = ':';") != std::string::npos);
 }
 
-TEST_CASE("web mirror: wig wag aligns every colon, including the bottom phase") {
+TEST_CASE("web mirror: countdown colon flashes each second when pregame blink enabled") {
   std::string html = read_file(repo_root() + "/external_components/web_editor/web_ui.html");
   REQUIRE(!html.empty());
   html = strip_cr(html);
@@ -99,9 +99,12 @@ TEST_CASE("web mirror: wig wag aligns every colon, including the bottom phase") 
   const std::string block = html.substr(wag, wag_end - wag);
 
   CHECK(block.find("for (const colon of colons)") != std::string::npos);
-  CHECK(block.find("classList.toggle('wag-top', toggle)") != std::string::npos);
-  CHECK(block.find("classList.toggle('wag-bottom', !toggle)") != std::string::npos);
-  CHECK(block.find("alignSelf = toggle ? 'flex-start' : 'flex-end'") != std::string::npos);
+  CHECK(block.find("colon.style.opacity = toggle ? '0' : '1'") != std::string::npos);
+  CHECK(block.find("Math.floor(performance.now() / 1000) % 2 === 0") != std::string::npos);
+  // Old wig-wag code removed
+  CHECK(block.find("wag-top") == std::string::npos);
+  CHECK(block.find("wag-bottom") == std::string::npos);
+  CHECK(block.find("alignSelf") == std::string::npos);
 }
 
 TEST_CASE("generated web UI header is release-stamped and browser-safe") {

@@ -311,11 +311,8 @@ label.check input { width: 18px; height: 18px; min-height: 0; margin: 0; accent-
 @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
 
 .countdown { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: clamp(44px, 12vw, 72px); font-weight: 800; color: var(--text-strong); margin: 8px 0; letter-spacing: -0.02em; }
-/* Pre-game countdown wig-wag: colon toggles top/bottom aligned each second */
-#mirror-countdown.cd-wag { display: flex; align-items: center; justify-content: center; }
-#mirror-countdown.cd-wag .cd-colon { display: inline-block; transition: align-self 0.25s ease-in-out; }
-#mirror-countdown.cd-wag .cd-colon.wag-top { align-self: flex-start; }
-#mirror-countdown.cd-wag .cd-colon.wag-bottom { align-self: flex-end; }
+/* Pre-game countdown colon - simple default colon */
+#mirror-countdown .cd-colon { display: inline-block; }
 .game-name { font-size: 20px; font-weight: 700; color: var(--text-strong); }
 #status-now { display: grid; gap: 14px; }
 .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; align-items: start; }
@@ -415,7 +412,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 .addon-card h3 { font-size: 16px; }
 .addon-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
 
-.progress-end-bar { position: relative; height: 85px; border-radius: 24px; overflow: hidden; background: #fff; border: 8px solid #000; width: 100%; box-sizing: border-box; }
+.progress-end-bar { position: relative; height: 95px; border-radius: 24px; overflow: hidden; background: #fff; border: 8px solid #000; width: 100%; box-sizing: border-box; }
 .progress-band { position: absolute; top: 0; height: 100%; }
 .progress-band.lead { background: #DC3545; } .progress-band.second { background: #FFC107; } .progress-band.vice { background: #0DCaf0; } .progress-band.skip { background: #198754; }
 .progress-divider { position: absolute; top: 0; height: 100%; background: #000; }
@@ -710,7 +707,7 @@ function normalizeLeaguePayload(league) {
 }
 // The engine uses U+02F8 (raised colon) on HDMI, but browser monospace fonts
 // usually lack it and render a placeholder box. Normalize every browser-mirror
-// countdown to ASCII ':' and let CSS supply the wig-wag vertical alignment.
+// countdown to ASCII ':' — simple colon, no wig-wag.
 function browserCountdown(text) {
   return Array.from(text || '').map(ch => (ch === ':' || ch === '\u02F8') ? ':' : ch).join('');
 }
@@ -1262,13 +1259,13 @@ function renderStatus() {
   const centerTop = sm.header_text ? px(20 + baseHeader * 1.4) : px(20);
   // HDMI pill: y=-79, height 85. Reserve that block plus a small gap so the
   // centre content never overlaps the single progress bar.
-  const centerBottom = showProgress ? px(79 + 85 + 8) : px(20 + baseFooter * 1.4);
+  const centerBottom = showProgress ? px(84 + 95 + 8) : px(20 + baseFooter * 1.4);
   const centerWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; top:${centerTop}px; bottom:${centerBottom}px; display:flex; flex-direction:column; align-items:center; justify-content:center;` });
 
   if (sm.show_countdown) {
      let cd;
      if (pregame && pregameBlink) {
-       cd = el('div', { id: 'mirror-countdown', class: 'cd-wag', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` });
+       cd = el('div', { id: 'mirror-countdown', style: `color:${unswap(sm.countdown_color) || '#fff'}; font-size:${fcd}px; font-weight:bold; text-align:center; line-height:1; width:100%; margin:0; white-space:nowrap; overflow:hidden;` });
        cd.dataset.maxFont = String(fcd);
        const text = sm.countdown || '';
        const cdNodes = buildCountdownContent(text);
@@ -1297,8 +1294,8 @@ function renderStatus() {
     // inner track, a white background, and bands that grow from their left
     // edges. No dark overlay and no per-end bar stack.
     const pct = (v) => v / PROGRESS_TRACK_PX * 100;
-    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(20)}px; right:${px(20)}px; bottom:${px(79)}px;` });
-    const bar = el('div', { id: 'mirror-progress-bar', class: 'progress-end-bar', style: `width:100%; height:${px(85)}px; border-width:${px(8)}px; border-radius:${px(24)}px;` });
+    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(20)}px; right:${px(20)}px; bottom:${px(84)}px;` });
+    const bar = el('div', { id: 'mirror-progress-bar', class: 'progress-end-bar', style: `width:100%; height:${px(95)}px; border-width:${px(8)}px; border-radius:${px(24)}px;` });
     const bandNames = ['lead', 'second', 'vice', 'skip'];
     for (let i = 0; i < 4; i++) {
       bar.append(el('div', { class: `progress-band ${bandNames[i]}`, 'data-band': String(i), style: `left:${pct(PROGRESS_BAND_GEOM[i][0])}%; width:0%;` }));
@@ -1385,32 +1382,25 @@ function tick() {
   if (mc && s) {
     if (s.is_pregame) {
       if (s.countdown) {
-        const wagOn = !!(s.pregame_blink && mc.classList.contains('cd-wag'));
-        if (wagOn) {
-          // Wig wag: do NOT rebuild DOM (causes flicker). Just toggle the
-          // colon's vertical position. The countdown text itself only
-          // changes when the seconds tick; renderMirror() already built
-          // the initial structure, so update text in-place if needed.
-          const digits = (s.countdown || '').replace(/[^0-9]/g, '');
-          const oldDigits = Array.from(mc.querySelectorAll('.cd-group')).map(g => g.textContent).join('');
-          if (digits && digits !== oldDigits) {
-            // Only rebuild when the numeric part changes (once per second max)
-            const nodes = buildCountdownContent(s.countdown);
-            mc.replaceChildren(...nodes);
-          }
+        const digits = (s.countdown || '').replace(/[^0-9]/g, '');
+        const oldDigits = Array.from(mc.querySelectorAll('.cd-group')).map(g => g.textContent).join('');
+        if (digits && digits !== oldDigits) {
+          // Only rebuild when the numeric part changes (once per second max)
+          const nodes = buildCountdownContent(s.countdown);
+          mc.replaceChildren(...nodes);
+        }
+        if (s.pregame_blink) {
+          // Flashing colon mode: spans exist, toggle colon opacity each second
           const colons = mc.querySelectorAll('.cd-colon');
           if (colons.length) {
+            // Simple flashing: toggle colon opacity each second
             const toggle = Math.floor(performance.now() / 1000) % 2 === 0;
             for (const colon of colons) {
-              colon.classList.toggle('wag-top', toggle);
-              colon.classList.toggle('wag-bottom', !toggle);
-              // Set inline alignment too: classList is enough normally, but
-              // an inline value guarantees the bottom phase never falls back
-              // to the centered default if another rule wins the cascade.
-              colon.style.alignSelf = toggle ? 'flex-start' : 'flex-end';
+              colon.style.opacity = toggle ? '0' : '1';
             }
           }
         } else {
+          // Normal mode: plain text, colon always visible
           mc.textContent = browserCountdown(s.countdown);
         }
       }
@@ -2121,7 +2111,7 @@ const CONFIG_SECTIONS = [
       ['config.pregame_countdown', 'minutes', 'Countdown (minutes)', 0, 60],
       ['config.pregame_countdown_color', 'color', 'Countdown colour'],
       ['config.pregame_font_size', 'int', 'Font size', 0, 100000],
-      ['config.pregame_blink', 'bool', 'Wig wag: countdown colon alternates top/bottom each second']] },
+      ['config.pregame_blink', 'bool', 'Countdown colon flashes each second']] },
   { group: 'Display', title: 'Header text',
     fields: [
       ['config.header.font_size', 'int', 'Font size (pixels)', 0, 100000],
