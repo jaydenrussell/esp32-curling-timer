@@ -426,7 +426,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.224</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.225</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -456,7 +456,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.224</span>
+    <span class="header-version">v2026.11.225</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1260,9 +1260,9 @@ function renderStatus() {
   const progressEndCount = Number(sm.progress_end_count || (s.current && s.current.end_count) || 0);
   const progressGameDuration = Number(sm.progress_game_duration || (s.current ? (s.current.buzzer - s.current.start) : 0));
   const centerTop = sm.header_text ? px(20 + baseHeader * 1.4) : px(20);
-  // HDMI pill: y=-94, height 95. Reserve that block plus a small gap so the
+  // HDMI pill: y=-79, height 95. Reserve that block plus a small gap so the
   // centre content never overlaps the single progress bar.
-  const centerBottom = showProgress ? px(94 + 95 + 8) : px(20 + baseFooter * 1.4);
+  const centerBottom = showProgress ? px(104 + 95 + 8) : px(20 + baseFooter * 1.4);
   const centerWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; top:${centerTop}px; bottom:${centerBottom}px; display:flex; flex-direction:column; align-items:center; justify-content:center;` });
 
   if (sm.show_countdown) {
@@ -1297,7 +1297,7 @@ function renderStatus() {
     // inner track, a white background, and bands that grow from their left
     // edges. No dark overlay and no per-end bar stack.
     const pct = (v) => v / PROGRESS_TRACK_PX * 100;
-    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(20)}px; right:${px(20)}px; bottom:${px(94)}px;` });
+    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(20)}px; right:${px(20)}px; bottom:${px(104)}px;` });
     const bar = el('div', { id: 'mirror-progress-bar', class: 'progress-end-bar', style: `width:100%; height:${px(95)}px; border-width:${px(8)}px; border-radius:${px(24)}px;` });
     const bandNames = ['lead', 'second', 'vice', 'skip'];
     for (let i = 0; i < 4; i++) {

@@ -282,7 +282,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.223
+      ref: v2026.11.225
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -876,7 +876,7 @@ lvgl:
     - obj:
         id: prog_pill
         align: BOTTOM_MID
-        y: -104
+        y: -79
         width: 1240
         height: 95
         bg_color: 0xFFFFFF
@@ -896,7 +896,7 @@ lvgl:
         id: prog_band0
         align: BOTTOM_LEFT
         x: 28
-        y: -95
+        y: -70
         width: 282
         height: 95
         bg_color: 0x4535DC  # Lead - #DC3545, pre-swapped for hex6() parity
@@ -907,7 +907,7 @@ lvgl:
         id: prog_band1
         align: BOTTOM_LEFT
         x: 310
-        y: -95
+        y: -70
         width: 282
         height: 95
         bg_color: 0x07C1FF  # Second - #FFC107, pre-swapped for hex6() parity
@@ -918,7 +918,7 @@ lvgl:
         id: prog_band2
         align: BOTTOM_LEFT
         x: 592
-        y: -95
+        y: -70
         width: 282
         height: 95
         bg_color: 0xF0CA0D  # Vice - #0DCAF0, pre-swapped for hex6() parity
@@ -929,7 +929,7 @@ lvgl:
         id: prog_band3
         align: BOTTOM_LEFT
         x: 874
-        y: -95
+        y: -70
         width: 378
         height: 95
         bg_color: 0x548719  # Skip - #198754, pre-swapped for hex6() parity
@@ -941,7 +941,7 @@ lvgl:
         id: prog_div0
         align: BOTTOM_LEFT
         x: 306
-        y: -95
+        y: -70
         width: 4
         height: 95
         bg_color: 0x000000
@@ -952,7 +952,7 @@ lvgl:
         id: prog_div1
         align: BOTTOM_LEFT
         x: 588
-        y: -95
+        y: -70
         width: 4
         height: 95
         bg_color: 0x000000
@@ -963,7 +963,7 @@ lvgl:
         id: prog_div2
         align: BOTTOM_LEFT
         x: 870
-        y: -95
+        y: -70
         width: 4
         height: 95
         bg_color: 0x000000
@@ -977,7 +977,7 @@ lvgl:
     - obj:
         id: prog_border
         align: BOTTOM_MID
-        y: -104
+        y: -79
         width: 1240
         height: 95
         bg_opa: 0

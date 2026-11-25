@@ -124,8 +124,8 @@ TEST_CASE("web mirror: one white progress pill replaces the per-end bar stack") 
   CHECK(bar_rule.find("rgba(") == std::string::npos);
   CHECK(html.find("height:${px(95)}px") != std::string::npos);
 
-  // The centre block reserves the whole HDMI pill (bottom y=-94) plus a gap.
-  CHECK(html.find("px(94 + 95 + 8)") != std::string::npos);
+  // The centre block reserves the web UI progress pill (bottom 104px) plus a gap.
+  CHECK(html.find("px(104 + 95 + 8)") != std::string::npos);
 
   // Browser keeps the requested palette; only the skin changed.
   CHECK(html.find(".progress-band.lead { background: #DC3545; }") != std::string::npos);
