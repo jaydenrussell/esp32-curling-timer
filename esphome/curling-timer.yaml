@@ -282,7 +282,7 @@ external_components:
   - source:
       type: git
       url: https://github.com/jaydenrussell/esp32-curling-timer
-      ref: v2026.11.221
+      ref: v2026.11.223
       path: external_components   # required: ESPHome only auto-scans
                                   # components/ and esphome/components/
     components: [curling_engine, web_editor, lt8912b]
@@ -863,7 +863,7 @@ lvgl:
         text: ""
     # ─── Progress Bar: black frame, white track, weighted colored bands ───
     # Screen is 1280x720. Progress bar fits width minus 20px padding each side = 1240px.
-    # Height: 85px. Border radius: 1.5rem = 24px (rounded, clipped).
+    # Height: 95px. Border radius: 1.5rem = 24px (rounded, clipped).
     # Outer frame: 8px BLACK border, WHITE track. Segment dividers: 4px BLACK.
     # Pill is centered: outer x=20..1260, inner x=28..1252 (1224px usable).
     # Fixed geometry inside the 1224px inner track: bands at x=0/282/564/846,
@@ -876,9 +876,9 @@ lvgl:
     - obj:
         id: prog_pill
         align: BOTTOM_MID
-        y: -79
+        y: -104
         width: 1240
-        height: 85
+        height: 95
         bg_color: 0xFFFFFF
         bg_opa: cover
         border_width: 8
@@ -896,9 +896,9 @@ lvgl:
         id: prog_band0
         align: BOTTOM_LEFT
         x: 28
-        y: -79
+        y: -95
         width: 282
-        height: 85
+        height: 95
         bg_color: 0x4535DC  # Lead - #DC3545, pre-swapped for hex6() parity
         border_width: 0
         radius: 0
@@ -907,9 +907,9 @@ lvgl:
         id: prog_band1
         align: BOTTOM_LEFT
         x: 310
-        y: -79
+        y: -95
         width: 282
-        height: 85
+        height: 95
         bg_color: 0x07C1FF  # Second - #FFC107, pre-swapped for hex6() parity
         border_width: 0
         radius: 0
@@ -918,9 +918,9 @@ lvgl:
         id: prog_band2
         align: BOTTOM_LEFT
         x: 592
-        y: -79
+        y: -95
         width: 282
-        height: 85
+        height: 95
         bg_color: 0xF0CA0D  # Vice - #0DCAF0, pre-swapped for hex6() parity
         border_width: 0
         radius: 0
@@ -929,9 +929,9 @@ lvgl:
         id: prog_band3
         align: BOTTOM_LEFT
         x: 874
-        y: -79
+        y: -95
         width: 378
-        height: 85
+        height: 95
         bg_color: 0x548719  # Skip - #198754, pre-swapped for hex6() parity
         border_width: 0
         radius: 0
@@ -941,9 +941,9 @@ lvgl:
         id: prog_div0
         align: BOTTOM_LEFT
         x: 306
-        y: -79
+        y: -95
         width: 4
-        height: 85
+        height: 95
         bg_color: 0x000000
         border_width: 0
         radius: 0
@@ -952,9 +952,9 @@ lvgl:
         id: prog_div1
         align: BOTTOM_LEFT
         x: 588
-        y: -79
+        y: -95
         width: 4
-        height: 85
+        height: 95
         bg_color: 0x000000
         border_width: 0
         radius: 0
@@ -963,9 +963,9 @@ lvgl:
         id: prog_div2
         align: BOTTOM_LEFT
         x: 870
-        y: -79
+        y: -95
         width: 4
-        height: 85
+        height: 95
         bg_color: 0x000000
         border_width: 0
         radius: 0
@@ -977,9 +977,9 @@ lvgl:
     - obj:
         id: prog_border
         align: BOTTOM_MID
-        y: -79
+        y: -104
         width: 1240
-        height: 85
+        height: 95
         bg_opa: 0
         border_width: 8
         border_color: 0x000000
@@ -1176,13 +1176,13 @@ interval:
               if (bands[i] == nullptr) continue;
               lv_obj_set_parent(bands[i], id(prog_pill));
               lv_obj_set_pos(bands[i], band_x[i], 0);
-              lv_obj_set_height(bands[i], 69);
+              lv_obj_set_height(bands[i], 79);
             }
             for (int i = 0; i < 3; i++) {
               if (divs[i] == nullptr) continue;
               lv_obj_set_parent(divs[i], id(prog_pill));
               lv_obj_set_pos(divs[i], div_x[i], 0);
-              lv_obj_set_height(divs[i], 69);
+              lv_obj_set_height(divs[i], 79);
             }
             progress_parented = true;
           }
