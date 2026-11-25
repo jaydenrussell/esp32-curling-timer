@@ -1257,9 +1257,9 @@ function renderStatus() {
   const progressEndCount = Number(sm.progress_end_count || (s.current && s.current.end_count) || 0);
   const progressGameDuration = Number(sm.progress_game_duration || (s.current ? (s.current.buzzer - s.current.start) : 0));
   const centerTop = sm.header_text ? px(20 + baseHeader * 1.4) : px(20);
-  // HDMI pill: y=-104, height 95. Reserve that block plus a small gap so the
+  // HDMI pill: y=-94, height 95. Reserve that block plus a small gap so the
   // centre content never overlaps the single progress bar.
-  const centerBottom = showProgress ? px(104 + 95 + 8) : px(20 + baseFooter * 1.4);
+  const centerBottom = showProgress ? px(94 + 95 + 8) : px(20 + baseFooter * 1.4);
   const centerWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; top:${centerTop}px; bottom:${centerBottom}px; display:flex; flex-direction:column; align-items:center; justify-content:center;` });
 
   if (sm.show_countdown) {
@@ -1285,7 +1285,7 @@ function renderStatus() {
     centerWrap.append(st);
   }
   if (showPace) {
-    centerWrap.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'}; font-size:${fp}px; text-align:center; margin-top:${px(8)}px;` }, sm.pace_text));
+    centerWrap.append(el('div', { style: `color:${unswap(sm.pace_color) || '#fff'}; font-size:${fp}px; text-align:center; margin-top:${px(18)}px;` }, sm.pace_text));
   }
   stage.append(centerWrap);
 
@@ -1294,7 +1294,7 @@ function renderStatus() {
     // inner track, a white background, and bands that grow from their left
     // edges. No dark overlay and no per-end bar stack.
     const pct = (v) => v / PROGRESS_TRACK_PX * 100;
-    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(20)}px; right:${px(20)}px; bottom:${px(104)}px;` });
+    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(20)}px; right:${px(20)}px; bottom:${px(94)}px;` });
     const bar = el('div', { id: 'mirror-progress-bar', class: 'progress-end-bar', style: `width:100%; height:${px(95)}px; border-width:${px(8)}px; border-radius:${px(24)}px;` });
     const bandNames = ['lead', 'second', 'vice', 'skip'];
     for (let i = 0; i < 4; i++) {
@@ -1445,8 +1445,9 @@ function countdownText(total) {
 
 // fitMirrorText: adjusts mirror countdown font size to fit container.
 // Respects the configured HDMI font size (set inline as font-size:${fcd}px
-// and stored in dataset.maxFont) and only shrinks it if the text overflows
-// the available width — so the web preview matches the HDMI output scale.
+// and stored in dataset.maxFont) and scales the size so the countdown text
+// fills the available width (grow or shrink proportionally). This keeps the
+// full H:MM:SS countdown spanning the mirror width like the real HDMI output.
 function fitMirrorText() {
   const mc = $('mirror-countdown');
   if (!mc) return;
@@ -1455,14 +1456,12 @@ function fitMirrorText() {
   const avail = Math.max(1, mc.clientWidth || 0);
   const text = (mc.textContent || '').trim();
   if (!text) return;
-  // Measure at the configured size; shrink proportionally if it overflows.
+  // Measure at the configured size and scale to fill the available width.
   mc.style.fontSize = maxFont + 'px';
-  let tries = 0;
-  while (mc.scrollWidth > avail && tries < 24) {
-    const cur = parseFloat(mc.style.fontSize) || maxFont;
-    mc.style.fontSize = Math.max(24, cur * 0.92) + 'px';
-    tries++;
-  }
+  const measured = mc.scrollWidth || 1;
+  const size = maxFont * (avail / measured);
+  const scaled = Math.max(24, Math.min(size, maxFont * 3));
+  mc.style.fontSize = scaled + 'px';
 }
 
 function readQuickForm(minutesInput, nameInput) {
