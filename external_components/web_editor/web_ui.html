@@ -1046,30 +1046,68 @@ function buildQuickForm() {
       el('div', {}, el('div', { class: 'section-title' }, 'Quick Game')),
       el('span', { class: 'pill' }, 'Ad hoc timer')),
     el('p', { class: 'muted small', style: 'margin: 0' }, 'Pick a preset or set the timing in minutes, options, and outputs below. The preview shows exactly what will be applied.'),
+    // Presets section - keep at the very top per requirements
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 8px' }, 'Quick picks'),
       el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px' }, ...presets)),
-    el('div', { class: 'grid2' },
-      el('div', { class: 'field', role: 'group', 'aria-label': 'Pre-game countdown duration' }, el('label', {}, 'Pre-game countdown (minutes)'), pregameMin),
-      el('div', { class: 'field', role: 'group', 'aria-label': 'Full game time' }, el('label', {}, 'Full game time (minutes)'), minutes),
-      el('div', { class: 'field' }, el('label', {}, 'Warning wording hold after buzzer (minutes)'), expiresMin),
-      el('div', { class: 'field' }, el('label', {}, 'Name shown on display'), name)),
-    el('div', { class: 'grid2' },
-      el('div', { class: 'field' }, el('label', {}, 'Stones per end (per team; mixed doubles = 5)'), stonesPerEnd),
-      el('div', { class: 'field' }, el('label', {}, 'Total number of ends'), endCount)),
-    el('div', { class: 'field' },
-      el('label', {}, 'Ends after expiration'),
+    // Main game settings — inline layout matching schedule entryEditor
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Full game time (minutes)'),
+      minutes),
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Pre-game countdown (minutes)'),
+      pregameMin),
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Warning wording hold after buzzer (minutes)'),
+      expiresMin),
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Name shown on display'),
+      name),
+
+    // Secondary settings in grid2 for wider layout
+    el('div', { class: 'grid2', style: 'gap: 12px' },
+      el('div', { class: 'field' },
+        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Stones per end (per team; mixed doubles = 5)'),
+        stonesPerEnd),
+      el('div', { class: 'field' },
+        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Total number of ends'),
+        endCount)),
+    // Additional field
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Ends after expiration'),
       untimedEnds,
       el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends after the buzzer so the game can finish naturally instead of cutting off mid-end.')),
-    el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
-      el('div', { class: 'section-title', style: 'margin-bottom: 8px' }, 'Game options'),
-      gameOptionsRow),
+
+    // Game options toggles row
+    el('div', { class: 'row-actions', style: 'margin: 0; gap: 10px; align-items: center' },
+      pregameBtn,
+      paceBtn,
+      showProgressBtn,
+      untimedTotalBtn,
+      replaceBtn),
+
+    // Outputs card
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 4px' }, 'Outputs'),
       el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
       startRow,
       endRow),
-    preview,
+
+    // Preview card (styled like schedule display preview)
+    el('div', { class: 'card', style: 'margin: 0 0 14px; background:rgba(2,10,20,0.45); border:1px solid rgba(255,255,255,0.12); padding:16px' },
+      el('div', { class: 'section-title', style: 'margin:0 0 10px' }, 'Preview — settings that will be applied'),
+      previewLine('Game time', gameSecs === 0 ? '—' : durationText(gameSecs)),
+      previewLine('Expires at', gameSecs === 0 ? '—' : pad(when.getHours()) + ':' + pad(when.getMinutes())),
+      previewLine('Wig Wag Countdown', pregameOn ? (formatMinutes(minutesToSeconds(pregameMin.value) || 0) + ' min') : 'Off'),
+      previewLine('Pace of play', paceOn ? 'On' : 'Off'),
+      previewLine('Progress through end', showProgressOn ? 'On' : 'Off'),
+      previewLine('Replace same-time games', replaceOn ? 'On' : 'Off'),
+      previewLine('Total time includes untimed ends', untimedTotalOn ? 'On' : 'Off'),
+      previewLine('Stones per end', stonesPerEnd.value || 8),
+      previewLine('Total ends', endCount.value || 8),
+      previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
+
+    // Action row (button and hint)
     el('div', { class: 'row-actions' }, button, hint));
   form._defaultsApplied = false;
   form.applyDefaults = () => {
