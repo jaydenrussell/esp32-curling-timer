@@ -429,7 +429,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.219</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.220</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -459,7 +459,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.219</span>
+    <span class="header-version">v2026.11.220</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1945,11 +1945,25 @@ function renderSchedule() {
       setDirty(true);
       renderSchedule();
     } }, el('option', { value: '' }, 'Copy to…'), DAYS.filter((d) => d !== day).map((d) => el('option', { value: d }, d)));
+    // Add new game entry inline (instead of opening a modal)
+    const addNewEntry = () => {
+      entries.push({
+        name: '', league: null, start: null, buzzer: null, game_completed: null,
+        header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false,
+        league_name: null, pregame_countdown: null,
+        end_count: 8, stones_per_end: 8, untimed_ends: 0,
+        show_progress_through_end: true, total_time_includes_untimed_ends: false,
+        replace_conflicts: false, manual_trigger: false,
+        start_relays: [], start_duration: 0, end_relays: [], end_duration: 0
+      });
+      setDirty(true);
+      renderSchedule();
+    };
     cards.push(foldCard({ openSet: state.openDays, key: day, title: day, count: entries.length,
       badge: day === todayWeekday ? el('span', { class: 'pill ok' }, 'today') : null,
       body: [entryList(entries, state.leagues, renderSchedule),
         el('div', { class: 'row-actions' },
-          el('button', { class: 'btn', onclick: () => openScheduleGameModal(day, entries, renderSchedule) }, '+ Add game'),
+          el('button', { class: 'btn', onclick: addNewEntry }, '+ Add game'),
           el('span', { class: 'spacer' }), copyTo)] }));
   }
   const excContainer = el('div', { class: 'stack', style: 'margin-top: 4px' });
@@ -2026,7 +2040,17 @@ function renderExceptions() {
           oninput: (event) => { day.note = event.target.value.trim(); noteText.textContent = day.note; setDirty(true); } }),
         entryList(day.entries, state.leagues, renderExceptions),
         el('div', { class: 'row-actions' },
-          el('button', { class: 'btn', onclick: () => openScheduleGameModal(day.date, day.entries, renderExceptions) }, '+ Add game'),
+          el('button', { class: 'btn', onclick: () => {
+            day.entries.push({
+              name: '', league: null, start: null, buzzer: null, game_completed: null,
+              header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false,
+              league_name: null, pregame_countdown: null,
+              end_count: 8, stones_per_end: 8, untimed_ends: 0,
+              show_progress_through_end: true, total_time_includes_untimed_ends: false,
+              replace_conflicts: false, manual_trigger: false,
+              start_relays: [], start_duration: 0, end_relays: [], end_duration: 0
+            });
+            setDirty(true); renderExceptions(); } }, '+ Add game'),
           el('span', { class: 'spacer' }),
           el('button', { class: 'btn danger', title: 'Delete this date', onclick: () => {
             if (!confirm(`Delete the exception for ${day.date}? The weekly schedule will apply again.`)) return;
@@ -2797,71 +2821,155 @@ function relayDuration(row) { const onEntries = row.entries.filter(e => e.btn.cl
 function openLeagueModal(league, leagues, onSaved) {
   const idx = league ? leagues.indexOf(league) : -1;
   const editing = idx >= 0;
-  openGameModal({
-    title: editing ? 'Edit league profile' : 'Add league profile',
-    submitLabel: editing ? 'Save league' : 'Add league',
-    showLeaguePicker: false,
-    showName: true,
-    nameLabel: 'League name',
-    namePlaceholder: 'League name',
-    showStartTime: false,
-    showHeaderText: true,
-    showCountdownWarning: true,
-    showWarningHold: false,
-    showManual: true,
-    showPresets: false,
-    initial: {
-      name: league ? league.name || '' : '',
-      header_text: league ? league.header_text || '' : '',
-      duration_minutes: league ? league.game_duration_minutes || 0 : 0,
-      pregame_on: Number((league && league.pregame_countdown_seconds) || 0) > 0,
-      pregame_minutes: league ? formatMinutes(league.pregame_countdown_seconds || 0) : '0',
-      pace_on: !!(league && league.pace_enabled),
-      progress_on: league ? league.show_progress_through_end !== false : true,
-      untimed_total_on: !!(league && league.total_time_includes_untimed_ends),
-      replace_on: !!(league && league.replace_conflicts),
-      manual_on: !!(league && league.manual_trigger),
-      countdown_warning_minutes: league && league.countdown_seconds_before != null ? formatMinutes(league.countdown_seconds_before) : '',
-      end_count: league && league.end_count != null ? league.end_count : 8,
-      stones_per_end: league && league.stones_per_end != null ? league.stones_per_end : 8,
-      untimed_ends: league && league.untimed_ends != null ? league.untimed_ends : 0,
-      start_relays: (league && league.start_relays) || [],
-      start_duration: (league && league.start_duration) || 0,
-      end_relays: (league && league.end_relays) || [],
-      end_duration: (league && league.end_duration) || 0,
-    },
-    onSubmit: async (v) => {
-      if (!v.name) { showMessage('League name required', 'bad'); return false; }
-      const profile = {
-        name: v.name,
-        game_duration_minutes: v.duration_minutes,
-        pregame_countdown_seconds: v.pregame_on ? v.pregame_countdown : 0,
-        header_text: v.header_text,
-        pace_enabled: v.pace_of_play,
-        countdown_seconds_before: v.countdown_seconds_before || 0,
-        format: league ? league.format || '' : '',
-        team_size: league ? league.team_size || 0 : 0,
-        stones_per_end: v.stones_per_end,
-        end_count: v.end_count,
-        untimed_ends: v.untimed_ends,
-        show_progress_through_end: v.show_progress_through_end,
-        total_time_includes_untimed_ends: v.total_time_includes_untimed_ends,
-        replace_conflicts: v.replace_conflicts,
-        manual_trigger: v.manual_trigger,
-        start_relays: v.start_relays,
-        start_duration: v.start_duration || 0,
-        end_relays: v.end_relays,
-        end_duration: v.end_duration || 0,
-      };
-      const next = editing ? leagues.map((item, i) => i === idx ? profile : item) : leagues.concat([profile]);
-      const result = await api('/api/leagues', { leagues: next });
-      if (!result.ok) { showMessage('Save failed: ' + (result.data.error || 'unknown'), 'bad'); return false; }
-      state.leagues = next;
-      showMessage(editing ? 'League saved' : 'League added', 'ok');
-      onSaved();
-      return true;
-    },
+  
+  // Create a new league object for editing (mutated directly)
+  const editLeague = league ? { ...league } : {
+    name: '',
+    game_duration_minutes: 0,
+    pregame_countdown_seconds: 0,
+    header_text: '',
+    pace_enabled: true,
+    countdown_seconds_before: 0,
+    format: '',
+    team_size: 0,
+    stones_per_end: 8,
+    end_count: 8,
+    untimed_ends: 0,
+    show_progress_through_end: true,
+    total_time_includes_untimed_ends: false,
+    replace_conflicts: false,
+    manual_trigger: false,
+    start_relays: [],
+    start_duration: 0,
+    end_relays: [],
+    end_duration: 0
+  };
+  
+  // Toggle button helper
+  const toggleBtn = (on, label) => el('button', { 
+    type: 'button', 
+    class: 'check-toggle ' + (on ? 'on' : 'off') 
+  }, label);
+  
+  // Build form fields
+  const nameIn = el('input', { 
+    type: 'text', 
+    value: editLeague.name || '', 
+    placeholder: 'League name', 
+    maxlength: 80,
+    oninput: (event) => { editLeague.name = event.target.value.trim() || null; }
   });
+  const durationIn = el('input', { 
+    type: 'number', 
+    min: 1, 
+    value: editLeague.game_duration_minutes || 0, 
+    oninput: (event) => { editLeague.game_duration_minutes = parseInt(event.target.value) || 0; }
+  });
+  const pregameIn = el('input', { 
+    type: 'number', 
+    min: 0, 
+    value: editLeague.pregame_countdown_seconds || 0, 
+    oninput: (event) => { editLeague.pregame_countdown_seconds = parseInt(event.target.value) || 0; }
+  });
+  const paceBtn = toggleBtn(editLeague.pace_enabled, 'Pace of play');
+  paceBtn.onclick = (e) => { editLeague.pace_enabled = !editLeague.pace_enabled; e.target.className = 'check-toggle ' + (editLeague.pace_enabled ? 'on' : 'off'); };
+  const progressBtn = toggleBtn(editLeague.show_progress_through_end, 'Progress through end');
+  progressBtn.onclick = (e) => { editLeague.show_progress_through_end = !editLeague.show_progress_through_end; e.target.className = 'check-toggle ' + (editLeague.show_progress_through_end ? 'on' : 'off'); };
+  const warningHoldIn = el('input', { 
+    type: 'number', 
+    min: 0, 
+    value: editLeague.countdown_seconds_before || 0, 
+    placeholder: 'Warning before end (seconds)',
+    oninput: (event) => { editLeague.countdown_seconds_before = parseInt(event.target.value) || 0; }
+  });
+  const manualBtn = toggleBtn(editLeague.manual_trigger, 'Manual trigger');
+  manualBtn.onclick = (e) => { editLeague.manual_trigger = !editLeague.manual_trigger; e.target.className = 'check-toggle ' + (editLeague.manual_trigger ? 'on' : 'off'); };
+  const stonesIn = el('input', { 
+    type: 'number', 
+    min: 1, 
+    value: editLeague.stones_per_end || 8, 
+    oninput: (event) => { editLeague.stones_per_end = parseInt(event.target.value) || 8; }
+  });
+  const endsIn = el('input', { 
+    type: 'number', 
+    min: 1, 
+    value: editLeague.end_count || 8, 
+    oninput: (event) => { editLeague.end_count = parseInt(event.target.value) || 8; }
+  });
+  const untimedIn = el('input', { 
+    type: 'number', 
+    min: 0, 
+    value: editLeague.untimed_ends || 0, 
+    oninput: (event) => { editLeague.untimed_ends = parseInt(event.target.value) || 0; }
+  });
+  
+  const editCard = el('div', { class: 'card league-edit' },
+    el('div', { class: 'section-title' }, editing ? 'Edit league profile' : 'Add league profile'),
+    el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 
+      editing ? 'Edit existing league settings' : 'Create a new league profile'),
+    
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', {}, 'League name'),
+      nameIn),
+    
+    el('div', { class: 'grid2' },
+      el('div', { class: 'field' },
+        el('label', {}, 'Game duration (minutes)'),
+        durationIn),
+      el('div', { class: 'field' },
+        el('label', {}, 'Pregame countdown (seconds)'),
+        pregameIn)),
+    
+    el('div', { class: 'grid2' },
+      el('div', { class: 'field' }, paceBtn),
+      el('div', { class: 'field' }, progressBtn)),
+    
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', {}, 'Warning before end (seconds)'),
+      warningHoldIn),
+    
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', {}, 'Manual trigger (pushbutton)'),
+      manualBtn),
+    
+    el('div', { class: 'grid2' },
+      el('div', { class: 'field' },
+        el('label', {}, 'Stones per end'),
+        stonesIn),
+      el('div', { class: 'field' },
+        el('label', {}, 'Ends per game'),
+        endsIn)),
+    
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', {}, 'Untimed ends'),
+      untimedIn),
+    
+    el('div', { class: 'row-actions' },
+      el('button', { class: 'btn primary', type: 'button', onclick: async () => {
+        if (!editLeague.name) { showMessage('League name required', 'bad'); return; }
+        const profile = { ...editLeague };
+        // Remove pace_of_play if not set
+        if (profile.pace_enabled === undefined) delete profile.pace_enabled;
+        if (profile.show_progress_through_end === undefined) delete profile.show_progress_through_end;
+        if (profile.manual_trigger === undefined) delete profile.manual_trigger;
+        const next = editing ? leagues.map((item, i) => i === idx ? profile : item) : leagues.concat([profile]);
+        const result = await api('/api/leagues', { leagues: next });
+        if (!result.ok) { showMessage('Save failed: ' + (result.data.error || 'unknown'), 'bad'); return; }
+        state.leagues = next;
+        showMessage(editing ? 'League saved' : 'League added', 'ok');
+        onSaved();
+      }}, editing ? 'Save league' : 'Add league')
+    )
+  );
+  
+  // Insert/replace the edit card in the leagues tab
+  const root = $('tab-leagues');
+  const existing = root.querySelector('.league-edit');
+  if (existing) existing.replaceWith(editCard);
+  else root.appendChild(editCard);
+  
+  // Focus name field
+  setTimeout(() => nameIn.focus(), 0);
 }
 
 // ---- leagues tab -----------------------------------------------------------
