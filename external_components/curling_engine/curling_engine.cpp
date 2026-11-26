@@ -55,10 +55,16 @@ void CurlingEngineComponent::detect_addons() {
     this->addon_detected.rtc = now.is_valid();
     ESP_LOGI(TAG, "addon rtc detected=%d", this->addon_detected.rtc ? 1 : 0);
   }
-  // PaHub, Wi-Fi: manual only for v1 (no I2C/SDIO bus access yet).
-  // relays, pushbutton, uart: manual only — always false.
-  ESP_LOGI(TAG, "addon pahub detected=%d wifi detected=%d", this->addon_detected.pahub ? 1 : 0,
-           this->addon_detected.wifi ? 1 : 0);
+  // PaHub v2.1 I2C hub: detection is left as a manual flag
+  // (config.addons.pahub) because the curling engine component does not
+  // initialize the I2C master bus; the web editor /api/addons/detection
+  // endpoint can report the flag set by a user or companion tool.
+  // Auto-detection of PaHub at default address 0x70 would require I2C
+  // bus enumeration which is outside the scope of this component.
+  this->addon_detected.pahub = false;
+  ESP_LOGI(TAG, "addon pahub detected=%d", this->addon_detected.pahub ? 1 : 0);
+  // Wi-Fi failover (ESP32-C6 SDIO) detection is handled separately;
+  // Pahub presence does not imply Wi-Fi is present.
 }
 
 void CurlingEngineComponent::setup() {

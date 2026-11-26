@@ -415,7 +415,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 .addon-card h3 { font-size: 16px; }
 .addon-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
 
-.progress-end-bar { position: relative; height: 95px; border-radius: 24px; overflow: hidden; background: #fff; border: 8px solid #000; width: 100%; box-sizing: border-box; }
+.progress-end-bar { position: relative; height: 105px; border-radius: 24px; overflow: hidden; background: #fff; border: 8px solid #000; width: 100%; box-sizing: border-box; }
 .progress-band { position: absolute; top: 0; height: 100%; }
 .progress-band.lead { background: #DC3545; } .progress-band.second { background: #FFC107; } .progress-band.vice { background: #0DCaf0; } .progress-band.skip { background: #198754; }
 .progress-divider { position: absolute; top: 0; height: 100%; background: #000; }
@@ -1204,7 +1204,7 @@ function buildQuickForm() {
   const startDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Game start relay duration in seconds' }));
   const endToggles = relayNames.map((name) => toggleBtn(false, name));
   const endDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Game expires relay duration in seconds' }));
-  const startRow = relayNames.length ? makeRelayRow('Game Start:', startToggles, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
+  const startRow = relayNames.length ? makeRelayRow('Countdown Clock Start:', startToggles, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
   const endRow = relayNames.length ? makeRelayRow('Warning Countdown Ends:', endToggles, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
 
   // relayValues: collect names of enabled relays by original index (filter()
@@ -1672,7 +1672,7 @@ function renderStatus() {
     const baseTimer = isFiveDigit ? baseTimer5 : baseTimer4;
     const pregame = !!sm.is_pregame;
     const pregameBlink = !!sm.pregame_blink;
-    const baseCountdown = pregame ? Math.round(baseTimer * 0.55) : baseTimer;
+    const baseCountdown = pregame ? Math.round(baseTimer * 1.1) : baseTimer;
 
   const fh = px(baseHeader);
   const fcd = px(baseCountdown);
@@ -1698,7 +1698,7 @@ function renderStatus() {
   const centerTop = sm.header_text ? px(20 + baseHeader * 1.4) : px(20);
   // HDMI pill: y=-79, height 95. Reserve that block plus a small gap so the
   // centre content never overlaps the single progress bar.
-  const centerBottom = showProgress ? px(104 + 95 + 8) : px(20 + baseFooter * 1.4);
+  const centerBottom = showProgress ? px(94 + 105 + 8) : px(20 + baseFooter * 1.4);
   const centerWrap = el('div', { style: `position:absolute; left:${px(12)}px; right:${px(12)}px; top:${centerTop}px; bottom:${centerBottom}px; display:flex; flex-direction:column; align-items:center; justify-content:center;` });
 
   if (sm.show_countdown) {
@@ -2081,7 +2081,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
     } else wrapper.append(el('span', { class: 'muted small' }, '(no relay outputs enabled)'));
     return { row: wrapper, toggles, durs };
   }
-  const startOut = makeOutRow('Game Start:');
+  const startOut = makeOutRow('Countdown Clock Start:');
   const endOut = makeOutRow('Warning Countdown Ends:');
   function populateOutputRows(league) {
     if (!league) return;
@@ -2305,7 +2305,7 @@ function entryEditor(entries, index, leagues, rerender) {
     entry[which + '_duration'] = value;
     if (!entry[which + '_relays'] || !entry[which + '_relays'].length) entry[which + '_duration'] = null;
   };
-  const labelOf = (which) => which === 'start' ? 'Notifications — Game Start' : 'Notifications — Warning Countdown Ends';
+  const labelOf = (which) => which === 'start' ? 'Notifications — Countdown Clock Start' : 'Notifications — Countdown Clock Expiration';
 
   const outputsCard = outputInfos.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
       el('h3', {}, 'Notifications 🔔'),
@@ -2582,19 +2582,19 @@ const CONFIG_SECTIONS = [
       ['config.footer.datetime', 'bool', 'Show date and time'],
       ['config.footer.entry_name', 'bool', 'Show entry name'],
       ['config.footer.color', 'color', 'Colour']] },
-  { group: 'Output Configuration', title: 'Game Start',
+  { group: 'Output Configuration', title: 'Countdown Clock Start',
     hint: 'Relay output durations are in seconds.',
     fields: [
       ['config.buzzer.ring_at_start', 'relays', 'Output'],
       ['config.buzzer.start_duration', 'output_duration', 'Duration', 'start']] },
-  { group: 'Output Configuration', title: 'Countdown Warning',
+  { group: 'Output Configuration', title: 'Countdown Clock Expiration',
     hint: 'Duration before warning fires this many minutes after game start. Time before buzzer counts backwards from game end. 0 disables the warning. Relay output durations are in seconds.',
     fields: [
       ['config.buzzer.countdown.mode', 'select', 'Countdown mode', COUNTDOWN_MODE_DURATION, COUNTDOWN_MODE_BUZZER],
       ['config.buzzer.countdown.seconds_before', 'minutes', 'Countdown warning time (minutes)', 0, 1666],
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
       ['config.buzzer.countdown_duration', 'output_duration', 'Duration', 'countdown']] },
-  { group: 'Output Configuration', title: 'Game End',
+  { group: 'Output Configuration', title: 'Countdown Clock End',
     hint: 'Warning wording hold controls how long the warning stays after the buzzer rings. The wording itself is set under Display → Header text → Text when Warning Countdown Ends/Output. Relay output durations are in seconds.',
     fields: [
       ['config.buzzer.header_hold', 'minutes', 'Warning wording hold after buzzer (minutes)', 0, 1666],

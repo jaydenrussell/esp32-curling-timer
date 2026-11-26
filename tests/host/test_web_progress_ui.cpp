@@ -117,7 +117,7 @@ TEST_CASE("web mirror: one white progress pill replaces the per-end bar stack") 
   const size_t css = html.find(".progress-end-bar {");
   REQUIRE(css != std::string::npos);
   const std::string bar_rule = html.substr(css, html.find('\n', css) - css);
-  CHECK(bar_rule.find("height: 95px") != std::string::npos);
+  CHECK(bar_rule.find("height: 105px") != std::string::npos);
   CHECK(bar_rule.find("background: #fff") != std::string::npos);
   CHECK(bar_rule.find("border: 8px solid #000") != std::string::npos);
   CHECK(bar_rule.find("border-radius: 24px") != std::string::npos);
@@ -125,7 +125,7 @@ TEST_CASE("web mirror: one white progress pill replaces the per-end bar stack") 
   CHECK(html.find("height:${px(95)}px") != std::string::npos);
 
   // The centre block reserves the web UI progress pill (bottom 104px) plus a gap.
-  CHECK(html.find("px(104 + 95 + 8)") != std::string::npos);
+  CHECK(html.find("px(94 + 105 + 8)") != std::string::npos);
 
   // Browser keeps the requested palette; only the skin changed.
   CHECK(html.find(".progress-band.lead { background: #DC3545; }") != std::string::npos);
