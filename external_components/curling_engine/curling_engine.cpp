@@ -12,6 +12,10 @@
 #include "esphome/core/log.h"
 #include "esp_sntp.h"
 
+#if defined(ESP_PLATFORM)
+#include "driver/i2c_master.h"
+#endif
+
 namespace esphome {
 namespace curling_engine {
 
@@ -55,14 +59,38 @@ void CurlingEngineComponent::detect_addons() {
     this->addon_detected.rtc = now.is_valid();
     ESP_LOGI(TAG, "addon rtc detected=%d", this->addon_detected.rtc ? 1 : 0);
   }
-  // PaHub v2.1 I2C hub: detection is left as a manual flag
-  // (config.addons.pahub) because the curling engine component does not
-  // initialize the I2C master bus; the web editor /api/addons/detection
-  // endpoint can report the flag set by a user or companion tool.
-  // Auto-detection of PaHub at default address 0x70 would require I2C
-  // bus enumeration which is outside the scope of this component.
+#if defined(ESP_PLATFORM)
+  // PaHub v2.1 I2C hub detection: probe default address 0x70.
+  // The PaHub (M5Stack PaHub Unit v2.1) is an I2C multiplexer at 0x70.
+  // We initialize a temporary I2C master bus and probe; if the device
+  // acknowledges, it is present. Errors (bus already in use, wrong pins,
+  // no I2C hardware) fall through to pahub=false, and the user can still
+  // manually enable config.addons.pahub in settings.
+  bool pahub_found = false;
+  i2c_master_bus_config_t bus_config = {};
+  bus_config.i2c_port = 0;
+  bus_config.sda_io_num = GPIO_NUM_21;
+  bus_config.scl_io_num = GPIO_NUM_22;
+  bus_config.clk_source = I2C_CLK_SRC_DEFAULT;
+  bus_config.glitch_ignore_cnt = 7;
+  bus_config.flags.enable_internal_pullup = true;
+
+  i2c_master_bus_handle_t bus_handle = nullptr;
+  esp_err_t err = i2c_new_master_bus(&bus_config, &bus_handle);
+  if (err == ESP_OK) {
+    err = i2c_master_probe(bus_handle, 0x70, -1);
+    if (err == ESP_OK) {
+      pahub_found = true;
+    }
+    i2c_del_master_bus(bus_handle);
+  }
+  this->addon_detected.pahub = pahub_found;
+  ESP_LOGI(TAG, "addon pahub detected=%d", this->addon_detected.pahub ? 1 : 0);
+#else
+  // Host test build: no I2C hardware available, PaHub cannot be auto-detected.
   this->addon_detected.pahub = false;
   ESP_LOGI(TAG, "addon pahub detected=%d", this->addon_detected.pahub ? 1 : 0);
+#endif
   // Wi-Fi failover (ESP32-C6 SDIO) detection is handled separately;
   // Pahub presence does not imply Wi-Fi is present.
 }
