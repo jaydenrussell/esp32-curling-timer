@@ -239,20 +239,23 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
         : settings.pregame_countdown;
     const bool pregame = since_start < 0 && pregame_secs > 0;
     const int seconds_left = pregame ? (-since_start) : g.seconds_until_buzzer.value_or(0);
-    // Display-only option: when the total time includes the untimed ends the
-    // countdown runs the whole game and reaches zero at the true end (the
-    // buzzer plus the extra ends). Otherwise it shows the countdown to the
-    // warning, so the warning is the zero point (unchanged behaviour). Pace,
-    // the progress bar and every bell keep using the real game values; only the
-    // displayed seconds are extended. The length of the untimed ends is
-    // estimated with the same per-end unit pace already uses.
+    // Countdown Expiration mode:
+    //   ON (total_time_includes_untimed_ends == true): clock runs the full game
+    //   duration (buzzer − start), reaching zero at the buzzer. Untimed ends are
+    //   ignored — they do not extend the countdown.
+    //   OFF: clock runs full game duration minus Countdown Expiration seconds,
+    //   reaching zero at buzzer − expiration. When zero, expiration outputs fire.
     int display_left = seconds_left;
-    if (!pregame && g.total_time_includes_untimed_ends.value_or(false)) {
-      const int untimed = g.untimed_ends.value_or(0);
-      const int ends = g.end_count.value_or(0);
-      const int regulation = g.buzzer - g.start;
-      if (untimed > 0 && ends > 0 && regulation > 0)
-        display_left += untimed * (regulation / ends);
+    if (!pregame) {
+      const int expiration_secs = g.countdown_seconds_before.value_or(settings.countdown_seconds_before);
+      if (g.total_time_includes_untimed_ends.value_or(false)) {
+        // ON: full game runtime, no extension for untimed ends
+        display_left = seconds_left;
+      } else {
+        // OFF: subtract countdown expiration from remaining time
+        if (expiration_secs > 0)
+          display_left = seconds_left - expiration_secs;
+      }
     }
     out.show_countdown = true;
     out.game_completed = !pregame && display_left <= 0;

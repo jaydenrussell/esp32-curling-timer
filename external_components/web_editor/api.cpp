@@ -646,6 +646,12 @@ ApiResponse PiTimerApi::quick_start(JsonObjectConst data) {
       return error_json(400, "'total_time_includes_untimed_ends' must be true or false");
     opts.total_time_includes_untimed_ends = data["total_time_includes_untimed_ends"].as<bool>();
   }
+  if (!data["countdown_seconds_before"].isNull()) {
+    long long value;
+    if (!json_strict_int(data["countdown_seconds_before"], &value) || value < 0)
+      return error_json(400, "'countdown_seconds_before' must be a whole number of seconds (0 or more)");
+    opts.countdown_seconds_before = static_cast<int>(value);
+  }
   Entry added;
   std::string new_version, err;
   SettingsStore *store = engine_->get_store();

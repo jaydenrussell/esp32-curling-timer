@@ -189,6 +189,43 @@ TEST_CASE("entry total_time_includes_untimed_ends overrides league") {
   CHECK(*game.total_time_includes_untimed_ends == false);
 }
 
+TEST_CASE("entry countdown_seconds_before parses") {
+  std::string text(CASE_BASE);
+  const std::string needle = "    name: MONDAY GAME\n";
+  const size_t at = text.find(needle);
+  REQUIRE(at != std::string::npos);
+  text.insert(at + needle.size(), "    countdown_seconds_before: 900\n");
+  auto r = parse_text(text.c_str());
+  REQUIRE(r.ok);
+  const PiTimerGame &game = r.s.schedules.at("Monday").at(0);
+  REQUIRE(game.countdown_seconds_before.has_value());
+  CHECK(*game.countdown_seconds_before == 900);
+}
+
+TEST_CASE("league countdown_seconds_before reaches entries") {
+  std::string text(CASE_BASE);
+  text += "leagues:\n  - name: MONDAY GAME\n    countdown_seconds_before: 600\n";
+  auto r = parse_text(text.c_str());
+  REQUIRE(r.ok);
+  const PiTimerGame &game = r.s.schedules.at("Monday").at(0);
+  REQUIRE(game.countdown_seconds_before.has_value());
+  CHECK(*game.countdown_seconds_before == 600);
+}
+
+TEST_CASE("entry countdown_seconds_before overrides league") {
+  std::string text(CASE_BASE);
+  const std::string needle = "    name: MONDAY GAME\n";
+  const size_t at = text.find(needle);
+  REQUIRE(at != std::string::npos);
+  text.insert(at + needle.size(), "    countdown_seconds_before: 300\n");
+  text += "leagues:\n  - name: MONDAY GAME\n    countdown_seconds_before: 600\n";
+  auto r = parse_text(text.c_str());
+  REQUIRE(r.ok);
+  const PiTimerGame &game = r.s.schedules.at("Monday").at(0);
+  REQUIRE(game.countdown_seconds_before.has_value());
+  CHECK(*game.countdown_seconds_before == 300);
+}
+
 TEST_CASE("header hold defaults to config") {
   auto r = parse_text(CASE_SUN_DEFAULT_HOLD);
   REQUIRE(r.ok);

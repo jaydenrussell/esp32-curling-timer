@@ -1390,6 +1390,12 @@ static bool parse_schedules_into(const YamlValue &src,
           return false;
         g.pregame_countdown_override = static_cast<int>(v->i);
       }
+      if (entry_v.has("countdown_seconds_before")) {
+        const YamlValue *v = require_(&entry_v, "countdown_seconds_before", YType::Int, where.c_str(), err);
+        if (v == nullptr)
+          return false;
+        g.countdown_seconds_before = static_cast<int>(v->i);
+      }
 
       // Apply per-league pace_of_play override when the game name matches a league
       // profile (fuzzy) and the entry did not explicitly set pace.
@@ -1950,6 +1956,8 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
                 g.show_progress_through_end = lp.show_progress_through_end;
               if (!g.total_time_includes_untimed_ends.has_value())
                 g.total_time_includes_untimed_ends = lp.total_time_includes_untimed_ends;
+              if (!g.countdown_seconds_before.has_value())
+                g.countdown_seconds_before = lp.countdown_seconds_before;
               if (!g.replace_conflicts)
                 g.replace_conflicts = lp.replace_conflicts;
               if (!g.start_relays_override.has_value() && !lp.start_relays.empty())
@@ -1979,6 +1987,8 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
                 g.show_progress_through_end = lp.show_progress_through_end;
               if (!g.total_time_includes_untimed_ends.has_value())
                 g.total_time_includes_untimed_ends = lp.total_time_includes_untimed_ends;
+              if (!g.countdown_seconds_before.has_value())
+                g.countdown_seconds_before = lp.countdown_seconds_before;
               if (!g.replace_conflicts)
                 g.replace_conflicts = lp.replace_conflicts;
               if (!g.start_relays_override.has_value() && !lp.start_relays.empty())
@@ -1991,7 +2001,6 @@ bool PiTimerSettings::parse_settings_text(const std::string &text, const std::st
                 g.end_duration_override = lp.end_duration;
               break;
             }
-
     valid = true;
   return true;
 }
