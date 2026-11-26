@@ -169,6 +169,10 @@ static void entry_into(JsonObject obj, const Entry &entry) {
     obj["pregame_countdown"] = *entry.pregame_countdown_override;
   else
     obj["pregame_countdown"] = nullptr;
+  if (entry.countdown_seconds_before.has_value())
+    obj["countdown_seconds_before"] = *entry.countdown_seconds_before;
+  else
+    obj["countdown_seconds_before"] = nullptr;
 }
 
 void entry_into_json(JsonObject obj, const Entry &entry) { entry_into(obj, entry); }
@@ -264,6 +268,8 @@ static bool entry_from_json(JsonObjectConst data, const std::string &where, Entr
     entry->replace_conflicts = data["replace_conflicts"].as<bool>();
   if (!data["pregame_countdown"].isNull())
     entry->pregame_countdown_override = static_cast<int>(data["pregame_countdown"].as<long long>());
+  if (!data["countdown_seconds_before"].isNull())
+    entry->countdown_seconds_before = static_cast<int>(data["countdown_seconds_before"].as<long long>());
   return true;
 }
 

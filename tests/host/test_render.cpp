@@ -286,7 +286,7 @@ TEST_CASE("render_snapshot: progress fields when enabled") {
   CHECK(snap.progress_seconds_since_start == 900);
 }
 
-TEST_CASE("render_snapshot: full game countdown includes untimed ends") {
+TEST_CASE("render_snapshot: countdown expiration modes") {
   PiTimerSettings s;
   s.valid = true;
   s.enabled = true;
@@ -302,36 +302,38 @@ TEST_CASE("render_snapshot: full game countdown includes untimed ends") {
   g.start = 36000;
   g.buzzer = 39600;   // 3600s regulation
   g.end_count = 8;    // 450s per end
-  g.untimed_ends = 2; // +900s when included
+  g.untimed_ends = 2; // ignored when total_time_includes_untimed_ends is true
   g.total_time_includes_untimed_ends = false;
   s.schedules["Monday"] = {g};
 
-  // OFF: countdown stops at the warning (15 min in -> 2700s left).
-  auto off = render_snapshot(s, true, 0, 36900, "2026-09-28");
-  CHECK(off.seconds_until_buzzer == 2700);
-  CHECK(off.countdown == std::string("45") + COLON + "00");
-  CHECK_FALSE(off.game_completed);
+  // OFF with no expiration: countdown is raw seconds_left (2700s at 15 min in).
+  auto off_no_exp = render_snapshot(s, true, 0, 36900, "2026-09-28");
+  CHECK(off_no_exp.seconds_until_buzzer == 2700);
+  CHECK(off_no_exp.countdown == std::string("45") + COLON + "00");
+  CHECK_FALSE(off_no_exp.game_completed);
 
-  // ON: clock runs the full duration (3600 + 900 - 900 = 3600s left).
+  // ON: full game runtime, untimed ends ignored (2700s at 15 min in).
   s.schedules["Monday"][0].total_time_includes_untimed_ends = true;
   auto on = render_snapshot(s, true, 0, 36900, "2026-09-28");
-  CHECK(on.seconds_until_buzzer == 3600);
-  CHECK(on.countdown == std::string("1") + COLON + "00" + COLON + "00");
+  CHECK(on.seconds_until_buzzer == 2700);
+  CHECK(on.countdown == std::string("45") + COLON + "00");
   CHECK_FALSE(on.game_completed);
 
-  // ON keeps counting through the untimed ends after the warning.
-  auto during = render_snapshot(s, true, 0, 39900, "2026-09-28"); // 5 min past buzzer
-  CHECK(during.seconds_until_buzzer == 600);
-  CHECK_FALSE(during.game_completed);
+  // ON keeps counting through zero at buzzer (negative after buzzer).
+  auto on_during = render_snapshot(s, true, 0, 39900, "2026-09-28"); // 5 min past buzzer
+  CHECK(on_during.seconds_until_buzzer == -300);
+  CHECK(on_during.game_completed);
 
-  // ON with no untimed ends is identical to OFF.
-  s.schedules["Monday"][0].untimed_ends = 0;
-  auto none = render_snapshot(s, true, 0, 36900, "2026-09-28");
-  CHECK(none.seconds_until_buzzer == 2700);
+  // OFF with expiration=900s: countdown subtracts expiration (1800s at 15 min in).
+  s.schedules["Monday"][0].total_time_includes_untimed_ends = false;
+  s.schedules["Monday"][0].countdown_seconds_before = 900;
+  auto off_with_exp = render_snapshot(s, true, 0, 36900, "2026-09-28");
+  CHECK(off_with_exp.seconds_until_buzzer == 1800);
+  CHECK(off_with_exp.countdown == std::string("30") + COLON + "00");
+  CHECK_FALSE(off_with_exp.game_completed);
 
-  // ON without an end count cannot estimate the extra time -> unchanged.
-  s.schedules["Monday"][0].untimed_ends = 2;
-  s.schedules["Monday"][0].end_count = std::nullopt;
-  auto no_ends = render_snapshot(s, true, 0, 36900, "2026-09-28");
-  CHECK(no_ends.seconds_until_buzzer == 2700);
+  // OFF with expiration reaches zero before buzzer.
+  auto off_zero = render_snapshot(s, true, 0, 38700, "2026-09-28"); // 30 min in
+  CHECK(off_zero.seconds_until_buzzer == 0);
+  CHECK(off_zero.game_completed);
 }

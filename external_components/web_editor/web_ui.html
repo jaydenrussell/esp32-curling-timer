@@ -685,7 +685,7 @@ function secondInput(props) {
 const COUNTDOWN_MODE_DURATION = 'Duration before warning';
 const COUNTDOWN_MODE_BUZZER = 'Time before buzzer';
 function normalizeCountdownMode(mode) {
-  return mode === 'Time until warning' || mode === 'time_until_warning' || mode === 'duration_before_warning'
+  return mode === 'Time until countdown expiration' || mode === 'time_until_countdown_expiration' || mode === 'duration_before_countdown_expiration'
     ? COUNTDOWN_MODE_DURATION
     : mode === COUNTDOWN_MODE_BUZZER || mode === 'time_before_buzzer' ? COUNTDOWN_MODE_BUZZER : COUNTDOWN_MODE_DURATION;
 }
@@ -898,6 +898,7 @@ const QUICK_PRESETS = [
     stones_per_end: 8,
     end_count: 8,
     untimed_ends: 0,
+    countdown_seconds_before: 0,
     options: {
       pregame: true,
       pace_of_play: false,
@@ -944,6 +945,7 @@ const QUICK_PRESETS = [
     stones_per_end: 8,
     end_count: 8,
     untimed_ends: 0,
+    countdown_seconds_before: 0,
     options: {
       pregame: true,
       pace_of_play: true,
@@ -1040,6 +1042,7 @@ function normalizeQuickPreset(raw, fallback = null) {
     stones_per_end: 8,
     end_count: 8,
     untimed_ends: 0,
+    countdown_seconds_before: 0,
     options: {
       pregame: false,
       pace_of_play: false,
@@ -1157,10 +1160,11 @@ function buildQuickForm() {
   const name = el('input', { type: 'text', maxlength: 60, placeholder: 'QUICK START', 'aria-label': 'Name shown on display' });
   const completed = el('input', { type: 'text', maxlength: 120, placeholder: 'Default completion message', 'aria-label': 'Completed message' });
   const pregameMin = minuteInput({ max: 60, value: '5', 'aria-label': 'Pre-game countdown in minutes' });
-  const expiresMin = minuteInput({ max: 60, value: '10', 'aria-label': 'Warning wording hold in minutes' });
+  const expiresMin = minuteInput({ max: 60, value: '10', 'aria-label': 'Countdown wording hold in minutes' });
   const stonesPerEnd = el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Stones per end' });
   const endCount = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Total number of ends' });
   const untimedEnds = el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', value: '0', 'aria-label': 'Ends after expiration' });
+  const countdownSecondsBefore = el('input', { type: 'number', min: 0, max: 3600, step: 60, inputmode: 'numeric', value: '0', 'aria-label': 'Countdown expiration seconds before buzzer' });
   let pregameOn = true;
   let paceOn = true;
   let showProgressOn = true;
@@ -1179,10 +1183,10 @@ function buildQuickForm() {
   untimedTotalBtn.onclick = (event) => { untimedTotalOn = !untimedTotalOn; event.target.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); refreshPreview(); };
   replaceBtn.onclick = (event) => { replaceOn = !replaceOn; event.target.className = 'check-toggle ' + (replaceOn ? 'on' : 'off'); refreshPreview(); };
 
-  const options = () => ({ pregame: pregameOn, pace_of_play: paceOn, replace_conflicts: replaceOn, show_progress_through_end: showProgressOn, total_time_includes_untimed_ends: untimedTotalOn });
+  const options = () => ({ pregame: pregameOn, pace_of_play: paceOn, replace_conflicts: replaceOn, show_progress_through_end: showProgressOn, total_time_includes_untimed_ends: untimedTotalOn, countdown_seconds_before: secondsValue(countdownSecondsBefore.value) || 0 });
 
   // Outputs driven from global settings: only enabled relays are offered,
-  // each with its own duration field for Game Start and Game Expires.
+  // each with its own duration field for Countdown Clock Start and Countdown Clock Expiration.
   // Durations are hidden via the wrapping .duration div (not the input itself)
   // so toggling on/off reliably shows/hides the field.
   const relayNames = RELAY_NAMES();
@@ -1202,7 +1206,7 @@ function buildQuickForm() {
   const endToggles = relayNames.map((name) => toggleBtn(false, name));
   const endDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Game expires relay duration in seconds' }));
   const startRow = relayNames.length ? makeRelayRow('Countdown Clock Start:', startToggles, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
-  const endRow = relayNames.length ? makeRelayRow('Warning Countdown Ends:', endToggles, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
+  const endRow = relayNames.length ? makeRelayRow('Countdown Clock Expiration:', endToggles, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
 
   // relayValues: collect names of enabled relays by original index (filter()
   // reindexes, so we must carry the original position explicitly).
@@ -1243,13 +1247,13 @@ function buildQuickForm() {
       previewLine('Pace of play', paceOn ? 'On' : 'Off'),
       previewLine('Progress through end', showProgressOn ? 'On' : 'Off'),
       previewLine('Replace same-time games', replaceOn ? 'On' : 'Off'),
-      previewLine('Countdown', untimedTotalOn ? 'Full game (extra ends included)' : 'Stops at the warning'),
+      previewLine('Countdown', untimedTotalOn ? 'Full game (extra ends included)' : 'Stops at the expiration'),
       previewLine('Stones per end', stonesPerEnd.value || 8),
       previewLine('Total ends', endCount.value || 8),
       previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
       el('div', { style: 'margin-top:10px;border-top:1px solid rgba(255,255,255,0.10);padding-top:10px' }),
-      previewLine('Outputs — Game Start', startOutputs.length ? startOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None'),
-      previewLine('Outputs — Game Expires', endOutputs.length ? endOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None')
+      previewLine('Outputs — Countdown Clock Start', startOutputs.length ? startOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None'),
+      previewLine('Outputs — Countdown Clock Expiration', endOutputs.length ? endOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None')
     );
   };
 
@@ -1271,7 +1275,7 @@ function buildQuickForm() {
 
 
   const wire = (input) => { input.addEventListener('input', refreshPreview); input.addEventListener('change', refreshPreview); };
-  wire(minutes); wire(expiresMin); wire(pregameMin); wire(completed);
+  wire(minutes); wire(expiresMin); wire(pregameMin); wire(completed); wire(countdownSecondsBefore);
   [pregameBtn, paceBtn, showProgressBtn, replaceBtn].forEach(b => { b.addEventListener('click', refreshPreview); });
   [stonesPerEnd, endCount, untimedEnds].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
   [...startToggles, ...startDurs, ...endToggles, ...endDurs].forEach(i => { i.addEventListener('input', refreshPreview); i.addEventListener('change', refreshPreview); });
@@ -1330,6 +1334,7 @@ function buildQuickForm() {
     stonesPerEnd.value = String(preset.stones_per_end);
     endCount.value = String(preset.end_count);
     untimedEnds.value = String(preset.untimed_ends);
+    countdownSecondsBefore.value = String(preset.countdown_seconds_before || 0);
 
     pregameOn = !!preset.options.pregame;
     paceOn = !!preset.options.pace_of_play;
@@ -1485,7 +1490,7 @@ function buildQuickForm() {
       el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Pre-game countdown (minutes)'),
       pregameMin),
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Warning wording hold after buzzer (minutes)'),
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Countdown wording hold after buzzer (minutes)'),
       expiresMin),
     el('div', { class: 'grid2', style: 'gap: 12px' },
       el('div', { class: 'field' },
@@ -1508,6 +1513,10 @@ function buildQuickForm() {
       el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Ends after expiration'),
       untimedEnds,
       el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends after the buzzer so the game can finish naturally instead of cutting off mid-end.')),
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Countdown expiration before buzzer (seconds)'),
+      countdownSecondsBefore,
+      el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Seconds before the buzzer at which the countdown reaches zero when full game countdown is off.')),
 
     // Game options toggles row
     el('div', { class: 'row-actions', style: 'margin: 0; gap: 10px; align-items: center' },
@@ -1520,7 +1529,7 @@ function buildQuickForm() {
     // Outputs card
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 4px' }, 'Outputs'),
-      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Game Start and when the warning countdown ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
+      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Countdown Clock Start and when the countdown expiration ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
       startRow,
       endRow),
 
@@ -1966,7 +1975,7 @@ function newEntry(previous) {
   const start = previous ? Math.ceil((previous.buzzer + 25 * 60) / 60) * 60 : 9 * 3600;
   return { start: Math.min(start, 86340), buzzer: Math.min(start + 105 * 60, 86340), name: null,
            game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false, league: null,
-           pregame_countdown: null, end_count: null, stones_per_end: null, untimed_ends: null, show_progress_through_end: null };
+           pregame_countdown: null, end_count: null, stones_per_end: null, untimed_ends: null, show_progress_through_end: null, countdown_seconds_before: null };
 }
 
 // Helper: map toggle buttons to relay names by original index (filter reindexes).
@@ -2035,6 +2044,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   const endsIn = el('input', { type: 'number', min: 1, max: 12, value: '8', placeholder: 'ends' });
   const stonesIn = el('input', { type: 'number', min: 1, max: 10, value: '8', placeholder: 'stones' });
   const untimedIn = el('input', { type: 'number', min: 0, max: 6, value: '0', placeholder: 'extra ends' });
+  const countdownSecondsBeforeInput = el('input', { type: 'number', min: 0, max: 3600, step: 60, inputmode: 'numeric', value: '0', placeholder: 'expiration seconds' });
   const durationMinutesInput = minuteInput({ max: 999, value: '0', 'aria-label': 'Game duration in minutes' });
 
   // --- option toggles ---
@@ -2050,7 +2060,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
   pregameMinutesInput._stepWrap.style.display = 'none';
   // Blank means "use the configured/global hold"; only an explicit value is
   // written into the new entry.
-  const warningIn = minuteInput({ max: 999, value: '', placeholder: 'default', 'aria-label': 'Warning wording hold after buzzer in minutes' });
+  const warningIn = minuteInput({ max: 999, value: '', placeholder: 'default', 'aria-label': 'Countdown wording hold after buzzer in minutes' });
   pregameBtn.onclick = (e) => { pregameOn = !pregameOn; e.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); pregameMinutesInput._stepWrap.style.display = pregameOn ? '' : 'none'; };
   paceBtn.onclick = (e) => { paceOn = !paceOn; e.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); };
   progressBtn.onclick = (e) => { progressOn = !progressOn; e.target.className = 'check-toggle ' + (progressOn ? 'on' : 'off'); };
@@ -2079,7 +2089,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
     return { row: wrapper, toggles, durs };
   }
   const startOut = makeOutRow('Countdown Clock Start:');
-  const endOut = makeOutRow('Warning Countdown Ends:');
+  const endOut = makeOutRow('Countdown Clock Expiration:');
   function populateOutputRows(league) {
     if (!league) return;
     const setRow = (row, relays, durations) => {
@@ -2131,7 +2141,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         durationMinutesInput
       ),
       el('div', { class: 'row-actions', style: 'margin: 4px 0; gap: 6px' },
-        el('span', { class: 'muted small' }, 'Warning wording hold after buzzer (minutes)'),
+        el('span', { class: 'muted small' }, 'Countdown wording hold after buzzer (minutes)'),
         warningIn
       ),
     ),
@@ -2139,7 +2149,8 @@ function openScheduleGameModal(dayKey, entries, rerender) {
     el('div', { class: 'row-actions', style: 'margin: 12px 0; gap: 6px' },
       el('div', {}, el('label', {}, 'Stones per end'), stonesIn),
       el('div', {}, el('label', {}, 'Ends'), endsIn),
-      el('div', {}, el('label', {}, 'Ends after expiration'), untimedIn)),
+      el('div', {}, el('label', {}, 'Ends after expiration'), untimedIn),
+      el('div', {}, el('label', {}, 'Countdown expiration (seconds)'), countdownSecondsBeforeInput)),
     // --- output rows ---
     el('div', {}, startOut.row),
     el('div', {}, endOut.row),
@@ -2170,6 +2181,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
           end_count: Number(endsIn.value) || (league ? league.end_count: 8),
           stones_per_end: Number(stonesIn.value) || (league ? league.stones_per_end: 8),
           untimed_ends: Number(untimedIn.value) || (league ? league.untimed_ends: 0),
+          countdown_seconds_before: secondsValue(countdownSecondsBeforeInput.value) || (league ? league.countdown_seconds_before : null),
           show_progress_through_end: progressOn,
           total_time_includes_untimed_ends: untimedTotalOn,
           replace_conflicts: replaceOn,
@@ -2199,7 +2211,7 @@ function entryEditor(entries, index, leagues, rerender) {
     onchange: (event) => { const v = parseTime(event.target.value); if (v !== null) { entry[key] = v; changed(); syncPace(); } } });
   const text = (key, placeholder) => el('input', { type: 'text', value: entry[key] || '', placeholder, maxlength: 80,
     oninput: (event) => { entry[key] = event.target.value.trim() || null; changed(); } });
-  const hold = minuteInput({ max: 60, placeholder: 'default', 'aria-label': 'Warning wording hold in minutes',
+  const hold = minuteInput({ max: 60, placeholder: 'default', 'aria-label': 'Countdown wording hold in minutes',
     value: entry.header_hold != null ? formatMinutes(entry.header_hold) : '',
     onchange: (event) => { entry.header_hold = minutesToSeconds(event.target.value); changed(); } });
   const leagueSelect = el('select', { onchange: (event) => {
@@ -2314,7 +2326,7 @@ function entryEditor(entries, index, leagues, rerender) {
   return el('div', { class: 'entry' },
     el('div', { class: 'league' }, el('label', {}, 'League'), leagueSelect),
     el('div', { class: 'start' }, el('label', {}, 'Start'), timeInput('start')),
-    el('div', { class: 'buzzer' }, el('label', {}, 'Warning Countdown Ends'), timeInput('buzzer')),
+    el('div', { class: 'buzzer' }, el('label', {}, 'Countdown Clock Expiration'), timeInput('buzzer')),
     el('div', { class: 'actions' },
       el('button', { class: 'btn icon danger', type: 'button', title: 'Delete game', onclick: () => { entries.splice(index, 1); changed(); rerender(); } }, '✕')),
     el('div', { class: 'name' }, text('name', 'League name'),
@@ -2322,7 +2334,7 @@ function entryEditor(entries, index, leagues, rerender) {
     el('div', { class: 'more' },
       pgBtn, pgFields,
       el('label', {}, 'Header when game completed'), text('game_completed', 'default'),
-      el('label', {}, 'Warning wording hold after buzzer (minutes)'), hold,
+      el('label', {}, 'Countdown wording hold after buzzer (minutes)'), hold,
       el('label', {}, 'Total ends'), endCountInput,
       el('label', {}, 'Stones per end'), el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.stones_per_end != null ? entry.stones_per_end : '', onchange: (event) => { entry.stones_per_end = event.target.value === '' ? null : Math.max(1, parseInt(event.target.value, 10) || 1); changed(); } }),
       el('label', {}, 'Ends after expiration'), el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', placeholder: 'default', value: entry.untimed_ends != null ? entry.untimed_ends : '', onchange: (event) => { entry.untimed_ends = event.target.value === '' ? null : Math.max(0, parseInt(event.target.value, 10) || 0); changed(); } }),
@@ -2553,8 +2565,8 @@ const CONFIG_SECTIONS = [
       ['config.header.text.when_disabled', 'text', 'Text when disabled'],
       ['config.header.text.when_idle', 'text', 'Text when idle'],
       ['config.header.text.counting_down', 'text', 'Text when Countdown'],
-      ['config.header.text.game_completed', 'text', 'Text when Warning Countdown Ends/Output'],
-      ['config.header.text.game_ended', 'text', 'Text when Game Ends'],
+      ['config.header.text.game_completed', 'text', 'Text when Countdown Expiration/Output'],
+      ['config.header.text.game_ended', 'text', 'Text when Countdown Clock End'],
       ['config.header.color.when_disabled', 'color', 'Colour when disabled'],
       ['config.header.color.when_idle', 'color', 'Colour when idle'],
       ['config.header.color.counting_down', 'color', 'Colour while counting down'],
@@ -2585,16 +2597,16 @@ const CONFIG_SECTIONS = [
       ['config.buzzer.ring_at_start', 'relays', 'Output'],
       ['config.buzzer.start_duration', 'output_duration', 'Duration', 'start']] },
   { group: 'Output Configuration', title: 'Countdown Clock Expiration',
-    hint: 'Duration before warning fires this many minutes after game start. Time before buzzer counts backwards from game end. 0 disables the warning. Relay output durations are in seconds.',
+    hint: 'Duration before countdown expiration fires this many minutes before game end. Time before buzzer counts backwards from game end. 0 disables the countdown expiration. Relay output durations are in seconds.',
     fields: [
       ['config.buzzer.countdown.mode', 'select', 'Countdown mode', COUNTDOWN_MODE_DURATION, COUNTDOWN_MODE_BUZZER],
-      ['config.buzzer.countdown.seconds_before', 'minutes', 'Countdown warning time (minutes)', 0, 1666],
+      ['config.buzzer.countdown.seconds_before', 'minutes', 'Countdown expiration time (minutes)', 0, 1666],
       ['config.buzzer.countdown.relays', 'relays', 'Output'],
       ['config.buzzer.countdown_duration', 'output_duration', 'Duration', 'countdown']] },
   { group: 'Output Configuration', title: 'Countdown Clock End',
-    hint: 'Warning wording hold controls how long the warning stays after the buzzer rings. The wording itself is set under Display → Header text → Text when Warning Countdown Ends/Output. Relay output durations are in seconds.',
+    hint: 'Countdown wording hold controls how long the countdown expiration stays after the buzzer rings. The wording itself is set under Display → Header text → Text when Countdown Expiration/Output. Relay output durations are in seconds.',
     fields: [
-      ['config.buzzer.header_hold', 'minutes', 'Warning wording hold after buzzer (minutes)', 0, 1666],
+      ['config.buzzer.header_hold', 'minutes', 'Countdown wording hold after buzzer (minutes)', 0, 1666],
       ['config.buzzer.relays', 'relays', 'Output'],
       ['config.buzzer.end_duration', 'output_duration', 'Duration', 'end']] },
 ];
@@ -2669,7 +2681,7 @@ function validateConfigDiff(diff) {
         return 'Display mirror scale must be an integer between 10 and 100 (percentage)';
     } else if (path === 'config.buzzer.countdown.seconds_before') {
       if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 100000)
-        return 'Countdown warning time must resolve to a whole number of seconds (0 or more)';
+        return 'Countdown expiration time must resolve to a whole number of seconds (0 or more)';
     } else if (path.endsWith('.font_size') || path.endsWith('.font_size_4_digits') ||
                 path.endsWith('.font_size_5_digits') || path === 'config.buzzer.duration' ||
                 path === 'config.buzzer.header_hold' ||
@@ -2897,7 +2909,7 @@ async function renderConfig() {
         el('div', { class: 'row-actions', style: 'margin: 6px 0; gap: 8px' }, configField(fields[1]), configField(fields[2]))
       ];
     } else if (section.group.startsWith('Output Configuration')) {
-      // Non-relay settings first (mode, warning time, header hold, ...).
+      // Non-relay settings first (mode, expiration time, header hold, ...).
       // Relay options and their per-output durations always come last.
       fieldNodes = [];
       for (const f of fields) {
@@ -3284,6 +3296,7 @@ function openLeagueModal(league, leagues, onSaved) {
     stones_per_end: 8,
     end_count: 8,
     untimed_ends: 0,
+    countdown_seconds_before: 0,
     show_progress_through_end: true,
     total_time_includes_untimed_ends: false,
     replace_conflicts: false,
@@ -3330,7 +3343,7 @@ function openLeagueModal(league, leagues, onSaved) {
     type: 'number', 
     min: 0, 
     value: editLeague.countdown_seconds_before || 0, 
-    placeholder: 'Warning before end (seconds)',
+    placeholder: 'Countdown expiration before end (seconds)',
     oninput: (event) => { editLeague.countdown_seconds_before = parseInt(event.target.value) || 0; }
   });
   const manualBtn = toggleBtn(editLeague.manual_trigger, 'Manual trigger');
@@ -3352,6 +3365,14 @@ function openLeagueModal(league, leagues, onSaved) {
     min: 0, 
     value: editLeague.untimed_ends || 0, 
     oninput: (event) => { editLeague.untimed_ends = parseInt(event.target.value) || 0; }
+  });
+  const countdownSecondsBeforeIn = el('input', { 
+    type: 'number', 
+    min: 0, 
+    max: 3600, 
+    step: 60,
+    value: editLeague.countdown_seconds_before || 0, 
+    oninput: (event) => { editLeague.countdown_seconds_before = parseInt(event.target.value) || 0; }
   });
   
   const editCard = el('div', { class: 'card league-edit' },
@@ -3376,7 +3397,7 @@ function openLeagueModal(league, leagues, onSaved) {
       el('div', { class: 'field' }, progressBtn)),
     
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', {}, 'Warning before end (seconds)'),
+      el('label', {}, 'Countdown expiration before end (seconds)'),
       warningHoldIn),
     
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
@@ -3394,6 +3415,10 @@ function openLeagueModal(league, leagues, onSaved) {
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
       el('label', {}, 'Ends after expiration'),
       untimedIn),
+
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', {}, 'Countdown expiration (seconds)'),
+      countdownSecondsBeforeIn),
 
     el('div', { class: 'field', style: 'margin-bottom: 10px' }, untimedTotalBtn),
     

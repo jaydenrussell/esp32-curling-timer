@@ -114,6 +114,10 @@ struct PiTimerGame {
   // countdown display mode (absent = default/league value; false shows the
   // countdown to the warning, true runs the full time including untimed ends)
   std::optional<bool> total_time_includes_untimed_ends;
+  // countdown expiration seconds before buzzer (absent = default/league value;
+  // used when total_time_includes_untimed_ends is false to subtract from
+  // remaining game time)
+  std::optional<int> countdown_seconds_before;
   bool replace_conflicts{false};
   // live state, set on the copy returned by find_current_game
   std::optional<int> seconds_until_buzzer;

@@ -45,6 +45,10 @@ struct Entry {
   // per-game pre-game countdown override (seconds; quick start sets it from
   // the form's pre-game minutes, absent = use the global settings value)
   std::optional<int> pregame_countdown_override;
+  // countdown expiration time before buzzer (seconds; absent = use the global
+  // settings value or league default; used to calculate the full game countdown
+  // when total_time_includes_untimed_ends is enabled)
+  std::optional<int> countdown_seconds_before;
   // replace any conflicting timer/entry when quick-starting
   bool replace_conflicts{false};
   // entry added by a quick start (marked with a trailing comment in the file)

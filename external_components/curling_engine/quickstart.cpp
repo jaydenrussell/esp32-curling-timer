@@ -113,6 +113,8 @@ bool quick_entry(const QuickStartOptions &opts, Entry *out, std::string *err) {
   // ': False' to every quick-start entry.
   if (opts.total_time_includes_untimed_ends)
     entry.total_time_includes_untimed_ends = true;
+  if (opts.countdown_seconds_before.has_value())
+    entry.countdown_seconds_before = *opts.countdown_seconds_before;
   if (opts.pregame_countdown > 0)
     entry.pregame_countdown_override = opts.pregame_countdown;
   *out = std::move(entry);
