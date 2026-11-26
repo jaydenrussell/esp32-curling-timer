@@ -956,7 +956,7 @@ ApiResponse PiTimerApi::get_config() {
   return from_document(doc);
 }
 
-ApiResponse PiTimerApi::get_addon_detection(const HttpRequest &req) {
+ApiResponse PiTimerApi::get_addon_detection(const ApiRequest &req) {
   // POST re-runs hardware detection (e.g. after plugging in a PaHub).
   if (req.method == "POST" && engine_ != nullptr) {
     engine_->detect_addons();

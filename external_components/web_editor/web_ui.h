@@ -426,7 +426,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.234</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.235</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -456,7 +456,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.234</span>
+    <span class="header-version">v2026.11.235</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1167,7 +1167,7 @@ function buildQuickForm() {
   const stonesPerEnd = el('input', { type: 'number', min: 1, max: 10, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Stones per end' });
   const endCount = el('input', { type: 'number', min: 1, max: 12, step: 1, inputmode: 'numeric', value: '8', 'aria-label': 'Total number of ends' });
   const untimedEnds = el('input', { type: 'number', min: 0, max: 6, step: 1, inputmode: 'numeric', value: '0', 'aria-label': 'Ends after expiration' });
-  const countdownSecondsBefore = el('input', { type: 'number', min: 0, max: 3600, step: 60, inputmode: 'numeric', value: '0', 'aria-label': 'Countdown expiration seconds before buzzer' });
+  const countdownSecondsBefore = el('input', { type: 'number', min: 0, max: 3600, step: 60, inputmode: 'numeric', value: '0', 'aria-label': 'Countdown Clock Expiration seconds before buzzer' });
   let pregameOn = true;
   let paceOn = true;
   let showProgressOn = true;
@@ -1180,7 +1180,7 @@ function buildQuickForm() {
   const replaceBtn = toggleBtn(replaceOn, 'Replace conflicts');
   const gameOptionsRow = el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px; flex-wrap: wrap' },
     pregameBtn, paceBtn, showProgressBtn, untimedTotalBtn, replaceBtn);
-  pregameBtn.onclick = (event) => { pregameOn = !pregameOn; event.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); refreshPreview(); };
+  pregameBtn.onclick = (event) => { pregameOn = !pregameOn; event.target.className = 'check-toggle ' + (pregameOn ? 'on' : 'off'); document.getElementById('pregameField').style.display = pregameOn ? '' : 'none'; refreshPreview(); };
   paceBtn.onclick = (event) => { paceOn = !paceOn; event.target.className = 'check-toggle ' + (paceOn ? 'on' : 'off'); refreshPreview(); };
   showProgressBtn.onclick = (event) => { showProgressOn = !showProgressOn; event.target.className = 'check-toggle ' + (showProgressOn ? 'on' : 'off'); refreshPreview(); };
   untimedTotalBtn.onclick = (event) => { untimedTotalOn = !untimedTotalOn; event.target.className = 'check-toggle ' + (untimedTotalOn ? 'on' : 'off'); refreshPreview(); };
@@ -1209,7 +1209,7 @@ function buildQuickForm() {
   const endToggles = relayNames.map((name) => toggleBtn(false, name));
   const endDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Game expires relay duration in seconds' }));
   const startRow = relayNames.length ? makeRelayRow('Countdown Clock Start:', startToggles, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
-  const endRow = relayNames.length ? makeRelayRow('Countdown Clock Expiration:', endToggles, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
+  const endRow = relayNames.length ? makeRelayRow('Countdown Clock End:', endToggles, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
 
   // relayValues: collect names of enabled relays by original index (filter()
   // reindexes, so we must carry the original position explicitly).
@@ -1256,7 +1256,7 @@ function buildQuickForm() {
       previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
       el('div', { style: 'margin-top:10px;border-top:1px solid rgba(255,255,255,0.10);padding-top:10px' }),
       previewLine('Outputs — Countdown Clock Start', startOutputs.length ? startOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None'),
-      previewLine('Outputs — Countdown Clock Expiration', endOutputs.length ? endOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None')
+      previewLine('Outputs — Countdown Clock End', endOutputs.length ? endOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None'),
     );
   };
 
@@ -1485,11 +1485,19 @@ function buildQuickForm() {
       el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Quick picks fill the form below — nothing starts until you press Start game.'),
       presetRow,
       el('div', { class: 'row-actions', style: 'margin: 0; gap: 8px' }, savePresetButton, resetPresetButton)),
+    // Game options toggles row (above fields so pregame toggle controls its field)
+    el('div', { class: 'row-actions', style: 'margin: 0; gap: 10px; align-items: center' },
+      pregameBtn,
+      paceBtn,
+      showProgressBtn,
+      untimedTotalBtn,
+      replaceBtn),
+
     // Main game settings — inline layout matching schedule entryEditor
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
       el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Full game time (minutes)'),
       minutes),
-    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+    el('div', { id: 'pregameField', class: 'field', style: 'margin-bottom: 10px; display:' + (pregameOn ? '' : 'none') },
       el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Pre-game countdown (minutes)'),
       pregameMin),
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
@@ -1517,22 +1525,14 @@ function buildQuickForm() {
       untimedEnds,
       el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends after the buzzer so the game can finish naturally instead of cutting off mid-end.')),
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Countdown expiration before buzzer (seconds)'),
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Countdown Clock Expiration (seconds)'),
       countdownSecondsBefore,
       el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Seconds before the buzzer at which the countdown reaches zero when full game countdown is off.')),
-
-    // Game options toggles row
-    el('div', { class: 'row-actions', style: 'margin: 0; gap: 10px; align-items: center' },
-      pregameBtn,
-      paceBtn,
-      showProgressBtn,
-      untimedTotalBtn,
-      replaceBtn),
 
     // Outputs card
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 4px' }, 'Outputs'),
-      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Countdown Clock Start and when the countdown expiration ends, and for how many seconds. Leave a duration blank to use the global buzzer duration.'),
+      el('p', { class: 'muted small', style: 'margin: 0 0 10px' }, 'Choose which enabled relay outputs ring at Countdown Clock Start, at Countdown Clock Expiration, and at Countdown Clock End. Leave a duration blank to use the global buzzer duration.'),
       startRow,
       endRow),
 
@@ -2092,7 +2092,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
     return { row: wrapper, toggles, durs };
   }
   const startOut = makeOutRow('Countdown Clock Start:');
-  const endOut = makeOutRow('Countdown Clock Expiration:');
+  const endOut = makeOutRow('Countdown Clock End:');
   function populateOutputRows(league) {
     if (!league) return;
     const setRow = (row, relays, durations) => {
@@ -2317,7 +2317,7 @@ function entryEditor(entries, index, leagues, rerender) {
     entry[which + '_duration'] = value;
     if (!entry[which + '_relays'] || !entry[which + '_relays'].length) entry[which + '_duration'] = null;
   };
-  const labelOf = (which) => which === 'start' ? 'Notifications — Countdown Clock Start' : 'Notifications — Countdown Clock Expiration';
+  const labelOf = (which) => which === 'start' ? 'Notifications — Countdown Clock Start' : 'Notifications — Countdown Clock End';
 
   const outputsCard = outputInfos.length ? el('div', { class: 'card', style: 'margin: 10px 0 0' },
       el('h3', {}, 'Notifications 🔔'),
@@ -2329,7 +2329,7 @@ function entryEditor(entries, index, leagues, rerender) {
   return el('div', { class: 'entry' },
     el('div', { class: 'league' }, el('label', {}, 'League'), leagueSelect),
     el('div', { class: 'start' }, el('label', {}, 'Start'), timeInput('start')),
-    el('div', { class: 'buzzer' }, el('label', {}, 'Countdown Clock Expiration'), timeInput('buzzer')),
+    el('div', { class: 'buzzer' }, el('label', {}, 'Countdown Clock End'), timeInput('buzzer')),
     el('div', { class: 'actions' },
       el('button', { class: 'btn icon danger', type: 'button', title: 'Delete game', onclick: () => { entries.splice(index, 1); changed(); rerender(); } }, '✕')),
     el('div', { class: 'name' }, text('name', 'League name'),
