@@ -251,7 +251,7 @@ bool CurlingEngineComponent::display_snapshot(DisplaySnapshot *out) {
   }
   // Gate the RTC fallback on the runtime addon flag from settings AND
   // hardware detection (auto-detect add-on: effective = user_enabled && detected).
-  this->rtc_enabled_ = settings.addons.rtc && this->addon_detected.rtc;
+  this->rtc_enabled_ = settings.addons.rtc;  // manual enable works without detection; detection is informational
 
   bool clock_known = this->local_now(&weekday_mon0, &seconds_of_day, &date_iso);
   *out = render_snapshot(settings, clock_known, weekday_mon0, seconds_of_day, date_iso);

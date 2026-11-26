@@ -956,7 +956,11 @@ ApiResponse PiTimerApi::get_config() {
   return from_document(doc);
 }
 
-ApiResponse PiTimerApi::get_addon_detection() {
+ApiResponse PiTimerApi::get_addon_detection(const HttpRequest &req) {
+  // POST re-runs hardware detection (e.g. after plugging in a PaHub).
+  if (req.method == "POST" && engine_ != nullptr) {
+    engine_->detect_addons();
+  }
   JsonDocument doc;
   if (engine_ != nullptr) {
     const auto &det = engine_->get_addon_detected();
@@ -1469,7 +1473,7 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
      if (p == "/api/config")
         return get_config();
      if (p == "/api/addons/detection")
-        return get_addon_detection();
+       return get_addon_detection(req);
      if (p == "/api/leagues")
        return get_leagues();
 
@@ -1521,6 +1525,8 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
      return display_test_mode(data);
    if (p == "/api/ntp_sync")
      return ntp_sync();
+    if (p == "/api/addons/detection")
+       return get_addon_detection(req);
     if (p == "/api/config")
       return post_config(data);
     if (p == "/api/leagues")

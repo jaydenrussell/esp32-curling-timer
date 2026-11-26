@@ -3004,11 +3004,14 @@ async function renderAddonMarketplace() {
   for (const a of ADDONS) {
     const intent = state.configValues[`config.addons.${a.key}`] === true;
     const detected = det[a.key] === true;
-    const enabled = intent && (!a.auto || detected);
+    // Manual enable overrides detection gating for auto-addons (rtc, pahub, wifi).
+    // User can force-enable even if auto-detection failed; detection is informational.
+    const enabled = intent;
     const showDetail = enabled || detected;
     const pillCls = a.auto ? (detected ? (intent ? 'enabled' : 'detected') : 'notdetected') : 'manual';
     const pillText = a.auto ? (detected ? (intent ? 'Enabled' : 'Detected') : 'Not detected') : 'Manual';
-    const btnDisabled = a.auto && !detected;
+    // Enable button is never disabled for manual override; only auto-gating shows disabled state visually.
+    const btnDisabled = false;
     const btnText = intent ? 'Disable' : 'Enable';
     const btnCls = intent ? 'btn danger' : 'btn primary';
 
@@ -3020,11 +3023,22 @@ async function renderAddonMarketplace() {
         el('span', { class: 'fold-count muted' }, 'details')),
       el('div', { class: 'fold-body' },
         ...infoLines));
+    const redetectBtn = el('button', { class: 'btn sm', title: 'Re-detect hardware', onclick: async () => {
+      const result = await api('/api/addons/detection', { method: 'POST' });
+      if (result.ok) {
+        addonDetection = result.data;
+        renderAddonMarketplace();
+        showMessage('Hardware detection re-run', 'ok');
+      } else {
+        showMessage('Re-detect failed: ' + (result.data && result.data.error), 'bad');
+      }
+    } }, 'Re-detect');
     const card = el('div', { class: 'addon-card' },
       el('h3', {}, a.label),
       el('p', { class: 'addon-desc' }, a.desc),
       el('div', { class: 'row-actions', style: 'margin-top: 8px; gap: 8px' },
         el('span', { class: `pill ${pillCls}` }, pillText),
+        a.auto ? redetectBtn : null,
         el('button', { class: btnCls, disabled: btnDisabled, onclick: () => toggleAddon(a.key, !intent) }, btnText)),
       showDetail ? detail : null);
     grid.append(card);
