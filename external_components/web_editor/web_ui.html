@@ -1730,7 +1730,7 @@ function renderStatus() {
     // inner track, a white background, and bands that grow from their left
     // edges. No dark overlay and no per-end bar stack.
     const pct = (v) => v / PROGRESS_TRACK_PX * 100;
-    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(20)}px; right:${px(20)}px; bottom:${px(104)}px;` });
+    const progWrap = el('div', { id: 'mirror-progress', style: `position:absolute; left:${px(20)}px; right:${px(20)}px; bottom:${px(124)}px;` });
     const bar = el('div', { id: 'mirror-progress-bar', class: 'progress-end-bar', style: `width:100%; height:${px(95)}px; border-width:${px(8)}px; border-radius:${px(24)}px;` });
     const bandNames = ['lead', 'second', 'vice', 'skip'];
     for (let i = 0; i < 4; i++) {
