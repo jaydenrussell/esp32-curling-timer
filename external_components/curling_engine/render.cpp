@@ -293,7 +293,8 @@ DisplaySnapshot render_snapshot(const PiTimerSettings &settings, bool clock_know
     }
 
     const bool progress_on = g.show_progress_through_end.value_or(false);
-    if (progress_on && g.end_count.has_value() && *g.end_count > 0 && g.buzzer > g.start) {
+    // Do not show progress during pre-game countdown or game start.
+    if (progress_on && !pregame && g.end_count.has_value() && *g.end_count > 0 && g.buzzer > g.start) {
       out.show_progress = true;
       out.progress_end_count = *g.end_count;
       out.progress_seconds_since_start = g.seconds_since_start.value_or(0);
