@@ -426,7 +426,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.236</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.237</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -456,7 +456,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.236</span>
+    <span class="header-version">v2026.11.237</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1519,7 +1519,7 @@ function buildQuickForm() {
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
       el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Ends after Expiration'),
       untimedEnds,
-      el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends after the buzzer so the game can finish naturally instead of cutting off mid-end.')),
+      el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Number of ends to complete after countdown expiration. Finish the current end and play the number of ends set here — usually 1 end is common.')),
     el('div', { class: 'grid2', style: 'gap: 12px' },
       el('div', { class: 'field' },
         el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Name shown on display'),
