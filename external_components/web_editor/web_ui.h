@@ -426,7 +426,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.235</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.236</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -456,7 +456,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.235</span>
+    <span class="header-version">v2026.11.236</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1364,17 +1364,19 @@ function buildQuickForm() {
       const pickButton = el('button', { class: 'btn preset', type: 'button',
         title: `${preset.name}, ${durationText(preset.minutes * 60)}`,
         onclick: () => applyQuickPreset(preset) }, preset.label);
-      const editButton = el('button', { class: 'btn preset', type: 'button',
+      const editButton = el('button', { class: 'btn icon', type: 'button',
         'aria-label': `Edit quick pick ${preset.label}`,
+        title: `Edit "${preset.label}"`,
         onclick: () => {
           editingPresetId = preset.id;
           applyQuickPreset(preset);
           name.focus();
           name.select();
           showMessage(`Editing quick pick "${preset.label}" — change the name and save.`, 'ok');
-        } }, 'Edit');
-      const deleteButton = el('button', { class: 'btn preset', type: 'button',
+        } }, '✏️');
+      const deleteButton = el('button', { class: 'btn icon danger', type: 'button',
         'aria-label': `Delete quick pick ${preset.label}`,
+        title: `Delete "${preset.label}"`,
         onclick: () => {
           if (!confirm(`Delete quick pick "${preset.label}"?`)) return;
           storedQuickPresets = storedQuickPresets.filter((item) => item.id !== preset.id);
@@ -1389,7 +1391,7 @@ function buildQuickForm() {
           } else {
             showMessage(`Deleted "${preset.label}" for this session, but browser storage could not be updated.`, 'bad');
           }
-        } }, 'Delete');
+        } }, '✕');
       presets.push(pickButton);
       rows.push(el('div', { class: 'row-actions', style: 'margin: 0; gap: 4px' }, pickButton, editButton, deleteButton));
     }
@@ -1493,42 +1495,41 @@ function buildQuickForm() {
       untimedTotalBtn,
       replaceBtn),
 
-    // Main game settings — inline layout matching schedule entryEditor
-    el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Full game time (minutes)'),
-      minutes),
+    // Main game settings — field order:
+    // Pre-Game Countdown, Full Game Time, Countdown Clock Expiration,
+    // Total Number of Ends, Stones Per End, Ends after Expiration,
+    // Name/Completed Message + Countdown wording hold (last grid2 group)
     el('div', { id: 'pregameField', class: 'field', style: 'margin-bottom: 10px; display:' + (pregameOn ? '' : 'none') },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Pre-game countdown (minutes)'),
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Pre-Game Countdown (minutes)'),
       pregameMin),
     el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Countdown wording hold after buzzer (minutes)'),
-      expiresMin),
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Full Game Time (minutes)'),
+      minutes),
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Countdown Clock Expiration (seconds)'),
+      countdownSecondsBefore,
+      el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Seconds before the buzzer at which the countdown reaches zero when full game countdown is off.')),
+    el('div', { class: 'grid2', style: 'gap: 12px' },
+      el('div', { class: 'field' },
+        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Total Number of Ends'),
+        endCount),
+      el('div', { class: 'field' },
+        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Stones Per End'),
+        stonesPerEnd)),
+    el('div', { class: 'field', style: 'margin-bottom: 10px' },
+      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Ends after Expiration'),
+      untimedEnds,
+      el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends after the buzzer so the game can finish naturally instead of cutting off mid-end.')),
     el('div', { class: 'grid2', style: 'gap: 12px' },
       el('div', { class: 'field' },
         el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Name shown on display'),
         name),
       el('div', { class: 'field' },
-        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Completed message (optional)'),
-        completed)),
-
-    // Secondary settings in grid2 for wider layout
-    el('div', { class: 'grid2', style: 'gap: 12px' },
+        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Completed Message (optional)'),
+        completed),
       el('div', { class: 'field' },
-        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Stones per end (per team; mixed doubles = 5)'),
-        stonesPerEnd),
-      el('div', { class: 'field' },
-        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Total number of ends'),
-        endCount)),
-    // Additional field
-    el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Ends after expiration'),
-      untimedEnds,
-      el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Extra ends after the buzzer so the game can finish naturally instead of cutting off mid-end.')),
-    el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Countdown Clock Expiration (seconds)'),
-      countdownSecondsBefore,
-      el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'Seconds before the buzzer at which the countdown reaches zero when full game countdown is off.')),
-
+        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Countdown wording hold after buzzer (minutes)'),
+        expiresMin)),
     // Outputs card
     el('div', { class: 'card', style: 'margin: 0; padding: 14px' },
       el('div', { class: 'section-title', style: 'margin-bottom: 4px' }, 'Outputs'),
