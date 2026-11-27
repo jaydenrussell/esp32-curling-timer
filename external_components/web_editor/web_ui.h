@@ -3271,9 +3271,9 @@ async function renderDiagnostics() {
     const r = await api('/api/rtc/time');
     if (r.ok && r.data.ok) {
       const d = r.data;
-      rtcTime.textContent = \`\${String(d.year).padStart(4, '0')}-\${String(d.month).padStart(2, '0')}-\${String(d.day).padStart(2, '0')} \${String(d.hour).padStart(2, '0')}:\${String(d.minute).padStart(2, '0')}:\${String(d.second).padStart(2, '0')}\`;
-      dateInput.value = \`\${String(d.year).padStart(4, '0')}-\${String(d.month).padStart(2, '0')}-\${String(d.day).padStart(2, '0')}\`;
-      timeInput.value = \`\${String(d.hour).padStart(2, '0')}:\${String(d.minute).padStart(2, '0')}\`;
+      rtcTime.textContent = `${String(d.year).padStart(4, '0')}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')} ${String(d.hour).padStart(2, '0')}:${String(d.minute).padStart(2, '0')}:${String(d.second).padStart(2, '0')}`;
+      dateInput.value = `${String(d.year).padStart(4, '0')}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+      timeInput.value = `${String(d.hour).padStart(2, '0')}:${String(d.minute).padStart(2, '0')}`;
     } else {
       rtcTime.textContent = 'N/A';
     }
