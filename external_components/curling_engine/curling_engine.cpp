@@ -61,11 +61,20 @@ void CurlingEngineComponent::detect_addons() {
   }
 #if defined(ESP_PLATFORM)
   // PaHub v2.1 I2C hub detection: probe default address 0x70.
-  // The PaHub (M5Stack PaHub Unit v2.1) is an I2C multiplexer at 0x70.
-  // We initialize a temporary I2C master bus and probe; if the device
-  // acknowledges, it is present. Errors (bus already in use, wrong pins,
-  // no I2C hardware) fall through to pahub=false, and the user can still
-  // manually enable config.addons.pahub in settings.
+  // The PaHub (M5Stack PaHub Unit v2.1) is an I2C multiplexer (PCA9548A)
+  // at address 0x70. We initialize a temporary I2C master bus, probe for
+  // the hub itself, then scan channels 0-5 for connected devices.
+  // Channel selection: write control byte (1 << channel) to 0x70.
+  //
+  // GPIO pin map: M5Stack Unit PoE-P4 (U213) Grove Port A =
+  //   SDA = GPIO 21, SCL = GPIO 22.
+  // See docs/wiring-U213.md for the full pin map.
+  static constexpr uint8_t PAHUB_ADDR = 0x70;
+  static constexpr uint8_t RTC_ADDR = 0x51;  // PCF8563 / HYM8563
+  static constexpr int PAHUB_CHANNELS = 6;   // channels 0-5
+  // Common I2C addresses to probe on each PaHub channel.
+  static constexpr uint8_t kCommonAddrs[] = {RTC_ADDR, 0x25, 0x26, 0x38, 0x39};
+
   bool pahub_found = false;
   i2c_master_bus_config_t bus_config = {};
   bus_config.i2c_port = 0;
@@ -78,17 +87,50 @@ void CurlingEngineComponent::detect_addons() {
   i2c_master_bus_handle_t bus_handle = nullptr;
   esp_err_t err = i2c_new_master_bus(&bus_config, &bus_handle);
   if (err == ESP_OK) {
-    err = i2c_master_probe(bus_handle, 0x70, -1);
+    // Probe the PaHub hub address itself.
+    err = i2c_master_probe(bus_handle, PAHUB_ADDR, -1);
     if (err == ESP_OK) {
       pahub_found = true;
+      // Scan each PaHub channel for connected devices.
+      for (int ch = 0; ch < PAHUB_CHANNELS; ch++) {
+        // Select channel: write control byte with bit channel set.
+        uint8_t cmd = static_cast<uint8_t>(1 << ch);
+        esp_err_t sel_err =
+            i2c_master_transmit(bus_handle, PAHUB_ADDR, &cmd, 1, -1);
+        if (sel_err != ESP_OK) {
+          continue;  // channel select failed, skip this channel
+        }
+        // Small delay for the mux to settle.
+        ets_delay_us(100);
+        // Probe common addresses on this channel.
+        for (uint8_t addr : kCommonAddrs) {
+          if (i2c_master_probe(bus_handle, addr, -1) == ESP_OK) {
+            this->addon_detected.pahub_channel_mask |= (1u << ch);
+            this->addon_detected.pahub_channel_addr[ch] = addr;
+            if (addr == RTC_ADDR) {
+              this->addon_detected.pahub_rtc_channel = ch;
+              this->addon_detected.rtc = true;
+            }
+            break;  // one device per channel is enough for reporting
+          }
+        }
+      }
     }
     i2c_del_master_bus(bus_handle);
   }
   this->addon_detected.pahub = pahub_found;
-  ESP_LOGI(TAG, "addon pahub detected=%d", this->addon_detected.pahub ? 1 : 0);
+  ESP_LOGI(TAG, "addon pahub detected=%d channel_mask=0x%04X rtc_channel=%d",
+           this->addon_detected.pahub ? 1 : 0,
+           this->addon_detected.pahub_channel_mask,
+           this->addon_detected.pahub_rtc_channel);
 #else
   // Host test build: no I2C hardware available, PaHub cannot be auto-detected.
   this->addon_detected.pahub = false;
+  this->addon_detected.pahub_channel_mask = 0;
+  this->addon_detected.pahub_rtc_channel = -1;
+  for (int i = 0; i < 6; i++) {
+    this->addon_detected.pahub_channel_addr[i] = 0;
+  }
   ESP_LOGI(TAG, "addon pahub detected=%d", this->addon_detected.pahub ? 1 : 0);
 #endif
   // Wi-Fi failover (ESP32-C6 SDIO) detection is handled separately;

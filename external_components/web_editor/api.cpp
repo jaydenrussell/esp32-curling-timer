@@ -968,6 +968,12 @@ ApiResponse PiTimerApi::get_addon_detection(const ApiRequest &req) {
     doc["relays"] = det.relays;
     doc["pushbutton"] = det.pushbutton;
     doc["pahub"] = det.pahub;
+    doc["pahub_channel_mask"] = static_cast<uint32_t>(det.pahub_channel_mask);
+    doc["pahub_rtc_channel"] = det.pahub_rtc_channel;
+    JsonArray ch_addrs = doc["pahub_channel_addrs"].to<JsonArray>();
+    for (int i = 0; i < 6; i++) {
+      ch_addrs.add(det.pahub_channel_addr[i]);
+    }
     doc["wifi"] = det.wifi;
     doc["uart"] = det.uart;
   } else {
@@ -975,6 +981,12 @@ ApiResponse PiTimerApi::get_addon_detection(const ApiRequest &req) {
     doc["relays"] = false;
     doc["pushbutton"] = false;
     doc["pahub"] = false;
+    doc["pahub_channel_mask"] = 0;
+    doc["pahub_rtc_channel"] = -1;
+    JsonArray ch_addrs = doc["pahub_channel_addrs"].to<JsonArray>();
+    for (int i = 0; i < 6; i++) {
+      ch_addrs.add(0);
+    }
     doc["wifi"] = false;
     doc["uart"] = false;
   }

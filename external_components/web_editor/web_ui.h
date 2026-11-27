@@ -426,7 +426,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.237</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.239</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -456,7 +456,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.237</span>
+    <span class="header-version">v2026.11.239</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -535,9 +535,9 @@ const ADDONS = [
   { key: 'pushbutton', label: 'Manual trigger button', desc: 'GPIO press rings the start relays for the next manually-triggered game.', auto: false,
     configPaths: ['config.addons.pushbutton', 'config.manual_trigger_gpio'],
     info: [ 'Pin: GPIO45 (manual trigger input)', 'Setting: Manual trigger GPIO under Global Settings → Timer' ] },
-  { key: 'pahub', label: 'PaHub I2C hub', desc: 'PCA9548A 8-channel multiplexer — multiple I2C devices on one Grove port.', auto: true,
+  { key: 'pahub', label: 'PaHub I2C hub', desc: 'PCA9548A 6-channel multiplexer — multiple I2C devices on one Grove port.', auto: true,
     configPaths: ['config.addons.pahub'],
-    info: [ 'I2C: address 0x70 (PCA9548A)', 'Port: Grove Port A — SDA GPIO5, SCL GPIO6', 'Channels: 0–7 (one per I2C device)' ] },
+    info: [ 'I2C: address 0x70 (PCA9548A)', 'Port: Grove Port A — SDA GPIO21, SCL GPIO22', 'Channels: 0–5 (one per I2C device)', 'RTC address: 0x51 (PCF8563 / HYM8563)' ] },
   { key: 'wifi', label: 'Wi-Fi failover', desc: 'ESP32-C6 SDIO Wi-Fi failover.', auto: true,
     configPaths: ['config.addons.wifi'],
     info: [ 'Module: ESP32-C6 SuperMini on SDIO header', 'Reference: docs/flash-c6.md' ] },
@@ -911,6 +911,8 @@ const QUICK_PRESETS = [
     },
     start_relays: [],
     start_duration: null,
+    middle_relays: [],
+    middle_duration: null,
     end_relays: [],
     end_duration: null,
   },
@@ -934,6 +936,8 @@ const QUICK_PRESETS = [
     },
     start_relays: [],
     start_duration: null,
+    middle_relays: [],
+    middle_duration: null,
     end_relays: [],
     end_duration: null,
   },
@@ -958,6 +962,8 @@ const QUICK_PRESETS = [
     },
     start_relays: [],
     start_duration: null,
+    middle_relays: [],
+    middle_duration: null,
     end_relays: [],
     end_duration: null,
   },
@@ -981,6 +987,8 @@ const QUICK_PRESETS = [
     },
     start_relays: [],
     start_duration: null,
+    middle_relays: [],
+    middle_duration: null,
     end_relays: [],
     end_duration: null,
   },
@@ -1055,6 +1063,8 @@ function normalizeQuickPreset(raw, fallback = null) {
     },
     start_relays: [],
     start_duration: null,
+    middle_relays: [],
+    middle_duration: null,
     end_relays: [],
     end_duration: null,
   };
@@ -1189,10 +1199,11 @@ function buildQuickForm() {
   const options = () => ({ pregame: pregameOn, pace_of_play: paceOn, replace_conflicts: replaceOn, show_progress_through_end: showProgressOn, total_time_includes_untimed_ends: untimedTotalOn, countdown_seconds_before: secondsValue(countdownSecondsBefore.value) || 0 });
 
   // Outputs driven from global settings: only enabled relays are offered,
-  // each with its own duration field for Countdown Clock Start and Countdown Clock Expiration.
-  // Durations are hidden via the wrapping .duration div (not the input itself)
-  // so toggling on/off reliably shows/hides the field.
+  // each with its own duration field for Countdown Clock Start, Countdown Clock Expiration,
+  // and Countdown Clock End. Durations are hidden via the wrapping .duration div
+  // (not the input itself) so toggling on/off reliably shows/hides the field.
   const relayNames = RELAY_NAMES();
+  const relayDisplay = (i) => relayDisplayName(i) || relayNames[i];
   const makeRelayRow = (label, toggles, durs) => {
     const row = el('div', { class: 'row-actions', style: 'margin-bottom: 10px; gap: 10px; align-items: center' },
       el('span', { class: 'muted small', style: 'margin-right: 8px' }, label));
@@ -1204,11 +1215,14 @@ function buildQuickForm() {
     }
     return row;
   };
-  const startToggles = relayNames.map((name) => toggleBtn(false, name));
-  const startDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Game start relay duration in seconds' }));
-  const endToggles = relayNames.map((name) => toggleBtn(false, name));
-  const endDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Game expires relay duration in seconds' }));
+  const startToggles = relayNames.map((name, i) => toggleBtn(false, relayDisplay(i)));
+  const startDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Countdown Clock Start relay duration in seconds' }));
+  const middleToggles = relayNames.map((name, i) => toggleBtn(false, relayDisplay(i)));
+  const middleDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Countdown Clock Expiration relay duration in seconds' }));
+  const endToggles = relayNames.map((name, i) => toggleBtn(false, relayDisplay(i)));
+  const endDurs = relayNames.map(() => secondInput({ max: 100000, placeholder: '0', 'aria-label': 'Countdown Clock End relay duration in seconds' }));
   const startRow = relayNames.length ? makeRelayRow('Countdown Clock Start:', startToggles, startDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
+  const middleRow = relayNames.length ? makeRelayRow('Countdown Clock Expiration:', middleToggles, middleDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
   const endRow = relayNames.length ? makeRelayRow('Countdown Clock End:', endToggles, endDurs) : el('div', { class: 'muted small' }, 'No relay outputs enabled in Settings.');
 
   // relayValues: collect names of enabled relays by original index (filter()
@@ -1216,7 +1230,7 @@ function buildQuickForm() {
   const relayValues = (toggles) => toggles.map((b, i) => b.className.includes('on') ? relayNames[i] : null).filter(Boolean);
   const relayPreview = (toggles, durs) => toggles
     .map((b, i) => b.className.includes('on')
-      ? { name: relayNames[i], seconds: secondsValue(durs[i].value) }
+      ? { name: relayDisplay(i), seconds: secondsValue(durs[i].value) }
       : null)
     .filter(Boolean);
   const relayMaxDuration = (durs) => { let m = 0; for (const d of durs) { const v = secondsValue(d.value) || 0; if (v > m) m = v; } return m || null; };
@@ -1230,6 +1244,7 @@ function buildQuickForm() {
     };
   });
   wireRelayToggle(startToggles);
+  wireRelayToggle(middleToggles);
   wireRelayToggle(endToggles);
   const refreshPreview = () => {
     const gameSecs = minutesToSeconds(minutes.value) || 0;
@@ -1239,6 +1254,7 @@ function buildQuickForm() {
     const endN = Number(endCount.value) || 8;
     const untimed = Number(untimedEnds.value) || 0;
     const startOutputs = relayPreview(startToggles, startDurs);
+    const middleOutputs = relayPreview(middleToggles, middleDurs);
     const endOutputs = relayPreview(endToggles, endDurs);
 
     preview.replaceChildren(
@@ -1256,11 +1272,15 @@ function buildQuickForm() {
       previewLine('Ends after expiration', untimed > 0 ? `${untimed} extra end(s) played after the buzzer so the game can finish naturally` : 'Game ends at the buzzer'),
       el('div', { style: 'margin-top:10px;border-top:1px solid rgba(255,255,255,0.10);padding-top:10px' }),
       previewLine('Outputs — Countdown Clock Start', startOutputs.length ? startOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None'),
+      previewLine('Outputs — Countdown Clock Expiration', middleOutputs.length ? middleOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None'),
       previewLine('Outputs — Countdown Clock End', endOutputs.length ? endOutputs.map((o) => o.name + ' ' + (o.seconds ? formatSeconds(o.seconds) + ' s' : 'default')).join(', ') : 'None'),
     );
   };
 
   startDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
+  middleDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
+  endDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
+  middleDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
   endDurs.forEach((d) => { d.addEventListener('input', refreshPreview); d.addEventListener('change', refreshPreview); });
 
   const button = el('button', { class: 'btn primary', type: 'submit' }, 'Start game');
@@ -1308,6 +1328,8 @@ function buildQuickForm() {
     options: options(),
     start_relays: relayValues(startToggles),
     start_duration: relayMaxDuration(startDurs),
+    middle_relays: relayValues(middleToggles),
+    middle_duration: relayMaxDuration(middleDurs),
     end_relays: relayValues(endToggles),
     end_duration: relayMaxDuration(endDurs),
   });
@@ -1351,6 +1373,7 @@ function buildQuickForm() {
     setToggleState(replaceBtn, replaceOn);
 
     applyRelayPreset(startToggles, startDurs, preset.start_relays, preset.start_duration);
+    applyRelayPreset(middleToggles, middleDurs, preset.middle_relays, preset.middle_duration);
     applyRelayPreset(endToggles, endDurs, preset.end_relays, preset.end_duration);
     refreshPreview();
     if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1469,6 +1492,8 @@ function buildQuickForm() {
         pregame_countdown: (pregameOn ? (minutesToSeconds(pregameMin.value) || 0) : 0),
         start_relays: relayValues(startToggles),
         start_duration: relayMaxDuration(startDurs),
+        middle_relays: relayValues(middleToggles),
+        middle_duration: relayMaxDuration(middleDurs),
         end_relays: relayValues(endToggles),
         end_duration: relayMaxDuration(endDurs),
         end_count: Number(endCount.value) || 8,
@@ -1979,7 +2004,7 @@ function newEntry(previous) {
   const start = previous ? Math.ceil((previous.buzzer + 25 * 60) / 60) * 60 : 9 * 3600;
   return { start: Math.min(start, 86340), buzzer: Math.min(start + 105 * 60, 86340), name: null,
            game_completed: null, header_hold: null, pace_of_play: null, pace_unit_duration: null, quick: false, league: null,
-           pregame_countdown: null, end_count: null, stones_per_end: null, untimed_ends: null, show_progress_through_end: null, countdown_seconds_before: null };
+           pregame_countdown: null, end_count: null, stones_per_end: null, untimed_ends: null, show_progress_through_end: null, countdown_seconds_before: null, middle_relays: null };
 }
 
 // Helper: map toggle buttons to relay names by original index (filter reindexes).
@@ -2093,6 +2118,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
     return { row: wrapper, toggles, durs };
   }
   const startOut = makeOutRow('Countdown Clock Start:');
+  const middleOut = makeOutRow('Countdown Clock Expiration:');
   const endOut = makeOutRow('Countdown Clock End:');
   function populateOutputRows(league) {
     if (!league) return;
@@ -2109,6 +2135,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
       });
     };
     setRow(startOut, league.start_relays, [league.start_duration]);
+    setRow(middleOut, league.middle_relays, [league.middle_duration]);
     setRow(endOut, league.end_relays, [league.end_duration]);
   }
 
@@ -2157,6 +2184,7 @@ function openScheduleGameModal(dayKey, entries, rerender) {
       el('div', {}, el('label', {}, 'Countdown expiration (seconds)'), countdownSecondsBeforeInput)),
     // --- output rows ---
     el('div', {}, startOut.row),
+    el('div', {}, middleOut.row),
     el('div', {}, endOut.row),
     el('div', { class: 'row-actions', style: 'margin-top: 20px' },
       el('button', { class: 'btn danger', onclick: () => {
@@ -2171,6 +2199,8 @@ function openScheduleGameModal(dayKey, entries, rerender) {
         const startDur = startOut.durs.length ? [secondsValue(startOut.durs[0].value) || 0] : [0];
         const endRelays = endOut.toggles.map((b, i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY', '')) : null).filter(n => n != null);
         const endDur = endOut.durs.length ? [secondsValue(endOut.durs[0].value) || 0] : [0];
+        const middleRelays = middleOut.toggles.map((b, i) => b.className.includes('on') ? Number(RELAY_NAMES()[i].replace('RELAY', '')) : null).filter(n => n != null);
+        const middleDur = middleOut.durs.length ? [secondsValue(middleOut.durs[0].value) || 0] : [0];
         entries.push({
           start: stSec,
           buzzer: buzzerSec,
@@ -2192,6 +2222,8 @@ function openScheduleGameModal(dayKey, entries, rerender) {
           manual_trigger: manualOn,
           start_relays: startRelays.length ? startRelays : (league ? league.start_relays : null),
           start_duration: startDur[0] || (league ? league.start_duration : null),
+          middle_relays: middleRelays.length ? middleRelays : (league ? league.middle_relays : null),
+          middle_duration: middleDur[0] || (league ? league.middle_duration : null),
           end_relays: endRelays.length ? endRelays : (league ? league.end_relays : null),
           end_duration: endDur[0] || (league ? league.end_duration : null),
         });
@@ -2235,6 +2267,8 @@ function entryEditor(entries, index, leagues, rerender) {
     if (league.start_duration != null) entry.start_duration = league.start_duration;
     if (league.end_relays != null) entry.end_relays = league.end_relays;
     if (league.end_duration != null) entry.end_duration = league.end_duration;
+    if (league.middle_relays != null) entry.middle_relays = league.middle_relays;
+    if (league.middle_duration != null) entry.middle_duration = league.middle_duration;
     syncPace();
     changed(); rerender();
   } },
@@ -2419,7 +2453,7 @@ function renderSchedule() {
         end_count: 8, stones_per_end: 8, untimed_ends: 0,
         show_progress_through_end: true, total_time_includes_untimed_ends: false,
         replace_conflicts: false, manual_trigger: false,
-        start_relays: [], start_duration: 0, end_relays: [], end_duration: 0
+        start_relays: [], start_duration: 0, middle_relays: [], middle_duration: 0, end_relays: [], end_duration: 0
       });
       setDirty(true);
       renderSchedule();
@@ -2513,7 +2547,7 @@ function renderExceptions() {
               end_count: 8, stones_per_end: 8, untimed_ends: 0,
               show_progress_through_end: true, total_time_includes_untimed_ends: false,
               replace_conflicts: false, manual_trigger: false,
-              start_relays: [], start_duration: 0, end_relays: [], end_duration: 0
+              start_relays: [], start_duration: 0, middle_relays: [], middle_duration: 0, end_relays: [], end_duration: 0
             });
             setDirty(true); renderExceptions(); } }, '+ Add game'),
           el('span', { class: 'spacer' }),
@@ -3020,6 +3054,27 @@ async function renderAddonMarketplace() {
     const btnCls = intent ? 'btn danger' : 'btn primary';
 
     const infoLines = (a.info || []).map((line) => el('div', { class: 'muted small', style: 'margin: 2px 0' }, line));
+    // PaHub per-channel detection results.
+    if (a.key === 'pahub' && det.pahub) {
+      const mask = det.pahub_channel_mask || 0;
+      const rtcCh = det.pahub_rtc_channel || -1;
+      const chAddrs = det.pahub_channel_addrs || [];
+      const chInfo = [];
+      for (let ch = 0; ch < 6; ch++) {
+        const bit = 1 << ch;
+        if (mask & bit) {
+          const addr = chAddrs[ch] || 0;
+          const label = addr === 81 ? 'RTC (PCF8563/HYM8563)' : `0x${addr.toString(16)}`;
+          chInfo.push(`Ch${ch}: ${label}`);
+        } else {
+          chInfo.push(`Ch${ch}: —`);
+        }
+      }
+      infoLines.push(el('div', { class: 'muted small', style: 'margin-top: 4px' }, 'PaHub channels: ' + chInfo.join('  ')));
+      if (rtcCh >= 0) {
+        infoLines.push(el('div', { class: 'muted small ok', style: 'margin-top: 2px' }, `RTC (0x51) detected on PaHub channel ${rtcCh}`));
+      }
+    }
     const detail = el('details', { class: 'card fold', open: false },
       el('summary', {},
         el('span', { class: 'chevron', 'aria-hidden': 'true' }, '▸'),

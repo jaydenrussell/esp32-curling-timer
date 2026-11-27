@@ -227,6 +227,15 @@ class PiTimerSettings {
     bool wifi{false};
     bool uart{false};       // manual only — always false
     uint32_t detected_at_ms{0};
+    // PaHub v2.1 (PCA9548A) channel detection results.
+    // bit n set = channel n (0-5) has at least one responding device.
+    uint32_t pahub_channel_mask{0};
+    // Device address found on each channel (0 = none detected).
+    // Indexed by channel number 0-5.
+    uint8_t pahub_channel_addr[6]{};
+    // PaHub channel that the RTC (PCF8563/HYM8563 at 0x51) was found on,
+    // or -1 if not detected through PaHub.
+    int pahub_rtc_channel{-1};
   };
 
   // Restore the pre-parse defaults (also called by the constructor so two
