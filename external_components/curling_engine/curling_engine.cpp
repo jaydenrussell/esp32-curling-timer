@@ -107,21 +107,21 @@ void CurlingEngineComponent::detect_addons() {
   i2c_master_bus_handle_t bus_handle = nullptr;
   esp_err_t err = i2c_new_master_bus(&bus_config, &bus_handle);
   if (err == ESP_OK) {
-    // Create device handle for PaHub at 0x70.
-    i2c_master_dev_handle_t pahub_dev = nullptr;
-    err = i2c_master_bus_add_device(bus_handle,
-        &(i2c_device_config_t{
-            .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-            .device_address = PAHUB_ADDR,
-            .scl_speed_hz = 100000,
-        }),
-        &pahub_dev);
-    if (err == ESP_OK && pahub_dev != nullptr) {
-      // Probe the PaHub hub address itself.
-      err = i2c_master_probe(pahub_dev, PAHUB_ADDR, -1);
-      if (err == ESP_OK) {
-        pahub_found = true;
-        // Scan each PaHub channel for connected devices.
+    // Probe PaHub hub address at 0x70 on the bus
+    err = i2c_master_probe(bus_handle, PAHUB_ADDR, -1);
+    if (err == ESP_OK) {
+      pahub_found = true;
+
+      // Create device handle for PaHub to select channels
+      i2c_master_dev_handle_t pahub_dev = nullptr;
+      i2c_device_config_t pahub_cfg = {
+          .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+          .device_address = PAHUB_ADDR,
+          .scl_speed_hz = 100000,
+      };
+      err = i2c_master_bus_add_device(bus_handle, &pahub_cfg, &pahub_dev);
+
+      if (err == ESP_OK && pahub_dev != nullptr) {
         for (int ch = 0; ch < PAHUB_CHANNELS; ch++) {
           // Select channel: write control byte with bit channel set.
           uint8_t cmd = static_cast<uint8_t>(1 << ch);
@@ -132,32 +132,21 @@ void CurlingEngineComponent::detect_addons() {
           }
           // Small delay for the mux to settle.
           esp_rom_delay_us(100);
-          // Probe common addresses on this channel.
+          // Probe common addresses on this channel using bus handle
           for (uint8_t addr : kCommonAddrs) {
-            i2c_master_dev_handle_t dev = nullptr;
-            esp_err_t dev_err = i2c_master_bus_add_device(bus_handle,
-                &(i2c_device_config_t{
-                    .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-                    .device_address = addr,
-                    .scl_speed_hz = 100000,
-                }),
-                &dev);
-            if (dev_err == ESP_OK && dev != nullptr) {
-              if (i2c_master_probe(dev, addr, -1) == ESP_OK) {
-                this->addon_detected.pahub_channel_mask |= (1u << ch);
-                this->addon_detected.pahub_channel_addr[ch] = addr;
-                if (addr == RTC_ADDR) {
-                  this->addon_detected.pahub_rtc_channel = ch;
-                  this->addon_detected.rtc = true;
-                }
-                break;  // one device per channel is enough for reporting
+            if (i2c_master_probe(bus_handle, addr, -1) == ESP_OK) {
+              this->addon_detected.pahub_channel_mask |= (1u << ch);
+              this->addon_detected.pahub_channel_addr[ch] = addr;
+              if (addr == RTC_ADDR) {
+                this->addon_detected.pahub_rtc_channel = ch;
+                this->addon_detected.rtc = true;
               }
-              i2c_master_bus_remove_device(dev);
+              break;  // one device per channel is enough for reporting
             }
           }
         }
       }
-      i2c_master_bus_remove_device(pahub_dev);
+      i2c_master_bus_rm_device(pahub_dev);
     }
     i2c_del_master_bus(bus_handle);
   }
@@ -241,13 +230,12 @@ bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
   i2c_master_dev_handle_t pahub_dev = nullptr;
   int rtc_ch = this->addon_detected.pahub_rtc_channel;
   if (rtc_ch >= 0) {
-    err = i2c_master_bus_add_device(bus_handle,
-        &(i2c_device_config_t{
-            .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-            .device_address = PAHUB_ADDR,
-            .scl_speed_hz = 100000,
-        }),
-        &pahub_dev);
+    i2c_device_config_t pahub_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address = PAHUB_ADDR,
+        .scl_speed_hz = 100000,
+    };
+    err = i2c_master_bus_add_device(bus_handle, &pahub_cfg, &pahub_dev);
     if (err != ESP_OK || pahub_dev == nullptr) {
       ESP_LOGE(TAG, "rtc set: pahub device handle failed: %s", esp_err_to_name(err));
       i2c_del_master_bus(bus_handle);
@@ -256,7 +244,7 @@ bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
     esp_err_t sel_err = select_pahub_channel(pahub_dev, rtc_ch);
     if (sel_err != ESP_OK) {
       ESP_LOGE(TAG, "rtc set: pahub channel select failed: %s", esp_err_to_name(sel_err));
-      i2c_master_bus_remove_device(pahub_dev);
+      i2c_master_bus_rm_device(pahub_dev);
       i2c_del_master_bus(bus_handle);
       return false;
     }
@@ -265,16 +253,15 @@ bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
 
   // Create device handle for PCF8563 at 0x51.
   i2c_master_dev_handle_t rtc_dev = nullptr;
-  err = i2c_master_bus_add_device(bus_handle,
-      &(i2c_device_config_t{
-          .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-          .device_address = PCF8563_ADDR,
-          .scl_speed_hz = 100000,
-        }),
-      &rtc_dev);
+  i2c_device_config_t rtc_cfg = {
+      .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+      .device_address = PCF8563_ADDR,
+      .scl_speed_hz = 100000,
+  };
+  err = i2c_master_bus_add_device(bus_handle, &rtc_cfg, &rtc_dev);
   if (err != ESP_OK || rtc_dev == nullptr) {
     ESP_LOGE(TAG, "rtc set: rtc device handle failed: %s", esp_err_to_name(err));
-    if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
+    if (pahub_dev) i2c_master_bus_rm_device(pahub_dev);
     i2c_del_master_bus(bus_handle);
     return false;
   }
@@ -283,16 +270,16 @@ bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
   uint8_t ctrl2 = 0;
   if (pcf8563_read_reg(rtc_dev, PCF8563_REG_CTRL2, &ctrl2) != ESP_OK) {
     ESP_LOGE(TAG, "rtc set: read ctrl2 failed");
-    i2c_master_bus_remove_device(rtc_dev);
-    if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
+    i2c_master_bus_rm_device(rtc_dev);
+    if (pahub_dev) i2c_master_bus_rm_device(pahub_dev);
     i2c_del_master_bus(bus_handle);
     return false;
   }
   ctrl2 |= 0x80;  // STOP = 1
   if (pcf8563_write_reg(rtc_dev, PCF8563_REG_CTRL2, ctrl2) != ESP_OK) {
     ESP_LOGE(TAG, "rtc set: write ctrl2 (stop) failed");
-    i2c_master_bus_remove_device(rtc_dev);
-    if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
+    i2c_master_bus_rm_device(rtc_dev);
+    if (pahub_dev) i2c_master_bus_rm_device(pahub_dev);
     i2c_del_master_bus(bus_handle);
     return false;
   }
@@ -305,8 +292,8 @@ bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
       pcf8563_write_reg(rtc_dev, PCF8563_REG_MONTH, dec_to_bcd(static_cast<uint8_t>(month))) != ESP_OK ||
       pcf8563_write_reg(rtc_dev, PCF8563_REG_YEAR, dec_to_bcd(static_cast<uint8_t>(year % 100))) != ESP_OK) {
     ESP_LOGE(TAG, "rtc set: write time registers failed");
-    i2c_master_bus_remove_device(rtc_dev);
-    if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
+    i2c_master_bus_rm_device(rtc_dev);
+    if (pahub_dev) i2c_master_bus_rm_device(pahub_dev);
     i2c_del_master_bus(bus_handle);
     return false;
   }
@@ -315,14 +302,14 @@ bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
   ctrl2 &= 0x7F;  // STOP = 0
   if (pcf8563_write_reg(rtc_dev, PCF8563_REG_CTRL2, ctrl2) != ESP_OK) {
     ESP_LOGE(TAG, "rtc set: write ctrl2 (start) failed");
-    i2c_master_bus_remove_device(rtc_dev);
-    if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
+    i2c_master_bus_rm_device(rtc_dev);
+    if (pahub_dev) i2c_master_bus_rm_device(pahub_dev);
     i2c_del_master_bus(bus_handle);
     return false;
   }
 
-  i2c_master_bus_remove_device(rtc_dev);
-  if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
+  i2c_master_bus_rm_device(rtc_dev);
+  if (pahub_dev) i2c_master_bus_rm_device(pahub_dev);
   i2c_del_master_bus(bus_handle);
   ESP_LOGI(TAG, "rtc set: datetime set to %04d-%02d-%02d %02d:%02d:%02d",
            year, month, day, hour, minute, second);
@@ -352,20 +339,19 @@ bool CurlingEngineComponent::get_rtc_datetime(int *year, int *month, int *day,
   i2c_master_dev_handle_t pahub_dev = nullptr;
   int rtc_ch = this->addon_detected.pahub_rtc_channel;
   if (rtc_ch >= 0) {
-    err = i2c_master_bus_add_device(bus_handle,
-        &(i2c_device_config_t{
-            .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-            .device_address = PAHUB_ADDR,
-            .scl_speed_hz = 100000,
-        }),
-        &pahub_dev);
+    i2c_device_config_t pahub_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address = PAHUB_ADDR,
+        .scl_speed_hz = 100000,
+    };
+    err = i2c_master_bus_add_device(bus_handle, &pahub_cfg, &pahub_dev);
     if (err != ESP_OK || pahub_dev == nullptr) {
       i2c_del_master_bus(bus_handle);
       return false;
     }
     esp_err_t sel_err = select_pahub_channel(pahub_dev, rtc_ch);
     if (sel_err != ESP_OK) {
-      i2c_master_bus_remove_device(pahub_dev);
+      i2c_master_bus_rm_device(pahub_dev);
       i2c_del_master_bus(bus_handle);
       return false;
     }
@@ -374,15 +360,14 @@ bool CurlingEngineComponent::get_rtc_datetime(int *year, int *month, int *day,
 
   // Create device handle for PCF8563 at 0x51.
   i2c_master_dev_handle_t rtc_dev = nullptr;
-  err = i2c_master_bus_add_device(bus_handle,
-      &(i2c_device_config_t{
-          .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-          .device_address = PCF8563_ADDR,
-          .scl_speed_hz = 100000,
-        }),
-      &rtc_dev);
+  i2c_device_config_t rtc_cfg = {
+      .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+      .device_address = PCF8563_ADDR,
+      .scl_speed_hz = 100000,
+  };
+  err = i2c_master_bus_add_device(bus_handle, &rtc_cfg, &rtc_dev);
   if (err != ESP_OK || rtc_dev == nullptr) {
-    if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
+    if (pahub_dev) i2c_master_bus_rm_device(pahub_dev);
     i2c_del_master_bus(bus_handle);
     return false;
   }
@@ -390,8 +375,8 @@ bool CurlingEngineComponent::get_rtc_datetime(int *year, int *month, int *day,
   uint8_t reg = PCF8563_REG_SECONDS;
   uint8_t vals[7];
   if (i2c_master_transmit_receive(rtc_dev, &reg, 1, vals, 7, -1) != ESP_OK) {
-    i2c_master_bus_remove_device(rtc_dev);
-    if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
+    i2c_master_bus_rm_device(rtc_dev);
+    if (pahub_dev) i2c_master_bus_rm_device(pahub_dev);
     i2c_del_master_bus(bus_handle);
     return false;
   }
@@ -403,8 +388,8 @@ bool CurlingEngineComponent::get_rtc_datetime(int *year, int *month, int *day,
   *month = bcd_to_dec(vals[5] & 0x1F);
   *year = 2000 + bcd_to_dec(vals[6]);
 
-  i2c_master_bus_remove_device(rtc_dev);
-  if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
+  i2c_master_bus_rm_device(rtc_dev);
+  if (pahub_dev) i2c_master_bus_rm_device(pahub_dev);
   i2c_del_master_bus(bus_handle);
   return true;
 }
