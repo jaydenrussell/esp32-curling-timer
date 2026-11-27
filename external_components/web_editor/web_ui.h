@@ -426,7 +426,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.240</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.241</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -456,7 +456,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.240</span>
+    <span class="header-version">v2026.11.241</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -1587,6 +1587,16 @@ function buildQuickForm() {
     showProgressBtn.className = 'check-toggle on';
     untimedTotalOn = false;
     untimedTotalBtn.className = 'check-toggle off';
+    // Pull default output relays from Settings.
+    const startRelays = Array.isArray(cv && cv['config.buzzer.ring_at_start']) ? cv['config.buzzer.ring_at_start'] : [];
+    const middleRelays = Array.isArray(cv && cv['config.buzzer.countdown.relays']) ? cv['config.buzzer.countdown.relays'] : [];
+    const endRelays = Array.isArray(cv && cv['config.buzzer.relays']) ? cv['config.buzzer.relays'] : [];
+    const startDur = cv && cv['config.buzzer.start_duration'] != null ? Number(cv['config.buzzer.start_duration']) || 0 : 0;
+    const middleDur = cv && cv['config.buzzer.countdown_duration'] != null ? Number(cv['config.buzzer.countdown_duration']) || 0 : 0;
+    const endDur = cv && cv['config.buzzer.end_duration'] != null ? Number(cv['config.buzzer.end_duration']) || 0 : 0;
+    applyRelayPreset(startToggles, startDurs, startRelays, startDur);
+    applyRelayPreset(middleToggles, middleDurs, middleRelays, middleDur);
+    applyRelayPreset(endToggles, endDurs, endRelays, endDur);
     refreshPreview();
     form._defaultsApplied = true;
   };

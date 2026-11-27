@@ -1584,6 +1584,16 @@ function buildQuickForm() {
     showProgressBtn.className = 'check-toggle on';
     untimedTotalOn = false;
     untimedTotalBtn.className = 'check-toggle off';
+    // Pull default output relays from Settings.
+    const startRelays = Array.isArray(cv && cv['config.buzzer.ring_at_start']) ? cv['config.buzzer.ring_at_start'] : [];
+    const middleRelays = Array.isArray(cv && cv['config.buzzer.countdown.relays']) ? cv['config.buzzer.countdown.relays'] : [];
+    const endRelays = Array.isArray(cv && cv['config.buzzer.relays']) ? cv['config.buzzer.relays'] : [];
+    const startDur = cv && cv['config.buzzer.start_duration'] != null ? Number(cv['config.buzzer.start_duration']) || 0 : 0;
+    const middleDur = cv && cv['config.buzzer.countdown_duration'] != null ? Number(cv['config.buzzer.countdown_duration']) || 0 : 0;
+    const endDur = cv && cv['config.buzzer.end_duration'] != null ? Number(cv['config.buzzer.end_duration']) || 0 : 0;
+    applyRelayPreset(startToggles, startDurs, startRelays, startDur);
+    applyRelayPreset(middleToggles, middleDurs, middleRelays, middleDur);
+    applyRelayPreset(endToggles, endDurs, endRelays, endDur);
     refreshPreview();
     form._defaultsApplied = true;
   };
