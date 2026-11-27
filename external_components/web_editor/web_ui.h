@@ -474,6 +474,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
   <section id="tab-status"></section>
   <section id="tab-quickstart" class="hidden"></section>
   <section id="tab-schedule" class="hidden"></section>
+  <section id="tab-history" class="hidden"></section>
   <section id="tab-exceptions" class="hidden"></section>
   <section id="tab-raw" class="hidden"></section>
   <section id="tab-config" class="hidden"></section>
@@ -492,7 +493,6 @@ const NAV_LABELS = {
   status: 'Live',
   quickstart: 'Quick',
   schedule: 'Scheduling',
-  history: 'History',
   config: 'Settings',
   diagnostics: 'Diagnostics'
 };
@@ -500,7 +500,6 @@ const NAV_ICONS = {
   status: '⏱️',
   quickstart: '⚡',
   schedule: '📅',
-  history: '📜',
   config: '⚙️',
   diagnostics: '🔧'
 };
@@ -508,7 +507,6 @@ const TABS = [
   ['status', '⏱️', 'Live'],
   ['quickstart', '⚡', 'Quick'],
   ['schedule', '📅', 'Scheduling'],
-  ['history', '📜', 'History'],
   ['config', '⚙️', 'Settings'],
   ['diagnostics', '🔧', 'Diagnostics']
 ];
