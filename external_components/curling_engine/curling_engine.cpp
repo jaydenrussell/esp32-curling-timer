@@ -68,11 +68,10 @@ static const char *const PARTITION_LABEL = "storage";
 // FAT counts every open file and directory against this limit.
 static constexpr size_t FAT_MAX_FILES = 16;
 
-void CurlingEngineComponent::detect_addons() {
-  this->addon_detected = PiTimerSettings::AddonDetection{};
-  this->addon_detected.detected_at_ms = millis();
+static constexpr uint8_t PAHUB_ADDR = 0x70;
+static constexpr uint8_t RTC_ADDR = 0x51;  // PCF8563 / HYM8563
 
-  // RTC: probe the PCF8563-compatible device via the RealTimeClock component.
+void CurlingEngineComponent::detect_addons() {
   // now().is_valid() is true when the hardware has answered at least one
   // I2C read (pcf8563 performs an initial read in its own setup()).
   if (this->rtc_time_ != nullptr) {
@@ -108,57 +107,33 @@ void CurlingEngineComponent::detect_addons() {
   i2c_master_bus_handle_t bus_handle = nullptr;
   esp_err_t err = i2c_new_master_bus(&bus_config, &bus_handle);
   if (err == ESP_OK) {
-    // Create device handle for PaHub at 0x70.
-    i2c_master_dev_handle_t pahub_dev = nullptr;
-    err = i2c_master_bus_add_device(bus_handle,
-        &(i2c_device_config_t{
-            .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-            .device_address = PAHUB_ADDR,
-            .scl_speed_hz = 100000,
-        }),
-        &pahub_dev);
-    if (err == ESP_OK && pahub_dev != nullptr) {
-      // Probe the PaHub hub address itself.
-      err = i2c_master_probe(pahub_dev, PAHUB_ADDR, -1);
-      if (err == ESP_OK) {
-        pahub_found = true;
-        // Scan each PaHub channel for connected devices.
-        for (int ch = 0; ch < PAHUB_CHANNELS; ch++) {
-          // Select channel: write control byte with bit channel set.
-          uint8_t cmd = static_cast<uint8_t>(1 << ch);
-          esp_err_t sel_err =
-              i2c_master_transmit(pahub_dev, &cmd, 1, -1);
-          if (sel_err != ESP_OK) {
-            continue;  // channel select failed, skip this channel
-          }
-          // Small delay for the mux to settle.
-          esp_rom_delay_us(100);
-          // Probe common addresses on this channel.
-          for (uint8_t addr : kCommonAddrs) {
-            i2c_master_dev_handle_t dev = nullptr;
-            esp_err_t dev_err = i2c_master_bus_add_device(bus_handle,
-                &(i2c_device_config_t{
-                    .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-                    .device_address = addr,
-                    .scl_speed_hz = 100000,
-                }),
-                &dev);
-            if (dev_err == ESP_OK && dev != nullptr) {
-              if (i2c_master_probe(dev, addr, -1) == ESP_OK) {
-                this->addon_detected.pahub_channel_mask |= (1u << ch);
-                this->addon_detected.pahub_channel_addr[ch] = addr;
-                if (addr == RTC_ADDR) {
-                  this->addon_detected.pahub_rtc_channel = ch;
-                  this->addon_detected.rtc = true;
-                }
-                break;  // one device per channel is enough for reporting
-              }
-              i2c_master_bus_remove_device(dev);
+    // Probe the PaHub hub address at 0x70 on the bus.
+    err = i2c_master_probe(bus_handle, PAHUB_ADDR, -1);
+    if (err == ESP_OK) {
+      pahub_found = true;
+      // Scan each PaHub channel for connected devices.
+      for (int ch = 0; ch < PAHUB_CHANNELS; ch++) {
+        // Select channel: write control byte (1 << ch) to PaHub address.
+        uint8_t cmd = static_cast<uint8_t>(1 << ch);
+        esp_err_t sel_err = i2c_master_transmit(bus_handle, PAHUB_ADDR, &cmd, 1, -1);
+        if (sel_err != ESP_OK) {
+          continue;  // channel select failed, skip this channel
+        }
+        // Small delay for the mux to settle.
+        esp_rom_delay_us(100);
+        // Probe common addresses on this channel.
+        for (uint8_t addr : kCommonAddrs) {
+          if (i2c_master_probe(bus_handle, addr, -1) == ESP_OK) {
+            this->addon_detected.pahub_channel_mask |= (1u << ch);
+            this->addon_detected.pahub_channel_addr[ch] = addr;
+            if (addr == RTC_ADDR) {
+              this->addon_detected.pahub_rtc_channel = ch;
+              this->addon_detected.rtc = true;
             }
+            break;  // one device per channel is enough for reporting
           }
         }
       }
-      i2c_master_bus_remove_device(pahub_dev);
     }
     i2c_del_master_bus(bus_handle);
   }
@@ -200,23 +175,6 @@ static uint8_t bcd_to_dec(uint8_t val) {
   return static_cast<uint8_t>((val / 16) * 10 + (val % 16));
 }
 
-// Select a PaHub channel (write control byte 1<<ch to 0x70).
-static esp_err_t select_pahub_channel(i2c_master_dev_handle_t pahub_dev, int ch) {
-  uint8_t cmd = static_cast<uint8_t>(1 << ch);
-  return i2c_master_transmit(pahub_dev, &cmd, 1, -1);
-}
-
-// Read a single register from PCF8563.
-static esp_err_t pcf8563_read_reg(i2c_master_dev_handle_t rtc_dev, uint8_t reg, uint8_t *val) {
-  return i2c_master_transmit_receive(rtc_dev, &reg, 1, val, 1, -1);
-}
-
-// Write a single register to PCF8563.
-static esp_err_t pcf8563_write_reg(i2c_master_dev_handle_t rtc_dev, uint8_t reg, uint8_t val) {
-  uint8_t buf[2] = {reg, val};
-  return i2c_master_transmit(rtc_dev, buf, 2, -1);
-}
-
 bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
                                                int hour, int minute, int second) {
 #if !defined(ESP_PLATFORM)
@@ -239,68 +197,47 @@ bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
   }
 
   // Select PaHub channel if RTC is behind a PaHub.
-  i2c_master_dev_handle_t pahub_dev = nullptr;
   int rtc_ch = this->addon_detected.pahub_rtc_channel;
   if (rtc_ch >= 0) {
-    err = i2c_master_bus_add_device(bus_handle,
-        &(i2c_device_config_t{
-            .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-            .device_address = PAHUB_ADDR,
-            .scl_speed_hz = 100000,
-        }),
-        &pahub_dev);
-    if (err != ESP_OK || pahub_dev == nullptr) {
-      ESP_LOGE(TAG, "rtc set: pahub device handle failed: %s", esp_err_to_name(err));
-      i2c_del_master_bus(bus_handle);
-      return false;
-    }
-    esp_err_t sel_err = select_pahub_channel(pahub_dev, rtc_ch);
-    if (sel_err != ESP_OK) {
-      ESP_LOGE(TAG, "rtc set: pahub channel select failed: %s", esp_err_to_name(sel_err));
-      i2c_master_bus_remove_device(pahub_dev);
+    uint8_t cmd = static_cast<uint8_t>(1 << rtc_ch);
+    err = i2c_master_transmit(bus_handle, PAHUB_ADDR, &cmd, 1, -1);
+    if (err != ESP_OK) {
+      ESP_LOGE(TAG, "rtc set: pahub channel select failed: %s", esp_err_to_name(err));
       i2c_del_master_bus(bus_handle);
       return false;
     }
     esp_rom_delay_us(100);
   }
 
-  // Create device handle for PCF8563 at 0x51.
-  i2c_master_dev_handle_t rtc_dev = nullptr;
-  err = i2c_master_bus_add_device(bus_handle,
-      &(i2c_device_config_t{
-          .dev_addr_length = I2C_ADDR_BIT_LEN_7,
-          .device_address = PCF8563_ADDR,
-          .scl_speed_hz = 100000,
-        }),
-      &rtc_dev);
-  if (err != ESP_OK || rtc_dev == nullptr) {
-    ESP_LOGE(TAG, "rtc set: rtc device handle failed: %s", esp_err_to_name(err));
-    if (pahub_dev) i2c_master_bus_remove_device(pahub_dev);
-    i2c_del_master_bus(bus_handle);
-    return false;
-  }
-
   // Stop oscillator before writing.
   uint8_t ctrl2 = 0;
-  if (pcf8563_read_reg(rtc_dev, PCF8563_REG_CTRL2, &ctrl2) != ESP_OK) {
+  uint8_t reg = PCF8563_REG_CTRL2;
+  if (i2c_master_transmit_receive(bus_handle, PCF8563_ADDR, &reg, 1, &ctrl2, 1, -1) != ESP_OK) {
     ESP_LOGE(TAG, "rtc set: read ctrl2 failed");
     i2c_del_master_bus(bus_handle);
     return false;
   }
   ctrl2 |= 0x80;  // STOP = 1
-  if (pcf8563_write_reg(rtc_dev, PCF8563_REG_CTRL2, ctrl2) != ESP_OK) {
+  uint8_t wr[2] = {PCF8563_REG_CTRL2, ctrl2};
+  if (i2c_master_transmit(bus_handle, PCF8563_ADDR, wr, 2, -1) != ESP_OK) {
     ESP_LOGE(TAG, "rtc set: write ctrl2 (stop) failed");
     i2c_del_master_bus(bus_handle);
     return false;
   }
 
   // Write time registers.
-  if (pcf8563_write_reg(rtc_dev, PCF8563_REG_SECONDS, dec_to_bcd(static_cast<uint8_t>(second))) != ESP_OK ||
-      pcf8563_write_reg(rtc_dev, PCF8563_REG_MINUTES, dec_to_bcd(static_cast<uint8_t>(minute))) != ESP_OK ||
-      pcf8563_write_reg(rtc_dev, PCF8563_REG_HOURS, dec_to_bcd(static_cast<uint8_t>(hour))) != ESP_OK ||
-      pcf8563_write_reg(rtc_dev, PCF8563_REG_DAY, dec_to_bcd(static_cast<uint8_t>(day))) != ESP_OK ||
-      pcf8563_write_reg(rtc_dev, PCF8563_REG_MONTH, dec_to_bcd(static_cast<uint8_t>(month))) != ESP_OK ||
-      pcf8563_write_reg(rtc_dev, PCF8563_REG_YEAR, dec_to_bcd(static_cast<uint8_t>(year % 100))) != ESP_OK) {
+  uint8_t data[2] = {PCF8563_REG_SECONDS, dec_to_bcd(static_cast<uint8_t>(second))};
+  if (i2c_master_transmit(bus_handle, PCF8563_ADDR, data, 2, -1) != ESP_OK ||
+      (data[0] = PCF8563_REG_MINUTES, data[1] = dec_to_bcd(static_cast<uint8_t>(minute)),
+       i2c_master_transmit(bus_handle, PCF8563_ADDR, data, 2, -1)) != ESP_OK ||
+      (data[0] = PCF8563_REG_HOURS, data[1] = dec_to_bcd(static_cast<uint8_t>(hour)),
+       i2c_master_transmit(bus_handle, PCF8563_ADDR, data, 2, -1)) != ESP_OK ||
+      (data[0] = PCF8563_REG_DAY, data[1] = dec_to_bcd(static_cast<uint8_t>(day)),
+       i2c_master_transmit(bus_handle, PCF8563_ADDR, data, 2, -1)) != ESP_OK ||
+      (data[0] = PCF8563_REG_MONTH, data[1] = dec_to_bcd(static_cast<uint8_t>(month)),
+       i2c_master_transmit(bus_handle, PCF8563_ADDR, data, 2, -1)) != ESP_OK ||
+      (data[0] = PCF8563_REG_YEAR, data[1] = dec_to_bcd(static_cast<uint8_t>(year % 100)),
+       i2c_master_transmit(bus_handle, PCF8563_ADDR, data, 2, -1)) != ESP_OK) {
     ESP_LOGE(TAG, "rtc set: write time registers failed");
     i2c_del_master_bus(bus_handle);
     return false;
@@ -308,7 +245,9 @@ bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
 
   // Start oscillator.
   ctrl2 &= 0x7F;  // STOP = 0
-  if (pcf8563_write_reg(rtc_dev, PCF8563_REG_CTRL2, ctrl2) != ESP_OK) {
+  wr[0] = PCF8563_REG_CTRL2;
+  wr[1] = ctrl2;
+  if (i2c_master_transmit(bus_handle, PCF8563_ADDR, wr, 2, -1) != ESP_OK) {
     ESP_LOGE(TAG, "rtc set: write ctrl2 (start) failed");
     i2c_del_master_bus(bus_handle);
     return false;
@@ -339,9 +278,11 @@ bool CurlingEngineComponent::get_rtc_datetime(int *year, int *month, int *day,
     return false;
   }
 
+  // Select PaHub channel if RTC is behind a PaHub.
   int rtc_ch = this->addon_detected.pahub_rtc_channel;
   if (rtc_ch >= 0) {
-    esp_err_t sel_err = select_pahub_channel(bus_handle, rtc_ch);
+    uint8_t cmd = static_cast<uint8_t>(1 << rtc_ch);
+    esp_err_t sel_err = i2c_master_transmit(bus_handle, PAHUB_ADDR, &cmd, 1, -1);
     if (sel_err != ESP_OK) {
       i2c_del_master_bus(bus_handle);
       return false;
@@ -351,7 +292,7 @@ bool CurlingEngineComponent::get_rtc_datetime(int *year, int *month, int *day,
 
   uint8_t reg = PCF8563_REG_SECONDS;
   uint8_t vals[7];
-  if (i2c_master_transmit_receive(rtc_dev, &reg, 1, vals, 7, -1) != ESP_OK) {
+  if (i2c_master_transmit_receive(bus_handle, PCF8563_ADDR, &reg, 1, vals, 7, -1) != ESP_OK) {
     i2c_del_master_bus(bus_handle);
     return false;
   }
