@@ -426,7 +426,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 </head>
 <body>
 <div id="login"><form class="card" id="login-form">
-  <h2>Curling Timer <span class="version">v2026.11.241</span></h2>
+  <h2>Curling Timer <span class="version">v2026.11.242</span></h2>
   <p>ESP32-P4 curling timer — live countdown, schedule, and relay control for your club.</p>
   <label for="username">Username</label>
   <input id="username" type="text" autocomplete="username" placeholder="Username">
@@ -456,7 +456,7 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
 <header>
   <div class="header-brand">
     <h1>⏱️ Curling Timer</h1>
-    <span class="header-version">v2026.11.241</span>
+    <span class="header-version">v2026.11.242</span>
   </div>
   <span id="header-msg" class="banner hidden"></span>
   <div class="header-actions">
@@ -475,7 +475,6 @@ pre.view { overflow: auto; max-height: 55vh; border-radius: 14px; padding: 12px;
   <section id="tab-quickstart" class="hidden"></section>
   <section id="tab-schedule" class="hidden"></section>
   <section id="tab-exceptions" class="hidden"></section>
-  <section id="tab-history" class="hidden"></section>
   <section id="tab-raw" class="hidden"></section>
   <section id="tab-config" class="hidden"></section>
   <section id="tab-diagnostics" class="hidden"></section>
@@ -493,7 +492,6 @@ const NAV_LABELS = {
   status: 'Live',
   quickstart: 'Quick',
   schedule: 'Scheduling',
-  clock: 'Clock',
   history: 'History',
   config: 'Settings',
   diagnostics: 'Diagnostics'
@@ -502,7 +500,6 @@ const NAV_ICONS = {
   status: '⏱️',
   quickstart: '⚡',
   schedule: '📅',
-  clock: '🕐',
   history: '📜',
   config: '⚙️',
   diagnostics: '🔧'
@@ -511,7 +508,6 @@ const TABS = [
   ['status', '⏱️', 'Live'],
   ['quickstart', '⚡', 'Quick'],
   ['schedule', '📅', 'Scheduling'],
-  ['clock', '🕐', 'Clock'],
   ['history', '📜', 'History'],
   ['config', '⚙️', 'Settings'],
   ['diagnostics', '🔧', 'Diagnostics']
@@ -873,9 +869,7 @@ async function selectTab(id) {
     else await renderConfig();
     await loadRaw();
   }
-  if (id === 'history') loadHistory();
   if (id === 'diagnostics') renderDiagnostics();
-  if (id === 'clock') renderClock();
 }
 
 // ---- status tab -----------------------------------------------------------
@@ -3224,61 +3218,6 @@ function formatBackupText(text) {
 }
 
 // ---- history --------------------------------------------------------------
-async function loadHistory() {
-  const result = await api('/api/backups');
-  if (!result.ok) { if (result.status !== 401) showMessage(result.data.error); return; }
-  const backups = result.data.backups;
-  const historyContainer = el('div', { class: 'history-container' });
-  if (backups.length === 0) {
-    historyContainer.append(el('p', { class: 'muted', style: 'margin: 0' }, 'No backups yet.'));
-  } else {
-    const detailsList = backups.map((b, index) => {
-      const date = new Date(b.mtime * 1000).toLocaleString();
-      const pre = el('pre', { class: 'view' }, 'Loading…');
-      const content = el('div', { class: 'content' }, pre);
-      const row = el('details', { class: 'backup-row', 'data-index': index, 'data-name': b.name },
-        el('summary', { class: 'summary-header' },
-          el('div', { class: 'summary-header-left' },
-            el('span', { class: 'chevron' }, '▸'),
-            el('span', { class: 'summary-date' }, date),
-            el('span', { class: 'summary-size muted small' }, `${b.size} B`)),
-          el('div', { class: 'summary-actions' },
-            el('button', { class: 'btn icon', onclick: async (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!confirm(`Restore the settings from ${date}? The current file is backed up first.`)) return;
-              const raw = await api('/api/raw');
-              if (!raw.ok) return showMessage(raw.data.error);
-              const restored = await api('/api/restore', { name: b.name, version: raw.data.version });
-              if (!restored.ok) return showMessage(`Not restored: ${restored.data.error}`);
-              showMessage('Restored; the display updates within a second', 'ok');
-              state.model = null; setDirty(false); loadHistory();
-            }}, 'Restore'))),
-        content);
-      row.addEventListener('toggle', async () => {
-        if (!row.open) return;
-        document.querySelectorAll('.backup-row[open]').forEach((r) => { if (r !== row) r.removeAttribute('open'); });
-        if (!pre.dataset.loaded) {
-          pre.dataset.loaded = '1';
-          const got = await api(`/api/backups/${encodeURIComponent(b.name)}`);
-          if (got.ok) pre.textContent = formatBackupText(got.data.text);
-          else { delete pre.dataset.loaded; pre.textContent = 'Failed to load: ' + ((got.data && got.data.error) || got.status); }
-        }
-      });
-      return row;
-    });
-    historyContainer.append(...detailsList);
-  }
-  $('tab-history').replaceChildren(
-    el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'History')),
-      el('span', { class: 'pill' }, `${backups.length} backup${backups.length === 1 ? '' : 's'}`)),
-    el('div', { class: 'card' },
-      el('div', { class: 'section-title' }, 'Previous versions'),
-      el('p', { class: 'muted small', style: 'margin: 0' }, 'Tap a row to expand and view the formatted settings. Restore creates a backup of the current file first.'),
-      historyContainer));
-}
-
 // ---- diagnostics tab -------------------------------------------------------
 async function renderDiagnostics() {
   const root = $('tab-diagnostics');
@@ -3334,6 +3273,53 @@ async function renderDiagnostics() {
       el('div', { class: 'field' }, 'NTP server', ntpServer),
       el('div', { class: 'field' }, 'Drift', ntpDrift)),
     el('div', { class: 'row-actions' }, syncBtn));
+  const rtcTime = el('span', {}, '--');
+  const rtcDetected = el('span', {}, '--');
+  const dateInput = el('input', { type: 'date' });
+  const timeInput = el('input', { type: 'time', step: 1 });
+
+  async function loadRtc() {
+    const r = await api('/api/rtc/time');
+    if (r.ok && r.data.ok) {
+      const d = r.data;
+      rtcTime.textContent = `${String(d.year).padStart(4, '0')}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')} ${String(d.hour).padStart(2, '0')}:${String(d.minute).padStart(2, '0')}:${String(d.second).padStart(2, '0')}`;
+      dateInput.value = `${String(d.year).padStart(4, '0')}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
+      timeInput.value = `${String(d.hour).padStart(2, '0')}:${String(d.minute).padStart(2, '0')}`;
+    } else {
+      rtcTime.textContent = 'N/A';
+    }
+    const det = await api('/api/addons/detection');
+    if (det.ok && det.data) {
+      rtcDetected.textContent = det.data.rtc ? 'Yes' : 'No';
+    }
+  }
+  loadRtc();
+
+  const setBtn = el('button', { class: 'btn primary', onclick: async () => {
+    const d = dateInput.value;
+    const t = timeInput.value;
+    if (!d || !t) { showMessage('Enter both date and time', 'bad'); return; }
+    const r = await api('/api/rtc/set', { method: 'POST', body: JSON.stringify({ date: d, time: t }) });
+    if (r.ok) {
+      showMessage('RTC time set', 'ok');
+      loadRtc();
+    } else {
+      showMessage('Failed: ' + ((r.data && r.data.error) || r.status), 'bad');
+    }
+  } }, 'Set RTC Time');
+
+  const section2b = el('div', { class: 'card' },
+    el('h2', {}, 'RTC / Clock'),
+    el('div', { class: 'grid2' },
+      el('div', { class: 'field' }, 'RTC Detected', rtcDetected),
+      el('div', { class: 'field' }, 'Current RTC Time', rtcTime),
+      el('div', { class: 'field' }, 'Set Date', dateInput),
+      el('div', { class: 'field' }, 'Set Time', timeInput)),
+    el('div', { class: 'row-actions' }, setBtn,
+      el('button', { class: 'btn', onclick: loadRtc }, 'Refresh')),
+    el('p', { class: 'muted small', style: 'margin-top: 10px' },
+      'The RTC (PCF8563/HYM8563) keeps time independently of NTP. When WiFi is unavailable and NTP sync fails, the display falls back to RTC time. Set the date/time here for standalone operation.'));
+
   const cfgRes = await api('/api/config');
   const savedLevel = (cfgRes.ok && cfgRes.data && cfgRes.data.config && cfgRes.data.config['config.log_level'] != null) ? cfgRes.data.config['config.log_level'] : 3;
   const levelSelect = el('select', { onchange: async () => {
@@ -3356,89 +3342,66 @@ async function renderDiagnostics() {
     el('div', { class: 'row-actions' },
       el('a', { class: 'btn', href: '/api/logs', target: '_blank', rel: 'noopener' }, 'Download logs'),
       el('label', { style: 'min-width: 180px' }, 'Log level', levelSelect)));
+
+  // History / backups section
+  const backupsContainer = el('div', { class: 'history-container' });
+  const backupsResult = await api('/api/backups');
+  if (backupsResult.ok && backupsResult.data) {
+    const backups = backupsResult.data.backups;
+    if (backups.length === 0) {
+      backupsContainer.append(el('p', { class: 'muted', style: 'margin: 0' }, 'No backups yet.'));
+    } else {
+      const detailsList = backups.map((b, index) => {
+        // reuse same structure
+        const date = new Date(b.mtime * 1000).toLocaleString();
+        const pre = el('pre', { class: 'view' }, 'Loading…');
+        const content = el('div', { class: 'content' }, pre);
+        const row = el('details', { class: 'backup-row', 'data-index': index, 'data-name': b.name },
+          el('summary', { class: 'summary-header' },
+            el('div', { class: 'summary-header-left' },
+              el('span', { class: 'chevron' }, '▸'),
+              el('span', { class: 'summary-date' }, date),
+              el('span', { class: 'summary-size muted small' }, `${b.size} B`)),
+            el('div', { class: 'summary-actions' },
+              el('button', { class: 'btn icon', onclick: async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!confirm(`Restore the settings from ${date}? The current file is backed up first.`)) return;
+                const raw = await api('/api/raw');
+                if (!raw.ok) return showMessage(raw.data.error);
+                const restored = await api('/api/restore', { name: b.name, version: raw.data.version });
+                if (!restored.ok) return showMessage(`Not restored: ${restored.data.error}`);
+                showMessage('Restored; the display updates within a second', 'ok');
+                state.model = null; setDirty(false); renderDiagnostics();
+              }}, 'Restore'))),
+          content);
+        row.addEventListener('toggle', async () => {
+          if (!row.open) return;
+          document.querySelectorAll('.backup-row[open]').forEach((r) => { if (r !== row) r.removeAttribute('open'); });
+          if (!pre.dataset.loaded) {
+            pre.dataset.loaded = '1';
+            const got = await api(`/api/backups/${encodeURIComponent(b.name)}`);
+            if (got.ok) pre.textContent = formatBackupText(got.data.text);
+            else { delete pre.dataset.loaded; pre.textContent = 'Failed to load: ' + ((got.data && got.data.error) || got.status); }
+          }
+        });
+        return row;
+      });
+      backupsContainer.append(...detailsList);
+    }
+  } else {
+    backupsContainer.append(el('p', { class: 'muted', style: 'margin: 0' }, 'No backups yet.'));
+  }
+  const section4 = el('div', { class: 'card' },
+    el('div', { class: 'section-title' }, 'History / Backups'),
+    el('p', { class: 'muted small', style: 'margin: 0' }, 'Previous settings versions. Tap a row to expand and view the formatted settings. Restore creates a backup of the current file first.'),
+    backupsContainer);
+
   root.replaceChildren(
     el('div', { class: 'page-head' },
       el('div', {}, el('div', { class: 'section-title' }, 'Diagnostics')),
       el('span', { class: 'pill' }, 'Troubleshooting')),
-    el('div', { class: 'stack' }, section1, section2, section3));
-}
-
-async function renderClock() {
-  const root = $('tab-clock');
-  root.replaceChildren();
-
-  const rtcTime = el('span', {}, '--');
-  const ntpStatus = el('span', {}, '--');
-  const ntpServer = el('span', {}, '--');
-  const rtcDetected = el('span', {}, '--');
-  const dateInput = el('input', { type: 'date' });
-  const timeInput = el('input', { type: 'time', step: 1 });
-
-  async function loadRtc() {
-    const r = await api('/api/rtc/time');
-    if (r.ok && r.data.ok) {
-      const d = r.data;
-      rtcTime.textContent = `${String(d.year).padStart(4, '0')}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')} ${String(d.hour).padStart(2, '0')}:${String(d.minute).padStart(2, '0')}:${String(d.second).padStart(2, '0')}`;
-      dateInput.value = `${String(d.year).padStart(4, '0')}-${String(d.month).padStart(2, '0')}-${String(d.day).padStart(2, '0')}`;
-      timeInput.value = `${String(d.hour).padStart(2, '0')}:${String(d.minute).padStart(2, '0')}`;
-    } else {
-      rtcTime.textContent = 'N/A';
-    }
-    const det = await api('/api/addons/detection');
-    if (det.ok && det.data) {
-      rtcDetected.textContent = det.data.rtc ? 'Yes' : 'No';
-    }
-    const ntps = await api('/api/ntp_status');
-    if (ntps.ok) {
-      ntpStatus.textContent = ntps.data.ntp_synced ? 'Synced' : 'Not synced';
-      if (ntps.data.ntp_server) ntpServer.textContent = ntps.data.ntp_server;
-    }
-  }
-  loadRtc();
-
-  const setBtn = el('button', { class: 'btn primary', onclick: async () => {
-    const d = dateInput.value;
-    const t = timeInput.value;
-    if (!d || !t) { showMessage('Enter both date and time', 'bad'); return; }
-    const r = await api('/api/rtc/set', { method: 'POST', body: JSON.stringify({ date: d, time: t }) });
-    if (r.ok) {
-      showMessage('RTC time set', 'ok');
-      loadRtc();
-    } else {
-      showMessage('Failed: ' + ((r.data && r.data.error) || r.status), 'bad');
-    }
-  } }, 'Set RTC Time');
-
-  root.replaceChildren(
-    el('div', { class: 'page-head' },
-      el('div', {}, el('div', { class: 'section-title' }, 'Clock')),
-      el('span', { class: 'pill' }, 'RTC date/time')),
-    el('div', { class: 'card' },
-      el('div', { class: 'section-title', style: 'margin-bottom: 10px' }, 'Current Time')),
-    el('div', { class: 'grid2', style: 'gap: 12px' },
-      el('div', { class: 'field' },
-        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'RTC Date/Time'),
-        rtcTime),
-      el('div', { class: 'field' },
-        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'RTC Detected'),
-        rtcDetected),
-      el('div', { class: 'field' },
-        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'NTP Status'),
-        ntpStatus),
-      el('div', { class: 'field' },
-        el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'NTP Server'),
-        ntpServer)),
-    el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Set Date'),
-      dateInput),
-    el('div', { class: 'field', style: 'margin-bottom: 10px' },
-      el('label', { class: 'muted', style: 'margin-bottom: 4px' }, 'Set Time'),
-      timeInput),
-    el('div', { class: 'row-actions' },
-      setBtn,
-      el('button', { class: 'btn', onclick: loadRtc }, 'Refresh')),
-    el('p', { class: 'muted small', style: 'margin-top: 10px' },
-      'The RTC (PCF8563/HYM8563) keeps time independently of NTP. When WiFi is unavailable and NTP sync fails, the display falls back to RTC time. Set the date/time here for standalone operation.'));
+    el('div', { class: 'stack' }, section1, section2, section2b, section3, section4));
 }
 
 function relayIds(row) { return row.entries.filter(e => e.btn.className.includes('on')).map(e => e.info.id); }
