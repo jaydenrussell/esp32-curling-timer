@@ -3327,6 +3327,8 @@ async function renderDiagnostics() {
     el('div', { class: 'muted small', style: 'margin-top: 10px' },
       'Set the date/time here for standalone operation when NTP is unavailable.'));
   const cfgRes = await api('/api/config');
+  const savedLevel = (cfgRes.ok && cfgRes.data && cfgRes.data.config && cfgRes.data.config['config.log_level'] != null) ? cfgRes.data.config['config.log_level'] : 3;
+
 function relayIds(row) { return row.entries.filter(e => e.btn.className.includes('on')).map(e => e.info.id); }
 function relayDuration(row) { const onEntries = row.entries.filter(e => e.btn.className.includes('on')); return onEntries.length ? (onEntries[0].dur ? onEntries[0].dur.value : '') : ''; }
 
