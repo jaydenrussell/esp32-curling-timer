@@ -91,6 +91,8 @@ class PiTimerApi {
    ApiResponse post_leagues(JsonObjectConst data);
    ApiResponse fetch_leagues(JsonObjectConst data);
    ApiResponse get_addon_detection(const ApiRequest &req);
+   ApiResponse rtc_set(JsonObjectConst data);
+   ApiResponse rtc_get();
 
   ApiResponse login(const ApiRequest &req, JsonObjectConst data);
   ApiResponse logout();

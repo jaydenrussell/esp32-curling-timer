@@ -993,6 +993,63 @@ ApiResponse PiTimerApi::get_addon_detection(const ApiRequest &req) {
   return from_document(doc);
 }
 
+ApiResponse PiTimerApi::rtc_set(JsonObjectConst data) {
+  if (engine_ == nullptr) {
+    return error_json(500, "engine not available");
+  }
+  // Parse date: "YYYY-MM-DD"
+  const char *date_str = data["date"].as<const char *>();
+  if (date_str == nullptr || strlen(date_str) != 10) {
+    return error_json(400, "'date' must be YYYY-MM-DD");
+  }
+  int year = 0, month = 0, day = 0;
+  if (sscanf(date_str, "%d-%d-%d", &year, &month, &day) != 3 ||
+      year < 2000 || year > 2099 || month < 1 || month > 12 || day < 1 || day > 31) {
+    return error_json(400, "'date' must be a valid YYYY-MM-DD");
+  }
+  // Parse time: "HH:MM:SS"
+  const char *time_str = data["time"].as<const char *>();
+  if (time_str == nullptr || strlen(time_str) != 8) {
+    return error_json(400, "'time' must be HH:MM:SS");
+  }
+  int hour = 0, minute = 0, second = 0;
+  if (sscanf(time_str, "%d:%d:%d", &hour, &minute, &second) != 3 ||
+      hour > 23 || minute > 59 || second > 59) {
+    return error_json(400, "'time' must be a valid HH:MM:SS");
+  }
+  if (!engine_->set_rtc_datetime(year, month, day, hour, minute, second)) {
+    return error_json(500, "failed to set RTC datetime");
+  }
+  JsonDocument doc;
+  doc["ok"] = true;
+  doc["year"] = year;
+  doc["month"] = month;
+  doc["day"] = day;
+  doc["hour"] = hour;
+  doc["minute"] = minute;
+  doc["second"] = second;
+  return from_document(doc);
+}
+
+ApiResponse PiTimerApi::rtc_get() {
+  if (engine_ == nullptr) {
+    return error_json(500, "engine not available");
+  }
+  int y, mo, d, h, mi, s;
+  if (!engine_->get_rtc_datetime(&y, &mo, &d, &h, &mi, &s)) {
+    return error_json(500, "failed to read RTC datetime");
+  }
+  JsonDocument doc;
+  doc["ok"] = true;
+  doc["year"] = y;
+  doc["month"] = mo;
+  doc["day"] = d;
+  doc["hour"] = h;
+  doc["minute"] = mi;
+  doc["second"] = s;
+  return from_document(doc);
+}
+
 ApiResponse PiTimerApi::post_config(JsonObjectConst data) {
   JsonVariantConst cfg_v = data["config"];
   if (!cfg_v.is<JsonObjectConst>())
@@ -1539,6 +1596,10 @@ ApiResponse PiTimerApi::handle(const ApiRequest &req) {
      return ntp_sync();
     if (p == "/api/addons/detection")
        return get_addon_detection(req);
+    if (p == "/api/rtc/set")
+       return rtc_set(data);
+    if (p == "/api/rtc/time")
+       return rtc_get();
     if (p == "/api/config")
       return post_config(data);
     if (p == "/api/leagues")

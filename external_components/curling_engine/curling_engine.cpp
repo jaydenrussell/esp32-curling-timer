@@ -34,6 +34,25 @@ void CurlingEngineComponent::ntp_sync() {
       return;
     }
   }
+  // SNTP failed or unavailable: fall back to RTC via direct I2C.
+  int y, mo, d, h, mi, s;
+  if (this->get_rtc_datetime(&y, &mo, &d, &h, &mi, &s)) {
+    // Compute epoch from YMDHMS.
+    int era = (y <= 0 ? y - 399 : y) / 400;
+    int yoe = y - era * 400;
+    int mp = (mo + 9) % 12;
+    int doe = (153 * mp + 2) / 5 + d - 1;
+    int days = era * 146097 + yoe * 365 + yoe / 4 - yoe / 100 + doe;
+    int64_t epoch = static_cast<int64_t>(days) * 86400 +
+                    static_cast<int64_t>(h) * 3600 +
+                    static_cast<int64_t>(mi) * 60 +
+                    static_cast<int64_t>(s);
+    ntp_last_sync_ = epoch;
+    ntp_ok_ = true;  // RTC is a valid time source
+    ESP_LOGI(TAG, "ntp: using RTC fallback time %04d-%02d-%02d %02d:%02d:%02d",
+             y, mo, d, h, mi, s);
+    return;
+  }
   ntp_ok_ = false;
 }
 
@@ -135,6 +154,195 @@ void CurlingEngineComponent::detect_addons() {
 #endif
   // Wi-Fi failover (ESP32-C6 SDIO) detection is handled separately;
   // Pahub presence does not imply Wi-Fi is present.
+}
+
+// PCF8563 register map
+static constexpr uint8_t PCF8563_ADDR = 0x51;
+static constexpr uint8_t PCF8563_REG_CTRL1 = 0x00;
+static constexpr uint8_t PCF8563_REG_CTRL2 = 0x01;  // bit7 = STOP oscillator
+static constexpr uint8_t PCF8563_REG_SECONDS = 0x02;
+static constexpr uint8_t PCF8563_REG_MINUTES = 0x03;
+static constexpr uint8_t PCF8563_REG_HOURS = 0x04;
+static constexpr uint8_t PCF8563_REG_DAY = 0x05;
+static constexpr uint8_t PCF8563_REG_WEEKDAY = 0x06;
+static constexpr uint8_t PCF8563_REG_MONTH = 0x07;
+static constexpr uint8_t PCF8563_REG_YEAR = 0x08;
+
+static uint8_t dec_to_bcd(uint8_t val) {
+  return static_cast<uint8_t>((val / 10) * 16 + (val % 10));
+}
+static uint8_t bcd_to_dec(uint8_t val) {
+  return static_cast<uint8_t>((val / 16) * 10 + (val % 16));
+}
+
+// Select a PaHub channel (write control byte 1<<ch to 0x70).
+static esp_err_t select_pahub_channel(i2c_master_bus_handle_t bus, int ch) {
+  uint8_t cmd = static_cast<uint8_t>(1 << ch);
+  return i2c_master_transmit(bus, 0x70, &cmd, 1, -1);
+}
+
+// Read a single register from PCF8563.
+static esp_err_t pcf8563_read_reg(i2c_master_bus_handle_t bus, uint8_t reg, uint8_t *val) {
+  return i2c_master_transmit_receive(bus, PCF8563_ADDR, &reg, 1, val, 1, -1);
+}
+
+// Write a single register to PCF8563.
+static esp_err_t pcf8563_write_reg(i2c_master_bus_handle_t bus, uint8_t reg, uint8_t val) {
+  uint8_t buf[2] = {reg, val};
+  return i2c_master_transmit(bus, PCF8563_ADDR, buf, 2, -1);
+}
+
+bool CurlingEngineComponent::set_rtc_datetime(int year, int month, int day,
+                                               int hour, int minute, int second) {
+#if !defined(ESP_PLATFORM)
+  return false;
+#endif
+  // Create I2C bus (same pins as detect_addons: Grove Port A GPIO21/22).
+  i2c_master_bus_config_t bus_config = {};
+  bus_config.i2c_port = 0;
+  bus_config.sda_io_num = GPIO_NUM_21;
+  bus_config.scl_io_num = GPIO_NUM_22;
+  bus_config.clk_source = I2C_CLK_SRC_DEFAULT;
+  bus_config.glitch_ignore_cnt = 7;
+  bus_config.flags.enable_internal_pullup = true;
+
+  i2c_master_bus_handle_t bus_handle = nullptr;
+  esp_err_t err = i2c_new_master_bus(&bus_config, &bus_handle);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "rtc set: i2c bus init failed: %s", esp_err_to_name(err));
+    return false;
+  }
+
+  // Select PaHub channel if RTC is behind a PaHub.
+  int rtc_ch = this->addon_detected.pahub_rtc_channel;
+  if (rtc_ch >= 0) {
+    esp_err_t sel_err = select_pahub_channel(bus_handle, rtc_ch);
+    if (sel_err != ESP_OK) {
+      ESP_LOGE(TAG, "rtc set: pahub channel select failed: %s", esp_err_to_name(sel_err));
+      i2c_del_master_bus(bus_handle);
+      return false;
+    }
+    ets_delay_us(100);
+  }
+
+  // Stop oscillator before writing.
+  uint8_t ctrl2 = 0;
+  if (pcf8563_read_reg(bus_handle, PCF8563_REG_CTRL2, &ctrl2) != ESP_OK) {
+    ESP_LOGE(TAG, "rtc set: read ctrl2 failed");
+    i2c_del_master_bus(bus_handle);
+    return false;
+  }
+  ctrl2 |= 0x80;  // STOP = 1
+  if (pcf8563_write_reg(bus_handle, PCF8563_REG_CTRL2, ctrl2) != ESP_OK) {
+    ESP_LOGE(TAG, "rtc set: write ctrl2 (stop) failed");
+    i2c_del_master_bus(bus_handle);
+    return false;
+  }
+
+  // Write time registers.
+  if (pcf8563_write_reg(bus_handle, PCF8563_REG_SECONDS, dec_to_bcd(static_cast<uint8_t>(second))) != ESP_OK ||
+      pcf8563_write_reg(bus_handle, PCF8563_REG_MINUTES, dec_to_bcd(static_cast<uint8_t>(minute))) != ESP_OK ||
+      pcf8563_write_reg(bus_handle, PCF8563_REG_HOURS, dec_to_bcd(static_cast<uint8_t>(hour))) != ESP_OK ||
+      pcf8563_write_reg(bus_handle, PCF8563_REG_DAY, dec_to_bcd(static_cast<uint8_t>(day))) != ESP_OK ||
+      pcf8563_write_reg(bus_handle, PCF8563_REG_MONTH, dec_to_bcd(static_cast<uint8_t>(month))) != ESP_OK ||
+      pcf8563_write_reg(bus_handle, PCF8563_REG_YEAR, dec_to_bcd(static_cast<uint8_t>(year % 100))) != ESP_OK) {
+    ESP_LOGE(TAG, "rtc set: write time registers failed");
+    i2c_del_master_bus(bus_handle);
+    return false;
+  }
+
+  // Start oscillator.
+  ctrl2 &= 0x7F;  // STOP = 0
+  if (pcf8563_write_reg(bus_handle, PCF8563_REG_CTRL2, ctrl2) != ESP_OK) {
+    ESP_LOGE(TAG, "rtc set: write ctrl2 (start) failed");
+    i2c_del_master_bus(bus_handle);
+    return false;
+  }
+
+  i2c_del_master_bus(bus_handle);
+  ESP_LOGI(TAG, "rtc set: datetime set to %04d-%02d-%02d %02d:%02d:%02d",
+           year, month, day, hour, minute, second);
+  return true;
+}
+
+bool CurlingEngineComponent::get_rtc_datetime(int *year, int *month, int *day,
+                                               int *hour, int *minute, int *second) {
+#if !defined(ESP_PLATFORM)
+  return false;
+#endif
+  i2c_master_bus_config_t bus_config = {};
+  bus_config.i2c_port = 0;
+  bus_config.sda_io_num = GPIO_NUM_21;
+  bus_config.scl_io_num = GPIO_NUM_22;
+  bus_config.clk_source = I2C_CLK_SRC_DEFAULT;
+  bus_config.glitch_ignore_cnt = 7;
+  bus_config.flags.enable_internal_pullup = true;
+
+  i2c_master_bus_handle_t bus_handle = nullptr;
+  esp_err_t err = i2c_new_master_bus(&bus_config, &bus_handle);
+  if (err != ESP_OK) {
+    return false;
+  }
+
+  int rtc_ch = this->addon_detected.pahub_rtc_channel;
+  if (rtc_ch >= 0) {
+    esp_err_t sel_err = select_pahub_channel(bus_handle, rtc_ch);
+    if (sel_err != ESP_OK) {
+      i2c_del_master_bus(bus_handle);
+      return false;
+    }
+    ets_delay_us(100);
+  }
+
+  uint8_t reg = PCF8563_REG_SECONDS;
+  uint8_t vals[7];
+  if (i2c_master_transmit_receive(bus_handle, PCF8563_ADDR, &reg, 1, vals, 7, -1) != ESP_OK) {
+    i2c_del_master_bus(bus_handle);
+    return false;
+  }
+
+  *second = bcd_to_dec(vals[0] & 0x7F);
+  *minute = bcd_to_dec(vals[1] & 0x7F);
+  *hour = bcd_to_dec(vals[2] & 0x3F);
+  *day = bcd_to_dec(vals[3] & 0x3F);
+  *month = bcd_to_dec(vals[5] & 0x1F);
+  *year = 2000 + bcd_to_dec(vals[6]);
+
+  i2c_del_master_bus(bus_handle);
+  return true;
+}
+
+int64_t CurlingEngineComponent::get_current_epoch() {
+#if defined(ESP_PLATFORM)
+  // Try SNTP/NTP first.
+  if (this->time_ != nullptr) {
+    auto now = this->time_->now();
+    if (now.is_valid()) {
+      this->ntp_ok_ = true;
+      this->ntp_last_sync_ = now.timestamp;
+      return now.timestamp;
+    }
+  }
+  // Fall back to RTC via direct I2C (handles PaHub channel selection).
+  int y, mo, d, h, mi, s;
+  if (this->get_rtc_datetime(&y, &mo, &d, &h, &mi, &s)) {
+    // Compute epoch from YMDHMS.
+    // Simple days-from-civil algorithm (Howard Hinnant).
+    int era = (y <= 0 ? y - 399 : y) / 400;
+    int yoe = y - era * 400;
+    int mp = (mo + 9) % 12;
+    int doe = (153 * mp + 2) / 5 + d - 1;
+    int days = era * 146097 + yoe * 365 + yoe / 4 - yoe / 100 + doe;
+    int64_t epoch = static_cast<int64_t>(days) * 86400 +
+                    static_cast<int64_t>(h) * 3600 +
+                    static_cast<int64_t>(mi) * 60 +
+                    static_cast<int64_t>(s);
+    // Mark NTP as not OK so callers know we're on RTC fallback.
+    this->ntp_ok_ = false;
+    return epoch;
+  }
+#endif
+  return 0;
 }
 
 void CurlingEngineComponent::setup() {

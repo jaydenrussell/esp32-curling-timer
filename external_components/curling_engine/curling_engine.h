@@ -48,6 +48,17 @@ class CurlingEngineComponent : public Component {
   // --- interface for web_editor ---
   SettingsStore *get_store() { return store_.get(); }
   StoreFs *get_store_fs() { return fs_.get(); }
+
+  // Set the RTC date/time manually (standalone mode, no NTP).
+  // Writes to PCF8563 via I2C, selecting the PaHub channel if RTC is behind a hub.
+  bool set_rtc_datetime(int year, int month, int day, int hour, int minute, int second);
+
+  // Read the current RTC date/time (from PCF8563 via I2C if available).
+  bool get_rtc_datetime(int *year, int *month, int *day, int *hour, int *minute, int *second);
+
+  // Get current epoch seconds with NTP → RTC fallback.
+  // Returns 0 if no time source is available.
+  int64_t get_current_epoch();
   bool ready() const { return ready_; }
   std::string settings_path() const { return store_path_ + "/" + SETTINGS_BASENAME; }
   time::RealTimeClock *get_time() { return time_; }
